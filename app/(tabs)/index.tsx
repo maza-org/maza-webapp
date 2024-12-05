@@ -10,8 +10,12 @@ import {
   ScrollView,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 export default function Home() {
+  const handleSearchPress = () => {
+    router.push("/search");
+  };
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -24,7 +28,11 @@ export default function Home() {
         </View>
 
         {/* Search Bar */}
-        <View style={styles.searchContainer}>
+        <TouchableOpacity
+          style={styles.searchContainer}
+          onPress={handleSearchPress}
+          activeOpacity={0.7}
+        >
           <TextInput
             style={styles.searchInput}
             placeholder="Pesquisar..."
@@ -37,7 +45,7 @@ export default function Home() {
             color="#666"
             style={styles.searchIcon}
           />
-        </View>
+        </TouchableOpacity>
 
         {/* Category Icons */}
         <View style={styles.categoryContainer}>
@@ -116,6 +124,126 @@ export default function Home() {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.coursesInProgress}>
+          <View style={styles.coursesHeader}>
+            <Text style={styles.sectionTitle}>Cursos em andamento</Text>
+            <TouchableOpacity>
+              <Text style={styles.verTodos}>VER TODOS</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.coursesList}>
+            <TouchableOpacity style={styles.courseItem}>
+              <Image
+                source={{ uri: "https://via.placeholder.com/60" }}
+                style={styles.courseImage}
+              />
+              <View style={styles.courseInfo}>
+                <Text style={styles.courseCategory}>Design</Text>
+                <Text style={styles.courseItemTitle}>
+                  Principles of Industri...
+                </Text>
+                <Text style={styles.moduleCount}>7/10 Modulos</Text>
+              </View>
+              <Text style={styles.percentageText}>70%</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.courseItem}>
+              <Image
+                source={{ uri: "https://via.placeholder.com/60" }}
+                style={styles.courseImage}
+              />
+              <View style={styles.courseInfo}>
+                <Text style={styles.courseCategory}>Programação</Text>
+                <Text style={styles.courseItemTitle}>
+                  HTML & CSS: Building...
+                </Text>
+                <Text style={styles.moduleCount}>4/14 Modulos</Text>
+              </View>
+              <Text style={styles.percentageText}>70%</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.popularCoursesSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Cursos mais populares</Text>
+            <TouchableOpacity>
+              <Text style={styles.verTodos}>VER TODOS</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.popularCoursesList}
+          >
+            <TouchableOpacity style={styles.popularCourseCard}>
+              <Image
+                source={{ uri: "https://via.placeholder.com/160x120" }}
+                style={styles.popularCourseImage}
+              />
+              <View style={styles.courseLevelBadge}>
+                <Text style={styles.courseLevelText}>Intermediário</Text>
+              </View>
+              <View style={styles.courseRatingBadge}>
+                <Text style={styles.starIcon}>★</Text>
+                <Text style={styles.ratingText}>4.5</Text>
+              </View>
+              <View style={styles.popularCourseInfo}>
+                <Text style={styles.courseCategory}>Negócios</Text>
+                <Text style={styles.popularCourseTitle}>
+                  Entrepreneurship and New Venture Creation
+                </Text>
+                <View style={styles.instructorInfo}>
+                  <Image
+                    source={{ uri: "https://via.placeholder.com/24" }}
+                    style={styles.instructorAvatar}
+                  />
+                  <Text style={styles.instructorName}>Lívia...</Text>
+                  <View style={styles.courseStats}>
+                    <Feather name="book" size={12} color="#FFF" />
+                    <Text style={styles.statsText}>12 módulos</Text>
+                    <Feather name="users" size={12} color="#FFF" />
+                    <Text style={styles.statsText}>3.8K inscritos</Text>
+                  </View>
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.popularCourseCard}>
+              <Image
+                source={{ uri: "https://via.placeholder.com/160x120" }}
+                style={styles.popularCourseImage}
+              />
+              <View style={styles.courseLevelBadge}>
+                <Text style={styles.courseLevelText}>Iniciante</Text>
+              </View>
+              <View style={styles.courseRatingBadge}>
+                <Text style={styles.starIcon}>★</Text>
+                <Text style={styles.ratingText}>4.8</Text>
+              </View>
+              <View style={styles.popularCourseInfo}>
+                <Text style={styles.courseCategory}>Marketing</Text>
+                <Text style={styles.popularCourseTitle}>
+                  Introduction to Digital Marketing
+                </Text>
+                <View style={styles.instructorInfo}>
+                  <Image
+                    source={{ uri: "https://via.placeholder.com/24" }}
+                    style={styles.instructorAvatar}
+                  />
+                  <Text style={styles.instructorName}>Sara...</Text>
+                  <View style={styles.courseStats}>
+                    <Feather name="book" size={12} color="#FFF" />
+                    <Text style={styles.statsText}>8 módulos</Text>
+                    <Feather name="users" size={12} color="#FFF" />
+                    <Text style={styles.statsText}>2.5K inscritos</Text>
+                  </View>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
         {/* Mentores Section */}
         <View style={styles.mentoresSection}>
           <View style={styles.mentoresHeader}>
@@ -218,9 +346,149 @@ const styles = StyleSheet.create({
     backgroundColor: "#121214",
     padding: 25,
   },
-  // ... (previous styles remain the same)
-
-  // New styles for Mentores section
+  popularCoursesSection: {
+    marginVertical: 24,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  popularCoursesList: {
+    marginHorizontal: -25, // Compensate for container padding
+    paddingHorizontal: 25,
+  },
+  popularCourseCard: {
+    width: 280,
+    backgroundColor: "#29292E",
+    borderRadius: 12,
+    marginRight: 16,
+    overflow: "hidden",
+  },
+  popularCourseImage: {
+    width: "100%",
+    height: 140,
+  },
+  courseLevelBadge: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    backgroundColor: "rgba(41, 41, 46, 0.9)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 16,
+  },
+  courseLevelText: {
+    color: "#FFF",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  courseRatingBadge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    backgroundColor: "rgba(41, 41, 46, 0.9)",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 16,
+  },
+  popularCourseInfo: {
+    padding: 16,
+  },
+  popularCourseTitle: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "500",
+    marginVertical: 8,
+  },
+  instructorInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  instructorAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  courseStats: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  statsText: {
+    color: "#FFF",
+    fontSize: 12,
+    opacity: 0.7,
+    marginRight: 8,
+  },
+  courseCategory: {
+    color: "#00B37E",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  instructorName: {
+    color: "#FFF",
+    fontSize: 14,
+    opacity: 0.7,
+  },
+  starIcon: {
+    color: "#00B37E",
+    marginRight: 4,
+  },
+  ratingText: {
+    color: "#FFF",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  coursesInProgress: {
+    marginVertical: 24,
+  },
+  coursesHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  coursesList: {
+    gap: 12,
+  },
+  courseItem: {
+    flexDirection: "row",
+    backgroundColor: "#29292E",
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+  },
+  courseImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  courseInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  courseItemTitle: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  moduleCount: {
+    color: "#FFF",
+    opacity: 0.7,
+    fontSize: 12,
+  },
+  percentageText: {
+    color: "#00B37E",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   mentoresSection: {
     marginTop: 24,
   },
@@ -229,6 +497,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#FFF",
+    marginBottom: 0,
   },
   verTodos: {
     color: "#00B37E",
@@ -295,7 +569,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
   },
-  // Include all previous styles here
   pointsCard: {
     backgroundColor: "#1C1C1E",
     borderRadius: 12,
@@ -304,6 +577,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
+    marginTop: 20,
   },
   pointsLabel: {
     color: "#FFF",
@@ -378,16 +652,11 @@ const styles = StyleSheet.create({
   courseSection: {
     flex: 1,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#FFF",
-    marginBottom: 16,
-  },
   courseCard: {
     backgroundColor: "#29292E",
     borderRadius: 12,
     padding: 16,
+    marginTop: 20,
   },
   courseHeader: {
     flexDirection: "row",
@@ -406,21 +675,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  instructorName: {
-    color: "#FFF",
-    fontSize: 14,
-  },
   ratingContainer: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  starIcon: {
-    color: "#00B37E",
-    marginRight: 4,
-  },
-  ratingText: {
-    color: "#FFF",
-    fontSize: 14,
   },
   courseTitle: {
     color: "#FFF",
