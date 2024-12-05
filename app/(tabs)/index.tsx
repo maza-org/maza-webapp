@@ -19,7 +19,7 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity onPress={() => router.push("/start/customize")}>
+        <TouchableOpacity onPress={() => router.push("/room/lessons")}>
           <Text style={{ color: "white", fontSize: 20 }}>GO</Text>
         </TouchableOpacity>
         {/* Header with Bell Icon */}
@@ -32,7 +32,7 @@ export default function Home() {
               borderWidth: 0.5,
               padding: 8,
               borderRadius: 50,
-              position: "relative", // Add this to position the notification dot
+              position: "relative",
             }}
           >
             <Feather name="bell" size={24} color="#FFF" />
