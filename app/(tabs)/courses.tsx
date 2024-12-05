@@ -12,7 +12,9 @@ import { useState, useRef, useEffect } from "react";
 import DailyScoreChart from "@/components/Daybar";
 import Search from "@/components/Search";
 import CourseItem from "@/components/CourseItem";
+import FavoriteCoursesGrid from "@/components/FavoriteCoursesGrid";
 
+// Sample completed courses data
 const completedCourses = [
   {
     id: 1,
@@ -388,7 +390,8 @@ export default function MeusCursosScreen() {
         />
       </View>
 
-      {selectedFilter === "completed" ? (
+      {selectedFilter === "favorites" && <FavoriteCoursesGrid />}
+      {selectedFilter === "completed" && (
         <ScrollView style={styles.courseList}>
           {completedCourses.map((course) => (
             <CourseItem
@@ -402,14 +405,14 @@ export default function MeusCursosScreen() {
             />
           ))}
         </ScrollView>
-      ) : (
+      )}
+      {selectedFilter === "inProgress" && (
         <>
           <DailyScoreChart />
           <CourseItem />
           <CourseItem />
         </>
       )}
-
       <FloatingFilterButton onPress={() => setFilterModalVisible(true)} />
 
       <FilterModal
