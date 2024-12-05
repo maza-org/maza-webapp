@@ -1,11 +1,10 @@
 import {
   StyleSheet,
-  TextInput,
   Pressable,
   Animated,
   Modal,
   TouchableOpacity,
-  useColorScheme,
+  ScrollView,
 } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { Text, View, useThemeColor } from "@/components/Themed";
@@ -13,6 +12,54 @@ import { useState, useRef, useEffect } from "react";
 import DailyScoreChart from "@/components/Daybar";
 import Search from "@/components/Search";
 import CourseItem from "@/components/CourseItem";
+
+const completedCourses = [
+  {
+    id: 1,
+    title: "Advanced React Development",
+    progress: 100,
+    rating: 4.8,
+    duration: "12h 30m",
+    instructor: "John Smith",
+    lessons: 24,
+  },
+  {
+    id: 2,
+    title: "UI/UX Design Fundamentals",
+    progress: 100,
+    rating: 4.5,
+    duration: "8h 45m",
+    instructor: "Sarah Wilson",
+    lessons: 18,
+  },
+  {
+    id: 3,
+    title: "Mobile App Architecture",
+    progress: 100,
+    rating: 4.9,
+    duration: "15h 20m",
+    instructor: "Mike Johnson",
+    lessons: 32,
+  },
+  {
+    id: 4,
+    title: "Cloud Computing Essentials",
+    progress: 100,
+    rating: 4.7,
+    duration: "10h 15m",
+    instructor: "Emily Brown",
+    lessons: 22,
+  },
+  {
+    id: 5,
+    title: "Data Structures & Algorithms",
+    progress: 100,
+    rating: 4.6,
+    duration: "20h 00m",
+    instructor: "David Chen",
+    lessons: 40,
+  },
+];
 
 // RadioButton Component
 const RadioButton = ({
@@ -341,9 +388,27 @@ export default function MeusCursosScreen() {
         />
       </View>
 
-      <DailyScoreChart />
-      <CourseItem />
-      <CourseItem />
+      {selectedFilter === "completed" ? (
+        <ScrollView style={styles.courseList}>
+          {completedCourses.map((course) => (
+            <CourseItem
+              key={course.id}
+              title={course.title}
+              instructor={course.instructor}
+              duration={course.duration}
+              lessons={course.lessons}
+              progress={course.progress}
+              rating={course.rating}
+            />
+          ))}
+        </ScrollView>
+      ) : (
+        <>
+          <DailyScoreChart />
+          <CourseItem />
+          <CourseItem />
+        </>
+      )}
 
       <FloatingFilterButton onPress={() => setFilterModalVisible(true)} />
 
@@ -545,5 +610,10 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "500",
+  },
+  courseList: {
+    flex: 1,
+    paddingHorizontal: 16,
+    marginTop: 16,
   },
 });
