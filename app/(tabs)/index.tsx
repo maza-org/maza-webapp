@@ -19,11 +19,36 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        <TouchableOpacity onPress={() => router.push("/start/customize")}>
+          <Text style={{ color: "white", fontSize: 20 }}>GO</Text>
+        </TouchableOpacity>
         {/* Header with Bell Icon */}
         <View style={styles.header}>
           <Text style={styles.headerText}>O que pretende aprender hoje?</Text>
-          <TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              borderStyle: "solid",
+              borderColor: "#b3b3b3",
+              borderWidth: 0.5,
+              padding: 8,
+              borderRadius: 50,
+              position: "relative", // Add this to position the notification dot
+            }}
+          >
             <Feather name="bell" size={24} color="#FFF" />
+            <View
+              style={{
+                position: "absolute",
+                right: 6,
+                top: 6,
+                backgroundColor: "#FF4444",
+                width: 13,
+                height: 13,
+                borderRadius: 50,
+                borderWidth: 2,
+                borderColor: "#121214",
+              }}
+            />
           </TouchableOpacity>
         </View>
 
@@ -359,7 +384,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   popularCoursesList: {
-    marginHorizontal: -25, // Compensate for container padding
+    marginHorizontal: -25,
     paddingHorizontal: 25,
   },
   popularCourseCard: {
@@ -645,7 +670,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     backgroundColor: "#29292E",
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 50,
     marginBottom: 8,
   },
   categoryText: {

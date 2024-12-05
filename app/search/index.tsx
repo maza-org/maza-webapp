@@ -195,6 +195,11 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginRight: 16,
+    borderStyle: "solid",
+    borderColor: "#b3b3b3",
+    borderWidth: 0.5,
+    padding: 8,
+    borderRadius: 50,
   },
   headerTitle: {
     fontSize: 24,
@@ -238,7 +243,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#29292E",
     borderRadius: 999,
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 12,
     gap: 8,
   },

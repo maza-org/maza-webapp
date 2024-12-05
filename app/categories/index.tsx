@@ -77,6 +77,10 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
+    borderStyle: "solid",
+    borderColor: "#b3b3b3",
+    borderWidth: 0.5,
+    borderRadius: 50,
   },
   headerTitle: {
     fontSize: 18,

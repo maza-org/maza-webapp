@@ -40,7 +40,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="courses"
         options={{
-          title: "Cursos",
+          title: "Meus Cursos",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
