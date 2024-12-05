@@ -70,7 +70,10 @@ export default function Home() {
             <Text style={styles.categoryText}>Saúde</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.categoryItem}>
+          <TouchableOpacity
+            style={styles.categoryItem}
+            onPress={() => router.push("/categories")}
+          >
             <View style={styles.iconContainer}>
               <Feather name="grid" size={20} color="#FFF" />
             </View>
