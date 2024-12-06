@@ -8,9 +8,9 @@ import {
   TouchableOpacity,
   Image,
   ImageBackground,
-  Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 interface Module {
   id: number;
@@ -42,6 +42,11 @@ export default function CourseDetail(): JSX.Element {
   const [activeTab, setActiveTab] = useState<"lessons" | "opinions">(
     "opinions",
   );
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const fullDescription =
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras congue arcu purus, vitae vehiculo tortor iaculis vel. Nulla facilisi. Morbi eu elit odio. Fusce vestibulum porttitor mauris quis viverra. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
+  const shortDescription = fullDescription.slice(0, 120) + "...";
 
   const ratings = [
     { label: "Qualidade dos videos", value: 4.5 },
@@ -116,7 +121,7 @@ export default function CourseDetail(): JSX.Element {
           <View style={styles.headerOverlay}>
             <View style={styles.headerActions}>
               <TouchableOpacity style={styles.iconButton}>
-                <Feather name="arrow-left" size={24} color="#FFF" />
+                <Feather name="chevron-left" size={24} color="#FFF" />
               </TouchableOpacity>
               <View style={styles.rightActions}>
                 <TouchableOpacity style={styles.iconButton}>
@@ -128,7 +133,7 @@ export default function CourseDetail(): JSX.Element {
               </View>
             </View>
             <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>Intermédio 🎯</Text>
+              <Text style={styles.levelText}>Intermédio</Text>
             </View>
           </View>
         </ImageBackground>
@@ -145,12 +150,17 @@ export default function CourseDetail(): JSX.Element {
             <Text style={styles.instructorName}>Lívia Donin</Text>
             <Text style={styles.categoryTag}>• Negócios</Text>
           </View>
-          <Text style={styles.description}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras congue
-            arcu purus, vitae vehiculo tortor iaculis vel. Nulla facilisi. Morbi
-            eu elit odio. Fusce vestibulum porttitor mauris quis viverra.{" "}
-            <Text style={styles.seeMore}>Ver mais</Text>
-          </Text>
+          <View>
+            <Text style={styles.description}>
+              {isExpanded ? fullDescription : shortDescription}{" "}
+              <Text
+                style={styles.seeMore}
+                onPress={() => setIsExpanded(!isExpanded)}
+              >
+                {isExpanded ? "Ver menos" : "Ver mais"}
+              </Text>
+            </Text>
+          </View>
 
           <View style={styles.tabContainer}>
             <Tab
@@ -176,22 +186,30 @@ export default function CourseDetail(): JSX.Element {
                 style={styles.moduleItem}
                 disabled={module.isLocked}
               >
-                <View style={styles.moduleInfo}>
-                  <Text style={styles.moduleNumber}>{module.id}.</Text>
-                  <Text style={styles.moduleTitle}>{module.title}</Text>
-                </View>
-                <View style={styles.moduleDetails}>
+                <View style={styles.moduleContent}>
+                  <View style={styles.moduleTopRow}>
+                    <View style={styles.moduleInfo}>
+                      <Text style={styles.moduleNumber}>{module.id}.</Text>
+                      <Text style={styles.moduleTitle}>{module.title}</Text>
+                    </View>
+                    <View style={styles.moduleDetails}>
+                      {module.isLocked ? (
+                        <View style={styles.iconContainer}>
+                          <Feather name="lock" size={20} color="#4db5ff" />
+                        </View>
+                      ) : (
+                        <View style={styles.iconContainer}>
+                          <Ionicons name="play" size={20} color="#4db5ff" />
+                        </View>
+                      )}
+                    </View>
+                  </View>
                   <View style={styles.videoCount}>
                     <Feather name="film" size={14} color="#A8A8B3" />
                     <Text style={styles.videoCountText}>
                       {module.videoCount} videos
                     </Text>
                   </View>
-                  {module.isLocked ? (
-                    <Feather name="lock" size={20} color="#A8A8B3" />
-                  ) : (
-                    <Feather name="chevron-right" size={20} color="#00B37E" />
-                  )}
                 </View>
               </TouchableOpacity>
             ))}
@@ -203,7 +221,7 @@ export default function CourseDetail(): JSX.Element {
                 <Text style={styles.ratingNumber}>4,5</Text>
                 <View style={styles.starsContainer}>
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <Feather
+                    <Ionicons
                       key={star}
                       name="star"
                       size={20}
@@ -259,7 +277,7 @@ export default function CourseDetail(): JSX.Element {
                   </View>
                   <View style={styles.starsContainer}>
                     {[1, 2, 3, 4, 5].map((star) => (
-                      <Feather
+                      <Ionicons
                         key={star}
                         name="star"
                         size={16}
@@ -319,7 +337,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   levelBadge: {
-    alignSelf: "flex-start",
+    alignSelf: "center",
     backgroundColor: "rgba(0,0,0,0.7)",
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -356,7 +374,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   categoryTag: {
-    color: "#00B37E",
+    color: "#1fa2df",
     fontSize: 14,
     marginLeft: 8,
   },
@@ -367,7 +385,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   seeMore: {
-    color: "#00B37E",
+    color: "#1fa2df",
     fontWeight: "500",
   },
   tabContainer: {
@@ -382,7 +400,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: "#00B37E",
+    borderBottomColor: "#1fa2df",
   },
   tabText: {
     color: "#A8A8B3",
@@ -390,19 +408,24 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   activeTabText: {
-    color: "#00B37E",
+    color: "#1fa2df",
   },
   modulesList: {
     padding: 24,
   },
   moduleItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     padding: 16,
     backgroundColor: "#202024",
     borderRadius: 15,
     marginBottom: 12,
+  },
+  moduleContent: {
+    gap: 12,
+  },
+  moduleTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   moduleInfo: {
     flex: 1,
@@ -423,12 +446,17 @@ const styles = StyleSheet.create({
   moduleDetails: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+  },
+  iconContainer: {
+    backgroundColor: "#2a2d3e",
+    borderRadius: 50,
+    padding: 5,
   },
   videoCount: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    marginStart: 25,
   },
   videoCountText: {
     color: "#A8A8B3",
@@ -440,7 +468,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#323238",
   },
   startButton: {
-    backgroundColor: "#00B37E",
+    backgroundColor: "#1fa2df",
     padding: 16,
     borderRadius: 50,
     alignItems: "center",
@@ -509,7 +537,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#202024",
   },
   filterButtonActive: {
-    backgroundColor: "#00B37E",
+    backgroundColor: "#1fa2df",
   },
   filterText: {
     color: "#A8A8B3",

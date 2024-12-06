@@ -18,7 +18,7 @@ interface CourseModule {
   locked?: boolean;
 }
 
-export default function CourseScreen(): JSX.Element {
+export default function CourseScreen() {
   const modules: CourseModule[] = [
     {
       id: 1,

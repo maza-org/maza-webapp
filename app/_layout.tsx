@@ -25,44 +25,11 @@ export const unstable_settings = {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-// Create custom themes with Manrope font
-const customDefaultTheme = {
-  ...DefaultTheme,
-  fonts: {
-    ...DefaultTheme.fonts,
-    regular: {
-      fontFamily: "Manrope-Regular",
-    },
-    medium: {
-      fontFamily: "Manrope-Medium",
-    },
-    bold: {
-      fontFamily: "Manrope-Bold",
-    },
-  },
-};
-
-const customDarkTheme = {
-  ...DarkTheme,
-  fonts: {
-    ...DarkTheme.fonts,
-    regular: {
-      fontFamily: "Manrope-Regular",
-    },
-    medium: {
-      fontFamily: "Manrope-Medium",
-    },
-    bold: {
-      fontFamily: "Manrope-Bold",
-    },
-  },
-};
-
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    "Manrope-Regular": require("../assets/fonts/Manrope-Regular.ttf"),
-    "Manrope-Medium": require("../assets/fonts/Manrope-Medium.ttf"),
-    "Manrope-Bold": require("../assets/fonts/Manrope-Bold.ttf"),
+    ManropeRegular: require("../assets/fonts/Manrope-Regular.ttf"),
+    ManropeBold: require("../assets/fonts/Manrope-Bold.ttf"),
+    ManropeMedium: require("../assets/fonts/Manrope-Medium.ttf"),
     ...FontAwesome.font,
   });
 
@@ -89,14 +56,10 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider
-      value={colorScheme === "dark" ? customDarkTheme : customDefaultTheme}
+      value={colorScheme === "dark" ? { ...DarkTheme } : DefaultTheme}
     >
-      <Stack
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="(tabs)" />
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: "modal" }} />
       </Stack>
     </ThemeProvider>

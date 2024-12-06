@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   courseCategory: {
-    color: "#00B37E",
+    color: "#1fa2df",
     fontSize: 14,
     fontWeight: "500",
   },
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   starIcon: {
-    color: "#00B37E",
+    color: "#1fa2df",
     marginRight: 4,
   },
   ratingText: {
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   percentageText: {
-    color: "#00B37E",
+    color: "#1fa2df",
     fontSize: 16,
     fontWeight: "600",
   },
@@ -531,9 +531,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FFF",
     marginBottom: 0,
+    fontFamily: "ManropeBold",
   },
   verTodos: {
-    color: "#00B37E",
+    color: "#1fa2df",
     fontSize: 14,
     fontWeight: "500",
   },
@@ -637,6 +638,7 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 24,
     fontWeight: "600",
+    fontFamily: "ManropeBold",
     color: "#FFF",
     width: 200,
   },
@@ -655,6 +657,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     marginLeft: 8,
+    fontFamily: "ManropeRegular",
   },
   searchIcon: {
     marginRight: 8,
@@ -676,6 +679,7 @@ const styles = StyleSheet.create({
   categoryText: {
     color: "#FFF",
     fontSize: 12,
+    fontFamily: "ManropeRegular",
   },
   courseSection: {
     flex: 1,
@@ -731,7 +735,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#00B37E",
+    backgroundColor: "#1fa2df",
     borderRadius: 4,
   },
 });
