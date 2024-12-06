@@ -477,6 +477,7 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "600",
+    fontFamily: "ManropeBold",
   },
   opinionsContainer: {
     padding: 24,
