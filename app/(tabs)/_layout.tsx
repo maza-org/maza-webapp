@@ -1,8 +1,6 @@
 import React from "react";
 import { Tabs } from "expo-router";
-import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
-import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
@@ -18,12 +16,12 @@ export default function TabLayout() {
           borderTopColor: "rgba(255, 255, 255, 0.1)",
           borderTopWidth: 1,
           paddingTop: 5,
-          paddingBottom: 5,
-          height: 60,
+          paddingBottom: 20,
+          height: 80,
         },
         tabBarLabelStyle: {
           fontSize: 12,
-          marginTop: 2,
+          marginTop: 10,
         },
         tabBarInactiveTintColor: "#7C7C8A",
       }}
@@ -33,7 +31,7 @@ export default function TabLayout() {
         options={{
           title: "Início",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Ionicons name="home" size={size} color={color} />
           ),
         }}
       />
@@ -42,7 +40,7 @@ export default function TabLayout() {
         options={{
           title: "Meus Cursos",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <Ionicons name="document-text" size={size} color={color} />
           ),
         }}
       />
@@ -51,7 +49,7 @@ export default function TabLayout() {
         options={{
           title: "Oportunidades",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="briefcase-outline" size={size} color={color} />
+            <Ionicons name="chatbubble-ellipses" size={size} color={color} />
           ),
         }}
       />
@@ -60,7 +58,7 @@ export default function TabLayout() {
         options={{
           title: "Perfil",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <Ionicons name="person" size={size} color={color} />
           ),
         }}
       />
