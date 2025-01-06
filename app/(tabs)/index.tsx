@@ -19,7 +19,7 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity onPress={() => router.push("/room/lessons")}>
+        <TouchableOpacity onPress={() => router.push("/start/customize")}>
           <Text style={{ color: "white", fontSize: 20 }}>GO</Text>
         </TouchableOpacity>
         {/* Header with Bell Icon */}

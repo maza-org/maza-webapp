@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,9 +10,9 @@ import {
   ViewStyle,
   TextStyle,
   TouchableOpacityProps,
+  ActivityIndicator,
 } from "react-native";
 
-// Types and Interfaces
 interface TopicButtonProps extends TouchableOpacityProps {
   topic: string;
   isSelected: boolean;
@@ -36,12 +36,11 @@ interface StylesType {
   confirmButtonText: TextStyle;
   skipButton: ViewStyle;
   skipButtonText: TextStyle;
+  loadingContainer: ViewStyle;
 }
 
-// Component Types
 type Topic = string;
 
-// Subcomponent for Topic Button
 function TopicButton({
   topic,
   isSelected,
@@ -63,22 +62,27 @@ function TopicButton({
 
 export default function Customize(): JSX.Element {
   const [selectedTopics, setSelectedTopics] = useState<Topic[]>([]);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const topics: Topic[] = [
-    "Negócios",
-    "Psicologia",
-    "Tecnologia",
-    "Inteligencia Artificial",
-    "Design",
-    "Comunicação",
-    "Artes",
-    "Marketing",
-    "Human-Computer Interaction",
-    "Criatividade",
-    "Inovação",
-    "Problem-solving",
-    "Idiomas",
-  ];
+  useEffect(() => {
+    fetchTopics();
+  }, []);
+
+  const fetchTopics = async () => {
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:1337/api/subjects?fields=name&sort=name&locale=pt",
+      );
+      const { data } = await response.json();
+      setTopics(data.map((item) => item.name));
+    } catch (error) {
+      console.error("Error fetching topics:", error);
+      setTopics([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const toggleTopic = (topic: Topic): void => {
     setSelectedTopics((prev) =>
@@ -87,14 +91,22 @@ export default function Customize(): JSX.Element {
   };
 
   const handleConfirm = (): void => {
-    // Handle confirmation logic here
     console.log("Selected topics:", selectedTopics);
   };
 
   const handleSkip = (): void => {
-    // Handle skip logic here
     console.log("Skipped topic selection");
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#00B37E" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -145,7 +157,6 @@ export default function Customize(): JSX.Element {
   );
 }
 
-// StyleSheet with proper typing
 const styles = StyleSheet.create<StylesType>({
   container: {
     flex: 1,
@@ -191,7 +202,7 @@ const styles = StyleSheet.create<StylesType>({
   },
   topicButtonSelected: {
     backgroundColor: "#323238",
-    borderColor: "#00B37E",
+    borderColor: "#22ACE3",
   },
   topicText: {
     color: "#A8A8B3",
@@ -206,7 +217,7 @@ const styles = StyleSheet.create<StylesType>({
     borderTopColor: "#323238",
   },
   confirmButton: {
-    backgroundColor: "#00B37E",
+    backgroundColor: "#22ACE3",
     padding: 16,
     borderRadius: 50,
     alignItems: "center",
@@ -227,5 +238,10 @@ const styles = StyleSheet.create<StylesType>({
   skipButtonText: {
     color: "#A8A8B3",
     fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

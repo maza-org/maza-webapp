@@ -47,7 +47,7 @@ export default function Photo({}: PhotoScreenProps): JSX.Element {
             <Image source={{ uri: photoUri }} style={styles.previewImage} />
           ) : (
             <>
-              <Feather name="upload" size={24} color="#00B37E" />
+              <Feather name="upload" size={24} color="#22ACE3" />
               <Text style={styles.uploadText}>
                 Upload your photos with a{"\n"}maximum size of 5 MB
               </Text>
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     marginTop: "auto",
   },
   confirmButton: {
-    backgroundColor: "#00B37E",
+    backgroundColor: "#22ACE3",
     padding: 16,
     borderRadius: 50,
     alignItems: "center",

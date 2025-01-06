@@ -190,6 +190,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#00B37E",
+    backgroundColor: "#22ACE3",
   },
 });

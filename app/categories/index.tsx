@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import Header from "@/components/Header";
 
 type Category = {
   id: number;
@@ -20,26 +21,16 @@ const categories: Category[] = [
 ];
 
 export default function CategorySelection() {
-  const handleBack = () => {
-    router.back();
-  };
-
   const handleCategoryPress = (category: Category) => {
-    // Navigate to category detail page
-    // router.push({
-    //   pathname: "/category/[id]",
-    //   params: { id: category.id },
-    // });
+    router.push({
+      pathname: "/categories/[id]",
+      params: { id: category.id, name: category.name },
+    });
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Escolha uma categoria</Text>
-      </View>
+      <Header title={"Escolha uma categoria"} />
 
       <View style={styles.categoriesList}>
         {categories.map((category) => (
