@@ -5,7 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
-  Image,
+  FlatList,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import Shimmer from "@/components/Shimmer";
@@ -63,58 +63,70 @@ export default function Category() {
     console.log(course);
   };
 
+  const renderCourseItem = ({ item: course }: { item: Course }) => (
+    <TouchableOpacity
+      style={styles.courseCard}
+      onPress={() => handlePressCourse(course)}
+    >
+      <View style={styles.thumbnail}>
+        {/* You can add a placeholder image or icon here */}
+      </View>
+      <View style={styles.courseInfo}>
+        <Text style={styles.courseTitle}>{course.title}</Text>
+        <View style={styles.courseMetadata}>
+          <Text style={styles.rating}>★ {course.rating_avg.toFixed(1)}</Text>
+          {course.author && <Text style={styles.author}>{course.author}</Text>}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderLoadingShimmer = () => (
+    <FlatList
+      data={[...Array(7)]}
+      keyExtractor={(_, index) => `shimmer-${index}`}
+      renderItem={({ index }) => (
+        <View key={index} style={styles.courseCard}>
+          <Shimmer>
+            <View style={styles.thumbnail} />
+          </Shimmer>
+          <View style={styles.courseInfo}>
+            <Shimmer>
+              <View style={styles.titleShimmer} />
+            </Shimmer>
+            <Shimmer>
+              <View style={styles.descriptionShimmer} />
+            </Shimmer>
+          </View>
+        </View>
+      )}
+      contentContainerStyle={styles.listContent}
+    />
+  );
+
+  const ListEmptyComponent = () => (
+    <Text style={styles.noCourses}>Nenhum curso encontrado</Text>
+  );
+
+  const ListHeaderComponent = isLoading ? (
+    <Text style={styles.loadingText}>Carregando cursos...</Text>
+  ) : null;
+
   return (
     <SafeAreaView style={styles.container}>
       <Header title={name as string} />
 
       {isLoading ? (
-        <>
-          <Text style={styles.loadingText}>Carregando cursos...</Text>
-          {[...Array(7)].map((_, i) => (
-            <View key={i} style={styles.courseCard}>
-              <Shimmer>
-                <View style={styles.thumbnail} />
-              </Shimmer>
-              <View style={styles.courseInfo}>
-                <Shimmer>
-                  <View style={styles.titleShimmer} />
-                </Shimmer>
-                <Shimmer>
-                  <View style={styles.descriptionShimmer} />
-                </Shimmer>
-              </View>
-            </View>
-          ))}
-        </>
+        renderLoadingShimmer()
       ) : (
-        <>
-          {courses.length === 0 ? (
-            <Text style={styles.noCourses}>Nenhum curso encontrado</Text>
-          ) : (
-            courses.map((course) => (
-              <TouchableOpacity
-                key={course.id}
-                style={styles.courseCard}
-                onPress={() => handlePressCourse(course)}
-              >
-                <View style={styles.thumbnail}>
-                  {/* You can add a placeholder image or icon here */}
-                </View>
-                <View style={styles.courseInfo}>
-                  <Text style={styles.courseTitle}>{course.title}</Text>
-                  <View style={styles.courseMetadata}>
-                    <Text style={styles.rating}>
-                      ★ {course.rating_avg.toFixed(1)}
-                    </Text>
-                    {course.author && (
-                      <Text style={styles.author}>{course.author}</Text>
-                    )}
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </>
+        <FlatList
+          data={courses}
+          renderItem={renderCourseItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={ListEmptyComponent}
+          ListHeaderComponent={ListHeaderComponent}
+        />
       )}
     </SafeAreaView>
   );
@@ -125,23 +137,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#121214",
   },
+  listContent: {
+    paddingHorizontal: 24,
+  },
   loadingText: {
     color: "#666",
     fontSize: 16,
     marginTop: 25,
-    marginLeft: 24,
     marginBottom: 24,
   },
   noCourses: {
     color: "#666",
     fontSize: 16,
     marginTop: 25,
-    marginLeft: 24,
   },
   courseCard: {
     flexDirection: "row",
     padding: 16,
-    marginHorizontal: 24,
     backgroundColor: "#202024",
     borderRadius: 12,
     marginBottom: 16,
