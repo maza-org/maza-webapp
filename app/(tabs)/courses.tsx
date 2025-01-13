@@ -5,6 +5,7 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
+  SafeAreaView,
 } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { Text, View, useThemeColor } from "@/components/Themed";
@@ -338,7 +339,7 @@ export default function MeusCursosScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Meus Cursos</Text>
         <View style={styles.headerButtons}>
@@ -420,7 +421,7 @@ export default function MeusCursosScreen() {
         onClose={() => setFilterModalVisible(false)}
         onApply={handleFilterApply}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 const styles = StyleSheet.create({

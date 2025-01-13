@@ -39,7 +39,7 @@ export default function ProfileScreen() {
       }
     } catch (error) {
       console.error("Error loading user data:", error);
-      Alert.alert("Error", "Failed to load user data");
+      Alert.alert("Erro", "Falha ao carregar dados do utilizador");
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ export default function ProfileScreen() {
       router.replace("/");
     } catch (error) {
       console.error("Error during logout:", error);
-      Alert.alert("Error", "Failed to logout");
+      Alert.alert("Erro", "Falha ao terminar sessão");
     }
   };
 
@@ -72,8 +72,8 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.errorTitle}>Sessão Expirada</Text>
           <Text style={styles.errorText}>
-            Sua sessão expirou ou você não está conectado. Por favor, faça login
-            novamente para acessar seu perfil.
+            A sua sessão expirou ou não está autenticado. Por favor, inicie
+            sessão novamente para aceder ao seu perfil.
           </Text>
           <TouchableOpacity
             style={styles.loginButton}
@@ -85,7 +85,7 @@ export default function ProfileScreen() {
               color="#FFF"
               style={styles.loginButtonIcon}
             />
-            <Text style={styles.loginButtonText}>Fazer Login</Text>
+            <Text style={styles.loginButtonText}>Iniciar Sessão</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -125,7 +125,7 @@ export default function ProfileScreen() {
           <View style={styles.infoItem}>
             <View style={styles.infoHeader}>
               <Feather name="phone" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Phone Number</Text>
+              <Text style={styles.infoLabel}>Número de Telemóvel</Text>
             </View>
             <Text style={styles.infoValue}>{user.phone}</Text>
           </View>
@@ -135,16 +135,18 @@ export default function ProfileScreen() {
               <Feather name="mail" size={20} color="#1fa2df" />
               <Text style={styles.infoLabel}>Email</Text>
             </View>
-            <Text style={styles.infoValue}>{user.email || "Not provided"}</Text>
+            <Text style={styles.infoValue}>
+              {user.email || "Não fornecido"}
+            </Text>
           </View>
 
           <View style={styles.infoItem}>
             <View style={styles.infoHeader}>
               <Feather name="tag" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Yoma ID</Text>
+              <Text style={styles.infoLabel}>ID Yoma</Text>
             </View>
             <Text style={styles.infoValue}>
-              {user.yoma_id || "Not connected"}
+              {user.yoma_id || "Não conectado"}
             </Text>
           </View>
         </View>
@@ -153,7 +155,7 @@ export default function ProfileScreen() {
       <View style={styles.footer}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Feather name="log-out" size={20} color="#FFF" />
-          <Text style={styles.logoutButtonText}>Logout</Text>
+          <Text style={styles.logoutButtonText}>Terminar Sessão</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
