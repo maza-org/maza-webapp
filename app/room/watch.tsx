@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 interface CourseModule {
   id: number;
@@ -45,7 +46,12 @@ export default function CourseScreen() {
       <ScrollView style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => {
+              router.back();
+            }}
+          >
             <Feather name="chevron-left" size={24} color="#FFF" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.shareButton}>
