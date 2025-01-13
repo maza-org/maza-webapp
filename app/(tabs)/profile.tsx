@@ -66,13 +66,28 @@ export default function ProfileScreen() {
   if (!user) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>No user data found</Text>
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => router.replace("/")}
-        >
-          <Text style={styles.loginButtonText}>Go to Login</Text>
-        </TouchableOpacity>
+        <View style={styles.errorContent}>
+          <View style={styles.errorIconContainer}>
+            <Feather name="user-x" size={48} color="#1fa2df" />
+          </View>
+          <Text style={styles.errorTitle}>Sessão Expirada</Text>
+          <Text style={styles.errorText}>
+            Sua sessão expirou ou você não está conectado. Por favor, faça login
+            novamente para acessar seu perfil.
+          </Text>
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => router.replace("/login")}
+          >
+            <Feather
+              name="log-in"
+              size={20}
+              color="#FFF"
+              style={styles.loginButtonIcon}
+            />
+            <Text style={styles.loginButtonText}>Fazer Login</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -163,17 +178,49 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 24,
   },
-  errorText: {
+  errorContent: {
+    width: "100%",
+    maxWidth: 320,
+    alignItems: "center",
+    backgroundColor: "#202024",
+    borderRadius: 16,
+    padding: 24,
+  },
+  errorIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(31, 162, 223, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  errorTitle: {
     color: "#FFF",
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  errorText: {
+    color: "#A8A8B3",
     fontSize: 16,
-    marginBottom: 16,
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 24,
   },
   loginButton: {
     backgroundColor: "#1fa2df",
     padding: 16,
     borderRadius: 50,
     width: "100%",
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  loginButtonIcon: {
+    marginRight: 8,
   },
   loginButtonText: {
     color: "#FFF",
