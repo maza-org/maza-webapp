@@ -9,13 +9,13 @@ import {
   Image,
   ImageBackground,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
-import Reviews from "@/components/Reviews";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert } from "react-native";
+import Reviews from "@/components/Reviews";
 
 interface Content {
   id: number;
@@ -56,6 +56,16 @@ interface Subject {
   name: string;
 }
 
+interface User {
+  id: string;
+  documentId: string;
+  email: string;
+  fullname: string;
+  phone: string;
+  yoma_id: string;
+  token: string;
+}
+
 interface CourseData {
   id: number;
   documentId: string;
@@ -68,6 +78,7 @@ interface CourseData {
   subjects: Subject[];
   final_test: FinalTest;
   modules: Module[];
+  isFavorite?: boolean;
 }
 
 interface TabProps {
@@ -93,13 +104,27 @@ export default function CourseDetail(): JSX.Element {
   const [activeTab, setActiveTab] = useState<"lessons" | "opinions">("lessons");
   const [courseData, setCourseData] = useState<CourseData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
-  // Get the documentId from route parameters
   const { documentId } = useLocalSearchParams();
 
   useEffect(() => {
+    loadUserData();
     fetchCourseData();
-  }, [documentId]); // Add documentId as dependency
+  }, [documentId]);
+
+  const loadUserData = async () => {
+    try {
+      const userData = await AsyncStorage.getItem("@user");
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+      Alert.alert("Erro", "Falha ao carregar dados do utilizador");
+    }
+  };
 
   const fetchCourseData = async () => {
     try {
@@ -112,6 +137,40 @@ export default function CourseDetail(): JSX.Element {
       console.error("Error fetching course data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFavoritePress = async () => {
+    if (!user?.token) {
+      Alert.alert("Erro", "Você precisa estar logado para favoritar um curso");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:1337/api/user-courses/favorites",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({
+            data: {
+              course: documentId,
+            },
+          }),
+        },
+      );
+
+      if (response.ok) {
+        setIsFavorite(true);
+      } else {
+        throw new Error("Failed to add to favorites");
+      }
+    } catch (error) {
+      console.error("Error adding to favorites:", error);
+      Alert.alert("Erro", "Falha ao adicionar aos favoritos");
     }
   };
 
@@ -150,8 +209,15 @@ export default function CourseDetail(): JSX.Element {
                 <TouchableOpacity style={styles.iconButton}>
                   <Feather name="share" size={24} color="#FFF" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton}>
-                  <Feather name="heart" size={24} color="#FFF" />
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={handleFavoritePress}
+                >
+                  <Ionicons
+                    name={isFavorite ? "heart" : "heart-outline"}
+                    size={24}
+                    color={isFavorite ? "#ff0000" : "#FFF"}
+                  />
                 </TouchableOpacity>
               </View>
             </View>
