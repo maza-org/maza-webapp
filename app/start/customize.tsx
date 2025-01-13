@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
   Text,
@@ -6,37 +7,18 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ScrollView,
-  StyleProp,
   ViewStyle,
   TextStyle,
   TouchableOpacityProps,
   ActivityIndicator,
+  Alert,
 } from "react-native";
+import { User } from "@/types/user";
+import { router } from "expo-router";
 
 interface TopicButtonProps extends TouchableOpacityProps {
   topic: string;
   isSelected: boolean;
-}
-
-interface StylesType {
-  container: ViewStyle;
-  scrollView: ViewStyle;
-  header: ViewStyle;
-  title: TextStyle;
-  subtitle: TextStyle;
-  sectionTitle: TextStyle;
-  topicsContainer: ViewStyle;
-  topicButton: ViewStyle;
-  topicButtonSelected: ViewStyle;
-  topicText: TextStyle;
-  topicTextSelected: TextStyle;
-  footer: ViewStyle;
-  confirmButton: ViewStyle;
-  confirmButtonDisabled: ViewStyle;
-  confirmButtonText: TextStyle;
-  skipButton: ViewStyle;
-  skipButtonText: TextStyle;
-  loadingContainer: ViewStyle;
 }
 
 type Topic = string;
@@ -46,7 +28,7 @@ function TopicButton({
   isSelected,
   onPress,
   ...props
-}: TopicButtonProps): JSX.Element {
+}: TopicButtonProps) {
   return (
     <TouchableOpacity
       style={[styles.topicButton, isSelected && styles.topicButtonSelected]}
@@ -60,13 +42,36 @@ function TopicButton({
   );
 }
 
-export default function Customize(): JSX.Element {
+export default function Customize() {
   const [selectedTopics, setSelectedTopics] = useState<Topic[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    fetchTopics();
+    const initialize = async () => {
+      try {
+        // Read the saved user data
+        const userString = await AsyncStorage.getItem("@user");
+        if (userString) {
+          const userData = JSON.parse(userString);
+          setUser(userData);
+          console.log("Retrieved user data:", userData);
+        } else {
+          console.log("No user data found");
+        }
+
+        // Fetch topics
+        await fetchTopics();
+      } catch (error) {
+        console.error("Error initializing:", error);
+        Alert.alert("Error", "Failed to load user data or topics");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initialize();
   }, []);
 
   const fetchTopics = async () => {
@@ -78,9 +83,8 @@ export default function Customize(): JSX.Element {
       setTopics(data.map((item) => item.name));
     } catch (error) {
       console.error("Error fetching topics:", error);
+      Alert.alert("Error", "Failed to load topics");
       setTopics([]);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -90,12 +94,48 @@ export default function Customize(): JSX.Element {
     );
   };
 
-  const handleConfirm = (): void => {
-    console.log("Selected topics:", selectedTopics);
+  const handleConfirm = async (): Promise<void> => {
+    if (selectedTopics && user) {
+      router.push("/");
+    }
+    if (!user) {
+      Alert.alert("Error", "No user data found. Please try logging in again.");
+      return;
+    }
+
+    console.log(JSON.stringify(user));
+
+    try {
+      setIsLoading(true);
+      // Add your API call here to save the selected topics for the user
+      console.log("Saving topics for user:", user.id, selectedTopics);
+
+      // Example API call (replace with your actual endpoint):
+      // await fetch("http://127.0.0.1:1337/api/users/topics", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     userId: user.id,
+      //     topics: selectedTopics,
+      //   }),
+      // });
+
+      // On success, you might want to navigate to the next screen
+      // router.push("/home");
+    } catch (error) {
+      console.error("Error saving topics:", error);
+      Alert.alert("Error", "Failed to save topics. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSkip = (): void => {
     console.log("Skipped topic selection");
+    // Navigate to next screen
+    // router.push("/home");
   };
 
   if (isLoading) {

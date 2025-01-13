@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,24 +6,75 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { router } from "expo-router";
 import Button from "@/components/Button";
 
 export default function Login() {
-  const handleRegister = () => {
-    // Handle registration logic
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async () => {
+    // Basic validation
+    if (!phoneNumber) {
+      Alert.alert("Erro", "Por favor preencha o número de telefone");
+      return;
+    }
+
+    // Format phone number to include country code if not present
+    const formattedPhone = phoneNumber.startsWith("+258")
+      ? phoneNumber
+      : `+258${phoneNumber}`;
+
+    setLoading(true);
+    try {
+      const response = await fetch("http://127.0.0.1:1337/api/otps", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: {
+            phone: formattedPhone,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      console.log(data);
+      // Navigate to OTP verification screen
+      router.push({
+        pathname: "/login/otp",
+        params: {
+          phone: formattedPhone,
+          otpId: data.otpID,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      Alert.alert(
+        "Erro",
+        "Não foi possível gerar o código OTP. Por favor, tente novamente.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.headerText}>Cadastrar</Text>
+        <Text style={styles.headerText}>Faça login com a sua conta</Text>
 
         <View style={styles.loginContainer}>
-          <Text style={styles.loginText}>Já tem uma conta? </Text>
+          <Text style={styles.loginText}>Não possui uma conta? </Text>
           <TouchableOpacity onPress={() => router.push("/login")}>
-            <Text style={styles.loginLink}>Faça Login</Text>
+            <Text style={styles.loginLink}>Registar</Text>
           </TouchableOpacity>
         </View>
 
@@ -35,21 +86,19 @@ export default function Login() {
               placeholder="821231231"
               placeholderTextColor="#666"
               keyboardType="phone-pad"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Full Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="João Carlos António"
-              placeholderTextColor="#666"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
             />
           </View>
         </View>
 
         <View>
-          <Button text={"Registar"} handle={handleRegister} />
+          <Button
+            text={loading ? "A processar..." : "Entrar"}
+            handle={handleRegister}
+            disabled={!phoneNumber || loading}
+            loading={loading}
+          />
         </View>
       </View>
     </SafeAreaView>
@@ -64,12 +113,14 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 24,
+    gap: 24,
   },
   headerText: {
     fontSize: 28,
     fontWeight: "600",
     color: "#FFFFFF",
-    marginBottom: 8,
+    marginBottom: 16,
+    width: 200,
   },
   loginContainer: {
     flexDirection: "row",
@@ -84,10 +135,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   formContainer: {
-    gap: 20,
+    gap: 24,
+    marginBottom: 32,
   },
   inputGroup: {
-    gap: 8,
+    gap: 12,
   },
   inputLabel: {
     color: "#FFFFFF",
@@ -108,7 +160,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 32,
   },
   registerButtonText: {
     color: "#FFFFFF",

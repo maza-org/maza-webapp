@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -13,13 +13,60 @@ import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 export default function Home() {
+  const [subjects, setSubjects] = useState([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(true);
+
+  useEffect(() => {
+    fetchSubjects();
+  }, []);
+
+  const fetchSubjects = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:1337/api/courses");
+      const data = await response.json();
+
+      const allSubjects = data.data.flatMap((course) => course.subjects);
+      const uniqueSubjects = Array.from(
+        new Map(allSubjects.map((subject) => [subject.id, subject])).values(),
+      );
+
+      setSubjects(uniqueSubjects.slice(0, 3));
+      setLoadingSubjects(false);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+      setLoadingSubjects(false);
+    }
+  };
+
+  const handleSubjectClick = (subject) => {
+    console.log("Selected subject:", {
+      id: subject.id,
+      documentId: subject.documentId,
+      name: subject.name,
+    });
+  };
+
+  const getIconForSubject = (subjectName) => {
+    switch (subjectName.toLowerCase()) {
+      case "design":
+        return "pen-tool";
+      case "tecnologia":
+        return "monitor";
+      case "saude":
+        return "heart";
+      default:
+        return "book";
+    }
+  };
+
   const handleSearchPress = () => {
     router.push("/search");
   };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity onPress={() => router.push("/start/customize")}>
+        <TouchableOpacity onPress={() => router.push("/start")}>
           <Text style={{ color: "white", fontSize: 20 }}>GO</Text>
         </TouchableOpacity>
         {/* Header with Bell Icon */}
@@ -74,21 +121,57 @@ export default function Home() {
 
         {/* Category Icons */}
         <View style={styles.categoryContainer}>
-          <TouchableOpacity style={styles.categoryItem}>
+          <TouchableOpacity
+            style={styles.categoryItem}
+            onPress={() => {
+              router.push({
+                pathname: "/categories/[id]",
+                params: {
+                  id: 18,
+                  documentId: "qm2wm9uoevejsv11odp074th",
+                  name: "Design",
+                },
+              });
+            }}
+          >
             <View style={styles.iconContainer}>
               <Feather name="pen-tool" size={20} color="#FFF" />
             </View>
             <Text style={styles.categoryText}>Design</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.categoryItem}>
+          <TouchableOpacity
+            style={styles.categoryItem}
+            onPress={() => {
+              router.push({
+                pathname: "/categories/[id]",
+                params: {
+                  id: 32,
+                  documentId: "ukg3l9uuoewo9b1y3ccnz3nl",
+                  name: "Tecnologia",
+                },
+              });
+            }}
+          >
             <View style={styles.iconContainer}>
               <Feather name="monitor" size={20} color="#FFF" />
             </View>
             <Text style={styles.categoryText}>Tecnologia</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.categoryItem}>
+          <TouchableOpacity
+            style={styles.categoryItem}
+            onPress={() => {
+              router.push({
+                pathname: "/categories/[id]",
+                params: {
+                  id: 34,
+                  documentId: "rkbgagnq8oku6e8tj37g3rr8",
+                  name: "Saude",
+                },
+              });
+            }}
+          >
             <View style={styles.iconContainer}>
               <Feather name="heart" size={20} color="#FFF" />
             </View>
@@ -373,6 +456,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#121214",
     padding: 25,
+    paddingEnd: 25,
+    paddingStart: 25,
   },
   popularCoursesSection: {
     marginVertical: 24,

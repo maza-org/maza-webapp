@@ -6,30 +6,93 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import Button from "@/components/Button";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { mapLoginResponseToUser, User } from "@/types/user";
 
 export default function Otp() {
-  const [otp, setOtp] = useState(["", "", "", ""]);
+  const { phone, otpId } = useLocalSearchParams();
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [loading, setLoading] = useState(false);
   const inputRefs = useRef([]);
 
-  const handleConfirm = () => {
-    // Handle OTP confirmation
+  const saveUser = async (user: User) => {
+    try {
+      await AsyncStorage.setItem("@user", JSON.stringify(user));
+    } catch (error) {
+      console.error("Error saving user data:", error);
+      Alert.alert("Erro", "Falha ao salvar dados do usuário");
+    }
   };
 
-  const handleOtpChange = (value, index) => {
+  const handleConfirm = async () => {
+    if (!otpId) {
+      Alert.alert("Erro", "Por favor, solicite o código OTP primeiro");
+      return;
+    }
+
+    const otpCode = otp.join("");
+    if (otpCode.length !== 6) {
+      Alert.alert("Erro", "Por favor, insira o código OTP completo");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log(`REQUEST`, { phone, otpId, otpCode });
+
+      const response = await fetch("http://127.0.0.1:1337/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          identifier: phone,
+          otpID: otpId,
+          password: otpCode,
+        }),
+      });
+
+      const data = await response.json();
+      console.log(JSON.stringify(data, null, 2));
+
+      if (data.success) {
+        await saveUser(mapLoginResponseToUser(data));
+        router.push("/start/customize");
+      } else {
+        Alert.alert(
+          "Erro de Verificação",
+          "Código OTP incorreto. Por favor, verifique e tente novamente.",
+          [{ text: "OK" }],
+        );
+      }
+    } catch (error) {
+      console.log(error);
+      Alert.alert(
+        "Erro",
+        "Ocorreu um erro ao verificar o código. Por favor, tente novamente.",
+        [{ text: "OK" }],
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpChange = (value: string, index: number) => {
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
 
-    if (value && index < 3) {
+    if (value && index < 5) {
       inputRefs.current[index + 1].focus();
     }
   };
 
-  const handleKeyPress = (e, index) => {
+  const handleKeyPress = (e, index: number) => {
     if (e.nativeEvent.key === "Backspace") {
       if (!otp[index] && index > 0) {
         const newOtp = [...otp];
@@ -55,13 +118,13 @@ export default function Otp() {
         <Text style={styles.headerText}>Código OTP</Text>
         <Text style={styles.subText}>
           Enviamos uma SMS com o código de autenticação{"\n"}
-          para o número <Text style={styles.phoneNumber}>821212121</Text>
+          para o número <Text style={styles.phoneNumber}>{phone}</Text>
         </Text>
 
         <View style={styles.formContainer}>
           <Text style={styles.inputLabel}>Código de Verificação</Text>
           <View style={styles.otpContainer}>
-            {[0, 1, 2, 3].map((i) => (
+            {[0, 1, 2, 3, 4, 5].map((i) => (
               <TextInput
                 key={i}
                 ref={(ref) => (inputRefs.current[i] = ref)}
@@ -76,7 +139,7 @@ export default function Otp() {
           </View>
         </View>
 
-        <Button text="Confirmar" handle={handleConfirm} />
+        <Button text="Confirmar" handle={handleConfirm} loading={loading} />
 
         <View style={styles.resendContainer}>
           <Text style={styles.resendText}>Não recebeu o código? </Text>
