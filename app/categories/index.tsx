@@ -1,9 +1,13 @@
+// src/app/categories/index.tsx
+
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -16,23 +20,140 @@ type Category = {
   icon: keyof typeof Ionicons.glyphMap;
 };
 
-const categories: Category[] = [
-  { id: 1, name: "Design", courses: 32, icon: "brush-outline" },
-  { id: 2, name: "Tecnologia", courses: 27, icon: "desktop-outline" },
-  { id: 3, name: "Saúde e bem-estar", courses: 19, icon: "fitness-outline" },
-  { id: 4, name: "Finanças", courses: 10, icon: "cash-outline" },
-  { id: 5, name: "Writing", courses: 29, icon: "create-outline" },
-  { id: 6, name: "Marketing Digital", courses: 30, icon: "megaphone-outline" },
-  { id: 7, name: "Personal Development", courses: 17, icon: "person-outline" },
-];
+type CourseSubject = {
+  id: number;
+  documentId: string;
+  name: string;
+};
+
+type Course = {
+  id: number;
+  documentId: string;
+  title: string;
+  author: string | null;
+  rating_avg: number;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  subjects: CourseSubject[];
+};
+
+type APIResponse = {
+  data: Course[];
+  meta: {
+    pagination: {
+      page: number;
+      pageSize: number;
+      pageCount: number;
+      total: number;
+    };
+  };
+};
 
 export default function CategorySelection() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch("http://127.0.0.1:1337/api/courses");
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch categories");
+      }
+
+      const data: APIResponse = await response.json();
+
+      // Process the API response
+      const coursesBySubject = data.data.reduce(
+        (acc: Record<string, { id: number; count: number }>, course) => {
+          course.subjects.forEach((subject) => {
+            if (!acc[subject.name]) {
+              acc[subject.name] = {
+                id: subject.id,
+                count: 1,
+              };
+            } else {
+              acc[subject.name].count++;
+            }
+          });
+          return acc;
+        },
+        {},
+      );
+
+      // Define icon mapping for subjects
+      const subjectToIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
+        Design: "brush-outline",
+        Tecnologia: "desktop-outline",
+        Saude: "fitness-outline",
+        Idiomas: "language-outline",
+        "Gestão Financeira": "cash-outline",
+        Negócios: "business-outline",
+      };
+
+      // Transform the data into the required format
+      const transformedCategories = Object.entries(coursesBySubject).map(
+        ([name, data]) => ({
+          id: data.id,
+          name: name,
+          courses: data.count,
+          icon: subjectToIcon[name] || "help-outline",
+        }),
+      );
+
+      setCategories(transformedCategories);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "An error occurred");
+      console.error("Error fetching categories:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleCategoryPress = (category: Category) => {
     router.push({
       pathname: "/categories/[id]",
       params: { id: category.id, name: category.name },
     });
   };
+
+  const handleRetry = () => {
+    fetchCategories();
+  };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header title={"Escolha uma categoria"} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#8257e5" />
+          <Text style={styles.loadingText}>Carregando categorias...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header title={"Escolha uma categoria"} />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+            <Text style={styles.retryButtonText}>Tentar novamente</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -65,25 +186,38 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#121214",
   },
-  header: {
-    flexDirection: "row",
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#FFF",
+    marginTop: 16,
+    fontSize: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#29292E",
   },
-  backButton: {
-    padding: 8,
-    borderStyle: "solid",
-    borderColor: "#b3b3b3",
-    borderWidth: 0.5,
-    borderRadius: 50,
+  errorText: {
+    color: "#ff4444",
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 16,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginLeft: 8,
+  retryButton: {
+    backgroundColor: "#8257e5",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
     color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
   categoriesList: {
     padding: 16,
