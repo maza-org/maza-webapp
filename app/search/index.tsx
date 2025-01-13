@@ -4,6 +4,7 @@ import {
   Pressable,
   Image,
   ImageSourcePropType,
+  SafeAreaView,
 } from "react-native";
 import { Text, View } from "@/components/Themed";
 import { Ionicons } from "@expo/vector-icons";
@@ -119,7 +120,7 @@ export default function Search(): JSX.Element {
   ];
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={handleBackPress}>
           <Ionicons name="chevron-back" size={24} color="#fff" />
@@ -177,7 +178,7 @@ export default function Search(): JSX.Element {
           ))}
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -186,6 +187,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#121214",
     padding: 16,
+    paddingStart: 16,
+    paddingEnd: 16,
   },
   header: {
     flexDirection: "row",
