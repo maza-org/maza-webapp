@@ -1,67 +1,123 @@
-import React from "react";
-import { StyleSheet, View, Pressable, ScrollView, Image } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  ScrollView,
+  Image,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { Text } from "@/components/Themed";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const favoriteCourses = [
-  {
-    id: 1,
-    title: "Entrepreneurship and New Venture Formation",
-    category: "Negócios",
-    instructor: {
-      name: "Livia Donin",
-    },
-    level: "Intermédio",
-    rating: 4.5,
-  },
-  {
-    id: 2,
-    title: "Introduction to Digital Marketing",
-    category: "Marketing Digital",
-    instructor: {
-      name: "Sarah Adams",
-    },
-    level: "Iniciante",
-    rating: 4.7,
-  },
-  {
-    id: 3,
-    title: "Full Stack React Development",
-    category: "Desenvolvimento",
-    instructor: {
-      name: "Michael Chen",
-    },
-    level: "Avançado",
-    rating: 4.9,
-  },
-  {
-    id: 4,
-    title: "Financial Planning Fundamentals",
-    category: "Finanças",
-    instructor: {
-      name: "Carlos Silva",
-    },
-    level: "Iniciante",
-    rating: 4.6,
-  },
-  {
-    id: 5,
-    title: "Advanced Data Analytics",
-    category: "Data Science",
-    instructor: {
-      name: "Emma Watson",
-    },
-    level: "Avançado",
-    rating: 4.8,
-  },
-];
+interface Instructor {
+  name: string;
+}
+
+interface Course {
+  id: number;
+  documentId: string;
+  title: string;
+  author: string;
+  rating_avg: number;
+}
+
+interface FavoriteCourse {
+  id: number;
+  documentId: string;
+  position: string;
+  is_favorite: boolean;
+  progress: number;
+  course: Course;
+}
+
+interface FavoriteResponse {
+  data: FavoriteCourse[];
+  meta: {
+    pagination: {
+      page: number;
+      pageSize: number;
+      pageCount: number;
+      total: number;
+    };
+  };
+}
 
 const FavoriteCoursesGrid = () => {
+  const [favorites, setFavorites] = useState<FavoriteCourse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchFavorites = async () => {
+    try {
+      const userData = await AsyncStorage.getItem("@user");
+      if (!userData) {
+        throw new Error("Dados do utilizador não encontrados");
+      }
+
+      const { token } = JSON.parse(userData);
+      if (!token) {
+        throw new Error("Token não encontrado");
+      }
+
+      const response = await fetch(
+        "http://127.0.0.1:1337/api/user-courses/favorites",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Falha ao obter favoritos");
+      }
+
+      const data: FavoriteResponse = await response.json();
+      setFavorites(data.data);
+    } catch (error) {
+      console.error("Erro ao buscar favoritos:", error);
+      setError("Não foi possível carregar os seus favoritos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFavorites();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#2EA8FF" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.message}>{error}</Text>
+      </View>
+    );
+  }
+
+  if (favorites.length === 0) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.message}>Não tem cursos favoritos disponíveis</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.gridContainer}>
-        {favoriteCourses.map((course) => (
-          <Pressable key={course.id} style={styles.courseCard}>
+        {favorites.map((favorite) => (
+          <Pressable key={favorite.id} style={styles.courseCard}>
             {/* Course Image */}
             <View style={styles.imageContainer}>
               <Image
@@ -75,31 +131,39 @@ const FavoriteCoursesGrid = () => {
 
             {/* Course Content */}
             <View style={styles.contentContainer}>
-              {/* Category */}
-              <Text style={styles.category}>{course.category}</Text>
+              {/* Position Status */}
+              <Text style={styles.category}>
+                {favorite.position === "NotStarted"
+                  ? "Não iniciado"
+                  : favorite.position}
+              </Text>
 
               {/* Title */}
               <Text style={styles.title} numberOfLines={2}>
-                {course.title}
+                {favorite.course.title}
               </Text>
 
-              {/* Instructor */}
+              {/* Author */}
               <View style={styles.instructorContainer}>
                 <Image
                   source={{ uri: "https://i.pravatar.cc/300" }}
                   style={styles.instructorAvatar}
                 />
                 <Text style={styles.instructorName}>
-                  {course.instructor.name}
+                  {favorite.course.author}
                 </Text>
               </View>
 
               {/* Footer */}
               <View style={styles.footer}>
-                <Text style={styles.level}>{course.level}</Text>
+                <Text style={styles.level}>
+                  Progresso: {favorite.progress}%
+                </Text>
                 <View style={styles.ratingContainer}>
                   <Ionicons name="star" size={16} color="#FFD700" />
-                  <Text style={styles.rating}>{course.rating}</Text>
+                  <Text style={styles.rating}>
+                    {favorite.course.rating_avg.toFixed(1)}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -115,6 +179,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#121214",
   },
+  centerContainer: {
+    flex: 1,
+    backgroundColor: "#121214",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  message: {
+    color: "#8F8F8F",
+    fontSize: 16,
+    textAlign: "center",
+  },
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -122,7 +198,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   courseCard: {
-    width: "47%", // Slightly less than 50% to account for gap
+    width: "47%",
     backgroundColor: "#202024",
     borderRadius: 8,
     overflow: "hidden",
