@@ -61,6 +61,7 @@ export default function Category() {
 
   const handlePressCourse = (course: Course) => {
     console.log(course);
+    router.push("/room/lessons");
   };
 
   const renderCourseItem = ({ item: course }: { item: Course }) => (

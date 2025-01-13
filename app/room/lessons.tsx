@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,15 +8,64 @@ import {
   TouchableOpacity,
   Image,
   ImageBackground,
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { router } from "expo-router";
+import Reviews from "@/components/Reviews";
+
+interface Content {
+  id: number;
+  title: string;
+  format: string;
+  url: string;
+  description: string | null;
+}
 
 interface Module {
   id: number;
   title: string;
-  videoCount: number;
-  isLocked: boolean;
+  quiz: any;
+  contents: Content[];
+}
+
+interface Question {
+  id: number;
+  description: string;
+  format: string;
+  options: {
+    id: number;
+    description: string;
+    comment: string | null;
+    is_correct: boolean;
+  }[];
+}
+
+interface FinalTest {
+  id: number;
+  pass_grade: number;
+  questions: Question[];
+}
+
+interface Subject {
+  id: number;
+  documentId: string;
+  name: string;
+}
+
+interface CourseData {
+  id: number;
+  documentId: string;
+  title: string;
+  author: string;
+  rating_avg: number;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  subjects: Subject[];
+  final_test: FinalTest;
+  modules: Module[];
 }
 
 interface TabProps {
@@ -39,77 +88,51 @@ function Tab({ active, onPress, children }: TabProps): JSX.Element {
 }
 
 export default function CourseDetail(): JSX.Element {
-  const [activeTab, setActiveTab] = useState<"lessons" | "opinions">(
-    "opinions",
-  );
+  const [activeTab, setActiveTab] = useState<"lessons" | "opinions">("lessons");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [courseData, setCourseData] = useState<CourseData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const fullDescription =
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras congue arcu purus, vitae vehiculo tortor iaculis vel. Nulla facilisi. Morbi eu elit odio. Fusce vestibulum porttitor mauris quis viverra. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
-  const shortDescription = fullDescription.slice(0, 120) + "...";
+  useEffect(() => {
+    fetchCourseData();
+  }, []);
 
-  const ratings = [
-    { label: "Qualidade dos videos", value: 4.5 },
-    { label: "Linguagem Clara", value: 4.8 },
-    { label: "Material acessível", value: 4.2 },
-  ];
+  const fetchCourseData = async () => {
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:1337/api/courses/x8yoemgcvc9e4mifdwnldr6g",
+      );
+      const data = await response.json();
+      setCourseData(data);
+    } catch (error) {
+      console.error("Error fetching course data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const reviews = [
-    {
-      id: "1",
-      name: "Carlos Alberto",
-      rating: 5,
-      date: "24 Oct 2024",
-      comment:
-        "Eu simplesmente adorei esse curso! O mentor consegue dividir conceitos complexos de negócios digitais em partes fáceis de entender.",
-    },
-    {
-      id: "2",
-      name: "Joana Candido",
-      rating: 4,
-      date: "15 Oct 2024",
-      comment: "As lições eram claras e metódicas, facilitando a aprendizagem.",
-    },
-  ];
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1fa2df" />
+      </View>
+    );
+  }
 
-  const modules: Module[] = [
-    {
-      id: 1,
-      title: "Introduction to Industrial D...",
-      videoCount: 3,
-      isLocked: false,
-    },
-    {
-      id: 2,
-      title: "Design Thinking and Proble...",
-      videoCount: 3,
-      isLocked: true,
-    },
-    {
-      id: 3,
-      title: "User Experience (UX) in Ind...",
-      videoCount: 3,
-      isLocked: true,
-    },
-    {
-      id: 4,
-      title: "Introduction to Industrial D...",
-      videoCount: 3,
-      isLocked: false,
-    },
-    {
-      id: 5,
-      title: "Design Thinking and Proble...",
-      videoCount: 3,
-      isLocked: true,
-    },
-    {
-      id: 6,
-      title: "User Experience (UX) in Ind...",
-      videoCount: 3,
-      isLocked: true,
-    },
-  ];
+  if (!courseData) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Failed to load course data</Text>
+      </View>
+    );
+  }
+
+  const totalVideos = courseData.modules.reduce(
+    (acc, module) =>
+      acc +
+      module.contents.filter((content) => content.format === "Video").length,
+    0,
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -120,7 +143,10 @@ export default function CourseDetail(): JSX.Element {
         >
           <View style={styles.headerOverlay}>
             <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.iconButton}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => router.back()}
+              >
                 <Feather name="chevron-left" size={24} color="#FFF" />
               </TouchableOpacity>
               <View style={styles.rightActions}>
@@ -132,33 +158,15 @@ export default function CourseDetail(): JSX.Element {
                 </TouchableOpacity>
               </View>
             </View>
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>Intermédio</Text>
-            </View>
           </View>
         </ImageBackground>
 
         <View style={styles.courseInfo}>
-          <Text style={styles.courseTitle}>
-            Entrepreneurship and New Venture Creation
-          </Text>
+          <Text style={styles.courseTitle}>{courseData.title}</Text>
           <View style={styles.instructor}>
-            <Image
-              source={{ uri: "https://via.placeholder.com/40" }}
-              style={styles.instructorImage}
-            />
-            <Text style={styles.instructorName}>Lívia Donin</Text>
-            <Text style={styles.categoryTag}>• Negócios</Text>
-          </View>
-          <View>
-            <Text style={styles.description}>
-              {isExpanded ? fullDescription : shortDescription}{" "}
-              <Text
-                style={styles.seeMore}
-                onPress={() => setIsExpanded(!isExpanded)}
-              >
-                {isExpanded ? "Ver menos" : "Ver mais"}
-              </Text>
+            <Text style={styles.instructorName}>{courseData.author}</Text>
+            <Text style={styles.categoryTag}>
+              • {courseData.subjects[0]?.name || ""}
             </Text>
           </View>
 
@@ -180,34 +188,24 @@ export default function CourseDetail(): JSX.Element {
 
         {activeTab === "lessons" ? (
           <View style={styles.modulesList}>
-            {modules.map((module) => (
-              <TouchableOpacity
-                key={module.id}
-                style={styles.moduleItem}
-                disabled={module.isLocked}
-              >
+            {courseData.modules.map((module, index) => (
+              <TouchableOpacity key={module.id} style={styles.moduleItem}>
                 <View style={styles.moduleContent}>
                   <View style={styles.moduleTopRow}>
                     <View style={styles.moduleInfo}>
-                      <Text style={styles.moduleNumber}>{module.id}.</Text>
+                      <Text style={styles.moduleNumber}>{index + 1}.</Text>
                       <Text style={styles.moduleTitle}>{module.title}</Text>
                     </View>
                     <View style={styles.moduleDetails}>
-                      {module.isLocked ? (
-                        <View style={styles.iconContainer}>
-                          <Feather name="lock" size={20} color="#4db5ff" />
-                        </View>
-                      ) : (
-                        <View style={styles.iconContainer}>
-                          <Ionicons name="play" size={20} color="#4db5ff" />
-                        </View>
-                      )}
+                      <View style={styles.iconContainer}>
+                        <Ionicons name="play" size={20} color="#4db5ff" />
+                      </View>
                     </View>
                   </View>
                   <View style={styles.videoCount}>
                     <Feather name="film" size={14} color="#A8A8B3" />
                     <Text style={styles.videoCountText}>
-                      {module.videoCount} videos
+                      {module.contents.length} videos
                     </Text>
                   </View>
                 </View>
@@ -217,78 +215,7 @@ export default function CourseDetail(): JSX.Element {
         ) : (
           <View style={styles.opinionsContainer}>
             <View style={styles.ratingOverview}>
-              <View style={styles.overallRating}>
-                <Text style={styles.ratingNumber}>4,5</Text>
-                <View style={styles.starsContainer}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Ionicons
-                      key={star}
-                      name="star"
-                      size={20}
-                      color={star <= 4 ? "#FFB800" : "#A8A8B3"}
-                      style={styles.starIcon}
-                    />
-                  ))}
-                </View>
-                <Text style={styles.totalReviews}>1.200 opiniões</Text>
-              </View>
-
-              <View style={styles.ratingCategories}>
-                {ratings.map((rating) => (
-                  <View key={rating.label} style={styles.ratingItem}>
-                    <Text style={styles.ratingLabel}>{rating.label}</Text>
-                    <View style={styles.ratingBar}>
-                      <View
-                        style={[
-                          styles.ratingFill,
-                          { width: `${(rating.value / 5) * 100}%` },
-                        ]}
-                      />
-                    </View>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.reviewFilters}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <TouchableOpacity
-                  style={[styles.filterButton, styles.filterButtonActive]}
-                >
-                  <Text style={[styles.filterText, styles.filterTextActive]}>
-                    Todos
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.filterButton}>
-                  <Text style={styles.filterText}>Maior Pontuação</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.filterButton}>
-                  <Text style={styles.filterText}>Mais Recentes</Text>
-                </TouchableOpacity>
-              </ScrollView>
-            </View>
-
-            <View style={styles.reviewsList}>
-              {reviews.map((review) => (
-                <View key={review.id} style={styles.reviewItem}>
-                  <View style={styles.reviewHeader}>
-                    <Text style={styles.reviewerName}>{review.name}</Text>
-                    <Text style={styles.reviewDate}>{review.date}</Text>
-                  </View>
-                  <View style={styles.starsContainer}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Ionicons
-                        key={star}
-                        name="star"
-                        size={16}
-                        color={star <= review.rating ? "#FFB800" : "#A8A8B3"}
-                        style={styles.starIcon}
-                      />
-                    ))}
-                  </View>
-                  <Text style={styles.reviewText}>{review.comment}</Text>
-                </View>
-              ))}
+              <Reviews courseId="x8yoemgcvc9e4mifdwnldr6g" />
             </View>
           </View>
         )}
@@ -304,6 +231,22 @@ export default function CourseDetail(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#121214",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#121214",
+  },
+  errorText: {
+    color: "#FFF",
+    fontSize: 16,
+  },
   container: {
     flex: 1,
     backgroundColor: "#121214",
@@ -336,18 +279,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  levelBadge: {
-    alignSelf: "center",
-    backgroundColor: "rgba(0,0,0,0.7)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  levelText: {
-    color: "#FFF",
-    fontSize: 14,
-    fontWeight: "500",
-  },
   courseInfo: {
     padding: 24,
     backgroundColor: "#121214",
@@ -363,12 +294,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  instructorImage: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    marginRight: 8,
-  },
   instructorName: {
     color: "#FFF",
     fontSize: 14,
@@ -377,16 +302,6 @@ const styles = StyleSheet.create({
     color: "#1fa2df",
     fontSize: 14,
     marginLeft: 8,
-  },
-  description: {
-    color: "#A8A8B3",
-    fontSize: 14,
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  seeMore: {
-    color: "#1fa2df",
-    fontWeight: "500",
   },
   tabContainer: {
     flexDirection: "row",
@@ -479,9 +394,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontFamily: "ManropeBold",
   },
-  opinionsContainer: {
-    padding: 24,
-  },
+  opinionsContainer: {},
   ratingOverview: {
     marginBottom: 24,
   },
@@ -501,75 +414,5 @@ const styles = StyleSheet.create({
   },
   starIcon: {
     marginHorizontal: 2,
-  },
-  totalReviews: {
-    color: "#A8A8B3",
-    fontSize: 14,
-  },
-  ratingCategories: {
-    gap: 16,
-  },
-  ratingItem: {
-    gap: 8,
-  },
-  ratingLabel: {
-    color: "#FFF",
-    fontSize: 14,
-  },
-  ratingBar: {
-    height: 8,
-    backgroundColor: "#323238",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  ratingFill: {
-    height: "100%",
-    backgroundColor: "#FFB800",
-    borderRadius: 4,
-  },
-  reviewFilters: {
-    marginBottom: 24,
-  },
-  filterButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
-    backgroundColor: "#202024",
-  },
-  filterButtonActive: {
-    backgroundColor: "#1fa2df",
-  },
-  filterText: {
-    color: "#A8A8B3",
-    fontSize: 14,
-  },
-  filterTextActive: {
-    color: "#FFF",
-  },
-  reviewsList: {
-    gap: 24,
-  },
-  reviewItem: {
-    gap: 8,
-  },
-  reviewHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  reviewerName: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  reviewDate: {
-    color: "#A8A8B3",
-    fontSize: 14,
-  },
-  reviewText: {
-    color: "#A8A8B3",
-    fontSize: 14,
-    lineHeight: 20,
   },
 });
