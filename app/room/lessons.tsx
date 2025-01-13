@@ -6,7 +6,6 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Image,
   ImageBackground,
   ActivityIndicator,
   Alert,
@@ -87,6 +86,23 @@ interface TabProps {
   children: string;
 }
 
+interface CourseProgress {
+  updatedAt: string;
+  id: number;
+  documentId: string;
+  position: string;
+  is_favorite: boolean;
+  progress: number;
+  createdAt: string;
+  course: {
+    id: number;
+    documentId: string;
+    title: string;
+    author: string;
+    rating_avg: number;
+  };
+}
+
 function Tab({ active, onPress, children }: TabProps): JSX.Element {
   return (
     <TouchableOpacity
@@ -106,6 +122,7 @@ export default function CourseDetail(): JSX.Element {
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [updating, setUpdating] = useState(false);
 
   const { documentId } = useLocalSearchParams();
 
@@ -171,6 +188,45 @@ export default function CourseDetail(): JSX.Element {
     } catch (error) {
       console.error("Error adding to favorites:", error);
       Alert.alert("Erro", "Falha ao adicionar aos favoritos");
+    }
+  };
+
+  const handleStartCourse = async () => {
+    if (!user?.token) {
+      Alert.alert("Erro", "Você precisa estar logado para iniciar o curso");
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:1337/api/user-courses?status=InProgress",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({
+            data: {
+              course: documentId,
+              position: "InProgress",
+            },
+          }),
+        },
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(result);
+      } else {
+        throw new Error("Failed to start course");
+      }
+    } catch (error) {
+      console.error("Error starting course:", error);
+      Alert.alert("Erro", "Falha ao iniciar o curso");
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -251,29 +307,43 @@ export default function CourseDetail(): JSX.Element {
 
         {activeTab === "lessons" ? (
           <View style={styles.modulesList}>
-            {courseData.modules.map((module, index) => (
-              <TouchableOpacity key={module.id} style={styles.moduleItem}>
-                <View style={styles.moduleContent}>
-                  <View style={styles.moduleTopRow}>
-                    <View style={styles.moduleInfo}>
-                      <Text style={styles.moduleNumber}>{index + 1}.</Text>
-                      <Text style={styles.moduleTitle}>{module.title}</Text>
-                    </View>
-                    <View style={styles.moduleDetails}>
-                      <View style={styles.iconContainer}>
-                        <Ionicons name="play" size={20} color="#4db5ff" />
+            {!courseData.modules || courseData.modules.length === 0 ? (
+              <View style={styles.noModulesContainer}>
+                <Feather
+                  name="book-open"
+                  size={48}
+                  color="#A8A8B3"
+                  style={styles.noModulesIcon}
+                />
+                <Text style={styles.noModulesText}>
+                  Nenhum módulo encontrado para este curso
+                </Text>
+              </View>
+            ) : (
+              courseData.modules.map((module, index) => (
+                <TouchableOpacity key={module.id} style={styles.moduleItem}>
+                  <View style={styles.moduleContent}>
+                    <View style={styles.moduleTopRow}>
+                      <View style={styles.moduleInfo}>
+                        <Text style={styles.moduleNumber}>{index + 1}.</Text>
+                        <Text style={styles.moduleTitle}>{module.title}</Text>
+                      </View>
+                      <View style={styles.moduleDetails}>
+                        <View style={styles.iconContainer}>
+                          <Ionicons name="play" size={20} color="#4db5ff" />
+                        </View>
                       </View>
                     </View>
+                    <View style={styles.videoCount}>
+                      <Feather name="film" size={14} color="#A8A8B3" />
+                      <Text style={styles.videoCountText}>
+                        {module.contents.length} videos
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.videoCount}>
-                    <Feather name="film" size={14} color="#A8A8B3" />
-                    <Text style={styles.videoCountText}>
-                      {module.contents.length} videos
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
+                </TouchableOpacity>
+              ))
+            )}
           </View>
         ) : (
           <View style={styles.opinionsContainer}>
@@ -285,8 +355,16 @@ export default function CourseDetail(): JSX.Element {
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.startButton}>
-          <Text style={styles.startButtonText}>Iniciar Curso</Text>
+        <TouchableOpacity
+          style={[styles.startButton, updating && styles.startButtonDisabled]}
+          onPress={handleStartCourse}
+          disabled={updating}
+        >
+          {updating ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.startButtonText}>Iniciar Curso</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -451,6 +529,9 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignItems: "center",
   },
+  startButtonDisabled: {
+    backgroundColor: "#1fa2df80",
+  },
   startButtonText: {
     color: "#FFF",
     fontSize: 16,
@@ -477,5 +558,22 @@ const styles = StyleSheet.create({
   },
   starIcon: {
     marginHorizontal: 2,
+  },
+  noModulesContainer: {
+    padding: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#202024",
+    borderRadius: 15,
+    marginVertical: 12,
+  },
+  noModulesText: {
+    color: "#A8A8B3",
+    fontSize: 16,
+    textAlign: "center",
+    fontWeight: "500",
+  },
+  noModulesIcon: {
+    marginBottom: 16,
   },
 });
