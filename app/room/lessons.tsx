@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import Reviews from "@/components/Reviews";
 
 interface Content {
@@ -89,18 +89,20 @@ function Tab({ active, onPress, children }: TabProps): JSX.Element {
 
 export default function CourseDetail(): JSX.Element {
   const [activeTab, setActiveTab] = useState<"lessons" | "opinions">("lessons");
-  const [isExpanded, setIsExpanded] = useState(false);
   const [courseData, setCourseData] = useState<CourseData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Get the documentId from route parameters
+  const { documentId } = useLocalSearchParams();
+
   useEffect(() => {
     fetchCourseData();
-  }, []);
+  }, [documentId]); // Add documentId as dependency
 
   const fetchCourseData = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:1337/api/courses/x8yoemgcvc9e4mifdwnldr6g",
+        `http://127.0.0.1:1337/api/courses/${documentId}`,
       );
       const data = await response.json();
       setCourseData(data);
@@ -126,13 +128,6 @@ export default function CourseDetail(): JSX.Element {
       </View>
     );
   }
-
-  const totalVideos = courseData.modules.reduce(
-    (acc, module) =>
-      acc +
-      module.contents.filter((content) => content.format === "Video").length,
-    0,
-  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -215,7 +210,7 @@ export default function CourseDetail(): JSX.Element {
         ) : (
           <View style={styles.opinionsContainer}>
             <View style={styles.ratingOverview}>
-              <Reviews courseId="x8yoemgcvc9e4mifdwnldr6g" />
+              <Reviews courseId={documentId as string} />
             </View>
           </View>
         )}
