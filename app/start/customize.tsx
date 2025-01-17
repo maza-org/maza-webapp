@@ -7,8 +7,6 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ScrollView,
-  ViewStyle,
-  TextStyle,
   TouchableOpacityProps,
   ActivityIndicator,
   Alert,
@@ -77,7 +75,7 @@ export default function Customize() {
   const fetchTopics = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:1337/api/subjects?fields=name&sort=name&locale=pt",
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/subjects?fields=name&sort=name&locale=pt`,
       );
       const { data } = await response.json();
       setTopics(data.map((item) => item.name));
@@ -197,7 +195,7 @@ export default function Customize() {
   );
 }
 
-const styles = StyleSheet.create<StylesType>({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#121214",

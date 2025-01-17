@@ -99,7 +99,7 @@ export default function Reviews({ courseId }: ReviewsProps) {
   const fetchReviews = async () => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:1337/api/reviews?course=${courseId}`,
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/reviews?course=${courseId}`,
       );
       const data = await response.json();
       setReviews(data);

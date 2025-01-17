@@ -15,7 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { mapLoginResponseToUser, User } from "@/types/user";
 
 export default function Otp() {
-  const { phone, otpId } = useLocalSearchParams();
+  const { phone, otpId, fullName } = useLocalSearchParams();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef([]);
@@ -43,24 +43,37 @@ export default function Otp() {
 
     setLoading(true);
     try {
-      console.log(`REQUEST`, { phone, otpId, otpCode });
+      // Determine if we should create an account or login based on fullName presence
+      const endpoint = fullName
+        ? `${process.env.EXPO_PUBLIC_BASE_URL}/api/users`
+        : `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/login`;
 
-      const response = await fetch("http://127.0.0.1:1337/api/auth/login", {
+      const body = fullName
+        ? {
+            data: {
+              phone: phone,
+              otpID: otpId,
+              code: otpCode,
+              fullname: fullName,
+            },
+          }
+        : {
+            identifier: phone,
+            otpID: otpId,
+            password: otpCode,
+          };
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          identifier: phone,
-          otpID: otpId,
-          password: otpCode,
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
-      console.log(JSON.stringify(data, null, 2));
-
-      if (data.success) {
+      if (data.success || (fullName && data.data)) {
+        // Check for success in both login and registration cases
         await saveUser(mapLoginResponseToUser(data));
         router.push("/start/customize");
       } else {

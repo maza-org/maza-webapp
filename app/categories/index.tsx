@@ -1,5 +1,3 @@
-// src/app/categories/index.tsx
-
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -63,7 +61,9 @@ export default function CategorySelection() {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch("http://127.0.0.1:1337/api/courses");
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/courses`,
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch categories");
@@ -171,7 +171,9 @@ export default function CategorySelection() {
             </View>
             <View style={styles.categoryInfo}>
               <Text style={styles.categoryName}>{category.name}</Text>
-              <Text style={styles.coursesCount}>{category.courses} Cursos</Text>
+              <Text style={styles.coursesCount}>
+                {category.courses} {category.courses === 1 ? "Curso" : "Cursos"}
+              </Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color="#666" />
           </TouchableOpacity>

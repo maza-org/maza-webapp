@@ -22,7 +22,9 @@ export default function Home() {
 
   const fetchSubjects = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:1337/api/courses");
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/courses`,
+      );
       const data = await response.json();
 
       const allSubjects = data.data.flatMap((course) => course.subjects);
@@ -46,19 +48,6 @@ export default function Home() {
     });
   };
 
-  const getIconForSubject = (subjectName) => {
-    switch (subjectName.toLowerCase()) {
-      case "design":
-        return "pen-tool";
-      case "tecnologia":
-        return "monitor";
-      case "saude":
-        return "heart";
-      default:
-        return "book";
-    }
-  };
-
   const handleSearchPress = () => {
     router.push("/search");
   };
@@ -66,7 +55,7 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity onPress={() => router.push("/room/watch")}>
+        <TouchableOpacity onPress={() => router.push("/start")}>
           <Text style={{ color: "white", fontSize: 20 }}>GO</Text>
         </TouchableOpacity>
         {/* Header with Bell Icon */}
@@ -127,8 +116,8 @@ export default function Home() {
               router.push({
                 pathname: "/categories/[id]",
                 params: {
-                  id: 18,
-                  documentId: "qm2wm9uoevejsv11odp074th",
+                  id: 17,
+                  documentId: "fwubsstwm950034zmd6dnt8r",
                   name: "Design",
                 },
               });
@@ -146,8 +135,8 @@ export default function Home() {
               router.push({
                 pathname: "/categories/[id]",
                 params: {
-                  id: 32,
-                  documentId: "ukg3l9uuoewo9b1y3ccnz3nl",
+                  id: 35,
+                  documentId: "unz4bv8reqwncrv34zed36zb",
                   name: "Tecnologia",
                 },
               });
@@ -165,8 +154,8 @@ export default function Home() {
               router.push({
                 pathname: "/categories/[id]",
                 params: {
-                  id: 34,
-                  documentId: "rkbgagnq8oku6e8tj37g3rr8",
+                  id: 33,
+                  documentId: "f2tnfg0q70l17lob34ll8w87",
                   name: "Saude",
                 },
               });

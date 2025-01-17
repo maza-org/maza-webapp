@@ -69,7 +69,7 @@ export default function OnboardingScreen() {
 
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>Não possui uma conta? </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/login/create")}>
               <Text style={styles.registerLink}>Registrar</Text>
             </TouchableOpacity>
           </View>

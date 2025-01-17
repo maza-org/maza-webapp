@@ -63,7 +63,7 @@ const FavoriteCoursesGrid = () => {
       }
 
       const response = await fetch(
-        "http://127.0.0.1:1337/api/user-courses/favorites",
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses/favorites`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

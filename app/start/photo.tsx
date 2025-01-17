@@ -12,7 +12,7 @@ import { Feather } from "@expo/vector-icons";
 
 interface PhotoScreenProps {}
 
-export default function Photo({}: PhotoScreenProps): JSX.Element {
+export default function Photo({}: PhotoScreenProps) {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
 
   const handleSelectPhoto = (): void => {

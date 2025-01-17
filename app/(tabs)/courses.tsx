@@ -14,6 +14,7 @@ import DailyScoreChart from "@/components/Daybar";
 import Search from "@/components/Search";
 import CourseItem from "@/components/CourseItem";
 import FavoriteCoursesGrid from "@/components/FavoriteCoursesGrid";
+import CoursesInProgress from "@/components/CourseInProgress";
 
 // Sample completed courses data
 const completedCourses = [
@@ -407,13 +408,7 @@ export default function MeusCursosScreen() {
           ))}
         </ScrollView>
       )}
-      {selectedFilter === "inProgress" && (
-        <>
-          <DailyScoreChart />
-          <CourseItem />
-          <CourseItem />
-        </>
-      )}
+      {selectedFilter === "inProgress" && <CoursesInProgress />}
       <FloatingFilterButton onPress={() => setFilterModalVisible(true)} />
 
       <FilterModal

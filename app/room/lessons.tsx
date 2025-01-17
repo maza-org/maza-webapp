@@ -146,7 +146,7 @@ export default function CourseDetail(): JSX.Element {
   const fetchCourseData = async () => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:1337/api/courses/${documentId}`,
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/courses/${documentId}`,
       );
       const data = await response.json();
       setCourseData(data);
@@ -165,7 +165,7 @@ export default function CourseDetail(): JSX.Element {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:1337/api/user-courses/favorites",
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses/favorites`,
         {
           method: "POST",
           headers: {
@@ -200,7 +200,7 @@ export default function CourseDetail(): JSX.Element {
     setUpdating(true);
     try {
       const response = await fetch(
-        "http://127.0.0.1:1337/api/user-courses?status=InProgress",
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses?status=InProgress`,
         {
           method: "POST",
           headers: {

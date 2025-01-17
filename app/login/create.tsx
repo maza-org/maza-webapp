@@ -11,14 +11,15 @@ import {
 import { router } from "expo-router";
 import Button from "@/components/Button";
 
-export default function Login() {
+export default function Create() {
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
     // Basic validation
-    if (!phoneNumber) {
-      Alert.alert("Erro", "Por favor preencha o número de telefone");
+    if (!phoneNumber || !fullName) {
+      Alert.alert("Erro", "Por favor preencha todos os campos");
       return;
     }
 
@@ -45,7 +46,7 @@ export default function Login() {
       );
 
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        throw new Error("Erro ao obter OTP");
       }
 
       const data = await response.json();
@@ -56,13 +57,14 @@ export default function Login() {
         params: {
           phone: formattedPhone,
           otpId: data.otpID,
+          fullName: fullName,
         },
       });
     } catch (error) {
       console.log(error);
       Alert.alert(
         "Erro",
-        "Não foi possível gerar o código OTP. Por favor, tente novamente.",
+        "Não foi possível processar o cadastro. Por favor, tente novamente.",
       );
     } finally {
       setLoading(false);
@@ -72,18 +74,18 @@ export default function Login() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.headerText}>Faça login com a sua conta</Text>
+        <Text style={styles.title}>Cadastrar</Text>
 
         <View style={styles.loginContainer}>
-          <Text style={styles.loginText}>Não possui uma conta? </Text>
+          <Text style={styles.loginText}>Já tem uma conta? </Text>
           <TouchableOpacity onPress={() => router.push("/login")}>
-            <Text style={styles.loginLink}>Registar</Text>
+            <Text style={styles.loginLink}>Faça Login</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.formContainer}>
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Número de Telemóvel</Text>
+            <Text style={styles.label}>Número de Telemóvel</Text>
             <TextInput
               style={styles.input}
               placeholder="821231231"
@@ -93,13 +95,24 @@ export default function Login() {
               onChangeText={setPhoneNumber}
             />
           </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Nome Completo</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="João Carlos António"
+              placeholderTextColor="#666"
+              value={fullName}
+              onChangeText={setFullName}
+            />
+          </View>
         </View>
 
         <View>
           <Button
-            text={loading ? "A processar..." : "Entrar"}
+            text={loading ? "A processar..." : "Cadastrar"}
             handle={handleRegister}
-            disabled={!phoneNumber || loading}
+            disabled={!phoneNumber || !fullName || loading}
             loading={loading}
           />
         </View>
@@ -118,12 +131,11 @@ const styles = StyleSheet.create({
     padding: 24,
     gap: 24,
   },
-  headerText: {
+  title: {
     fontSize: 28,
     fontWeight: "600",
     color: "#FFFFFF",
-    marginBottom: 16,
-    width: 200,
+    marginBottom: 8,
   },
   loginContainer: {
     flexDirection: "row",
@@ -144,7 +156,7 @@ const styles = StyleSheet.create({
   inputGroup: {
     gap: 12,
   },
-  inputLabel: {
+  label: {
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "500",
@@ -156,17 +168,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     color: "#FFFFFF",
-  },
-  registerButton: {
-    height: 48,
-    backgroundColor: "#2196F3",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  registerButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
   },
 });
