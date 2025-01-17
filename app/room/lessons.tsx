@@ -85,24 +85,6 @@ interface TabProps {
   onPress: () => void;
   children: string;
 }
-
-interface CourseProgress {
-  updatedAt: string;
-  id: number;
-  documentId: string;
-  position: string;
-  is_favorite: boolean;
-  progress: number;
-  createdAt: string;
-  course: {
-    id: number;
-    documentId: string;
-    title: string;
-    author: string;
-    rating_avg: number;
-  };
-}
-
 function Tab({ active, onPress, children }: TabProps): JSX.Element {
   return (
     <TouchableOpacity
@@ -123,13 +105,47 @@ export default function CourseDetail(): JSX.Element {
   const [isFavorite, setIsFavorite] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [isInProgress, setIsInProgress] = useState(false);
 
   const { documentId } = useLocalSearchParams();
+  const checkCourseProgress = async () => {
+    if (!user?.token) return;
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses?status=InProgress`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsInProgress(
+          data.data.some(
+            (course: any) => course.course.documentId === documentId,
+          ),
+        );
+      }
+    } catch (error) {
+      console.error("Error checking course progress:", error);
+    }
+  };
 
   useEffect(() => {
-    loadUserData();
-    fetchCourseData();
-  }, [documentId]);
+    const initializeData = async () => {
+      try {
+        await loadUserData();
+        await fetchCourseData();
+        await checkCourseProgress();
+      } catch (error) {
+        console.error("Error initializing data:", error);
+      }
+    };
+
+    initializeData();
+  }, [documentId, user?.token]);
 
   const loadUserData = async () => {
     try {
@@ -199,8 +215,9 @@ export default function CourseDetail(): JSX.Element {
 
     setUpdating(true);
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses?status=InProgress`,
+      // First, save the course to user's courses
+      const saveResponse = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses`,
         {
           method: "POST",
           headers: {
@@ -210,17 +227,35 @@ export default function CourseDetail(): JSX.Element {
           body: JSON.stringify({
             data: {
               course: documentId,
-              position: "InProgress",
             },
           }),
         },
       );
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log(result);
-      } else {
-        throw new Error("Failed to start course");
+      if (!saveResponse.ok) {
+        throw new Error("Failed to save course");
+      }
+
+      const savedCourse = await saveResponse.json();
+      const updateResponse = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses/${documentId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({
+            data: {
+              progress: 1,
+            },
+          }),
+        },
+      );
+
+      const updatedCourse = await updateResponse.json();
+      if (!updateResponse.ok) {
+        throw new Error("Erro ao começar curso");
       }
     } catch (error) {
       console.error("Error starting course:", error);
@@ -356,14 +391,25 @@ export default function CourseDetail(): JSX.Element {
 
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.startButton, updating && styles.startButtonDisabled]}
+          style={[
+            styles.startButton,
+            updating && styles.startButtonDisabled,
+            isInProgress && styles.continueButton,
+          ]}
           onPress={handleStartCourse}
           disabled={updating}
         >
           {updating ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.startButtonText}>Iniciar Curso</Text>
+            <Text
+              style={[
+                styles.startButtonText,
+                isInProgress && styles.continueButtonText,
+              ]}
+            >
+              {isInProgress ? "Continuar" : "Iniciar Curso"}
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -575,5 +621,8 @@ const styles = StyleSheet.create({
   },
   noModulesIcon: {
     marginBottom: 16,
+  },
+  continueButton: {
+    backgroundColor: "#1fa2df",
   },
 });
