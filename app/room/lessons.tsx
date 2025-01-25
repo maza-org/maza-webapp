@@ -282,7 +282,6 @@ export default function CourseDetail(): JSX.Element {
   }
 
   function handlePlayModule(module) {
-    console.log("Playing module", JSON.stringify(module, null, 2));
     router.push({
       pathname: "/room/watch",
       params: {
@@ -295,7 +294,7 @@ export default function CourseDetail(): JSX.Element {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} stickyHeaderIndices={[1]}>
         <ImageBackground
-          source={{ uri: "https://via.placeholder.com/400x200" }}
+          source={{ uri: courseData.cover.formats.thumbnail.url }}
           style={styles.header}
         >
           <View style={styles.headerOverlay}>
