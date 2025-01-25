@@ -15,6 +15,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Reviews from '@/components/Reviews';
+import { ImageFormat, Picture } from '@/types/course';
 
 interface Content {
   id: number;
@@ -65,7 +66,7 @@ interface User {
   token: string;
 }
 
-interface CourseData {
+interface Course {
   id: number;
   documentId: string;
   title: string;
@@ -78,6 +79,7 @@ interface CourseData {
   final_test: FinalTest;
   modules: Module[];
   isFavorite?: boolean;
+  cover: Picture;
 }
 
 interface TabProps {
@@ -95,7 +97,7 @@ function Tab({ active, onPress, children }: TabProps): JSX.Element {
 
 export default function CourseDetail(): JSX.Element {
   const [activeTab, setActiveTab] = useState<'lessons' | 'opinions'>('lessons');
-  const [courseData, setCourseData] = useState<CourseData | null>(null);
+  const [courseData, setCourseData] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -267,10 +269,19 @@ export default function CourseDetail(): JSX.Element {
     });
   }
 
+  function handleStartQuiz(content: FinalTest) {
+    router.push({
+      pathname: '/room/quiz',
+      params: {
+        module: JSON.stringify(content),
+      },
+    });
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} stickyHeaderIndices={[1]}>
-        <ImageBackground source={{ uri: courseData?.cover?.formats?.thumbnail.url }} style={styles.header}>
+        <ImageBackground source={{ uri: courseData?.cover?.formats?.thumbnail?.url }} style={styles.header}>
           <View style={styles.headerOverlay}>
             <View style={styles.headerActions}>
               <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
@@ -340,7 +351,7 @@ export default function CourseDetail(): JSX.Element {
                   </TouchableOpacity>
                 ))}
                 {courseData.final_test && (
-                  <TouchableOpacity style={styles.moduleItem}>
+                  <TouchableOpacity style={styles.moduleItem} onPress={() => handleStartQuiz(courseData.final_test)}>
                     <View style={styles.moduleContent}>
                       <View style={styles.moduleTopRow}>
                         <View style={styles.moduleInfo}>
@@ -381,7 +392,7 @@ export default function CourseDetail(): JSX.Element {
           {updating ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={[styles.startButtonText, isInProgress && styles.continueButtonText]}>
+            <Text style={[styles.startButtonText, isInProgress && styles.continueButton]}>
               {isInProgress ? 'Continuar' : 'Iniciar Curso'}
             </Text>
           )}

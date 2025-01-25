@@ -24,7 +24,7 @@ export interface ApiResponse {
   };
 }
 
-interface Picture {
+export interface Picture {
   id: number;
   documentId: string;
   url: string;
@@ -39,7 +39,7 @@ interface Picture {
   };
 }
 
-interface ImageFormat {
+export interface ImageFormat {
   ext: string;
   url: string;
   hash: string;
