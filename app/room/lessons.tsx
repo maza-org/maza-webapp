@@ -273,7 +273,7 @@ export default function CourseDetail(): JSX.Element {
     router.push({
       pathname: '/room/quiz',
       params: {
-        module: JSON.stringify(content),
+        content: JSON.stringify(content),
       },
     });
   }

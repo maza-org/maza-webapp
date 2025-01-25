@@ -24,8 +24,8 @@ interface QuizModule {
 }
 
 export default function Quiz() {
-  const { module } = useLocalSearchParams();
-  const quizData: QuizModule = JSON.parse(module as string);
+  const { content } = useLocalSearchParams();
+  const quizData: QuizModule = JSON.parse(content as string);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showResults, setShowResults] = useState(false);
