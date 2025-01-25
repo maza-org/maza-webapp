@@ -51,9 +51,9 @@ export default function Category() {
       />
       <View style={styles.courseInfo}>
         <Text style={styles.courseTitle}>{course.title}</Text>
-        <View style={styles.courseMetadata}>
-          <Text style={styles.rating}>★ {course.rating_avg.toFixed(1)}</Text>
+        <View>
           {course.author && <Text style={styles.author}>{course.author}</Text>}
+          <Text style={styles.rating}>★ {course.rating_avg.toFixed(1)}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -133,8 +133,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   thumbnail: {
-    width: 120,
-    height: 90,
+    width: 100,
+    height: 70,
     borderRadius: 8,
   },
   courseInfo: {
@@ -147,10 +147,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
-  },
-  courseMetadata: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   rating: {
     color: '#FFD700',
