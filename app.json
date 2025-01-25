@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "org.maza.app",
-    "slug": "org.maza.app",
+    "slug": "org-maza-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -20,7 +20,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "org.maza.app"
     },
     "web": {
       "bundler": "metro",
@@ -33,6 +34,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "5682e6b9-6777-48c0-9d2a-703591db90b1"
+      }
     }
   }
 }
