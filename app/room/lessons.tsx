@@ -281,6 +281,16 @@ export default function CourseDetail(): JSX.Element {
     );
   }
 
+  function handlePlayModule(module) {
+    console.log("Playing module", JSON.stringify(module, null, 2));
+    router.push({
+      pathname: "/room/watch",
+      params: {
+        module: JSON.stringify(module),
+      },
+    });
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} stickyHeaderIndices={[1]}>
@@ -356,7 +366,11 @@ export default function CourseDetail(): JSX.Element {
               </View>
             ) : (
               courseData.modules.map((module, index) => (
-                <TouchableOpacity key={module.id} style={styles.moduleItem}>
+                <TouchableOpacity
+                  key={module.id}
+                  style={styles.moduleItem}
+                  onPress={() => handlePlayModule(module)}
+                >
                   <View style={styles.moduleContent}>
                     <View style={styles.moduleTopRow}>
                       <View style={styles.moduleInfo}>

@@ -4,7 +4,7 @@ export interface User {
   email: string;
   fullname: string;
   phone: string;
-  yoma_id: string;
+  yomaId: string;
   token: string;
 }
 
@@ -26,10 +26,10 @@ export function mapLoginResponseToUser(response: LoginResponse): User {
   return {
     id: response.user.id.toString(),
     documentId: response.user.documentId,
-    email: response.user.email || "",
+    email: response.user.email || '',
     fullname: response.user.fullname,
     phone: response.user.phone,
-    yoma_id: response.user.yoma_id || "",
+    yomaId: response.user.yoma_id || '',
     token: response.jwt,
   };
 }

@@ -1,11 +1,5 @@
-import {
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  View,
-} from "react-native";
-import React from "react";
+import { Text, TouchableOpacity, StyleSheet, ActivityIndicator, View } from 'react-native';
+import React from 'react';
 
 interface ButtonProps {
   handle: () => void;
@@ -14,27 +8,16 @@ interface ButtonProps {
   loading?: boolean;
 }
 
-export default function Button({
-  handle,
-  text,
-  disabled,
-  loading,
-}: ButtonProps) {
+function Button({ handle, text, disabled, loading }: ButtonProps) {
   return (
     <TouchableOpacity
-      style={[
-        styles.confirmButton,
-        loading && styles.loadingButton,
-        disabled && styles.disabledButton,
-      ]}
+      style={[styles.confirmButton, loading && styles.loadingButton, disabled && styles.disabledButton]}
       onPress={handle}
       activeOpacity={0.7}
       disabled={disabled || loading}
     >
       <View style={styles.contentContainer}>
-        {loading && (
-          <ActivityIndicator color="#FFFFFF" style={styles.spinner} />
-        )}
+        {loading && <ActivityIndicator color="#FFFFFF" style={styles.spinner} />}
         <Text style={styles.confirmButtonText}>{text}</Text>
       </View>
     </TouchableOpacity>
@@ -43,29 +26,31 @@ export default function Button({
 
 const styles = StyleSheet.create({
   confirmButton: {
-    backgroundColor: "#22ACE3",
+    backgroundColor: '#22ACE3',
     padding: 16,
     borderRadius: 50,
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 12,
   },
   loadingButton: {
-    backgroundColor: "#29292E",
+    backgroundColor: '#29292E',
   },
   disabledButton: {
     opacity: 0.7,
   },
   contentContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   confirmButtonText: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   spinner: {
     marginRight: 8,
   },
 });
+
+export default Button;

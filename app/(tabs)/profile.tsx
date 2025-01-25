@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,54 +8,27 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-} from "react-native";
-import { Feather } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
-
-interface User {
-  id: string;
-  documentId: string;
-  email: string;
-  fullname: string;
-  phone: string;
-  yoma_id: string;
-  token: string;
-}
+} from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
+import { User } from '@/types/user';
+import useUser from '@/hooks/useUser';
 
 export default function ProfileScreen() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const userData = await AsyncStorage.getItem("@user");
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
-    } catch (error) {
-      console.error("Error loading user data:", error);
-      Alert.alert("Erro", "Falha ao carregar dados do utilizador");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const { data: user, isLoading, error } = useUser();
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem("@user");
-      router.replace("/");
+      await AsyncStorage.removeItem('@user');
+      // queryClient.invalidateQueries({ queryKey: ['user'] });
+      router.replace('/');
     } catch (error) {
-      console.error("Error during logout:", error);
-      Alert.alert("Erro", "Falha ao terminar sessão");
+      console.error('Error during logout:', error);
+      Alert.alert('Erro', 'Falha ao terminar sessão');
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#1fa2df" />
@@ -63,7 +36,7 @@ export default function ProfileScreen() {
     );
   }
 
-  if (!user) {
+  if (error || !user) {
     return (
       <View style={styles.errorContainer}>
         <View style={styles.errorContent}>
@@ -72,19 +45,10 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.errorTitle}>Sessão Expirada</Text>
           <Text style={styles.errorText}>
-            A sua sessão expirou ou não está autenticado. Por favor, inicie
-            sessão novamente para aceder ao seu perfil.
+            A sua sessão expirou ou não está autenticado. Por favor, inicie sessão novamente para aceder ao seu perfil.
           </Text>
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={() => router.replace("/login")}
-          >
-            <Feather
-              name="log-in"
-              size={20}
-              color="#FFF"
-              style={styles.loginButtonIcon}
-            />
+          <TouchableOpacity style={styles.loginButton} onPress={() => router.replace('/login')}>
+            <Feather name="log-in" size={20} color="#FFF" style={styles.loginButtonIcon} />
             <Text style={styles.loginButtonText}>Iniciar Sessão</Text>
           </TouchableOpacity>
         </View>
@@ -97,10 +61,7 @@ export default function ProfileScreen() {
       <ScrollView style={styles.scrollView}>
         <View style={styles.header}>
           <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={() => router.back()}
-            >
+            <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
               <Feather name="chevron-left" size={24} color="#FFF" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.iconButton}>
@@ -112,9 +73,7 @@ export default function ProfileScreen() {
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
             <View style={styles.profileImagePlaceholder}>
-              <Text style={styles.profileImagePlaceholderText}>
-                {user.fullname.charAt(0)}
-              </Text>
+              <Text style={styles.profileImagePlaceholderText}>{user.fullname.charAt(0)}</Text>
             </View>
           </View>
           <Text style={styles.fullname}>{user.fullname}</Text>
@@ -135,9 +94,7 @@ export default function ProfileScreen() {
               <Feather name="mail" size={20} color="#1fa2df" />
               <Text style={styles.infoLabel}>Email</Text>
             </View>
-            <Text style={styles.infoValue}>
-              {user.email || "Não fornecido"}
-            </Text>
+            <Text style={styles.infoValue}>{user.email || 'Não fornecido'}</Text>
           </View>
 
           <View style={styles.infoItem}>
@@ -145,9 +102,7 @@ export default function ProfileScreen() {
               <Feather name="tag" size={20} color="#1fa2df" />
               <Text style={styles.infoLabel}>ID Yoma</Text>
             </View>
-            <Text style={styles.infoValue}>
-              {user.yoma_id || "Não conectado"}
-            </Text>
+            <Text style={styles.infoValue}>{user.yomaId || 'Não conectado'}</Text>
           </View>
         </View>
       </ScrollView>
@@ -165,26 +120,26 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121214",
+    backgroundColor: '#121214',
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: "#121214",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#121214',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   errorContainer: {
     flex: 1,
-    backgroundColor: "#121214",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#121214',
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 24,
   },
   errorContent: {
-    width: "100%",
+    width: '100%',
     maxWidth: 320,
-    alignItems: "center",
-    backgroundColor: "#202024",
+    alignItems: 'center',
+    backgroundColor: '#202024',
     borderRadius: 16,
     padding: 24,
   },
@@ -192,42 +147,42 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "rgba(31, 162, 223, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: 'rgba(31, 162, 223, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 24,
   },
   errorTitle: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: '700',
     marginBottom: 12,
-    textAlign: "center",
+    textAlign: 'center',
   },
   errorText: {
-    color: "#A8A8B3",
+    color: '#A8A8B3',
     fontSize: 16,
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,
   },
   loginButton: {
-    backgroundColor: "#1fa2df",
+    backgroundColor: '#1fa2df',
     padding: 16,
     borderRadius: 50,
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   loginButtonIcon: {
     marginRight: 8,
   },
   loginButtonText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,
@@ -235,23 +190,23 @@ const styles = StyleSheet.create({
   header: {
     height: 100,
     padding: 24,
-    backgroundColor: "#202024",
+    backgroundColor: '#202024',
   },
   headerActions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   iconButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   profileSection: {
-    alignItems: "center",
+    alignItems: 'center',
     padding: 24,
     marginTop: -50,
   },
@@ -262,25 +217,25 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "#1fa2df",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#1fa2df',
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 4,
-    borderColor: "#121214",
+    borderColor: '#121214',
   },
   profileImagePlaceholderText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 36,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   fullname: {
     fontSize: 24,
-    fontWeight: "700",
-    color: "#FFF",
+    fontWeight: '700',
+    color: '#FFF',
     marginBottom: 8,
   },
   documentId: {
-    color: "#A8A8B3",
+    color: '#A8A8B3',
     fontSize: 14,
   },
   infoSection: {
@@ -291,37 +246,37 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   infoHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   infoLabel: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   infoValue: {
-    color: "#A8A8B3",
+    color: '#A8A8B3',
     fontSize: 14,
     marginLeft: 28,
   },
   footer: {
     padding: 24,
     borderTopWidth: 1,
-    borderTopColor: "#323238",
+    borderTopColor: '#323238',
   },
   logoutButton: {
-    backgroundColor: "#202024",
+    backgroundColor: '#202024',
     padding: 16,
     borderRadius: 50,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   logoutButtonText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });

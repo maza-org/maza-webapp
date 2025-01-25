@@ -1,66 +1,58 @@
-import {
-  StyleSheet,
-  Pressable,
-  Animated,
-  Modal,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-} from "react-native";
-import { Feather, Ionicons } from "@expo/vector-icons";
-import { Text, View, useThemeColor } from "@/components/Themed";
-import { useState, useRef, useEffect } from "react";
-import DailyScoreChart from "@/components/Daybar";
-import Search from "@/components/Search";
-import CourseItem from "@/components/CourseItem";
-import FavoriteCoursesGrid from "@/components/FavoriteCoursesGrid";
-import CoursesInProgress from "@/components/CourseInProgress";
+import { StyleSheet, Pressable, Animated, Modal, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { Feather, Ionicons } from '@expo/vector-icons';
+import { Text, View, useThemeColor } from '@/components/Themed';
+import { useState, useRef, useEffect } from 'react';
+import DailyScoreChart from '@/components/Daybar';
+import Search from '@/components/Search';
+import CourseItem from '@/components/CourseItem';
+import FavoriteCoursesGrid from '@/components/FavoriteCoursesGrid';
+import CoursesInProgress from '@/components/CourseInProgress';
 
 // Sample completed courses data
 const completedCourses = [
   {
     id: 1,
-    title: "Advanced React Development",
+    title: 'Advanced React Development',
     progress: 100,
     rating: 4.8,
-    duration: "12h 30m",
-    instructor: "John Smith",
+    duration: '12h 30m',
+    instructor: 'John Smith',
     lessons: 24,
   },
   {
     id: 2,
-    title: "UI/UX Design Fundamentals",
+    title: 'UI/UX Design Fundamentals',
     progress: 100,
     rating: 4.5,
-    duration: "8h 45m",
-    instructor: "Sarah Wilson",
+    duration: '8h 45m',
+    instructor: 'Sarah Wilson',
     lessons: 18,
   },
   {
     id: 3,
-    title: "Mobile App Architecture",
+    title: 'Mobile App Architecture',
     progress: 100,
     rating: 4.9,
-    duration: "15h 20m",
-    instructor: "Mike Johnson",
+    duration: '15h 20m',
+    instructor: 'Mike Johnson',
     lessons: 32,
   },
   {
     id: 4,
-    title: "Cloud Computing Essentials",
+    title: 'Cloud Computing Essentials',
     progress: 100,
     rating: 4.7,
-    duration: "10h 15m",
-    instructor: "Emily Brown",
+    duration: '10h 15m',
+    instructor: 'Emily Brown',
     lessons: 22,
   },
   {
     id: 5,
-    title: "Data Structures & Algorithms",
+    title: 'Data Structures & Algorithms',
     progress: 100,
     rating: 4.6,
-    duration: "20h 00m",
-    instructor: "David Chen",
+    duration: '20h 00m',
+    instructor: 'David Chen',
     lessons: 40,
   },
 ];
@@ -72,11 +64,14 @@ const RadioButton = ({
   onPress,
   animatedBg,
   animatedText,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  animatedBg: string;
+  animatedText: string;
 }) => (
-  <Pressable
-    style={[styles.radioButton, selected && { backgroundColor: animatedBg }]}
-    onPress={onPress}
-  >
+  <Pressable style={[styles.radioButton, selected && { backgroundColor: animatedBg }]} onPress={onPress}>
     <Animated.Text
       style={[
         styles.radioButtonText,
@@ -91,7 +86,7 @@ const RadioButton = ({
 );
 
 // Floating Filter Button Component
-const FloatingFilterButton = ({ onPress }) => (
+const FloatingFilterButton = ({ onPress }: { onPress: () => void }) => (
   <Pressable style={styles.floatingButton} onPress={onPress}>
     <Feather name="filter" size={16} color="#fff" style={styles.filterIcon} />
     <Text style={styles.filterText}>Filtrar</Text>
@@ -99,176 +94,108 @@ const FloatingFilterButton = ({ onPress }) => (
 );
 
 // Filter Option Component
-const FilterOption = ({ label, selected, onPress }) => {
-  const backgroundColor = useThemeColor(
-    { light: "#f5f5f5", dark: "#29292E" },
-    "background",
-  );
-  const textColor = useThemeColor({ light: "#666", dark: "#8F8F8F" }, "text");
+const FilterOption = ({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) => {
+  const backgroundColor = useThemeColor({ light: '#f5f5f5', dark: '#29292E' }, 'background');
+  const textColor = useThemeColor({ light: '#666', dark: '#8F8F8F' }, 'text');
 
   return (
     <TouchableOpacity
       style={[
         styles.filterOption,
         {
-          backgroundColor: selected
-            ? "rgba(130, 87, 229, 0.2)"
-            : backgroundColor,
+          backgroundColor: selected ? 'rgba(130, 87, 229, 0.2)' : backgroundColor,
         },
       ]}
       onPress={onPress}
     >
-      <Text
-        style={[
-          styles.filterOptionText,
-          { color: selected ? "#8257E5" : textColor },
-        ]}
-      >
-        {label}
-      </Text>
+      <Text style={[styles.filterOptionText, { color: selected ? '#8257E5' : textColor }]}>{label}</Text>
     </TouchableOpacity>
   );
 };
 
 // Rating Option Component
-const RatingOption = ({ rating, selected, onPress }) => {
-  const backgroundColor = useThemeColor(
-    { light: "#f5f5f5", dark: "#29292E" },
-    "background",
-  );
-  const textColor = useThemeColor({ light: "#666", dark: "#8F8F8F" }, "text");
+const RatingOption = ({ rating, selected, onPress }: { selected: boolean; onPress: () => void; rating: string }) => {
+  const backgroundColor = useThemeColor({ light: '#f5f5f5', dark: '#29292E' }, 'background');
+  const textColor = useThemeColor({ light: '#666', dark: '#8F8F8F' }, 'text');
 
   return (
     <TouchableOpacity
       style={[
         styles.filterOption,
         {
-          backgroundColor: selected
-            ? "rgba(130, 87, 229, 0.2)"
-            : backgroundColor,
+          backgroundColor: selected ? 'rgba(130, 87, 229, 0.2)' : backgroundColor,
         },
       ]}
       onPress={onPress}
     >
-      <Ionicons
-        name="star"
-        size={16}
-        color={selected ? "#8257E5" : textColor}
-      />
-      <Text
-        style={[
-          styles.filterOptionText,
-          { color: selected ? "#8257E5" : textColor },
-        ]}
-      >
-        {rating}
-      </Text>
+      <Ionicons name="star" size={16} color={selected ? '#8257E5' : textColor} />
+      <Text style={[styles.filterOptionText, { color: selected ? '#8257E5' : textColor }]}>{rating}</Text>
     </TouchableOpacity>
   );
 };
 
 // Filter Modal Component
-const FilterModal = ({ visible, onClose, onApply }) => {
-  const [selectedLevel, setSelectedLevel] = useState("Intermédio");
-  const [selectedRating, setSelectedRating] = useState("4-5");
+const FilterModal = ({
+  visible,
+  onClose,
+  onApply,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onApply: ({ level, rating }: { level: string; rating: string }) => void;
+}) => {
+  const [selectedLevel, setSelectedLevel] = useState('Intermédio');
+  const [selectedRating, setSelectedRating] = useState('4-5');
 
-  const backgroundColor = useThemeColor(
-    { light: "#ffffff", dark: "#202024" },
-    "background",
-  );
-  const textColor = useThemeColor(
-    { light: "#000000", dark: "#ffffff" },
-    "text",
-  );
-  const secondaryTextColor = useThemeColor(
-    { light: "#666666", dark: "#8F8F8F" },
-    "text",
-  );
+  const backgroundColor = useThemeColor({ light: '#ffffff', dark: '#202024' }, 'background');
+  const textColor = useThemeColor({ light: '#000000', dark: '#ffffff' }, 'text');
+  const secondaryTextColor = useThemeColor({ light: '#666666', dark: '#8F8F8F' }, 'text');
 
   return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
+    <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContent, { backgroundColor }]}>
           <View style={[styles.modalHeader, { backgroundColor }]}>
-            <Text style={[styles.modalTitle, { color: textColor }]}>
-              Filtrar Cursos
-            </Text>
+            <Text style={[styles.modalTitle, { color: textColor }]}>Filtrar Cursos</Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={24} color={secondaryTextColor} />
             </TouchableOpacity>
           </View>
 
           <View style={[styles.filterSection, { backgroundColor }]}>
-            <Text
-              style={[styles.filterSectionTitle, { color: secondaryTextColor }]}
-            >
-              Nivel
-            </Text>
+            <Text style={[styles.filterSectionTitle, { color: secondaryTextColor }]}>Nivel</Text>
             <View style={styles.filterOptionsRow}>
               <FilterOption
                 label="Iniciante"
-                selected={selectedLevel === "Iniciante"}
-                onPress={() => setSelectedLevel("Iniciante")}
+                selected={selectedLevel === 'Iniciante'}
+                onPress={() => setSelectedLevel('Iniciante')}
               />
               <FilterOption
                 label="Intermédio"
-                selected={selectedLevel === "Intermédio"}
-                onPress={() => setSelectedLevel("Intermédio")}
+                selected={selectedLevel === 'Intermédio'}
+                onPress={() => setSelectedLevel('Intermédio')}
               />
               <FilterOption
                 label="Avançado"
-                selected={selectedLevel === "Avançado"}
-                onPress={() => setSelectedLevel("Avançado")}
+                selected={selectedLevel === 'Avançado'}
+                onPress={() => setSelectedLevel('Avançado')}
               />
             </View>
             <View style={styles.filterOptionsRow}>
-              <FilterOption
-                label="MAZA"
-                selected={selectedLevel === "MAZA"}
-                onPress={() => setSelectedLevel("MAZA")}
-              />
+              <FilterOption label="MAZA" selected={selectedLevel === 'MAZA'} onPress={() => setSelectedLevel('MAZA')} />
             </View>
           </View>
 
           <View style={[styles.filterSection, { backgroundColor }]}>
-            <Text
-              style={[styles.filterSectionTitle, { color: secondaryTextColor }]}
-            >
-              Avaliação
-            </Text>
+            <Text style={[styles.filterSectionTitle, { color: secondaryTextColor }]}>Avaliação</Text>
             <View style={styles.filterOptionsRow}>
-              <RatingOption
-                rating="0-1"
-                selected={selectedRating === "0-1"}
-                onPress={() => setSelectedRating("0-1")}
-              />
-              <RatingOption
-                rating="1-2"
-                selected={selectedRating === "1-2"}
-                onPress={() => setSelectedRating("1-2")}
-              />
-              <RatingOption
-                rating="2-3"
-                selected={selectedRating === "2-3"}
-                onPress={() => setSelectedRating("2-3")}
-              />
+              <RatingOption rating="0-1" selected={selectedRating === '0-1'} onPress={() => setSelectedRating('0-1')} />
+              <RatingOption rating="1-2" selected={selectedRating === '1-2'} onPress={() => setSelectedRating('1-2')} />
+              <RatingOption rating="2-3" selected={selectedRating === '2-3'} onPress={() => setSelectedRating('2-3')} />
             </View>
             <View style={styles.filterOptionsRow}>
-              <RatingOption
-                rating="3-4"
-                selected={selectedRating === "3-4"}
-                onPress={() => setSelectedRating("3-4")}
-              />
-              <RatingOption
-                rating="4-5"
-                selected={selectedRating === "4-5"}
-                onPress={() => setSelectedRating("4-5")}
-              />
+              <RatingOption rating="3-4" selected={selectedRating === '3-4'} onPress={() => setSelectedRating('3-4')} />
+              <RatingOption rating="4-5" selected={selectedRating === '4-5'} onPress={() => setSelectedRating('4-5')} />
             </View>
           </View>
 
@@ -289,7 +216,7 @@ const FilterModal = ({ visible, onClose, onApply }) => {
 
 // Main Screen Component
 export default function MeusCursosScreen() {
-  const [selectedFilter, setSelectedFilter] = useState("inProgress");
+  const [selectedFilter, setSelectedFilter] = useState('inProgress');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const animationValue = useRef(new Animated.Value(0)).current;
 
@@ -297,11 +224,11 @@ export default function MeusCursosScreen() {
 
   const getAnimatedPosition = () => {
     switch (selectedFilter) {
-      case "inProgress":
+      case 'inProgress':
         return 0;
-      case "favorites":
+      case 'favorites':
         return buttonWidth;
-      case "completed":
+      case 'completed':
         return buttonWidth * 2;
       default:
         return 0;
@@ -319,24 +246,19 @@ export default function MeusCursosScreen() {
 
   const animatedBg = animationValue.interpolate({
     inputRange: [0, buttonWidth, buttonWidth * 2],
-    outputRange: ["#29292E", "#29292E", "#29292E"],
+    outputRange: ['#29292E', '#29292E', '#29292E'],
   });
 
-  const animatedText = (buttonIndex) => {
+  const animatedText = (buttonIndex: number) => {
     return animationValue.interpolate({
-      inputRange: [
-        buttonWidth * (buttonIndex - 0.5),
-        buttonWidth * buttonIndex,
-        buttonWidth * (buttonIndex + 0.5),
-      ],
-      outputRange: ["#666", "#fff", "#666"],
-      extrapolate: "clamp",
+      inputRange: [buttonWidth * (buttonIndex - 0.5), buttonWidth * buttonIndex, buttonWidth * (buttonIndex + 0.5)],
+      outputRange: ['#666', '#fff', '#666'],
+      extrapolate: 'clamp',
     });
   };
 
   const handleFilterApply = (filters) => {
-    console.log("Applied filters:", filters);
-    // Implement your filter logic here
+    console.log('Applied filters:', filters);
   };
 
   return (
@@ -374,26 +296,26 @@ export default function MeusCursosScreen() {
         />
         <RadioButton
           label="Em andam..."
-          selected={selectedFilter === "inProgress"}
-          onPress={() => setSelectedFilter("inProgress")}
+          selected={selectedFilter === 'inProgress'}
+          onPress={() => setSelectedFilter('inProgress')}
           animatedText={animatedText(0)}
         />
         <RadioButton
           label="Favoritos"
-          selected={selectedFilter === "favorites"}
-          onPress={() => setSelectedFilter("favorites")}
+          selected={selectedFilter === 'favorites'}
+          onPress={() => setSelectedFilter('favorites')}
           animatedText={animatedText(1)}
         />
         <RadioButton
           label="Terminados"
-          selected={selectedFilter === "completed"}
-          onPress={() => setSelectedFilter("completed")}
+          selected={selectedFilter === 'completed'}
+          onPress={() => setSelectedFilter('completed')}
           animatedText={animatedText(2)}
         />
       </View>
 
-      {selectedFilter === "favorites" && <FavoriteCoursesGrid />}
-      {selectedFilter === "completed" && (
+      {selectedFilter === 'favorites' && <FavoriteCoursesGrid />}
+      {selectedFilter === 'completed' && (
         <ScrollView style={styles.courseList}>
           {completedCourses.map((course) => (
             <CourseItem
@@ -408,7 +330,7 @@ export default function MeusCursosScreen() {
           ))}
         </ScrollView>
       )}
-      {selectedFilter === "inProgress" && <CoursesInProgress />}
+      {selectedFilter === 'inProgress' && <CoursesInProgress />}
       <FloatingFilterButton onPress={() => setFilterModalVisible(true)} />
 
       <FilterModal
@@ -422,24 +344,24 @@ export default function MeusCursosScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121214",
+    backgroundColor: '#121214',
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 30,
     paddingBottom: 20,
-    backgroundColor: "#121214",
+    backgroundColor: '#121214',
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
+    fontWeight: 'bold',
+    color: '#fff',
   },
   headerButtons: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 8,
   },
   iconButton: {
@@ -448,35 +370,35 @@ const styles = StyleSheet.create({
   maximizeButton: {
     width: 40,
     height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#29292E",
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#29292E',
     borderRadius: 6,
   },
   menuButton: {
     width: 40,
     height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#29292E",
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#29292E',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   searchContainer: {
     marginHorizontal: 16,
     marginTop: 8,
-    backgroundColor: "#202024",
+    backgroundColor: '#202024',
     borderRadius: 8,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     height: 44,
   },
   searchInput: {
     flex: 1,
-    height: "100%",
-    color: "#fff",
+    height: '100%',
+    color: '#fff',
     fontSize: 16,
     marginLeft: 8,
   },
@@ -484,49 +406,49 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   radioGroup: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginHorizontal: 16,
     marginTop: 16,
-    backgroundColor: "#202024",
+    backgroundColor: '#202024',
     borderRadius: 999,
     padding: 4,
-    position: "relative",
+    position: 'relative',
   },
   radioButton: {
     flex: 1,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 999,
-    alignItems: "center",
+    alignItems: 'center',
     zIndex: 1,
   },
   animatedSelection: {
-    position: "absolute",
+    position: 'absolute',
     top: 4,
     left: 4,
     right: 4,
     bottom: 4,
-    width: "33%",
-    backgroundColor: "#29292E",
+    width: '33%',
+    backgroundColor: '#29292E',
     borderRadius: 999,
     zIndex: 0,
   },
   radioButtonText: {
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   floatingButton: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 20,
-    alignSelf: "center",
-    backgroundColor: "#29292E",
+    alignSelf: 'center',
+    backgroundColor: '#29292E',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 999,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     elevation: 5,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -538,77 +460,77 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   filterText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: "#202024",
+    backgroundColor: '#202024',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: 24,
-    minHeight: "50%",
+    minHeight: '50%',
   },
   modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 24,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: "bold",
-    color: "#fff",
+    fontWeight: 'bold',
+    color: '#fff',
   },
   filterSection: {
     marginBottom: 24,
   },
   filterSectionTitle: {
     fontSize: 16,
-    color: "#8F8F8F",
+    color: '#8F8F8F',
     marginBottom: 16,
   },
   filterOptionsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
     marginBottom: 8,
   },
   filterOption: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 999,
-    backgroundColor: "#29292E",
+    backgroundColor: '#29292E',
     gap: 4,
   },
   filterOptionSelected: {
-    backgroundColor: "rgba(130, 87, 229, 0.1)",
+    backgroundColor: 'rgba(130, 87, 229, 0.1)',
   },
   filterOptionText: {
-    color: "#666",
+    color: '#666',
     fontSize: 14,
   },
   filterOptionTextSelected: {
-    color: "#8257E5",
+    color: '#8257E5',
   },
   applyButton: {
-    backgroundColor: "#2EA8FF",
+    backgroundColor: '#2EA8FF',
     padding: 16,
     borderRadius: 8,
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 8,
   },
   applyButtonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   courseList: {
     flex: 1,

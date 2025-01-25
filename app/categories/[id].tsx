@@ -1,40 +1,11 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
-  FlatList,
-} from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
-import Shimmer from "@/components/Shimmer";
-import Header from "@/components/Header";
-
-interface Course {
-  title: string;
-  id: number;
-  documentId: string;
-  author: string | null;
-  rating_avg: number;
-  subjects: {
-    id: number;
-    documentId: string;
-    name: string;
-  }[];
-}
-
-interface ApiResponse {
-  data: Course[];
-  meta: {
-    pagination: {
-      page: number;
-      pageSize: number;
-      pageCount: number;
-      total: number;
-    };
-  };
-}
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList } from 'react-native';
+import { Image } from 'expo-image';
+import { router, useLocalSearchParams } from 'expo-router';
+import Shimmer from '@/components/Shimmer';
+import Header from '@/components/Header';
+import { ApiResponse, Course } from '@/types/course';
+import { blurhash } from '@/util/util';
 
 export default function Category() {
   const { name, id } = useLocalSearchParams();
@@ -47,14 +18,12 @@ export default function Category() {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/courses?subjects=${id}`,
-      );
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/courses?subjects=${id}`);
       const data: ApiResponse = await response.json();
       setCourses(data.data);
       setIsLoading(false);
     } catch (error) {
-      console.error("Error fetching courses:", error);
+      console.error('Error fetching courses:', error);
       setIsLoading(false);
     }
   };
@@ -62,7 +31,7 @@ export default function Category() {
   const handlePressCourse = (course: Course) => {
     console.log(course);
     router.push({
-      pathname: "/room/lessons",
+      pathname: '/room/lessons',
       params: {
         documentId: course.documentId,
       },
@@ -70,13 +39,16 @@ export default function Category() {
   };
 
   const renderCourseItem = ({ item: course }: { item: Course }) => (
-    <TouchableOpacity
-      style={styles.courseCard}
-      onPress={() => handlePressCourse(course)}
-    >
-      <View style={styles.thumbnail}>
-        {/* You can add a placeholder image or icon here */}
-      </View>
+    <TouchableOpacity style={styles.courseCard} onPress={() => handlePressCourse(course)}>
+      <Image
+        style={styles.thumbnail}
+        placeholder={{ blurhash }}
+        contentFit="cover"
+        transition={1000}
+        source={{
+          uri: course.picture?.formats?.thumbnail?.url || course.picture?.formats?.small?.url || course.picture?.url,
+        }}
+      />
       <View style={styles.courseInfo}>
         <Text style={styles.courseTitle}>{course.title}</Text>
         <View style={styles.courseMetadata}>
@@ -110,13 +82,9 @@ export default function Category() {
     />
   );
 
-  const ListEmptyComponent = () => (
-    <Text style={styles.noCourses}>Nenhum curso encontrado</Text>
-  );
+  const ListEmptyComponent = () => <Text style={styles.noCourses}>Nenhum curso encontrado</Text>;
 
-  const ListHeaderComponent = isLoading ? (
-    <Text style={styles.loadingText}>Carregando cursos...</Text>
-  ) : null;
+  const ListHeaderComponent = isLoading ? <Text style={styles.loadingText}>Carregando cursos...</Text> : null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -141,70 +109,69 @@ export default function Category() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121214",
+    backgroundColor: '#121214',
   },
   listContent: {
     paddingHorizontal: 24,
   },
   loadingText: {
-    color: "#666",
+    color: '#666',
     fontSize: 16,
     marginTop: 25,
     marginBottom: 24,
   },
   noCourses: {
-    color: "#666",
+    color: '#666',
     fontSize: 16,
     marginTop: 25,
   },
   courseCard: {
-    flexDirection: "row",
+    flexDirection: 'row',
     padding: 16,
-    backgroundColor: "#202024",
+    backgroundColor: '#202024',
     borderRadius: 12,
     marginBottom: 16,
   },
   thumbnail: {
-    width: 80,
-    height: 80,
-    backgroundColor: "#29292E",
+    width: 120,
+    height: 90,
     borderRadius: 8,
   },
   courseInfo: {
     flex: 1,
     marginLeft: 16,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   courseTitle: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
     marginBottom: 8,
   },
   courseMetadata: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   rating: {
-    color: "#FFD700",
+    color: '#FFD700',
     fontSize: 14,
     marginRight: 8,
   },
   author: {
-    color: "#666",
+    color: '#666',
     fontSize: 14,
   },
   titleShimmer: {
     height: 20,
-    backgroundColor: "#29292E",
+    backgroundColor: '#29292E',
     borderRadius: 4,
     marginBottom: 8,
-    width: "80%",
+    width: '80%',
   },
   descriptionShimmer: {
     height: 16,
-    backgroundColor: "#29292E",
+    backgroundColor: '#29292E',
     borderRadius: 4,
-    width: "60%",
+    width: '60%',
   },
 });
