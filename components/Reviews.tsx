@@ -1,13 +1,6 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ReviewUser {
   id: number;
@@ -45,9 +38,7 @@ interface ReviewsProps {
 const NoReviews = () => (
   <View style={styles.noReviewsContainer}>
     <Text style={styles.noReviewsTitle}>Seja o primeiro a avaliar!</Text>
-    <Text style={styles.noReviewsSubtitle}>
-      Sua opinião é muito importante para melhorarmos nosso conteúdo.
-    </Text>
+    <Text style={styles.noReviewsSubtitle}>Sua opinião é muito importante para melhorarmos nosso conteúdo.</Text>
     <TouchableOpacity style={styles.rateButton}>
       <Text style={styles.rateButtonText}>Avaliar Curso</Text>
     </TouchableOpacity>
@@ -61,7 +52,7 @@ const StarRating = ({ rating }: { rating: number }) => (
         key={star}
         name="star"
         size={20}
-        color={star <= rating ? "#FFB800" : "#A8A8B3"}
+        color={star <= rating ? '#FFB800' : '#A8A8B3'}
         style={styles.starIcon}
       />
     ))}
@@ -72,9 +63,7 @@ const ReviewCard = ({ review }: { review: Review }) => (
   <View style={styles.reviewCard}>
     <View style={styles.reviewHeader}>
       <View style={styles.avatarContainer}>
-        <Text style={styles.avatarText}>
-          {review.user.fullname.charAt(0).toUpperCase()}
-        </Text>
+        <Text style={styles.avatarText}>{review.user.fullname.charAt(0).toUpperCase()}</Text>
       </View>
       <View style={styles.reviewUserInfo}>
         <Text style={styles.userName}>{review.user.fullname}</Text>
@@ -82,9 +71,7 @@ const ReviewCard = ({ review }: { review: Review }) => (
       </View>
     </View>
     <Text style={styles.reviewComment}>{review.comment}</Text>
-    <Text style={styles.reviewDate}>
-      {new Date(review.createdAt).toLocaleDateString()}
-    </Text>
+    <Text style={styles.reviewDate}>{new Date(review.createdAt).toLocaleDateString()}</Text>
   </View>
 );
 
@@ -98,13 +85,11 @@ export default function Reviews({ courseId }: ReviewsProps) {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/reviews?course=${courseId}`,
-      );
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/reviews?course=${courseId}`);
       const data = await response.json();
       setReviews(data);
     } catch (error) {
-      console.error("Error fetching reviews:", error);
+      console.error('Error fetching reviews:', error);
     } finally {
       setLoading(false);
     }
@@ -122,9 +107,7 @@ export default function Reviews({ courseId }: ReviewsProps) {
     return <NoReviews />;
   }
 
-  const averageRating =
-    reviews.data.reduce((acc, review) => acc + review.rating, 0) /
-    reviews.data.length;
+  const averageRating = reviews.data.reduce((acc, review) => acc + review.rating, 0) / reviews.data.length;
 
   return (
     <ScrollView style={styles.container}>
@@ -132,9 +115,7 @@ export default function Reviews({ courseId }: ReviewsProps) {
         <View style={styles.overallRating}>
           <Text style={styles.ratingNumber}>{averageRating.toFixed(1)}</Text>
           <StarRating rating={Math.round(averageRating)} />
-          <Text style={styles.totalReviews}>
-            {reviews.meta.pagination.total} avaliações
-          </Text>
+          <Text style={styles.totalReviews}>{reviews.meta.pagination.total} avaliações</Text>
         </View>
       </View>
 
@@ -153,52 +134,52 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 24,
   },
   noReviewsContainer: {
     padding: 24,
-    alignItems: "center",
+    alignItems: 'center',
   },
   noReviewsTitle: {
     fontSize: 20,
-    fontWeight: "600",
-    color: "#FFF",
+    fontWeight: '600',
+    color: '#FFF',
     marginBottom: 8,
   },
   noReviewsSubtitle: {
     fontSize: 14,
-    color: "#A8A8B3",
-    textAlign: "center",
+    color: '#A8A8B3',
+    textAlign: 'center',
     marginBottom: 24,
   },
   rateButton: {
-    backgroundColor: "#1fa2df",
+    backgroundColor: '#1fa2df',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
   },
   rateButtonText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   ratingOverview: {
     padding: 24,
-    alignItems: "center",
+    alignItems: 'center',
   },
   overallRating: {
-    alignItems: "center",
+    alignItems: 'center',
   },
   ratingNumber: {
     fontSize: 48,
-    fontWeight: "700",
-    color: "#FFF",
+    fontWeight: '700',
+    color: '#FFF',
     marginBottom: 8,
   },
   starsContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginBottom: 8,
   },
   starIcon: {
@@ -206,53 +187,52 @@ const styles = StyleSheet.create({
   },
   totalReviews: {
     fontSize: 14,
-    color: "#A8A8B3",
+    color: '#A8A8B3',
   },
   reviewsList: {
     padding: 24,
   },
   reviewCard: {
-    backgroundColor: "#202024",
     borderRadius: 15,
     padding: 16,
     marginBottom: 16,
   },
   reviewHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
   },
   avatarContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#323238",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#323238',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
   },
   avatarText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   reviewUserInfo: {
     flex: 1,
   },
   userName: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
     marginBottom: 4,
   },
   reviewComment: {
-    color: "#A8A8B3",
+    color: '#A8A8B3',
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 8,
   },
   reviewDate: {
-    color: "#7C7C8A",
+    color: '#7C7C8A',
     fontSize: 12,
   },
 });

@@ -29,7 +29,6 @@ export default function Category() {
   };
 
   const handlePressCourse = (course: Course) => {
-    console.log("selected course", course)
     router.push({
       pathname: '/room/lessons',
       params: {
