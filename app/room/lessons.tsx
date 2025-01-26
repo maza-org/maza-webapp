@@ -15,7 +15,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Reviews from '@/components/Reviews';
-import { ImageFormat, Picture } from '@/types/course';
+import { Picture } from '@/types/course';
 
 interface Content {
   id: number;
@@ -87,7 +87,7 @@ interface TabProps {
   onPress: () => void;
   children: string;
 }
-function Tab({ active, onPress, children }: TabProps): JSX.Element {
+function Tab({ active, onPress, children }: TabProps) {
   return (
     <TouchableOpacity onPress={onPress} style={[styles.tab, active && styles.activeTab]}>
       <Text style={[styles.tabText, active && styles.activeTabText]}>{children}</Text>
@@ -95,7 +95,7 @@ function Tab({ active, onPress, children }: TabProps): JSX.Element {
   );
 }
 
-export default function CourseDetail(): JSX.Element {
+export default function CourseDetail() {
   const [activeTab, setActiveTab] = useState<'lessons' | 'opinions'>('lessons');
   const [courseData, setCourseData] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
@@ -218,7 +218,6 @@ export default function CourseDetail(): JSX.Element {
         throw new Error('Failed to save course');
       }
 
-      const savedCourse = await saveResponse.json();
       const updateResponse = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses/${documentId}`, {
         method: 'PUT',
         headers: {
@@ -232,7 +231,6 @@ export default function CourseDetail(): JSX.Element {
         }),
       });
 
-      const updatedCourse = await updateResponse.json();
       if (!updateResponse.ok) {
         throw new Error('Erro ao começar curso');
       }
@@ -260,7 +258,7 @@ export default function CourseDetail(): JSX.Element {
     );
   }
 
-  function handlePlayModule(module) {
+  function handlePlayModule(module: Module) {
     router.push({
       pathname: '/room/watch',
       params: {
