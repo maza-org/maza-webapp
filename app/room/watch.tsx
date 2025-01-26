@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView, Dimensions } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import YoutubePlayer from 'react-native-youtube-iframe';
-import { Module } from '@/app/room/lessons';
+import { Module, Quiz } from '@/app/room/lessons';
 import ModuleItem from '@/components/ModuleItem';
 
 const width = Dimensions.get('screen').width;
@@ -21,7 +21,7 @@ interface Content {
 interface ModuleData {
   id: number;
   title: string;
-  quiz: null;
+  quiz: Quiz;
   contents: Content[];
 }
 
@@ -55,7 +55,6 @@ export default function CourseScreen() {
   const [selectedContent, setSelectedContent] = React.useState<Content | undefined>(undefined);
 
   const handleContentPress = (content: Content) => {
-    console.log(content);
     if (content.format === 'Text' && content.description && !content.youtubeID) {
       router.push({
         pathname: '/room/text-viewer',
@@ -68,6 +67,15 @@ export default function CourseScreen() {
       setSelectedContent(content);
       setPlaying(true);
     }
+  };
+
+  const handleQuizPress = (quiz: Quiz) => {
+    router.push({
+      pathname: '/room/quiz',
+      params: {
+        content: JSON.stringify(quiz),
+      },
+    });
   };
 
   return (
@@ -106,6 +114,25 @@ export default function CourseScreen() {
                 onPress={handleContentPress}
               />
             ))}
+
+            {/* Quiz Item */}
+            {moduleData.quiz && (
+              <TouchableOpacity style={styles.moduleItem} onPress={() => handleQuizPress(moduleData.quiz)}>
+                <View style={styles.moduleHeader}>
+                  <Text style={styles.moduleNumber}>Q.</Text>
+                  <Text style={styles.moduleTitle}>Avaliação</Text>
+                  <View style={styles.quizIcon}>
+                    <Ionicons name="help-circle" size={20} color="#4db5ff" />
+                  </View>
+                </View>
+                <View style={styles.moduleFooter}>
+                  <View style={styles.moduleDuration}>
+                    <Feather name="check-circle" size={14} color="#A8A8B3" />
+                    <Text style={styles.moduleDurationText}>{moduleData.quiz.questions?.length || 0} perguntas</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -141,12 +168,6 @@ const styles = StyleSheet.create({
     color: '#FFF',
     marginBottom: 8,
   },
-  courseDescription: {
-    fontSize: 14,
-    color: '#A8A8B3',
-    lineHeight: 20,
-    marginBottom: 16,
-  },
   instructorInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -175,25 +196,26 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 8,
   },
-  moduleItemSelected: {
-    backgroundColor: 'rgba(32, 32, 36, 0.8)',
-    borderColor: '#00B37E',
-    borderWidth: 1,
-  },
   moduleHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
   },
   moduleNumber: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFF',
-    marginRight: 4,
+    marginRight: 8,
   },
   moduleTitle: {
     fontSize: 16,
     color: '#FFF',
     flex: 1,
+  },
+  quizIcon: {
+    backgroundColor: '#2a2d3e',
+    borderRadius: 50,
+    padding: 5,
   },
   moduleFooter: {
     flexDirection: 'row',

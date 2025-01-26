@@ -45,7 +45,7 @@ interface Question {
   }[];
 }
 
-interface FinalTest {
+export interface Quiz {
   id: number;
   pass_grade: number;
   questions: Question[];
@@ -77,7 +77,7 @@ interface Course {
   updatedAt: string;
   publishedAt: string;
   subjects: Subject[];
-  final_test: FinalTest;
+  final_test: Quiz;
   modules: Module[];
   isFavorite?: boolean;
   cover: Picture;
@@ -268,7 +268,7 @@ export default function CourseDetail() {
     });
   }
 
-  function handleStartQuiz(content: FinalTest) {
+  function handleStartQuiz(content: Quiz) {
     router.push({
       pathname: '/room/quiz',
       params: {
