@@ -17,15 +17,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Reviews from '@/components/Reviews';
 import { Picture } from '@/types/course';
 
-interface Content {
+export interface Content {
   id: number;
   title: string;
   format: string;
+  youtubeID: string;
   url: string;
   description: string | null;
 }
 
-interface Module {
+export interface Module {
   id: number;
   title: string;
   quiz: any;

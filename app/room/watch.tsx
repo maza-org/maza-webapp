@@ -54,8 +54,19 @@ export default function CourseScreen() {
   const [selectedContent, setSelectedContent] = React.useState<Content | null>(null);
 
   const handleContentPress = (content: Content) => {
-    setSelectedContent(content);
-    setPlaying(true);
+    console.log(content);
+    if (content.format === 'Text' && content.description && !content.youtubeID) {
+      router.push({
+        pathname: '/room/text-viewer',
+        params: {
+          content: JSON.stringify(content),
+        },
+      });
+      return;
+    } else {
+      setSelectedContent(content);
+      setPlaying(true);
+    }
   };
 
   return (
