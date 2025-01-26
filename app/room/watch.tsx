@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { Module } from '@/app/room/lessons';
+import ModuleItem from '@/components/ModuleItem';
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -51,7 +52,7 @@ export default function CourseScreen() {
   const params = useLocalSearchParams();
   const moduleData = JSON.parse(params.module as string) as Module;
   const [playing, setPlaying] = React.useState(false);
-  const [selectedContent, setSelectedContent] = React.useState<Content | null>(null);
+  const [selectedContent, setSelectedContent] = React.useState<Content | undefined>(undefined);
 
   const handleContentPress = (content: Content) => {
     console.log(content);
@@ -97,24 +98,13 @@ export default function CourseScreen() {
           {/* Modules List */}
           <View style={styles.modulesList}>
             {moduleData.contents?.map((content, index) => (
-              <TouchableOpacity
+              <ModuleItem
                 key={content.id}
-                style={[styles.moduleItem, selectedContent?.id === content.id && styles.moduleItemSelected]}
-                onPress={() => handleContentPress(content)}
-              >
-                <View style={styles.moduleHeader}>
-                  <Text style={styles.moduleNumber}>{index + 1}.</Text>
-                  <Text style={styles.moduleTitle}>{content.title}</Text>
-                </View>
-                <View style={styles.moduleFooter}>
-                  <View style={styles.moduleDuration}>
-                    <Feather name={content.format === 'Text' ? 'file-text' : 'video'} size={14} color="#A8A8B3" />
-                    <Text style={styles.moduleDurationText}>
-                      {content.format === 'Text' ? 'Texto' : content.format}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
+                content={content}
+                index={index}
+                selectedContent={selectedContent}
+                onPress={handleContentPress}
+              />
             ))}
           </View>
         </ScrollView>
