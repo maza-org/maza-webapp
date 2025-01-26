@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 
@@ -23,111 +23,182 @@ interface QuizModule {
   questions: Question[];
 }
 
+const ResultsView = ({
+  correctAnswers,
+  totalQuestions,
+  passGrade,
+  onRetake,
+}: {
+  correctAnswers: number;
+  totalQuestions: number;
+  passGrade: number;
+  onRetake: () => void;
+}) => {
+  const score = (correctAnswers / totalQuestions) * 100;
+  const passed = score >= passGrade;
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Resultado Final</Text>
+      </View>
+
+      <ScrollView style={styles.content} contentContainerStyle={styles.resultsContentContainer}>
+        <View style={[styles.scoreCard, passed ? styles.passedCard : styles.failedCard]}>
+          <Text style={styles.scoreTitle}>{passed ? 'Parabéns!' : 'Tente Novamente'}</Text>
+          <Text style={styles.scoreText}>{score.toFixed(1)}%</Text>
+          <View style={styles.statsRow}>
+            <Text style={styles.statText}>Questões Corretas: {correctAnswers}</Text>
+            <Text style={styles.statText}>Questões Incorretas: {totalQuestions - correctAnswers}</Text>
+          </View>
+          <Text style={styles.totalText}>Total de Questões: {totalQuestions}</Text>
+        </View>
+
+        <View style={styles.resultsButtonContainer}>
+          <TouchableOpacity style={styles.retakeButton} onPress={onRetake}>
+            <Text style={styles.retakeButtonText}>Tentar Novamente</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.continueButton} onPress={() => router.back()}>
+            <Text style={styles.continueButtonText}>Continuar</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
+  );
+};
+
 export default function Quiz() {
   const { content } = useLocalSearchParams();
   const quizData: QuizModule = JSON.parse(content as string);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showResults, setShowResults] = useState(false);
-
-  const calculateScore = () => {
-    let correctAnswers = 0;
-    Object.entries(selectedAnswers).forEach(([questionId, answerId]) => {
-      const question = quizData.questions.find((q) => q.id === Number(questionId));
-      const selectedOption = question?.options.find((o) => o.id === answerId);
-      if (selectedOption?.is_correct) {
-        correctAnswers++;
-      }
-    });
-    return (correctAnswers / quizData.questions.length) * 100;
-  };
+  const [showCurrentFeedback, setShowCurrentFeedback] = useState(false);
 
   const handleAnswer = (questionId: number, optionId: number) => {
     setSelectedAnswers((prev) => ({
       ...prev,
       [questionId]: optionId,
     }));
+    setShowCurrentFeedback(true);
+  };
+
+  const handleNext = () => {
+    setCurrentQuestion((prev) => prev + 1);
+    setShowCurrentFeedback(false);
+  };
+
+  const handlePrevious = () => {
+    setCurrentQuestion((prev) => prev - 1);
+    setShowCurrentFeedback(false);
   };
 
   const handleFinish = () => {
-    const score = calculateScore();
     setShowResults(true);
-    if (score >= quizData.pass_grade) {
-      Alert.alert('Parabéns!', `Você passou no teste com ${score.toFixed(1)}%`);
-    } else {
-      Alert.alert('Tente novamente', `Sua pontuação foi ${score.toFixed(1)}%`);
-    }
+  };
+
+  const handleRetake = () => {
+    setCurrentQuestion(0);
+    setSelectedAnswers({});
+    setShowResults(false);
+    setShowCurrentFeedback(false);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Feather name="chevron-left" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Teste Final</Text>
-        <Text style={styles.questionCounter}>
-          {currentQuestion + 1}/{quizData.questions.length}
-        </Text>
-      </View>
-
-      <ScrollView style={styles.content}>
-        <View style={styles.questionContainer}>
-          <Text style={styles.questionText}>{quizData.questions[currentQuestion].description}</Text>
-
-          <View style={styles.optionsContainer}>
-            {quizData.questions[currentQuestion].options.map((option) => (
-              <TouchableOpacity
-                key={option.id}
-                style={[
-                  styles.optionButton,
-                  selectedAnswers[quizData.questions[currentQuestion].id] === option.id && styles.selectedOption,
-                  showResults && option.is_correct && styles.correctOption,
-                  showResults &&
-                    selectedAnswers[quizData.questions[currentQuestion].id] === option.id &&
-                    !option.is_correct &&
-                    styles.incorrectOption,
-                ]}
-                onPress={() => handleAnswer(quizData.questions[currentQuestion].id, option.id)}
-                disabled={showResults}
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    selectedAnswers[quizData.questions[currentQuestion].id] === option.id && styles.selectedOptionText,
-                  ]}
-                >
-                  {option.description}
-                </Text>
-                {showResults && option.comment && <Text style={styles.commentText}>{option.comment}</Text>}
-              </TouchableOpacity>
-            ))}
+      {!showResults ? (
+        <>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <Feather name="chevron-left" size={24} color="#FFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Teste Final</Text>
+            <Text style={styles.questionCounter}>
+              {currentQuestion + 1}/{quizData.questions.length}
+            </Text>
           </View>
-        </View>
-      </ScrollView>
 
-      <View style={styles.footer}>
-        {currentQuestion > 0 && !showResults && (
-          <TouchableOpacity style={styles.navigationButton} onPress={() => setCurrentQuestion((prev) => prev - 1)}>
-            <Text style={styles.navigationButtonText}>Anterior</Text>
-          </TouchableOpacity>
-        )}
+          <ScrollView style={styles.content}>
+            <View style={styles.questionContainer}>
+              <Text style={styles.questionText}>
+                {currentQuestion + 1}. {quizData.questions[currentQuestion].description}
+              </Text>
 
-        {currentQuestion < quizData.questions.length - 1 && !showResults && (
-          <TouchableOpacity
-            style={[styles.navigationButton, styles.nextButton]}
-            onPress={() => setCurrentQuestion((prev) => prev + 1)}
-          >
-            <Text style={styles.navigationButtonText}>Próxima</Text>
-          </TouchableOpacity>
-        )}
+              <View style={styles.optionsContainer}>
+                {quizData.questions[currentQuestion].options.map((option) => (
+                  <TouchableOpacity
+                    key={option.id}
+                    style={[
+                      styles.optionButton,
+                      selectedAnswers[quizData.questions[currentQuestion].id] === option.id && styles.selectedOption,
+                      (showCurrentFeedback || showResults) && option.is_correct && styles.correctOption,
+                      (showCurrentFeedback || showResults) &&
+                        selectedAnswers[quizData.questions[currentQuestion].id] === option.id &&
+                        !option.is_correct &&
+                        styles.incorrectOption,
+                    ]}
+                    onPress={() => handleAnswer(quizData.questions[currentQuestion].id, option.id)}
+                    disabled={showCurrentFeedback || showResults}
+                  >
+                    <Text
+                      style={[
+                        styles.optionText,
+                        selectedAnswers[quizData.questions[currentQuestion].id] === option.id &&
+                          styles.selectedOptionText,
+                      ]}
+                    >
+                      {option.description}
+                    </Text>
+                    {(showCurrentFeedback || showResults) && option.comment && (
+                      <Text style={styles.commentText}>{option.comment}</Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </ScrollView>
 
-        {currentQuestion === quizData.questions.length - 1 && !showResults && (
-          <TouchableOpacity style={[styles.navigationButton, styles.finishButton]} onPress={handleFinish}>
-            <Text style={styles.navigationButtonText}>Finalizar</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+          <View style={styles.footer}>
+            {currentQuestion > 0 && (
+              <TouchableOpacity style={styles.navigationButton} onPress={handlePrevious}>
+                <Text style={styles.navigationButtonText}>Anterior</Text>
+              </TouchableOpacity>
+            )}
+
+            {currentQuestion < quizData.questions.length - 1 ? (
+              <TouchableOpacity
+                style={[styles.navigationButton, styles.nextButton]}
+                onPress={handleNext}
+                disabled={!showCurrentFeedback}
+              >
+                <Text style={styles.navigationButtonText}>Próxima</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.navigationButton, styles.finishButton]}
+                onPress={handleFinish}
+                disabled={!showCurrentFeedback}
+              >
+                <Text style={styles.navigationButtonText}>Finalizar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </>
+      ) : (
+        <ResultsView
+          correctAnswers={
+            Object.entries(selectedAnswers).filter(([questionId, answerId]) => {
+              const question = quizData.questions.find((q) => q.id === Number(questionId));
+              const selectedOption = question?.options.find((o) => o.id === answerId);
+              return selectedOption?.is_correct;
+            }).length
+          }
+          totalQuestions={quizData.questions.length}
+          passGrade={quizData.pass_grade}
+          onRetake={handleRetake}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -160,6 +231,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  resultsContentContainer: {
+    padding: 24,
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   questionContainer: {
     padding: 24,
@@ -225,6 +301,73 @@ const styles = StyleSheet.create({
     backgroundColor: '#04D361',
   },
   navigationButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  resultsButtonContainer: {
+    gap: 16,
+    marginTop: 24,
+  },
+  scoreCard: {
+    padding: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  passedCard: {
+    backgroundColor: 'rgba(4, 211, 97, 0.1)',
+    borderWidth: 2,
+    borderColor: '#04D361',
+  },
+  failedCard: {
+    backgroundColor: 'rgba(255, 59, 48, 0.1)',
+    borderWidth: 2,
+    borderColor: '#FF3B30',
+  },
+  scoreTitle: {
+    color: '#FFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  scoreText: {
+    color: '#FFF',
+    fontSize: 48,
+    fontWeight: 'bold',
+    marginBottom: 24,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 8,
+  },
+  statText: {
+    color: '#A8A8B3',
+    fontSize: 16,
+  },
+  totalText: {
+    color: '#A8A8B3',
+    fontSize: 16,
+  },
+  retakeButton: {
+    backgroundColor: '#1fa2df',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  retakeButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  continueButton: {
+    backgroundColor: '#323238',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  continueButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
