@@ -76,6 +76,12 @@ export default function Quiz() {
   const [showResults, setShowResults] = useState(false);
   const [showCurrentFeedback, setShowCurrentFeedback] = useState(false);
 
+  const getCurrentSelectedOption = () => {
+    const questionId = quizData.questions[currentQuestion].id;
+    const selectedOptionId = selectedAnswers[questionId];
+    return quizData.questions[currentQuestion].options.find((option) => option.id === selectedOptionId);
+  };
+
   const handleAnswer = (questionId: number, optionId: number) => {
     setSelectedAnswers((prev) => ({
       ...prev,
@@ -126,36 +132,54 @@ export default function Quiz() {
               </Text>
 
               <View style={styles.optionsContainer}>
-                {quizData.questions[currentQuestion].options.map((option) => (
-                  <TouchableOpacity
-                    key={option.id}
-                    style={[
-                      styles.optionButton,
-                      selectedAnswers[quizData.questions[currentQuestion].id] === option.id && styles.selectedOption,
-                      (showCurrentFeedback || showResults) && option.is_correct && styles.correctOption,
-                      (showCurrentFeedback || showResults) &&
-                        selectedAnswers[quizData.questions[currentQuestion].id] === option.id &&
-                        !option.is_correct &&
-                        styles.incorrectOption,
-                    ]}
-                    onPress={() => handleAnswer(quizData.questions[currentQuestion].id, option.id)}
-                    disabled={showCurrentFeedback || showResults}
-                  >
-                    <Text
+                {quizData.questions[currentQuestion].options.map((option) => {
+                  const isSelected = selectedAnswers[quizData.questions[currentQuestion].id] === option.id;
+                  const showComment = isSelected && option.comment;
+
+                  return (
+                    <TouchableOpacity
+                      key={option.id}
                       style={[
-                        styles.optionText,
-                        selectedAnswers[quizData.questions[currentQuestion].id] === option.id &&
-                          styles.selectedOptionText,
+                        styles.optionButton,
+                        isSelected && styles.selectedOption,
+                        (showCurrentFeedback || showResults) && option.is_correct && styles.correctOption,
+                        (showCurrentFeedback || showResults) &&
+                          isSelected &&
+                          !option.is_correct &&
+                          styles.incorrectOption,
                       ]}
+                      onPress={() => handleAnswer(quizData.questions[currentQuestion].id, option.id)}
+                      disabled={showCurrentFeedback || showResults}
                     >
-                      {option.description}
-                    </Text>
-                    {(showCurrentFeedback || showResults) && option.comment && (
-                      <Text style={styles.commentText}>{option.comment}</Text>
-                    )}
-                  </TouchableOpacity>
-                ))}
+                      <View style={styles.optionContent}>
+                        <View style={styles.optionTextContainer}>
+                          <Text style={[styles.optionText, isSelected && styles.selectedOptionText]}>
+                            {option.description}
+                          </Text>
+                        </View>
+
+                        {(showCurrentFeedback || showResults) && (
+                          <View style={styles.iconContainer}>
+                            {option.is_correct ? (
+                              <Feather name="check-circle" size={24} color="#04D361" />
+                            ) : (
+                              isSelected && <Feather name="x-circle" size={24} color="#FF3B30" />
+                            )}
+                          </View>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
+
+              {/* Comment section at the bottom */}
+              {showCurrentFeedback && getCurrentSelectedOption()?.comment && (
+                <View style={styles.bottomCommentContainer}>
+                  <Text style={styles.bottomCommentTitle}>Comentário</Text>
+                  <Text style={styles.bottomCommentText}>{getCurrentSelectedOption()?.comment}</Text>
+                </View>
+              )}
             </View>
           </ScrollView>
 
@@ -267,6 +291,15 @@ const styles = StyleSheet.create({
     borderColor: '#FF3B30',
     backgroundColor: 'rgba(255, 59, 48, 0.1)',
   },
+  optionContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  optionTextContainer: {
+    flex: 1,
+    marginRight: 16,
+  },
   optionText: {
     color: '#FFF',
     fontSize: 16,
@@ -278,6 +311,9 @@ const styles = StyleSheet.create({
     color: '#A8A8B3',
     fontSize: 14,
     marginTop: 8,
+  },
+  iconContainer: {
+    paddingTop: 4,
   },
   footer: {
     flexDirection: 'row',
@@ -369,6 +405,24 @@ const styles = StyleSheet.create({
   },
   continueButtonText: {
     color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  bottomCommentContainer: {
+    marginTop: 24,
+    padding: 16,
+    backgroundColor: 'transparent',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#1fa2df',
+  },
+  bottomCommentText: {
+    color: '#A8A8B3',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  bottomCommentTitle: {
+    color: '#1fa2df',
     fontSize: 16,
     fontWeight: '600',
   },
