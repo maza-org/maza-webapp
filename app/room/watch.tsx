@@ -108,8 +108,10 @@ export default function CourseScreen() {
                 </View>
                 <View style={styles.moduleFooter}>
                   <View style={styles.moduleDuration}>
-                    <Feather name="video" size={14} color="#A8A8B3" />
-                    <Text style={styles.moduleDurationText}>{content.format}</Text>
+                    <Feather name={content.format === 'Text' ? 'file-text' : 'video'} size={14} color="#A8A8B3" />
+                    <Text style={styles.moduleDurationText}>
+                      {content.format === 'Text' ? 'Texto' : content.format}
+                    </Text>
                   </View>
                 </View>
               </TouchableOpacity>
