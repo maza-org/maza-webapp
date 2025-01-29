@@ -6,9 +6,12 @@ import { router } from 'expo-router';
 export default function Home() {
   const [subjects, setSubjects] = useState([]);
   const [loadingSubjects, setLoadingSubjects] = useState(true);
+  const [popularCourses, setPopularCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
 
   useEffect(() => {
     fetchSubjects();
+    fetchPopularCourses();
   }, []);
 
   const fetchSubjects = async () => {
@@ -24,6 +27,18 @@ export default function Home() {
     } catch (error) {
       console.error('Error fetching subjects:', error);
       setLoadingSubjects(false);
+    }
+  };
+
+  const fetchPopularCourses = async () => {
+    try {
+      const response = await fetch('https://maza-strapi-backend.onrender.com/api/courses');
+      const data = await response.json();
+      setPopularCourses(data.data);
+      setLoadingCourses(false);
+    } catch (error) {
+      console.error('Error fetching popular courses:', error);
+      setLoadingCourses(false);
     }
   };
 
@@ -45,6 +60,7 @@ export default function Home() {
         <TouchableOpacity onPress={() => router.push('/start')}>
           <Text style={{ color: 'white', fontSize: 20 }}>GO</Text>
         </TouchableOpacity>
+
         {/* Header with Bell Icon */}
         <View style={styles.header}>
           <Text style={styles.headerText}>O que pretende aprender hoje?</Text>
@@ -183,6 +199,7 @@ export default function Home() {
           </View>
         </View>
 
+        {/* Courses in Progress */}
         <View style={styles.coursesInProgress}>
           <View style={styles.coursesHeader}>
             <Text style={styles.sectionTitle}>Cursos em andamento</Text>
@@ -213,6 +230,8 @@ export default function Home() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Popular Courses */}
         <View style={styles.popularCoursesSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Cursos mais populares</Text>
@@ -222,144 +241,76 @@ export default function Home() {
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.popularCoursesList}>
-            <TouchableOpacity style={styles.popularCourseCard}>
-              <Image source={{ uri: 'https://via.placeholder.com/160x120' }} style={styles.popularCourseImage} />
-              <View style={styles.courseLevelBadge}>
-                <Text style={styles.courseLevelText}>Intermediário</Text>
-              </View>
-              <View style={styles.courseRatingBadge}>
-                <Text style={styles.starIcon}>★</Text>
-                <Text style={styles.ratingText}>4.5</Text>
-              </View>
-              <View style={styles.popularCourseInfo}>
-                <Text style={styles.courseCategory}>Negócios</Text>
-                <Text style={styles.popularCourseTitle}>Entrepreneurship and New Venture Creation</Text>
-                <View style={styles.instructorInfo}>
-                  <Image source={{ uri: 'https://via.placeholder.com/24' }} style={styles.instructorAvatar} />
-                  <Text style={styles.instructorName}>Lívia...</Text>
-                  <View style={styles.courseStats}>
-                    <Feather name="book" size={12} color="#FFF" />
-                    <Text style={styles.statsText}>12 módulos</Text>
-                    <Feather name="users" size={12} color="#FFF" />
-                    <Text style={styles.statsText}>3.8K inscritos</Text>
-                  </View>
+            {loadingCourses ? (
+              // Loading placeholder
+              <View style={styles.popularCourseCard}>
+                <View style={[styles.popularCourseImage, { backgroundColor: '#29292E' }]} />
+                <View style={styles.popularCourseInfo}>
+                  <View style={[styles.courseCategory, { width: 100, height: 20, backgroundColor: '#29292E' }]} />
+                  <View
+                    style={[
+                      styles.popularCourseTitle,
+                      { width: 200, height: 20, backgroundColor: '#29292E', marginTop: 8 },
+                    ]}
+                  />
                 </View>
               </View>
-            </TouchableOpacity>
+            ) : (
+              popularCourses.map((course) => (
+                <TouchableOpacity key={course.id} style={styles.popularCourseCard}>
+                  {course.picture ? (
+                    <Image source={{ uri: course.picture.formats.small.url }} style={styles.popularCourseImage} />
+                  ) : (
+                    <View
+                      style={[
+                        styles.popularCourseImage,
+                        { backgroundColor: '#29292E', justifyContent: 'center', alignItems: 'center' },
+                      ]}
+                    >
+                      <Feather name="image" size={24} color="#666" />
+                    </View>
+                  )}
 
-            <TouchableOpacity style={styles.popularCourseCard}>
-              <Image source={{ uri: 'https://via.placeholder.com/160x120' }} style={styles.popularCourseImage} />
-              <View style={styles.courseLevelBadge}>
-                <Text style={styles.courseLevelText}>Iniciante</Text>
-              </View>
-              <View style={styles.courseRatingBadge}>
-                <Text style={styles.starIcon}>★</Text>
-                <Text style={styles.ratingText}>4.8</Text>
-              </View>
-              <View style={styles.popularCourseInfo}>
-                <Text style={styles.courseCategory}>Marketing</Text>
-                <Text style={styles.popularCourseTitle}>Introduction to Digital Marketing</Text>
-                <View style={styles.instructorInfo}>
-                  <Image source={{ uri: 'https://via.placeholder.com/24' }} style={styles.instructorAvatar} />
-                  <Text style={styles.instructorName}>Sara...</Text>
-                  <View style={styles.courseStats}>
-                    <Feather name="book" size={12} color="#FFF" />
-                    <Text style={styles.statsText}>8 módulos</Text>
-                    <Feather name="users" size={12} color="#FFF" />
-                    <Text style={styles.statsText}>2.5K inscritos</Text>
+                  <View style={styles.courseLevelBadge}>
+                    <Text style={styles.courseLevelText}>Intermediário</Text>
                   </View>
-                </View>
-              </View>
-            </TouchableOpacity>
+
+                  <View style={styles.courseRatingBadge}>
+                    <Text style={styles.starIcon}>★</Text>
+                    <Text style={styles.ratingText}>{course.rating_avg}</Text>
+                  </View>
+
+                  <View style={styles.popularCourseInfo}>
+                    {course.subjects && course.subjects[0] && (
+                      <Text style={styles.courseCategory}>{course.subjects[0].name}</Text>
+                    )}
+
+                    <Text style={styles.popularCourseTitle} numberOfLines={2}>
+                      {course.title}
+                    </Text>
+
+                    <View style={styles.instructorInfo}>
+                      <Image source={{ uri: 'https://via.placeholder.com/24' }} style={styles.instructorAvatar} />
+                      <Text style={styles.instructorName}>
+                        {course.author ? course.author.slice(0, 5) + '...' : 'Instrutor'}
+                      </Text>
+                      <View style={styles.courseStats}>
+                        <Feather name="book" size={12} color="#FFF" />
+                        <Text style={styles.statsText}>12 módulos</Text>
+                        <Feather name="users" size={12} color="#FFF" />
+                        <Text style={styles.statsText}>3.8K inscritos</Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))
+            )}
           </ScrollView>
-        </View>
-        {/* Mentores Section */}
-        <View style={styles.mentoresSection}>
-          <View style={styles.mentoresHeader}>
-            <Text style={styles.sectionTitle}>Mentores</Text>
-            <TouchableOpacity>
-              <Text style={styles.verTodos}>VER TODOS</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Mentor Cards */}
-          <View style={styles.mentorCard}>
-            <View style={styles.mentorInfo}>
-              <Image source={{ uri: 'https://via.placeholder.com/48' }} style={styles.mentorImage} />
-              <View style={styles.mentorDetails}>
-                <Text style={styles.mentorName}>Alex Johnson</Text>
-                <Text style={styles.mentorArea}>Liderança</Text>
-                <View style={styles.mentorStats}>
-                  <View style={styles.statContainer}>
-                    <Text style={styles.starIcon}>★</Text>
-                    <Text style={styles.statText}>4,8</Text>
-                    <Text style={styles.statSubtext}>(1.8K reviews)</Text>
-                  </View>
-                  <View style={styles.statContainer}>
-                    <Feather name="users" size={14} color="#FFF" />
-                    <Text style={styles.statText}>3.8K seg.</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-            <TouchableOpacity style={styles.seguirButton}>
-              <Text style={styles.seguirButtonText}>Seguir</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.mentorCard}>
-            <View style={styles.mentorInfo}>
-              <Image source={{ uri: 'https://via.placeholder.com/48' }} style={styles.mentorImage} />
-              <View style={styles.mentorDetails}>
-                <Text style={styles.mentorName}>Emily Johnson</Text>
-                <Text style={styles.mentorArea}>Marketing Digital</Text>
-                <View style={styles.mentorStats}>
-                  <View style={styles.statContainer}>
-                    <Text style={styles.starIcon}>★</Text>
-                    <Text style={styles.statText}>4,6</Text>
-                    <Text style={styles.statSubtext}>(2.7K reviews)</Text>
-                  </View>
-                  <View style={styles.statContainer}>
-                    <Feather name="users" size={14} color="#FFF" />
-                    <Text style={styles.statText}>4K seg.</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-            <TouchableOpacity style={styles.seguirButton}>
-              <Text style={styles.seguirButtonText}>Seguir</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.mentorCard}>
-            <View style={styles.mentorInfo}>
-              <Image source={{ uri: 'https://via.placeholder.com/48' }} style={styles.mentorImage} />
-              <View style={styles.mentorDetails}>
-                <Text style={styles.mentorName}>Michael Chen</Text>
-                <Text style={styles.mentorArea}>Data Science</Text>
-                <View style={styles.mentorStats}>
-                  <View style={styles.statContainer}>
-                    <Text style={styles.starIcon}>★</Text>
-                    <Text style={styles.statText}>4,3</Text>
-                    <Text style={styles.statSubtext}>(800 reviews)</Text>
-                  </View>
-                  <View style={styles.statContainer}>
-                    <Feather name="users" size={14} color="#FFF" />
-                    <Text style={styles.statText}>6.4K seg.</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-            <TouchableOpacity style={styles.seguirButton}>
-              <Text style={styles.seguirButtonText}>Seguir</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
