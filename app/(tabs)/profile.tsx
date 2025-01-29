@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,13 @@ import {
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { User } from '@/types/user';
 import useUser from '@/hooks/useUser';
+
+export interface Subject {
+  id: number;
+  documentId: string;
+  name: string;
+}
 
 export default function ProfileScreen() {
   const { data: user, isLoading, error } = useUser();
@@ -64,7 +69,7 @@ export default function ProfileScreen() {
             <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
               <Feather name="chevron-left" size={24} color="#FFF" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/user/edit')}>
               <Feather name="edit-2" size={24} color="#FFF" />
             </TouchableOpacity>
           </View>
@@ -103,6 +108,26 @@ export default function ProfileScreen() {
               <Text style={styles.infoLabel}>ID Yoma</Text>
             </View>
             <Text style={styles.infoValue}>{user.yomaId || 'Não conectado'}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <View style={styles.infoHeader}>
+              <Feather name="star" size={20} color="#1fa2df" />
+              <Text style={styles.infoLabel}>Interesses</Text>
+            </View>
+            <View style={styles.interestsContainer}>
+              {user.subjects && user.subjects.length > 0 ? (
+                <View style={styles.interestsList}>
+                  {user.subjects.map((subject: Subject) => (
+                    <View key={subject.id} style={styles.interestTag}>
+                      <Text style={styles.interestText}>{subject.name}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.infoValue}>Nenhum interesse adicionado</Text>
+              )}
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -278,5 +303,27 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  interestsContainer: {
+    marginLeft: 28,
+    marginTop: 4,
+  },
+  interestsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  interestTag: {
+    backgroundColor: 'rgba(31, 162, 223, 0.1)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#1fa2df',
+  },
+  interestText: {
+    color: '#1fa2df',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

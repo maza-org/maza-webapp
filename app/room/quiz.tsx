@@ -13,7 +13,7 @@ interface Option {
 interface Question {
   id: number;
   description: string;
-  format: string;
+  format: 'SingleOption' | 'AllThatApply';
   options: Option[];
 }
 
@@ -22,6 +22,10 @@ interface QuizModule {
   pass_grade: number;
   questions: Question[];
 }
+
+type SelectedAnswers = {
+  [key: number]: number | number[];
+};
 
 const ResultsView = ({
   correctAnswers,
@@ -72,27 +76,73 @@ export default function Quiz() {
   const { content } = useLocalSearchParams();
   const quizData: QuizModule = JSON.parse(content as string);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<SelectedAnswers>({});
   const [showResults, setShowResults] = useState(false);
   const [showCurrentFeedback, setShowCurrentFeedback] = useState(false);
 
-  const getCurrentSelectedOption = () => {
-    const questionId = quizData.questions[currentQuestion].id;
-    const selectedOptionId = selectedAnswers[questionId];
-    return quizData.questions[currentQuestion].options.find((option) => option.id === selectedOptionId);
+  const getCurrentQuestion = () => quizData.questions[currentQuestion];
+
+  const getCurrentSelectedAnswers = () => {
+    const questionId = getCurrentQuestion().id;
+    return selectedAnswers[questionId] || (getCurrentQuestion().format === 'AllThatApply' ? [] : null);
+  };
+
+  const isAnswerCorrect = (questionId: number): boolean => {
+    const question = quizData.questions.find((q) => q.id === questionId);
+    if (!question) return false;
+
+    const selected = selectedAnswers[questionId];
+
+    if (question.format === 'SingleOption') {
+      const selectedOption = question.options.find((o) => o.id === selected);
+      return selectedOption?.is_correct || false;
+    } else {
+      const selectedArray = selected as number[];
+      const correctOptionIds = question.options.filter((o) => o.is_correct).map((o) => o.id);
+      const selectedCorrectly =
+        selectedArray.length === correctOptionIds.length &&
+        selectedArray.every((id) => correctOptionIds.includes(id)) &&
+        correctOptionIds.every((id) => selectedArray.includes(id));
+      return selectedCorrectly;
+    }
   };
 
   const handleAnswer = (questionId: number, optionId: number) => {
-    setSelectedAnswers((prev) => ({
-      ...prev,
-      [questionId]: optionId,
-    }));
+    const question = quizData.questions.find((q) => q.id === questionId);
+    if (!question) return;
+
+    if (question.format === 'SingleOption') {
+      setSelectedAnswers((prev) => ({
+        ...prev,
+        [questionId]: optionId,
+      }));
+      setShowCurrentFeedback(true);
+    } else {
+      setSelectedAnswers((prev) => {
+        const currentSelections = (prev[questionId] as number[]) || [];
+        const newSelections = currentSelections.includes(optionId)
+          ? currentSelections.filter((id) => id !== optionId)
+          : [...currentSelections, optionId];
+
+        return {
+          ...prev,
+          [questionId]: newSelections,
+        };
+      });
+    }
+  };
+
+  const handleVerify = () => {
     setShowCurrentFeedback(true);
   };
 
   const handleNext = () => {
-    setCurrentQuestion((prev) => prev + 1);
-    setShowCurrentFeedback(false);
+    if (getCurrentQuestion().format === 'AllThatApply' && !showCurrentFeedback) {
+      setShowCurrentFeedback(true);
+    } else {
+      setCurrentQuestion((prev) => prev + 1);
+      setShowCurrentFeedback(false);
+    }
   };
 
   const handlePrevious = () => {
@@ -101,7 +151,11 @@ export default function Quiz() {
   };
 
   const handleFinish = () => {
-    setShowResults(true);
+    if (getCurrentQuestion().format === 'AllThatApply' && !showCurrentFeedback) {
+      setShowCurrentFeedback(true);
+    } else {
+      setShowResults(true);
+    }
   };
 
   const handleRetake = () => {
@@ -109,6 +163,14 @@ export default function Quiz() {
     setSelectedAnswers({});
     setShowResults(false);
     setShowCurrentFeedback(false);
+  };
+
+  const isOptionSelected = (optionId: number) => {
+    const currentSelected = getCurrentSelectedAnswers();
+    if (Array.isArray(currentSelected)) {
+      return currentSelected.includes(optionId);
+    }
+    return currentSelected === optionId;
   };
 
   return (
@@ -128,13 +190,17 @@ export default function Quiz() {
           <ScrollView style={styles.content}>
             <View style={styles.questionContainer}>
               <Text style={styles.questionText}>
-                {currentQuestion + 1}. {quizData.questions[currentQuestion].description}
+                {currentQuestion + 1}. {getCurrentQuestion().description}
               </Text>
 
+              {getCurrentQuestion().format === 'AllThatApply' && (
+                <Text style={styles.AllThatApplySelectHint}>Selecione todas as opções corretas</Text>
+              )}
+
               <View style={styles.optionsContainer}>
-                {quizData.questions[currentQuestion].options.map((option) => {
-                  const isSelected = selectedAnswers[quizData.questions[currentQuestion].id] === option.id;
-                  const showComment = isSelected && option.comment;
+                {getCurrentQuestion().options.map((option) => {
+                  const isSelected = isOptionSelected(option.id);
+                  const showComment = isSelected && option.comment && showCurrentFeedback;
 
                   return (
                     <TouchableOpacity
@@ -142,23 +208,37 @@ export default function Quiz() {
                       style={[
                         styles.optionButton,
                         isSelected && styles.selectedOption,
-                        (showCurrentFeedback || showResults) && option.is_correct && styles.correctOption,
-                        (showCurrentFeedback || showResults) &&
-                          isSelected &&
-                          !option.is_correct &&
-                          styles.incorrectOption,
+                        showCurrentFeedback && option.is_correct && styles.correctOption,
+                        showCurrentFeedback && isSelected && !option.is_correct && styles.incorrectOption,
                       ]}
-                      onPress={() => handleAnswer(quizData.questions[currentQuestion].id, option.id)}
-                      disabled={showCurrentFeedback || showResults}
+                      onPress={() => handleAnswer(getCurrentQuestion().id, option.id)}
+                      disabled={getCurrentQuestion().format === 'SingleOption' && showCurrentFeedback}
                     >
                       <View style={styles.optionContent}>
+                        <View style={styles.checkboxContainer}>
+                          <View
+                            style={[
+                              styles.checkbox,
+                              getCurrentQuestion().format === 'AllThatApply' && styles.squareCheckbox,
+                              isSelected && styles.checkedCheckbox,
+                            ]}
+                          >
+                            {isSelected && (
+                              <Feather
+                                name={getCurrentQuestion().format === 'AllThatApply' ? 'check' : 'circle'}
+                                size={16}
+                                color="#FFF"
+                              />
+                            )}
+                          </View>
+                        </View>
                         <View style={styles.optionTextContainer}>
                           <Text style={[styles.optionText, isSelected && styles.selectedOptionText]}>
                             {option.description}
                           </Text>
                         </View>
 
-                        {(showCurrentFeedback || showResults) && (
+                        {showCurrentFeedback && (
                           <View style={styles.iconContainer}>
                             {option.is_correct ? (
                               <Feather name="check-circle" size={24} color="#04D361" />
@@ -168,17 +248,24 @@ export default function Quiz() {
                           </View>
                         )}
                       </View>
+
+                      {showComment && <Text style={styles.commentText}>{option.comment}</Text>}
                     </TouchableOpacity>
                   );
                 })}
               </View>
 
-              {/* Comment section at the bottom */}
-              {showCurrentFeedback && getCurrentSelectedOption()?.comment && (
-                <View style={styles.bottomCommentContainer}>
-                  <Text style={styles.bottomCommentTitle}>Comentário</Text>
-                  <Text style={styles.bottomCommentText}>{getCurrentSelectedOption()?.comment}</Text>
-                </View>
+              {getCurrentQuestion().format === 'AllThatApply' && !showCurrentFeedback && (
+                <TouchableOpacity
+                  style={[
+                    styles.verifyButton,
+                    (getCurrentSelectedAnswers() as number[]).length === 0 && styles.verifyButtonDisabled,
+                  ]}
+                  onPress={handleVerify}
+                  disabled={(getCurrentSelectedAnswers() as number[]).length === 0}
+                >
+                  <Text style={styles.verifyButtonText}>Verificar Resposta</Text>
+                </TouchableOpacity>
               )}
             </View>
           </ScrollView>
@@ -194,7 +281,11 @@ export default function Quiz() {
               <TouchableOpacity
                 style={[styles.navigationButton, styles.nextButton]}
                 onPress={handleNext}
-                disabled={!showCurrentFeedback}
+                disabled={
+                  getCurrentQuestion().format === 'SingleOption'
+                    ? !showCurrentFeedback
+                    : !showCurrentFeedback && (getCurrentSelectedAnswers() as number[]).length === 0
+                }
               >
                 <Text style={styles.navigationButtonText}>Próxima</Text>
               </TouchableOpacity>
@@ -202,7 +293,11 @@ export default function Quiz() {
               <TouchableOpacity
                 style={[styles.navigationButton, styles.finishButton]}
                 onPress={handleFinish}
-                disabled={!showCurrentFeedback}
+                disabled={
+                  getCurrentQuestion().format === 'SingleOption'
+                    ? !showCurrentFeedback
+                    : !showCurrentFeedback && (getCurrentSelectedAnswers() as number[]).length === 0
+                }
               >
                 <Text style={styles.navigationButtonText}>Finalizar</Text>
               </TouchableOpacity>
@@ -212,11 +307,7 @@ export default function Quiz() {
       ) : (
         <ResultsView
           correctAnswers={
-            Object.entries(selectedAnswers).filter(([questionId, answerId]) => {
-              const question = quizData.questions.find((q) => q.id === Number(questionId));
-              const selectedOption = question?.options.find((o) => o.id === answerId);
-              return selectedOption?.is_correct;
-            }).length
+            Object.keys(selectedAnswers).filter((questionId) => isAnswerCorrect(Number(questionId))).length
           }
           totalQuestions={quizData.questions.length}
           passGrade={quizData.pass_grade}
@@ -423,6 +514,47 @@ const styles = StyleSheet.create({
   },
   bottomCommentTitle: {
     color: '#1fa2df',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // New styles for AllThatApply select
+  AllThatApplySelectHint: {
+    color: '#A8A8B3',
+    fontSize: 14,
+    marginBottom: 16,
+    fontStyle: 'italic',
+  },
+  checkboxContainer: {
+    marginRight: 12,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#323238',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  squareCheckbox: {
+    borderRadius: 4,
+  },
+  checkedCheckbox: {
+    backgroundColor: '#1fa2df',
+    borderColor: '#1fa2df',
+  },
+  verifyButton: {
+    backgroundColor: '#1fa2df',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  verifyButtonDisabled: {
+    opacity: 0.5,
+  },
+  verifyButtonText: {
+    color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
   },

@@ -1,49 +1,40 @@
-import React, { useRef, useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  Alert,
-} from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
-import Button from "@/components/Button";
-import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { mapLoginResponseToUser, User } from "@/types/user";
+import React, { useRef, useState } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import Button from '@/components/Button';
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { mapLoginResponseToUser, User } from '@/types/user';
 
 export default function Otp() {
   const { phone, otpId, fullName } = useLocalSearchParams();
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef([]);
 
   const saveUser = async (user: User) => {
     try {
-      await AsyncStorage.setItem("@user", JSON.stringify(user));
+      await AsyncStorage.setItem('@user', JSON.stringify(user));
     } catch (error) {
-      console.error("Error saving user data:", error);
-      Alert.alert("Erro", "Falha ao salvar dados do usuário");
+      console.error('Error saving user data:', error);
+      Alert.alert('Erro', 'Falha ao salvar dados do usuário');
     }
   };
 
   const handleConfirm = async () => {
     if (!otpId) {
-      Alert.alert("Erro", "Por favor, solicite o código OTP primeiro");
+      Alert.alert('Erro', 'Por favor, solicite o código OTP primeiro');
       return;
     }
 
-    const otpCode = otp.join("");
+    const otpCode = otp.join('');
     if (otpCode.length !== 6) {
-      Alert.alert("Erro", "Por favor, insira o código OTP completo");
+      Alert.alert('Erro', 'Por favor, insira o código OTP completo');
       return;
     }
 
     setLoading(true);
     try {
-      // Determine if we should create an account or login based on fullName presence
       const endpoint = fullName
         ? `${process.env.EXPO_PUBLIC_BASE_URL}/api/users`
         : `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/login`;
@@ -64,32 +55,32 @@ export default function Otp() {
           };
 
       const response = await fetch(endpoint, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(body),
       });
 
       const data = await response.json();
       if (data.success || (fullName && data.data)) {
-        // Check for success in both login and registration cases
-        await saveUser(mapLoginResponseToUser(data));
-        router.push("/start/customize");
+        const userData = mapLoginResponseToUser(data);
+        await saveUser(userData);
+
+        // Check if user has interests before navigating
+        if (userData.interests && userData.interests.length > 0) {
+          router.push('/');
+        } else {
+          router.push('/start/customize');
+        }
       } else {
-        Alert.alert(
-          "Erro de Verificação",
-          "Código OTP incorreto. Por favor, verifique e tente novamente.",
-          [{ text: "OK" }],
-        );
+        Alert.alert('Erro de Verificação', 'Código OTP incorreto. Por favor, verifique e tente novamente.', [
+          { text: 'OK' },
+        ]);
       }
     } catch (error) {
       console.log(error);
-      Alert.alert(
-        "Erro",
-        "Ocorreu um erro ao verificar o código. Por favor, tente novamente.",
-        [{ text: "OK" }],
-      );
+      Alert.alert('Erro', 'Ocorreu um erro ao verificar o código. Por favor, tente novamente.', [{ text: 'OK' }]);
     } finally {
       setLoading(false);
     }
@@ -106,10 +97,10 @@ export default function Otp() {
   };
 
   const handleKeyPress = (e, index: number) => {
-    if (e.nativeEvent.key === "Backspace") {
+    if (e.nativeEvent.key === 'Backspace') {
       if (!otp[index] && index > 0) {
         const newOtp = [...otp];
-        newOtp[index - 1] = "";
+        newOtp[index - 1] = '';
         setOtp(newOtp);
         inputRefs.current[index - 1].focus();
       }
@@ -120,17 +111,14 @@ export default function Otp() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
 
         <Text style={styles.headerText}>Código OTP</Text>
         <Text style={styles.subText}>
-          Enviamos uma SMS com o código de autenticação{"\n"}
+          Enviamos uma SMS com o código de autenticação{'\n'}
           para o número <Text style={styles.phoneNumber}>{phone}</Text>
         </Text>
 
@@ -168,7 +156,7 @@ export default function Otp() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121212",
+    backgroundColor: '#121212',
   },
   content: {
     flex: 1,
@@ -177,74 +165,74 @@ const styles = StyleSheet.create({
   backButton: {
     marginBottom: 16,
     padding: 8,
-    borderStyle: "solid",
-    borderColor: "#b3b3b3",
+    borderStyle: 'solid',
+    borderColor: '#b3b3b3',
     borderWidth: 0.5,
     borderRadius: 50,
   },
   backButtonText: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     fontSize: 24,
   },
   headerText: {
     fontSize: 28,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    fontWeight: '600',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   subText: {
-    color: "#999999",
+    color: '#999999',
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 32,
   },
   phoneNumber: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
   },
   formContainer: {
     marginBottom: 32,
   },
   inputLabel: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
     marginBottom: 16,
   },
   otpContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 32,
   },
   otpInput: {
     width: 48,
     height: 48,
-    backgroundColor: "#252525",
+    backgroundColor: '#252525',
     borderRadius: 24,
-    textAlign: "center",
+    textAlign: 'center',
     fontSize: 16,
-    color: "#FFFFFF",
+    color: '#FFFFFF',
   },
   resendContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginTop: 16,
   },
   resendText: {
-    color: "#999999",
+    color: '#999999',
     fontSize: 14,
   },
   resendLink: {
-    color: "#2196F3",
+    color: '#2196F3',
     fontSize: 14,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
     marginLeft: 8,
-    color: "#FFF",
+    color: '#FFF',
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });

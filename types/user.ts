@@ -6,6 +6,7 @@ export interface User {
   phone: string;
   yomaId: string;
   token: string;
+  interests: Subject[];
 }
 
 interface LoginResponse {
@@ -20,6 +21,13 @@ interface LoginResponse {
     yoma_id: string | null;
   };
   jwt: string;
+  interests: Subject[];
+}
+
+export interface Subject {
+  id: number;
+  documentId: string;
+  name: string;
 }
 
 export function mapLoginResponseToUser(response: LoginResponse): User {
@@ -31,5 +39,6 @@ export function mapLoginResponseToUser(response: LoginResponse): User {
     phone: response.user.phone,
     yomaId: response.user.yoma_id || '',
     token: response.jwt,
+    interests: response.interests,
   };
 }

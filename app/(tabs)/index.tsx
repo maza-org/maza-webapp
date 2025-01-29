@@ -1,16 +1,7 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  SafeAreaView,
-  ScrollView,
-} from "react-native";
-import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 export default function Home() {
   const [subjects, setSubjects] = useState([]);
@@ -22,26 +13,22 @@ export default function Home() {
 
   const fetchSubjects = async () => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/courses`,
-      );
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/courses`);
       const data = await response.json();
 
       const allSubjects = data.data.flatMap((course) => course.subjects);
-      const uniqueSubjects = Array.from(
-        new Map(allSubjects.map((subject) => [subject.id, subject])).values(),
-      );
+      const uniqueSubjects = Array.from(new Map(allSubjects.map((subject) => [subject.id, subject])).values());
 
       setSubjects(uniqueSubjects.slice(0, 3));
       setLoadingSubjects(false);
     } catch (error) {
-      console.error("Error fetching subjects:", error);
+      console.error('Error fetching subjects:', error);
       setLoadingSubjects(false);
     }
   };
 
   const handleSubjectClick = (subject) => {
-    console.log("Selected subject:", {
+    console.log('Selected subject:', {
       id: subject.id,
       documentId: subject.documentId,
       name: subject.name,
@@ -49,63 +36,54 @@ export default function Home() {
   };
 
   const handleSearchPress = () => {
-    router.push("/search");
+    router.push('/search');
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity onPress={() => router.push("/start")}>
-          <Text style={{ color: "white", fontSize: 20 }}>GO</Text>
+        <TouchableOpacity onPress={() => router.push('/start')}>
+          <Text style={{ color: 'white', fontSize: 20 }}>GO</Text>
         </TouchableOpacity>
         {/* Header with Bell Icon */}
         <View style={styles.header}>
           <Text style={styles.headerText}>O que pretende aprender hoje?</Text>
           <TouchableOpacity
             style={{
-              borderStyle: "solid",
-              borderColor: "#b3b3b3",
+              borderStyle: 'solid',
+              borderColor: '#b3b3b3',
               borderWidth: 0.5,
               padding: 8,
               borderRadius: 50,
-              position: "relative",
+              position: 'relative',
             }}
           >
             <Feather name="bell" size={24} color="#FFF" />
             <View
               style={{
-                position: "absolute",
+                position: 'absolute',
                 right: 6,
                 top: 6,
-                backgroundColor: "#FF4444",
+                backgroundColor: '#FF4444',
                 width: 13,
                 height: 13,
                 borderRadius: 50,
                 borderWidth: 2,
-                borderColor: "#121214",
+                borderColor: '#121214',
               }}
             />
           </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
-        <TouchableOpacity
-          style={styles.searchContainer}
-          onPress={handleSearchPress}
-          activeOpacity={0.7}
-        >
+        <TouchableOpacity style={styles.searchContainer} onPress={handleSearchPress} activeOpacity={0.7}>
           <TextInput
             style={styles.searchInput}
             placeholder="Pesquisar..."
             placeholderTextColor="#666"
             selectionColor="#fff"
           />
-          <Feather
-            name="search"
-            size={20}
-            color="#666"
-            style={styles.searchIcon}
-          />
+          <Feather name="search" size={20} color="#666" style={styles.searchIcon} />
         </TouchableOpacity>
 
         {/* Category Icons */}
@@ -114,11 +92,11 @@ export default function Home() {
             style={styles.categoryItem}
             onPress={() => {
               router.push({
-                pathname: "/categories/[id]",
+                pathname: '/categories/[id]',
                 params: {
                   id: 17,
-                  documentId: "fwubsstwm950034zmd6dnt8r",
-                  name: "Design",
+                  documentId: 'fwubsstwm950034zmd6dnt8r',
+                  name: 'Design',
                 },
               });
             }}
@@ -133,11 +111,11 @@ export default function Home() {
             style={styles.categoryItem}
             onPress={() => {
               router.push({
-                pathname: "/categories/[id]",
+                pathname: '/categories/[id]',
                 params: {
                   id: 35,
-                  documentId: "unz4bv8reqwncrv34zed36zb",
-                  name: "Tecnologia",
+                  documentId: 'unz4bv8reqwncrv34zed36zb',
+                  name: 'Tecnologia',
                 },
               });
             }}
@@ -152,11 +130,11 @@ export default function Home() {
             style={styles.categoryItem}
             onPress={() => {
               router.push({
-                pathname: "/categories/[id]",
+                pathname: '/categories/[id]',
                 params: {
                   id: 33,
-                  documentId: "f2tnfg0q70l17lob34ll8w87",
-                  name: "Saude",
+                  documentId: 'f2tnfg0q70l17lob34ll8w87',
+                  name: 'Saude',
                 },
               });
             }}
@@ -167,10 +145,7 @@ export default function Home() {
             <Text style={styles.categoryText}>Saúde</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.categoryItem}
-            onPress={() => router.push("/categories")}
-          >
+          <TouchableOpacity style={styles.categoryItem} onPress={() => router.push('/categories')}>
             <View style={styles.iconContainer}>
               <Feather name="grid" size={20} color="#FFF" />
             </View>
@@ -184,10 +159,7 @@ export default function Home() {
 
           <View style={styles.courseCard}>
             <View style={styles.courseHeader}>
-              <Image
-                source={{ uri: "https://via.placeholder.com/40" }}
-                style={styles.profileImage}
-              />
+              <Image source={{ uri: 'https://via.placeholder.com/40' }} style={styles.profileImage} />
               <View style={styles.courseHeaderInfo}>
                 <Text style={styles.instructorName}>Lívia Donin</Text>
                 <View style={styles.ratingContainer}>
@@ -197,9 +169,7 @@ export default function Home() {
               </View>
             </View>
 
-            <Text style={styles.courseTitle}>
-              Entrepreneurship and New Venture Creation
-            </Text>
+            <Text style={styles.courseTitle}>Entrepreneurship and New Venture Creation</Text>
 
             <View style={styles.progressContainer}>
               <View style={styles.progressInfo}>
@@ -207,21 +177,10 @@ export default function Home() {
                 <Text style={styles.progressText}>10%</Text>
               </View>
               <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: "10%" }]} />
+                <View style={[styles.progressFill, { width: '10%' }]} />
               </View>
             </View>
           </View>
-        </View>
-
-        {/* Points Display */}
-        <View style={styles.pointsCard}>
-          <View>
-            <Text style={styles.pointsLabel}>Pontos acumulados</Text>
-            <Text style={styles.pointsValue}>3.245</Text>
-          </View>
-          <TouchableOpacity style={styles.pointsButton}>
-            <Text style={styles.pointsButtonText}>User Pontos</Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.coursesInProgress}>
@@ -234,30 +193,20 @@ export default function Home() {
 
           <View style={styles.coursesList}>
             <TouchableOpacity style={styles.courseItem}>
-              <Image
-                source={{ uri: "https://via.placeholder.com/60" }}
-                style={styles.courseImage}
-              />
+              <Image source={{ uri: 'https://via.placeholder.com/60' }} style={styles.courseImage} />
               <View style={styles.courseInfo}>
                 <Text style={styles.courseCategory}>Design</Text>
-                <Text style={styles.courseItemTitle}>
-                  Principles of Industri...
-                </Text>
+                <Text style={styles.courseItemTitle}>Principles of Industri...</Text>
                 <Text style={styles.moduleCount}>7/10 Modulos</Text>
               </View>
               <Text style={styles.percentageText}>70%</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.courseItem}>
-              <Image
-                source={{ uri: "https://via.placeholder.com/60" }}
-                style={styles.courseImage}
-              />
+              <Image source={{ uri: 'https://via.placeholder.com/60' }} style={styles.courseImage} />
               <View style={styles.courseInfo}>
                 <Text style={styles.courseCategory}>Programação</Text>
-                <Text style={styles.courseItemTitle}>
-                  HTML & CSS: Building...
-                </Text>
+                <Text style={styles.courseItemTitle}>HTML & CSS: Building...</Text>
                 <Text style={styles.moduleCount}>4/14 Modulos</Text>
               </View>
               <Text style={styles.percentageText}>70%</Text>
@@ -272,16 +221,9 @@ export default function Home() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.popularCoursesList}
-          >
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.popularCoursesList}>
             <TouchableOpacity style={styles.popularCourseCard}>
-              <Image
-                source={{ uri: "https://via.placeholder.com/160x120" }}
-                style={styles.popularCourseImage}
-              />
+              <Image source={{ uri: 'https://via.placeholder.com/160x120' }} style={styles.popularCourseImage} />
               <View style={styles.courseLevelBadge}>
                 <Text style={styles.courseLevelText}>Intermediário</Text>
               </View>
@@ -291,14 +233,9 @@ export default function Home() {
               </View>
               <View style={styles.popularCourseInfo}>
                 <Text style={styles.courseCategory}>Negócios</Text>
-                <Text style={styles.popularCourseTitle}>
-                  Entrepreneurship and New Venture Creation
-                </Text>
+                <Text style={styles.popularCourseTitle}>Entrepreneurship and New Venture Creation</Text>
                 <View style={styles.instructorInfo}>
-                  <Image
-                    source={{ uri: "https://via.placeholder.com/24" }}
-                    style={styles.instructorAvatar}
-                  />
+                  <Image source={{ uri: 'https://via.placeholder.com/24' }} style={styles.instructorAvatar} />
                   <Text style={styles.instructorName}>Lívia...</Text>
                   <View style={styles.courseStats}>
                     <Feather name="book" size={12} color="#FFF" />
@@ -311,10 +248,7 @@ export default function Home() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.popularCourseCard}>
-              <Image
-                source={{ uri: "https://via.placeholder.com/160x120" }}
-                style={styles.popularCourseImage}
-              />
+              <Image source={{ uri: 'https://via.placeholder.com/160x120' }} style={styles.popularCourseImage} />
               <View style={styles.courseLevelBadge}>
                 <Text style={styles.courseLevelText}>Iniciante</Text>
               </View>
@@ -324,14 +258,9 @@ export default function Home() {
               </View>
               <View style={styles.popularCourseInfo}>
                 <Text style={styles.courseCategory}>Marketing</Text>
-                <Text style={styles.popularCourseTitle}>
-                  Introduction to Digital Marketing
-                </Text>
+                <Text style={styles.popularCourseTitle}>Introduction to Digital Marketing</Text>
                 <View style={styles.instructorInfo}>
-                  <Image
-                    source={{ uri: "https://via.placeholder.com/24" }}
-                    style={styles.instructorAvatar}
-                  />
+                  <Image source={{ uri: 'https://via.placeholder.com/24' }} style={styles.instructorAvatar} />
                   <Text style={styles.instructorName}>Sara...</Text>
                   <View style={styles.courseStats}>
                     <Feather name="book" size={12} color="#FFF" />
@@ -356,10 +285,7 @@ export default function Home() {
           {/* Mentor Cards */}
           <View style={styles.mentorCard}>
             <View style={styles.mentorInfo}>
-              <Image
-                source={{ uri: "https://via.placeholder.com/48" }}
-                style={styles.mentorImage}
-              />
+              <Image source={{ uri: 'https://via.placeholder.com/48' }} style={styles.mentorImage} />
               <View style={styles.mentorDetails}>
                 <Text style={styles.mentorName}>Alex Johnson</Text>
                 <Text style={styles.mentorArea}>Liderança</Text>
@@ -383,10 +309,7 @@ export default function Home() {
 
           <View style={styles.mentorCard}>
             <View style={styles.mentorInfo}>
-              <Image
-                source={{ uri: "https://via.placeholder.com/48" }}
-                style={styles.mentorImage}
-              />
+              <Image source={{ uri: 'https://via.placeholder.com/48' }} style={styles.mentorImage} />
               <View style={styles.mentorDetails}>
                 <Text style={styles.mentorName}>Emily Johnson</Text>
                 <Text style={styles.mentorArea}>Marketing Digital</Text>
@@ -410,10 +333,7 @@ export default function Home() {
 
           <View style={styles.mentorCard}>
             <View style={styles.mentorInfo}>
-              <Image
-                source={{ uri: "https://via.placeholder.com/48" }}
-                style={styles.mentorImage}
-              />
+              <Image source={{ uri: 'https://via.placeholder.com/48' }} style={styles.mentorImage} />
               <View style={styles.mentorDetails}>
                 <Text style={styles.mentorName}>Michael Chen</Text>
                 <Text style={styles.mentorArea}>Data Science</Text>
@@ -443,7 +363,7 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121214",
+    backgroundColor: '#121214',
     padding: 25,
     paddingEnd: 25,
     paddingStart: 25,
@@ -452,9 +372,9 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
   sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
   popularCoursesList: {
@@ -463,36 +383,36 @@ const styles = StyleSheet.create({
   },
   popularCourseCard: {
     width: 280,
-    backgroundColor: "#29292E",
+    backgroundColor: '#29292E',
     borderRadius: 12,
     marginRight: 16,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   popularCourseImage: {
-    width: "100%",
+    width: '100%',
     height: 140,
   },
   courseLevelBadge: {
-    position: "absolute",
+    position: 'absolute',
     top: 12,
     left: 12,
-    backgroundColor: "rgba(41, 41, 46, 0.9)",
+    backgroundColor: 'rgba(41, 41, 46, 0.9)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 16,
   },
   courseLevelText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   courseRatingBadge: {
-    position: "absolute",
+    position: 'absolute',
     top: 12,
     right: 12,
-    backgroundColor: "rgba(41, 41, 46, 0.9)",
-    flexDirection: "row",
-    alignItems: "center",
+    backgroundColor: 'rgba(41, 41, 46, 0.9)',
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 16,
@@ -501,15 +421,15 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   popularCourseTitle: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
     marginVertical: 8,
   },
   instructorInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
   },
   instructorAvatar: {
@@ -518,53 +438,53 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   courseStats: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 4,
   },
   statsText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 12,
     opacity: 0.7,
     marginRight: 8,
   },
   courseCategory: {
-    color: "#1fa2df",
+    color: '#1fa2df',
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   instructorName: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 14,
     opacity: 0.7,
   },
   starIcon: {
-    color: "#1fa2df",
+    color: '#1fa2df',
     marginRight: 4,
   },
   ratingText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   coursesInProgress: {
     marginVertical: 24,
   },
   coursesHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
   coursesList: {
     gap: 12,
   },
   courseItem: {
-    flexDirection: "row",
-    backgroundColor: "#29292E",
+    flexDirection: 'row',
+    backgroundColor: '#29292E',
     borderRadius: 12,
     padding: 12,
-    alignItems: "center",
+    alignItems: 'center',
   },
   courseImage: {
     width: 60,
@@ -577,49 +497,49 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   courseItemTitle: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   moduleCount: {
-    color: "#FFF",
+    color: '#FFF',
     opacity: 0.7,
     fontSize: 12,
   },
   percentageText: {
-    color: "#1fa2df",
+    color: '#1fa2df',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   mentoresSection: {
     marginTop: 24,
   },
   mentoresHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: "600",
-    color: "#FFF",
+    fontWeight: '600',
+    color: '#FFF',
     marginBottom: 0,
-    fontFamily: "ManropeBold",
+    fontFamily: 'ManropeBold',
   },
   verTodos: {
-    color: "#1fa2df",
+    color: '#1fa2df',
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   mentorCard: {
-    backgroundColor: "#29292E",
+    backgroundColor: '#29292E',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
   },
   mentorInfo: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginBottom: 16,
   },
   mentorImage: {
@@ -632,141 +552,141 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   mentorName: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
     marginBottom: 4,
   },
   mentorArea: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 14,
     opacity: 0.7,
     marginBottom: 8,
   },
   mentorStats: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 16,
   },
   statContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 4,
   },
   statText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 14,
   },
   statSubtext: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 14,
     opacity: 0.7,
   },
   seguirButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     paddingVertical: 8,
     borderRadius: 20,
-    alignItems: "center",
+    alignItems: 'center',
   },
   seguirButtonText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   pointsCard: {
-    backgroundColor: "#1C1C1E",
+    backgroundColor: '#1C1C1E',
     borderRadius: 12,
     padding: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 20,
     marginTop: 20,
   },
   pointsLabel: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 14,
     opacity: 0.7,
   },
   pointsValue: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 24,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   pointsButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
   },
   pointsButtonText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 20,
   },
   headerText: {
     fontSize: 24,
-    fontWeight: "600",
-    fontFamily: "ManropeBold",
-    color: "#FFF",
+    fontWeight: '600',
+    fontFamily: 'ManropeBold',
+    color: '#FFF',
     width: 200,
   },
   searchContainer: {
-    backgroundColor: "#202024",
+    backgroundColor: '#202024',
     borderRadius: 8,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     height: 44,
     marginBottom: 24,
   },
   searchInput: {
     flex: 1,
-    height: "100%",
-    color: "#fff",
+    height: '100%',
+    color: '#fff',
     fontSize: 16,
     marginLeft: 8,
-    fontFamily: "ManropeRegular",
+    fontFamily: 'ManropeRegular',
   },
   searchIcon: {
     marginRight: 8,
   },
   categoryContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 24,
   },
   categoryItem: {
-    alignItems: "center",
+    alignItems: 'center',
   },
   iconContainer: {
-    backgroundColor: "#29292E",
+    backgroundColor: '#29292E',
     padding: 12,
     borderRadius: 50,
     marginBottom: 8,
   },
   categoryText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 12,
-    fontFamily: "ManropeRegular",
+    fontFamily: 'ManropeRegular',
   },
   courseSection: {
     flex: 1,
   },
   courseCard: {
-    backgroundColor: "#29292E",
+    backgroundColor: '#29292E',
     borderRadius: 12,
     padding: 16,
     marginTop: 20,
   },
   courseHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
   },
   profileImage: {
@@ -777,39 +697,39 @@ const styles = StyleSheet.create({
   },
   courseHeaderInfo: {
     flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   courseTitle: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 18,
-    fontWeight: "500",
+    fontWeight: '500',
     marginBottom: 16,
   },
   progressContainer: {
     gap: 8,
   },
   progressInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   progressText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 12,
   },
   progressBar: {
     height: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 4,
   },
   progressFill: {
-    height: "100%",
-    backgroundColor: "#1fa2df",
+    height: '100%',
+    backgroundColor: '#1fa2df',
     borderRadius: 4,
   },
 });
