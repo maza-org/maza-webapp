@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { Course } from '@/types/course';
 
 export default function Home() {
   const [subjects, setSubjects] = useState([]);
@@ -53,6 +54,15 @@ export default function Home() {
   const handleSearchPress = () => {
     router.push('/search');
   };
+
+  function handleOnPressPopularCourse(course: Course) {
+    router.push({
+      pathname: '/room/lessons',
+      params: {
+        documentId: course.documentId,
+      },
+    });
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -257,7 +267,11 @@ export default function Home() {
               </View>
             ) : (
               popularCourses.map((course) => (
-                <TouchableOpacity key={course.id} style={styles.popularCourseCard}>
+                <TouchableOpacity
+                  key={course.id}
+                  style={styles.popularCourseCard}
+                  onPress={() => handleOnPressPopularCourse(course)}
+                >
                   {course.picture ? (
                     <Image source={{ uri: course.picture.formats.small.url }} style={styles.popularCourseImage} />
                   ) : (
