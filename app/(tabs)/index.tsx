@@ -3,17 +3,41 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, SafeAreaVie
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Course } from '@/types/course';
+import useUser from '@/hooks/useUser';
 
 export default function Home() {
   const [subjects, setSubjects] = useState([]);
+  const { data: user, isLoading, error } = useUser();
   const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [popularCourses, setPopularCourses] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
+  const [userCourses, setUserCourses] = useState([]);
+  const [loadingUserCourses, setLoadingUserCourses] = useState(true);
 
   useEffect(() => {
     fetchSubjects();
     fetchPopularCourses();
-  }, []);
+    if (user?.token) {
+      fetchUserCourses();
+    }
+  }, [user?.token]);
+
+  const fetchUserCourses = async () => {
+    try {
+      const response = await fetch('https://maza-strapi-backend.onrender.com/api/user-courses?status=InProgress', {
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
+      const data = await response.json();
+      const sortedCourses = [...data.data].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+      setUserCourses(sortedCourses);
+      setLoadingUserCourses(false);
+    } catch (error) {
+      console.error('Error fetching user courses:', error);
+      setLoadingUserCourses(false);
+    }
+  };
 
   const fetchSubjects = async () => {
     try {
@@ -157,66 +181,87 @@ export default function Home() {
         </View>
 
         {/* Continue Course Section */}
-        <View style={styles.courseSection}>
-          <Text style={styles.sectionTitle}>Continuar curso</Text>
+        {user?.token && !loadingUserCourses && userCourses.length > 0 && (
+          <View style={styles.courseSection}>
+            <Text style={styles.sectionTitle}>Continuar curso</Text>
 
-          <View style={styles.courseCard}>
-            <View style={styles.courseHeader}>
-              <Image source={{ uri: 'https://via.placeholder.com/40' }} style={styles.profileImage} />
-              <View style={styles.courseHeaderInfo}>
-                <Text style={styles.instructorName}>Lívia Donin</Text>
-                <View style={styles.ratingContainer}>
-                  <Text style={styles.starIcon}>★</Text>
-                  <Text style={styles.ratingText}>4,5</Text>
+            <View style={styles.courseCard}>
+              <View style={styles.courseHeader}>
+                {userCourses[0].course.picture ? (
+                  <Image
+                    source={{ uri: userCourses[0].course.picture.formats.thumbnail.url }}
+                    style={styles.profileImage}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      styles.profileImage,
+                      { backgroundColor: '#29292E', justifyContent: 'center', alignItems: 'center' },
+                    ]}
+                  >
+                    <Feather name="user" size={20} color="#666" />
+                  </View>
+                )}
+                <View style={styles.courseHeaderInfo}>
+                  <Text style={styles.instructorName}>{userCourses[0].course.author}</Text>
+                  <View style={styles.ratingContainer}>
+                    <Text style={styles.starIcon}>★</Text>
+                    <Text style={styles.ratingText}>{userCourses[0].course.rating_avg}</Text>
+                  </View>
+                </View>
+              </View>
+
+              <Text style={styles.courseTitle}>{userCourses[0].course.title}</Text>
+
+              <View style={styles.progressContainer}>
+                <View style={styles.progressInfo}>
+                  <Text style={styles.progressText}>Progresso</Text>
+                  <Text style={styles.progressText}>{userCourses[0].progress}%</Text>
+                </View>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { width: `${userCourses[0].progress}%` }]} />
                 </View>
               </View>
             </View>
-
-            <Text style={styles.courseTitle}>Entrepreneurship and New Venture Creation</Text>
-
-            <View style={styles.progressContainer}>
-              <View style={styles.progressInfo}>
-                <Text style={styles.progressText}>1/5 Module</Text>
-                <Text style={styles.progressText}>10%</Text>
-              </View>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: '10%' }]} />
-              </View>
-            </View>
           </View>
-        </View>
+        )}
 
         {/* Courses in Progress */}
-        <View style={styles.coursesInProgress}>
-          <View style={styles.coursesHeader}>
-            <Text style={styles.sectionTitle}>Cursos em andamento</Text>
-            <TouchableOpacity>
-              <Text style={styles.verTodos}>VER TODOS</Text>
-            </TouchableOpacity>
-          </View>
+        {user?.token && !loadingUserCourses && userCourses.length > 1 && (
+          <View style={styles.coursesInProgress}>
+            <View style={styles.coursesHeader}>
+              <Text style={styles.sectionTitle}>Cursos em andamento</Text>
+              <TouchableOpacity>
+                <Text style={styles.verTodos}>VER TODOS</Text>
+              </TouchableOpacity>
+            </View>
 
-          <View style={styles.coursesList}>
-            <TouchableOpacity style={styles.courseItem}>
-              <Image source={{ uri: 'https://via.placeholder.com/60' }} style={styles.courseImage} />
-              <View style={styles.courseInfo}>
-                <Text style={styles.courseCategory}>Design</Text>
-                <Text style={styles.courseItemTitle}>Principles of Industri...</Text>
-                <Text style={styles.moduleCount}>7/10 Modulos</Text>
-              </View>
-              <Text style={styles.percentageText}>70%</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.courseItem}>
-              <Image source={{ uri: 'https://via.placeholder.com/60' }} style={styles.courseImage} />
-              <View style={styles.courseInfo}>
-                <Text style={styles.courseCategory}>Programação</Text>
-                <Text style={styles.courseItemTitle}>HTML & CSS: Building...</Text>
-                <Text style={styles.moduleCount}>4/14 Modulos</Text>
-              </View>
-              <Text style={styles.percentageText}>70%</Text>
-            </TouchableOpacity>
+            <View style={styles.coursesList}>
+              {userCourses.slice(1).map((course) => (
+                <TouchableOpacity key={course.id} style={styles.courseItem}>
+                  {course.course.picture ? (
+                    <Image source={{ uri: course.course.picture.formats.thumbnail.url }} style={styles.courseImage} />
+                  ) : (
+                    <View
+                      style={[
+                        styles.courseImage,
+                        { backgroundColor: '#29292E', justifyContent: 'center', alignItems: 'center' },
+                      ]}
+                    >
+                      <Feather name="image" size={20} color="#666" />
+                    </View>
+                  )}
+                  <View style={styles.courseInfo}>
+                    <Text style={styles.courseCategory}>{course.course.author}</Text>
+                    <Text style={styles.courseItemTitle}>{course.course.title}</Text>
+                    <Text style={styles.moduleCount}>Progresso</Text>
+                  </View>
+                  <Text style={styles.percentageText}>{course.progress}%</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Popular Courses */}
         <View style={styles.popularCoursesSection}>
@@ -262,10 +307,6 @@ export default function Home() {
                     </View>
                   )}
 
-                  {/*<View style={styles.courseLevelBadge}>*/}
-                  {/*  <Text style={styles.courseLevelText}>Intermediário</Text>*/}
-                  {/*</View>*/}
-
                   <View style={styles.courseRatingBadge}>
                     <Text style={styles.starIcon}>★</Text>
                     <Text style={styles.ratingText}>{course.rating_avg}</Text>
@@ -289,8 +330,6 @@ export default function Home() {
                         {course.author ? course.author.slice(0, 5) + '...' : 'Instrutor'}
                       </Text>
                       <View style={styles.courseStats}>
-                        {/*<Feather name="book" size={12} color="#FFF" />*/}
-                        {/*<Text style={styles.statsText}>12 módulos</Text>*/}
                         <Feather name="users" size={12} color="#FFF" />
                         <Text style={styles.statsText}>
                           {course.subscribed >= 1000 ? `${(course.subscribed / 1000).toFixed(1)}k` : course.subscribed}{' '}
@@ -308,6 +347,7 @@ export default function Home() {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
