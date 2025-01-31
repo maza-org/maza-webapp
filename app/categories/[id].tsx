@@ -86,7 +86,12 @@ export default function Category() {
 
   const ListEmptyComponent = () => <Text style={styles.noCourses}>Nenhum curso encontrado</Text>;
 
-  const ListHeaderComponent = isLoading ? <Text style={styles.loadingText}>Carregando cursos...</Text> : null;
+  const ListHeaderComponent = () =>
+    !isLoading ? (
+      <Text style={styles.coursesAvailable}>
+        {courses.length} {courses.length === 1 ? 'curso disponível' : 'cursos disponíveis'}
+      </Text>
+    ) : null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -173,6 +178,13 @@ const styles = StyleSheet.create({
     width: '60%',
   },
   loadingLabel: {
+    color: '#666',
+    fontSize: 16,
+    marginTop: 24,
+    marginBottom: 16,
+    marginLeft: 24,
+  },
+  coursesAvailable: {
     color: '#666',
     fontSize: 16,
     marginTop: 24,
