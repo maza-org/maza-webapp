@@ -228,6 +228,8 @@ export default function Home() {
                 </View>
               </View>
 
+              <Image source={{ uri: userCourses[0].course.cover.formats.thumbnail.url }} style={styles.coverImage} />
+
               <Text style={styles.courseTitle}>{userCourses[0].course.title}</Text>
 
               <View style={styles.progressContainer}>
@@ -741,4 +743,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#1fa2df',
     borderRadius: 4,
   },
+  coverImage: { width: '100%', height: 160, borderRadius: 5, marginBottom: 12 },
 });
