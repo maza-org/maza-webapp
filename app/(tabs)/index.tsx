@@ -33,7 +33,9 @@ export default function Home() {
 
   const fetchPopularCourses = async () => {
     try {
-      const response = await fetch('https://maza-strapi-backend.onrender.com/api/courses');
+      const response = await fetch(
+        'https://maza-strapi-backend.onrender.com/api/courses?sort=subscribed%3Adesc&pageSize=15&page=1'
+      );
       const data = await response.json();
       setPopularCourses(data.data);
       setLoadingCourses(false);
@@ -74,31 +76,6 @@ export default function Home() {
         {/* Header with Bell Icon */}
         <View style={styles.header}>
           <Text style={styles.headerText}>O que pretende aprender hoje?</Text>
-          <TouchableOpacity
-            style={{
-              borderStyle: 'solid',
-              borderColor: '#b3b3b3',
-              borderWidth: 0.5,
-              padding: 8,
-              borderRadius: 50,
-              position: 'relative',
-            }}
-          >
-            <Feather name="bell" size={24} color="#FFF" />
-            <View
-              style={{
-                position: 'absolute',
-                right: 6,
-                top: 6,
-                backgroundColor: '#FF4444',
-                width: 13,
-                height: 13,
-                borderRadius: 50,
-                borderWidth: 2,
-                borderColor: '#121214',
-              }}
-            />
-          </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
@@ -266,14 +243,14 @@ export default function Home() {
                 </View>
               </View>
             ) : (
-              popularCourses.map((course) => (
+              popularCourses.map((course: Course) => (
                 <TouchableOpacity
                   key={course.id}
                   style={styles.popularCourseCard}
                   onPress={() => handleOnPressPopularCourse(course)}
                 >
                   {course.picture ? (
-                    <Image source={{ uri: course.picture.formats.small.url }} style={styles.popularCourseImage} />
+                    <Image source={{ uri: course?.picture?.formats?.small?.url }} style={styles.popularCourseImage} />
                   ) : (
                     <View
                       style={[
@@ -285,9 +262,9 @@ export default function Home() {
                     </View>
                   )}
 
-                  <View style={styles.courseLevelBadge}>
-                    <Text style={styles.courseLevelText}>Intermediário</Text>
-                  </View>
+                  {/*<View style={styles.courseLevelBadge}>*/}
+                  {/*  <Text style={styles.courseLevelText}>Intermediário</Text>*/}
+                  {/*</View>*/}
 
                   <View style={styles.courseRatingBadge}>
                     <Text style={styles.starIcon}>★</Text>
@@ -304,15 +281,21 @@ export default function Home() {
                     </Text>
 
                     <View style={styles.instructorInfo}>
-                      <Image source={{ uri: 'https://via.placeholder.com/24' }} style={styles.instructorAvatar} />
+                      <Image
+                        source={{ uri: course?.picture?.formats?.thumbnail?.url }}
+                        style={styles.instructorAvatar}
+                      />
                       <Text style={styles.instructorName}>
                         {course.author ? course.author.slice(0, 5) + '...' : 'Instrutor'}
                       </Text>
                       <View style={styles.courseStats}>
-                        <Feather name="book" size={12} color="#FFF" />
-                        <Text style={styles.statsText}>12 módulos</Text>
+                        {/*<Feather name="book" size={12} color="#FFF" />*/}
+                        {/*<Text style={styles.statsText}>12 módulos</Text>*/}
                         <Feather name="users" size={12} color="#FFF" />
-                        <Text style={styles.statsText}>3.8K inscritos</Text>
+                        <Text style={styles.statsText}>
+                          {course.subscribed >= 1000 ? `${(course.subscribed / 1000).toFixed(1)}k` : course.subscribed}{' '}
+                          inscritos
+                        </Text>
                       </View>
                     </View>
                   </View>
