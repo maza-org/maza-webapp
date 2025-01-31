@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   rating: {
     color: '#FFD700',
     fontSize: 14,
-    marginRight: 8,
+    marginTop: 10,
   },
   author: {
     color: '#666',
