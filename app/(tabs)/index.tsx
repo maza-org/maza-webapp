@@ -30,7 +30,12 @@ export default function Home() {
         },
       });
       const data = await response.json();
-      const sortedCourses = [...data.data].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+      // Explicitly sort by updatedAt in descending order to get the most recently updated course first
+      const sortedCourses = [...data.data].sort((a, b) => {
+        const dateA = new Date(a.updatedAt);
+        const dateB = new Date(b.updatedAt);
+        return dateB.getTime() - dateA.getTime();
+      });
       setUserCourses(sortedCourses);
       setLoadingUserCourses(false);
     } catch (error) {
@@ -82,6 +87,15 @@ export default function Home() {
   };
 
   function handleOnPressPopularCourse(course: Course) {
+    router.push({
+      pathname: '/room/lessons',
+      params: {
+        documentId: course.documentId,
+      },
+    });
+  }
+
+  function handleOnInProgressCoursePress(course: Course) {
     router.push({
       pathname: '/room/lessons',
       params: {
@@ -185,7 +199,10 @@ export default function Home() {
           <View style={styles.courseSection}>
             <Text style={styles.sectionTitle}>Continuar curso</Text>
 
-            <View style={styles.courseCard}>
+            <TouchableOpacity
+              style={styles.courseCard}
+              onPress={() => handleOnInProgressCoursePress(userCourses[0]?.course)}
+            >
               <View style={styles.courseHeader}>
                 {userCourses[0].course.picture ? (
                   <Image
@@ -222,7 +239,7 @@ export default function Home() {
                   <View style={[styles.progressFill, { width: `${userCourses[0].progress}%` }]} />
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -238,7 +255,11 @@ export default function Home() {
 
             <View style={styles.coursesList}>
               {userCourses.slice(1).map((course) => (
-                <TouchableOpacity key={course.id} style={styles.courseItem}>
+                <TouchableOpacity
+                  key={course.id}
+                  style={styles.courseItem}
+                  onPress={() => handleOnInProgressCoursePress(course?.course)}
+                >
                   {course.course.picture ? (
                     <Image source={{ uri: course.course.picture.formats.thumbnail.url }} style={styles.courseImage} />
                   ) : (
