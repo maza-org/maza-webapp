@@ -59,26 +59,29 @@ export default function Category() {
   );
 
   const renderLoadingShimmer = () => (
-    <FlatList
-      data={[...Array(7)]}
-      keyExtractor={(_, index) => `shimmer-${index}`}
-      renderItem={({ index }) => (
-        <View key={index} style={styles.courseCard}>
-          <Shimmer>
-            <View style={styles.thumbnail} />
-          </Shimmer>
-          <View style={styles.courseInfo}>
+    <>
+      <Text style={styles.loadingLabel}>Carregando os cursos...</Text>
+      <FlatList
+        data={[...Array(7)]}
+        keyExtractor={(_, index) => `shimmer-${index}`}
+        renderItem={({ index }) => (
+          <View key={index} style={styles.courseCard}>
             <Shimmer>
-              <View style={styles.titleShimmer} />
+              <View style={styles.thumbnail} />
             </Shimmer>
-            <Shimmer>
-              <View style={styles.descriptionShimmer} />
-            </Shimmer>
+            <View style={styles.courseInfo}>
+              <Shimmer>
+                <View style={styles.titleShimmer} />
+              </Shimmer>
+              <Shimmer>
+                <View style={styles.descriptionShimmer} />
+              </Shimmer>
+            </View>
           </View>
-        </View>
-      )}
-      contentContainerStyle={styles.listContent}
-    />
+        )}
+        contentContainerStyle={styles.listContent}
+      />
+    </>
   );
 
   const ListEmptyComponent = () => <Text style={styles.noCourses}>Nenhum curso encontrado</Text>;
@@ -168,5 +171,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#29292E',
     borderRadius: 4,
     width: '60%',
+  },
+  loadingLabel: {
+    color: '#666',
+    fontSize: 16,
+    marginTop: 24,
+    marginBottom: 16,
+    marginLeft: 24,
   },
 });
