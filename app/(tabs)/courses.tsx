@@ -11,12 +11,32 @@ import {
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Text, View } from '@/components/Themed';
 import { useState, useRef, useEffect } from 'react';
+import { router } from 'expo-router';
 import DailyScoreChart from '@/components/Daybar';
 import Search from '@/components/Search';
 import CourseItem from '@/components/CourseItem';
 import FavoriteCoursesGrid from '@/components/FavoriteCoursesGrid';
 import CoursesInProgress from '@/components/CourseInProgress';
 import useUser from '@/hooks/useUser';
+
+// Login Prompt Component
+const LoginPrompt = () => {
+  return (
+    <View style={styles.loginContainer}>
+      <View style={styles.errorIconContainer}>
+        <Feather name="user-x" size={48} color="#1fa2df" />
+      </View>
+      <Text style={styles.errorTitle}>Sessão Expirada</Text>
+      <Text style={styles.errorText}>
+        A sua sessão expirou ou não está autenticado. Por favor, inicie sessão novamente para aceder aos seus cursos.
+      </Text>
+      <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/login')}>
+        <Feather name="log-in" size={20} color="#FFF" style={styles.loginButtonIcon} />
+        <Text style={styles.loginButtonText}>Iniciar Sessão</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 // RadioButton Component
 const RadioButton = ({
@@ -59,6 +79,7 @@ const CompletedCourses = () => {
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { data: user } = useUser();
 
   useEffect(() => {
     fetchCompletedCourses();
@@ -68,8 +89,7 @@ const CompletedCourses = () => {
     try {
       const response = await fetch('https://maza-strapi-backend.onrender.com/api/user-courses?status=Completed', {
         headers: {
-          Authorization:
-            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNzM3MTM0NjgzLCJleHAiOjE3Mzk3MjY2ODN9.vtnxuCe_Q2q2LiBvpZrMOINV0wZbqCUL5jcM4eUj7W8',
+          Authorization: `Bearer ${user?.token}`,
         },
       });
 
@@ -111,8 +131,8 @@ const CompletedCourses = () => {
     return (
       <View style={styles.centerContainer}>
         <Feather name="book" size={48} color="#8F8F8F" />
-        <Text style={styles.emptyText}>No completed courses yet</Text>
-        <Text style={styles.emptySubtext}>Complete your first course to see it here</Text>
+        <Text style={styles.emptyText}>Ainda não há cursos concluídos</Text>
+        <Text style={styles.emptySubtext}>Conclua seu primeiro curso para vê-lo aqui</Text>
       </View>
     );
   }
@@ -132,14 +152,137 @@ const CompletedCourses = () => {
   );
 };
 
+// Filter Modal Component
+const FilterModal = ({ visible, onClose, onApply }) => {
+  const [selectedLevel, setSelectedLevel] = useState('Intermédio');
+  const [selectedRating, setSelectedRating] = useState('4-5');
+
+  return (
+    <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Filtrar Cursos</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={24} color="#8F8F8F" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Nível</Text>
+            <View style={styles.filterOptionsRow}>
+              <TouchableOpacity
+                style={[styles.filterOption, selectedLevel === 'Iniciante' && styles.filterOptionSelected]}
+                onPress={() => setSelectedLevel('Iniciante')}
+              >
+                <Text
+                  style={[styles.filterOptionText, selectedLevel === 'Iniciante' && styles.filterOptionTextSelected]}
+                >
+                  Iniciante
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterOption, selectedLevel === 'Intermédio' && styles.filterOptionSelected]}
+                onPress={() => setSelectedLevel('Intermédio')}
+              >
+                <Text
+                  style={[styles.filterOptionText, selectedLevel === 'Intermédio' && styles.filterOptionTextSelected]}
+                >
+                  Intermédio
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterOption, selectedLevel === 'Avançado' && styles.filterOptionSelected]}
+                onPress={() => setSelectedLevel('Avançado')}
+              >
+                <Text
+                  style={[styles.filterOptionText, selectedLevel === 'Avançado' && styles.filterOptionTextSelected]}
+                >
+                  Avançado
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.filterOptionsRow}>
+              <TouchableOpacity
+                style={[styles.filterOption, selectedLevel === 'MAZA' && styles.filterOptionSelected]}
+                onPress={() => setSelectedLevel('MAZA')}
+              >
+                <Text style={[styles.filterOptionText, selectedLevel === 'MAZA' && styles.filterOptionTextSelected]}>
+                  MAZA
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Avaliação</Text>
+            <View style={styles.filterOptionsRow}>
+              {['0-1', '1-2', '2-3'].map((rating) => (
+                <TouchableOpacity
+                  key={rating}
+                  style={[styles.filterOption, selectedRating === rating && styles.filterOptionSelected]}
+                  onPress={() => setSelectedRating(rating)}
+                >
+                  <Ionicons
+                    name="star"
+                    size={16}
+                    color={selectedRating === rating ? '#8257E5' : '#8F8F8F'}
+                    style={styles.ratingIcon}
+                  />
+                  <Text style={[styles.filterOptionText, selectedRating === rating && styles.filterOptionTextSelected]}>
+                    {rating}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={styles.filterOptionsRow}>
+              {['3-4', '4-5'].map((rating) => (
+                <TouchableOpacity
+                  key={rating}
+                  style={[styles.filterOption, selectedRating === rating && styles.filterOptionSelected]}
+                  onPress={() => setSelectedRating(rating)}
+                >
+                  <Ionicons
+                    name="star"
+                    size={16}
+                    color={selectedRating === rating ? '#8257E5' : '#8F8F8F'}
+                    style={styles.ratingIcon}
+                  />
+                  <Text style={[styles.filterOptionText, selectedRating === rating && styles.filterOptionTextSelected]}>
+                    {rating}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.applyButton}
+            onPress={() => {
+              onApply({ level: selectedLevel, rating: selectedRating });
+              onClose();
+            }}
+          >
+            <Text style={styles.applyButtonText}>Aplicar Filtro</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 // Main Screen Component
 export default function MeusCursosScreen() {
+  const { data: user } = useUser();
   const [selectedFilter, setSelectedFilter] = useState('inProgress');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const animationValue = useRef(new Animated.Value(0)).current;
-  const buttonWidth = 100; // Approximate width of each button
-  const { data: user } = useUser();
-  console.log(JSON.stringify(user, null, 2));
+  const buttonWidth = 100;
+
+  // If user is not authenticated, show login prompt
+  if (!user?.token) {
+    return <LoginPrompt />;
+  }
 
   const getAnimatedPosition = () => {
     switch (selectedFilter) {
@@ -178,129 +321,6 @@ export default function MeusCursosScreen() {
 
   const handleFilterApply = (filters) => {
     console.log('Applied filters:', filters);
-  };
-
-  // Filter Modal Component
-  const FilterModal = ({ visible, onClose, onApply }) => {
-    const [selectedLevel, setSelectedLevel] = useState('Intermédio');
-    const [selectedRating, setSelectedRating] = useState('4-5');
-
-    return (
-      <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={onClose}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filtrar Cursos</Text>
-              <TouchableOpacity onPress={onClose}>
-                <Ionicons name="close" size={24} color="#8F8F8F" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.filterSection}>
-              <Text style={styles.filterSectionTitle}>Nível</Text>
-              <View style={styles.filterOptionsRow}>
-                <TouchableOpacity
-                  style={[styles.filterOption, selectedLevel === 'Iniciante' && styles.filterOptionSelected]}
-                  onPress={() => setSelectedLevel('Iniciante')}
-                >
-                  <Text
-                    style={[styles.filterOptionText, selectedLevel === 'Iniciante' && styles.filterOptionTextSelected]}
-                  >
-                    Iniciante
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.filterOption, selectedLevel === 'Intermédio' && styles.filterOptionSelected]}
-                  onPress={() => setSelectedLevel('Intermédio')}
-                >
-                  <Text
-                    style={[styles.filterOptionText, selectedLevel === 'Intermédio' && styles.filterOptionTextSelected]}
-                  >
-                    Intermédio
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.filterOption, selectedLevel === 'Avançado' && styles.filterOptionSelected]}
-                  onPress={() => setSelectedLevel('Avançado')}
-                >
-                  <Text
-                    style={[styles.filterOptionText, selectedLevel === 'Avançado' && styles.filterOptionTextSelected]}
-                  >
-                    Avançado
-                  </Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.filterOptionsRow}>
-                <TouchableOpacity
-                  style={[styles.filterOption, selectedLevel === 'MAZA' && styles.filterOptionSelected]}
-                  onPress={() => setSelectedLevel('MAZA')}
-                >
-                  <Text style={[styles.filterOptionText, selectedLevel === 'MAZA' && styles.filterOptionTextSelected]}>
-                    MAZA
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={styles.filterSection}>
-              <Text style={styles.filterSectionTitle}>Avaliação</Text>
-              <View style={styles.filterOptionsRow}>
-                {['0-1', '1-2', '2-3'].map((rating) => (
-                  <TouchableOpacity
-                    key={rating}
-                    style={[styles.filterOption, selectedRating === rating && styles.filterOptionSelected]}
-                    onPress={() => setSelectedRating(rating)}
-                  >
-                    <Ionicons
-                      name="star"
-                      size={16}
-                      color={selectedRating === rating ? '#8257E5' : '#8F8F8F'}
-                      style={styles.ratingIcon}
-                    />
-                    <Text
-                      style={[styles.filterOptionText, selectedRating === rating && styles.filterOptionTextSelected]}
-                    >
-                      {rating}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <View style={styles.filterOptionsRow}>
-                {['3-4', '4-5'].map((rating) => (
-                  <TouchableOpacity
-                    key={rating}
-                    style={[styles.filterOption, selectedRating === rating && styles.filterOptionSelected]}
-                    onPress={() => setSelectedRating(rating)}
-                  >
-                    <Ionicons
-                      name="star"
-                      size={16}
-                      color={selectedRating === rating ? '#8257E5' : '#8F8F8F'}
-                      style={styles.ratingIcon}
-                    />
-                    <Text
-                      style={[styles.filterOptionText, selectedRating === rating && styles.filterOptionTextSelected]}
-                    >
-                      {rating}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={styles.applyButton}
-              onPress={() => {
-                onApply({ level: selectedLevel, rating: selectedRating });
-                onClose();
-              }}
-            >
-              <Text style={styles.applyButtonText}>Aplicar Filtro</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    );
   };
 
   return (
@@ -358,7 +378,6 @@ export default function MeusCursosScreen() {
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -378,6 +397,60 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
+
+  // Login prompt styles
+  loginContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121214',
+    padding: 24,
+  },
+  errorIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(31, 162, 223, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  errorTitle: {
+    color: '#FFF',
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: '#A8A8B3',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 24,
+    maxWidth: 320,
+  },
+  loginButton: {
+    backgroundColor: '#1fa2df',
+    padding: 16,
+    borderRadius: 50,
+    width: '100%',
+    maxWidth: 320,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  loginButtonIcon: {
+    marginRight: 8,
+  },
+  loginButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  // Header button styles
   headerButtons: {
     flexDirection: 'row',
     gap: 8,
@@ -403,6 +476,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
+
+  // Search styles
   searchContainer: {
     marginHorizontal: 16,
     marginTop: 8,
@@ -423,6 +498,8 @@ const styles = StyleSheet.create({
   searchIcon: {
     marginRight: 8,
   },
+
+  // Radio group styles
   radioGroup: {
     flexDirection: 'row',
     marginHorizontal: 16,
@@ -455,6 +532,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
+
+  // Floating filter button styles
   floatingButton: {
     position: 'absolute',
     bottom: 20,
@@ -482,6 +561,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
+
+  // Modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -506,6 +587,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     backgroundColor: '#29292E',
   },
+
+  // Filter styles
   filterSection: {
     marginBottom: 24,
     backgroundColor: '#29292E',
@@ -541,6 +624,8 @@ const styles = StyleSheet.create({
   filterOptionTextSelected: {
     color: '#8257E5',
   },
+
+  // Button styles
   applyButton: {
     backgroundColor: '#2EA8FF',
     padding: 16,
@@ -553,11 +638,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
+
+  // Course list styles
   courseList: {
     flex: 1,
     paddingHorizontal: 16,
     marginTop: 16,
   },
+
+  // Center container styles
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -565,13 +654,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     backgroundColor: '#121214',
   },
-  errorText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 16,
-    textAlign: 'center',
+
+  // Loading styles
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#121214',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+
   errorSubtext: {
     fontSize: 14,
     color: '#8F8F8F',
@@ -602,5 +693,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '500',
+  },
+
+  // Rating icon styles
+  ratingIcon: {
+    marginRight: 4,
   },
 });

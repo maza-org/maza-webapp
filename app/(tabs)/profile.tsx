@@ -164,7 +164,6 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 320,
     alignItems: 'center',
-    backgroundColor: '#202024',
     borderRadius: 16,
     padding: 24,
   },
