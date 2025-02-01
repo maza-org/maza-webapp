@@ -22,7 +22,7 @@ export default function Home() {
     }
   }, [user?.token]);
 
-  const fetchUserCourses = async () => {
+  async function fetchUserCourses() {
     try {
       const response = await fetch('https://maza-strapi-backend.onrender.com/api/user-courses?status=InProgress', {
         headers: {
@@ -42,9 +42,9 @@ export default function Home() {
       console.error('Error fetching user courses:', error);
       setLoadingUserCourses(false);
     }
-  };
+  }
 
-  const fetchSubjects = async () => {
+  async function fetchSubjects() {
     try {
       const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/courses`);
       const data = await response.json();
@@ -58,9 +58,9 @@ export default function Home() {
       console.error('Error fetching subjects:', error);
       setLoadingSubjects(false);
     }
-  };
+  }
 
-  const fetchPopularCourses = async () => {
+  async function fetchPopularCourses() {
     try {
       const response = await fetch(
         'https://maza-strapi-backend.onrender.com/api/courses?sort=subscribed%3Adesc&pageSize=15&page=1'
@@ -72,19 +72,19 @@ export default function Home() {
       console.error('Error fetching popular courses:', error);
       setLoadingCourses(false);
     }
-  };
+  }
 
-  const handleSubjectClick = (subject) => {
+  function handleSubjectClick(subject) {
     console.log('Selected subject:', {
       id: subject.id,
       documentId: subject.documentId,
       name: subject.name,
     });
-  };
+  }
 
-  const handleSearchPress = () => {
+  function handleSearchPress() {
     router.push('/search');
-  };
+  }
 
   function handleOnPressPopularCourse(course: Course) {
     router.push({
@@ -102,6 +102,10 @@ export default function Home() {
         documentId: course.documentId,
       },
     });
+  }
+
+  function handleOnOpenCoursesInProgress() {
+    router.push('/(tabs)/courses');
   }
 
   return (
@@ -250,7 +254,7 @@ export default function Home() {
           <View style={styles.coursesInProgress}>
             <View style={styles.coursesHeader}>
               <Text style={styles.sectionTitle}>Cursos em andamento</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={handleOnOpenCoursesInProgress}>
                 <Text style={styles.verTodos}>VER TODOS</Text>
               </TouchableOpacity>
             </View>
