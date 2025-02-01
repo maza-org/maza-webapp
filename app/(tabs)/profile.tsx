@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -22,17 +22,40 @@ export interface Subject {
 
 export default function ProfileScreen() {
   const { data: user, isLoading, error } = useUser();
+  const [isEditing, setIsEditing] = useState(false);
+
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('@user');
-      // queryClient.invalidateQueries({ queryKey: ['user'] });
       router.replace('/');
     } catch (error) {
       console.error('Error during logout:', error);
       Alert.alert('Erro', 'Falha ao terminar sessão');
     }
   };
-  console.log(JSON.stringify(user, null, 2));
+
+  const handleDeleteInterest = async (interestId: number) => {
+    try {
+      Alert.alert('Confirmar', 'Tem certeza que deseja remover este interesse?', [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Remover',
+          style: 'destructive',
+          onPress: async () => {
+            // Add your API call here to delete the interest
+            Alert.alert('Sucesso', 'Interesse removido com sucesso');
+          },
+        },
+      ]);
+    } catch (error) {
+      console.error('Error deleting interest:', error);
+      Alert.alert('Erro', 'Falha ao remover interesse');
+    }
+  };
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -111,21 +134,48 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="star" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Interesses</Text>
+            <View style={styles.headerContainer}>
+              <View style={styles.infoHeader}>
+                <Feather name="star" size={20} color="#1fa2df" />
+                <Text style={styles.infoLabel}>Interesses</Text>
+              </View>
+              <TouchableOpacity onPress={() => setIsEditing(!isEditing)} style={styles.editButton}>
+                <Feather name={isEditing ? 'check' : 'edit-2'} size={16} color="#1fa2df" />
+              </TouchableOpacity>
             </View>
+
             <View style={styles.interestsContainer}>
               {user.interests && user.interests.length > 0 ? (
                 <View style={styles.interestsList}>
                   {user.interests.map((subject: Subject) => (
                     <View key={subject.id} style={styles.interestTag}>
+                      <View style={styles.interestIconContainer}>
+                        <Feather name="hash" size={14} color="#1fa2df" />
+                      </View>
                       <Text style={styles.interestText}>{subject.name}</Text>
+                      {isEditing && (
+                        <TouchableOpacity
+                          onPress={() => handleDeleteInterest(subject.id)}
+                          style={styles.deleteInterestButton}
+                        >
+                          <Feather name="x" size={14} color="#1fa2df" />
+                        </TouchableOpacity>
+                      )}
                     </View>
                   ))}
                 </View>
               ) : (
-                <Text style={styles.infoValue}>Nenhum interesse adicionado</Text>
+                <View style={styles.emptyState}>
+                  <Feather name="star" size={24} color="#A8A8B3" style={styles.emptyStateIcon} />
+                  <Text style={styles.emptyStateText}>Nenhum interesse adicionado</Text>
+                  <TouchableOpacity
+                    onPress={() => router.push('/user/edit-interests')}
+                    style={styles.addInterestButton}
+                  >
+                    <Feather name="plus" size={16} color="#FFF" />
+                    <Text style={styles.addInterestText}>Adicionar Interesses</Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
           </View>
@@ -141,7 +191,6 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -267,7 +316,12 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   infoItem: {
-    gap: 8,
+    gap: 12,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   infoHeader: {
     flexDirection: 'row',
@@ -279,10 +333,77 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
+  editButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(31, 162, 223, 0.1)',
+  },
   infoValue: {
     color: '#A8A8B3',
     fontSize: 14,
     marginLeft: 28,
+  },
+  interestsContainer: {
+    marginLeft: 28,
+  },
+  interestsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  interestTag: {
+    backgroundColor: 'rgba(31, 162, 223, 0.08)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(31, 162, 223, 0.2)',
+  },
+  interestIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(31, 162, 223, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  interestText: {
+    color: '#1fa2df',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  emptyState: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    gap: 12,
+  },
+  emptyStateIcon: {
+    opacity: 0.5,
+  },
+  emptyStateText: {
+    color: '#A8A8B3',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  addInterestButton: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1fa2df',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    gap: 8,
+  },
+  addInterestText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '500',
   },
   footer: {
     padding: 24,
@@ -302,27 +423,5 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
-  },
-  interestsContainer: {
-    marginLeft: 28,
-    marginTop: 4,
-  },
-  interestsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  interestTag: {
-    backgroundColor: 'rgba(31, 162, 223, 0.1)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#1fa2df',
-  },
-  interestText: {
-    color: '#1fa2df',
-    fontSize: 14,
-    fontWeight: '500',
   },
 });
