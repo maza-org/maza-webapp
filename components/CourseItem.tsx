@@ -1,13 +1,10 @@
-import { Image, Text, TouchableOpacity, View, StyleSheet } from "react-native";
-import React from "react";
+import { Image, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import React from 'react';
 
 export default function CourseItem() {
   return (
     <TouchableOpacity style={styles.courseItem}>
-      <Image
-        source={{ uri: "https://via.placeholder.com/60" }}
-        style={styles.courseImage}
-      />
+      <Image source={{ uri: 'https://via.placeholder.com/60' }} style={styles.courseImage} />
       <View style={styles.courseInfo}>
         <Text style={styles.courseCategory}>Design</Text>
         <Text style={styles.courseItemTitle}>Principles of Industri...</Text>
@@ -23,30 +20,30 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
   moduleCount: {
-    color: "#FFF",
+    color: '#FFF',
     opacity: 0.7,
     fontSize: 12,
   },
   percentageText: {
-    color: "#00B37E",
+    color: '#2EA8FF',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   coursesHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
   coursesList: {
     gap: 12,
   },
   courseItem: {
-    flexDirection: "row",
-    backgroundColor: "#29292E",
+    flexDirection: 'row',
+    backgroundColor: '#29292E',
     borderRadius: 12,
     padding: 6,
-    alignItems: "center",
+    alignItems: 'center',
     margin: 10,
   },
   courseImage: {
@@ -60,13 +57,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   courseItemTitle: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   courseCategory: {
-    color: "#00B37E",
+    color: '#2EA8FF',
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
   },
 });
