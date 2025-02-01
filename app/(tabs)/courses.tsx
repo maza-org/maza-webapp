@@ -1,6 +1,6 @@
 import { StyleSheet, Pressable, Animated, Modal, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { Text, View, useThemeColor } from '@/components/Themed';
+import { Text, View } from '@/components/Themed';
 import { useState, useRef, useEffect } from 'react';
 import DailyScoreChart from '@/components/Daybar';
 import Search from '@/components/Search';
@@ -93,127 +93,6 @@ const FloatingFilterButton = ({ onPress }: { onPress: () => void }) => (
   </Pressable>
 );
 
-// Filter Option Component
-const FilterOption = ({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) => {
-  const backgroundColor = useThemeColor({ light: '#f5f5f5', dark: '#29292E' }, 'background');
-  const textColor = useThemeColor({ light: '#666', dark: '#8F8F8F' }, 'text');
-
-  return (
-    <TouchableOpacity
-      style={[
-        styles.filterOption,
-        {
-          backgroundColor: selected ? 'rgba(130, 87, 229, 0.2)' : backgroundColor,
-        },
-      ]}
-      onPress={onPress}
-    >
-      <Text style={[styles.filterOptionText, { color: selected ? '#8257E5' : textColor }]}>{label}</Text>
-    </TouchableOpacity>
-  );
-};
-
-// Rating Option Component
-const RatingOption = ({ rating, selected, onPress }: { selected: boolean; onPress: () => void; rating: string }) => {
-  const backgroundColor = useThemeColor({ light: '#f5f5f5', dark: '#29292E' }, 'background');
-  const textColor = useThemeColor({ light: '#666', dark: '#8F8F8F' }, 'text');
-
-  return (
-    <TouchableOpacity
-      style={[
-        styles.filterOption,
-        {
-          backgroundColor: selected ? 'rgba(130, 87, 229, 0.2)' : backgroundColor,
-        },
-      ]}
-      onPress={onPress}
-    >
-      <Ionicons name="star" size={16} color={selected ? '#8257E5' : textColor} />
-      <Text style={[styles.filterOptionText, { color: selected ? '#8257E5' : textColor }]}>{rating}</Text>
-    </TouchableOpacity>
-  );
-};
-
-// Filter Modal Component
-const FilterModal = ({
-  visible,
-  onClose,
-  onApply,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  onApply: ({ level, rating }: { level: string; rating: string }) => void;
-}) => {
-  const [selectedLevel, setSelectedLevel] = useState('Intermédio');
-  const [selectedRating, setSelectedRating] = useState('4-5');
-
-  const backgroundColor = useThemeColor({ light: '#ffffff', dark: '#202024' }, 'background');
-  const textColor = useThemeColor({ light: '#000000', dark: '#ffffff' }, 'text');
-  const secondaryTextColor = useThemeColor({ light: '#666666', dark: '#8F8F8F' }, 'text');
-
-  return (
-    <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { backgroundColor }]}>
-          <View style={[styles.modalHeader, { backgroundColor }]}>
-            <Text style={[styles.modalTitle, { color: textColor }]}>Filtrar Cursos</Text>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color={secondaryTextColor} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={[styles.filterSection, { backgroundColor }]}>
-            <Text style={[styles.filterSectionTitle, { color: secondaryTextColor }]}>Nivel</Text>
-            <View style={styles.filterOptionsRow}>
-              <FilterOption
-                label="Iniciante"
-                selected={selectedLevel === 'Iniciante'}
-                onPress={() => setSelectedLevel('Iniciante')}
-              />
-              <FilterOption
-                label="Intermédio"
-                selected={selectedLevel === 'Intermédio'}
-                onPress={() => setSelectedLevel('Intermédio')}
-              />
-              <FilterOption
-                label="Avançado"
-                selected={selectedLevel === 'Avançado'}
-                onPress={() => setSelectedLevel('Avançado')}
-              />
-            </View>
-            <View style={styles.filterOptionsRow}>
-              <FilterOption label="MAZA" selected={selectedLevel === 'MAZA'} onPress={() => setSelectedLevel('MAZA')} />
-            </View>
-          </View>
-
-          <View style={[styles.filterSection, { backgroundColor }]}>
-            <Text style={[styles.filterSectionTitle, { color: secondaryTextColor }]}>Avaliação</Text>
-            <View style={styles.filterOptionsRow}>
-              <RatingOption rating="0-1" selected={selectedRating === '0-1'} onPress={() => setSelectedRating('0-1')} />
-              <RatingOption rating="1-2" selected={selectedRating === '1-2'} onPress={() => setSelectedRating('1-2')} />
-              <RatingOption rating="2-3" selected={selectedRating === '2-3'} onPress={() => setSelectedRating('2-3')} />
-            </View>
-            <View style={styles.filterOptionsRow}>
-              <RatingOption rating="3-4" selected={selectedRating === '3-4'} onPress={() => setSelectedRating('3-4')} />
-              <RatingOption rating="4-5" selected={selectedRating === '4-5'} onPress={() => setSelectedRating('4-5')} />
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={styles.applyButton}
-            onPress={() => {
-              onApply({ level: selectedLevel, rating: selectedRating });
-              onClose();
-            }}
-          >
-            <Text style={styles.applyButtonText}>Aplicar Filtro</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
 // Main Screen Component
 export default function MeusCursosScreen() {
   const [selectedFilter, setSelectedFilter] = useState('inProgress');
@@ -259,6 +138,129 @@ export default function MeusCursosScreen() {
 
   const handleFilterApply = (filters) => {
     console.log('Applied filters:', filters);
+  };
+
+  // Filter Modal Component (Inlined)
+  const FilterModal = ({ visible, onClose, onApply }) => {
+    const [selectedLevel, setSelectedLevel] = useState('Intermédio');
+    const [selectedRating, setSelectedRating] = useState('4-5');
+
+    return (
+      <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={onClose}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filtrar Cursos</Text>
+              <TouchableOpacity onPress={onClose}>
+                <Ionicons name="close" size={24} color="#8F8F8F" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.filterSection}>
+              <Text style={styles.filterSectionTitle}>Nível</Text>
+              <View style={styles.filterOptionsRow}>
+                <TouchableOpacity
+                  style={[styles.filterOption, selectedLevel === 'Iniciante' && styles.filterOptionSelected]}
+                  onPress={() => setSelectedLevel('Iniciante')}
+                >
+                  <Text
+                    style={[styles.filterOptionText, selectedLevel === 'Iniciante' && styles.filterOptionTextSelected]}
+                  >
+                    Iniciante
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.filterOption, selectedLevel === 'Intermédio' && styles.filterOptionSelected]}
+                  onPress={() => setSelectedLevel('Intermédio')}
+                >
+                  <Text
+                    style={[styles.filterOptionText, selectedLevel === 'Intermédio' && styles.filterOptionTextSelected]}
+                  >
+                    Intermédio
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.filterOption, selectedLevel === 'Avançado' && styles.filterOptionSelected]}
+                  onPress={() => setSelectedLevel('Avançado')}
+                >
+                  <Text
+                    style={[styles.filterOptionText, selectedLevel === 'Avançado' && styles.filterOptionTextSelected]}
+                  >
+                    Avançado
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.filterOptionsRow}>
+                <TouchableOpacity
+                  style={[styles.filterOption, selectedLevel === 'MAZA' && styles.filterOptionSelected]}
+                  onPress={() => setSelectedLevel('MAZA')}
+                >
+                  <Text style={[styles.filterOptionText, selectedLevel === 'MAZA' && styles.filterOptionTextSelected]}>
+                    MAZA
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.filterSection}>
+              <Text style={styles.filterSectionTitle}>Avaliação</Text>
+              <View style={styles.filterOptionsRow}>
+                {['0-1', '1-2', '2-3'].map((rating) => (
+                  <TouchableOpacity
+                    key={rating}
+                    style={[styles.filterOption, selectedRating === rating && styles.filterOptionSelected]}
+                    onPress={() => setSelectedRating(rating)}
+                  >
+                    <Ionicons
+                      name="star"
+                      size={16}
+                      color={selectedRating === rating ? '#8257E5' : '#8F8F8F'}
+                      style={styles.ratingIcon}
+                    />
+                    <Text
+                      style={[styles.filterOptionText, selectedRating === rating && styles.filterOptionTextSelected]}
+                    >
+                      {rating}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <View style={styles.filterOptionsRow}>
+                {['3-4', '4-5'].map((rating) => (
+                  <TouchableOpacity
+                    key={rating}
+                    style={[styles.filterOption, selectedRating === rating && styles.filterOptionSelected]}
+                    onPress={() => setSelectedRating(rating)}
+                  >
+                    <Ionicons
+                      name="star"
+                      size={16}
+                      color={selectedRating === rating ? '#8257E5' : '#8F8F8F'}
+                      style={styles.ratingIcon}
+                    />
+                    <Text
+                      style={[styles.filterOptionText, selectedRating === rating && styles.filterOptionTextSelected]}
+                    >
+                      {rating}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.applyButton}
+              onPress={() => {
+                onApply({ level: selectedLevel, rating: selectedRating });
+                onClose();
+              }}
+            >
+              <Text style={styles.applyButtonText}>Aplicar Filtro</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
   };
 
   return (
@@ -470,7 +472,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#202024',
+    backgroundColor: '#29292E',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: 24,
@@ -486,9 +488,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
+    backgroundColor: '#29292E',
   },
   filterSection: {
     marginBottom: 24,
+    backgroundColor: '#29292E',
   },
   filterSectionTitle: {
     fontSize: 16,
@@ -500,6 +504,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     marginBottom: 8,
+    backgroundColor: '#29292E',
   },
   filterOption: {
     flexDirection: 'row',

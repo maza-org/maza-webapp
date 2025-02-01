@@ -1,15 +1,6 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  Text,
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, ActivityIndicator, Alert, StyleSheet, TouchableOpacity, Image, Text } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Course {
   id: number;
@@ -49,28 +40,14 @@ interface CourseItemProps {
   lessons: number;
 }
 
-const CourseItem: React.FC<CourseItemProps> = ({
-  title,
-  instructor,
-  progress,
-  rating,
-  duration,
-  lessons,
-}) => {
+const CourseItem: React.FC<CourseItemProps> = ({ title, instructor, progress, rating, duration, lessons }) => {
   return (
     <TouchableOpacity style={styles.courseItem}>
-      <Image
-        source={{ uri: "https://via.placeholder.com/60" }}
-        style={styles.courseImage}
-      />
+      <Image source={{ uri: 'https://via.placeholder.com/60' }} style={styles.courseImage} />
       <View style={styles.courseInfo}>
         <Text style={styles.courseCategory}>{instructor}</Text>
-        <Text style={styles.courseItemTitle}>
-          {title.length > 20 ? `${title.substring(0, 20)}...` : title}
-        </Text>
-        <Text style={styles.moduleCount}>
-          {`${lessons} Módulos • ${duration} • ${rating.toFixed(1)}★`}
-        </Text>
+        <Text style={styles.courseItemTitle}>{title.length > 20 ? `${title.substring(0, 20)}...` : title}</Text>
+        <Text style={styles.moduleCount}>{`${lessons} Módulos • ${duration} • ${rating.toFixed(1)}★`}</Text>
       </View>
       <Text style={styles.percentageText}>{`${Math.round(progress)}%`}</Text>
     </TouchableOpacity>
@@ -84,13 +61,13 @@ const CoursesInProgress = () => {
 
   const loadUserData = async () => {
     try {
-      const userData = await AsyncStorage.getItem("@user");
+      const userData = await AsyncStorage.getItem('@user');
       if (userData) {
         setUser(JSON.parse(userData));
       }
     } catch (error) {
-      console.error("Error loading user data:", error);
-      Alert.alert("Erro", "Falha ao carregar dados do utilizador");
+      console.error('Error loading user data:', error);
+      Alert.alert('Erro', 'Falha ao carregar dados do utilizador');
     }
   };
 
@@ -98,20 +75,17 @@ const CoursesInProgress = () => {
     if (!user?.token) return;
 
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses?status=InProgress`,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses?status=InProgress`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
         },
-      );
+      });
 
       const json = await response.json();
       setCourses(json.data);
     } catch (error) {
-      console.error("Error fetching courses:", error);
-      Alert.alert("Erro", "Falha ao carregar cursos");
+      console.error('Error fetching courses:', error);
+      Alert.alert('Erro', 'Falha ao carregar cursos');
     } finally {
       setLoading(false);
     }
@@ -165,35 +139,35 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     marginTop: 16,
-    backgroundColor: "#121214",
+    backgroundColor: '#121214',
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#121214",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121214',
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#121214",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121214',
     paddingHorizontal: 16,
     marginTop: 16,
   },
   emptyText: {
-    color: "#8F8F8F",
+    color: '#8F8F8F',
     fontSize: 16,
   },
   coursesInProgress: {
     marginVertical: 24,
   },
   courseItem: {
-    flexDirection: "row",
-    backgroundColor: "#29292E",
+    flexDirection: 'row',
+    backgroundColor: '#29292E',
     borderRadius: 12,
     padding: 6,
-    alignItems: "center",
+    alignItems: 'center',
     margin: 10,
   },
   courseImage: {
@@ -207,24 +181,24 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   courseItemTitle: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   courseCategory: {
-    color: "#00B37E",
+    color: '#2EA8FF',
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   moduleCount: {
-    color: "#FFF",
+    color: '#FFF',
     opacity: 0.7,
     fontSize: 12,
   },
   percentageText: {
-    color: "#00B37E",
+    color: '#2EA8FF',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });
 
