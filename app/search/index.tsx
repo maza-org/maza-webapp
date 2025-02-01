@@ -1,14 +1,7 @@
-import {
-  StyleSheet,
-  TextInput,
-  Pressable,
-  Image,
-  ImageSourcePropType,
-  SafeAreaView,
-} from "react-native";
-import { Text, View } from "@/components/Themed";
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { StyleSheet, TextInput, Pressable, Image, ImageSourcePropType, SafeAreaView } from 'react-native';
+import { Text, View } from '@/components/Themed';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 interface SearchTagProps {
   label: string;
@@ -63,13 +56,7 @@ const CategoryButton = ({ icon, label }: CategoryButtonProps) => (
   </Pressable>
 );
 
-const MentorCard = ({
-  image,
-  name,
-  title,
-  rating,
-  reviews,
-}: MentorCardProps) => (
+const MentorCard = ({ image, name, title, rating, reviews }: MentorCardProps) => (
   <Pressable style={styles.mentorCard}>
     <Image source={image} style={styles.mentorImage} />
     <View style={styles.mentorInfo}>
@@ -89,33 +76,33 @@ export default function Search(): JSX.Element {
     router.back();
   };
   const recentSearches: RecentSearch[] = [
-    { id: "1", label: "Business" },
-    { id: "2", label: "development" },
-    { id: "3", label: "technology" },
-    { id: "4", label: "UI/UX Designer" },
+    { id: '1', label: 'Business' },
+    { id: '2', label: 'development' },
+    { id: '3', label: 'technology' },
+    { id: '4', label: 'UI/UX Designer' },
   ];
 
   const categories: Category[] = [
-    { id: "1", icon: "brush", label: "Design" },
-    { id: "2", icon: "laptop", label: "Tecnologia" },
-    { id: "3", icon: "heart", label: "Saúde e Bem-estar" },
-    { id: "4", icon: "cash", label: "Finanças" },
+    { id: '1', icon: 'brush', label: 'Design' },
+    { id: '2', icon: 'laptop', label: 'Tecnologia' },
+    { id: '3', icon: 'heart', label: 'Saúde e Bem-estar' },
+    { id: '4', icon: 'cash', label: 'Finanças' },
   ];
 
   const mentors: Mentor[] = [
     {
-      id: "1",
-      name: "Alex Johnson",
-      title: "Leadership",
+      id: '1',
+      name: 'Alex Johnson',
+      title: 'Leadership',
       rating: 4.8,
-      reviews: "1.8k",
+      reviews: '1.8k',
     },
     {
-      id: "2",
-      name: "Michael Chen",
-      title: "Data Science",
+      id: '2',
+      name: 'Michael Chen',
+      title: 'Data Science',
       rating: 4.3,
-      reviews: "800",
+      reviews: '800',
     },
   ];
 
@@ -129,11 +116,7 @@ export default function Search(): JSX.Element {
       </View>
 
       <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Pesquisar cursos"
-          placeholderTextColor="#666"
-        />
+        <TextInput style={styles.searchInput} placeholder="Pesquisar cursos" placeholderTextColor="#666" />
         <Ionicons name="search" size={20} color="#666" />
       </View>
 
@@ -141,11 +124,7 @@ export default function Search(): JSX.Element {
         <Text style={styles.sectionTitle}>Últimas pesquisas</Text>
         <View style={styles.tagsContainer}>
           {recentSearches.map((search) => (
-            <SearchTag
-              key={search.id}
-              label={search.label}
-              onRemove={() => {}}
-            />
+            <SearchTag key={search.id} label={search.label} onRemove={() => {}} />
           ))}
         </View>
       </View>
@@ -154,27 +133,7 @@ export default function Search(): JSX.Element {
         <Text style={styles.sectionTitle}>Pesquisar por categoria</Text>
         <View style={styles.categoriesContainer}>
           {categories.map((category) => (
-            <CategoryButton
-              key={category.id}
-              icon={category.icon}
-              label={category.label}
-            />
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Pesquisar por mentor</Text>
-        <View style={styles.mentorsContainer}>
-          {mentors.map((mentor) => (
-            <MentorCard
-              key={mentor.id}
-              name={mentor.name}
-              title={mentor.title}
-              rating={mentor.rating}
-              reviews={mentor.reviews}
-              image={{ uri: "https://via.placeholder.com/50" }}
-            />
+            <CategoryButton key={category.id} icon={category.icon} label={category.label} />
           ))}
         </View>
       </View>
@@ -185,101 +144,101 @@ export default function Search(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121214",
+    backgroundColor: '#121214',
     padding: 16,
     paddingStart: 16,
     paddingEnd: 16,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 16,
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
   },
   backButton: {
     marginRight: 16,
-    borderStyle: "solid",
-    borderColor: "#b3b3b3",
+    borderStyle: 'solid',
+    borderColor: '#b3b3b3',
     borderWidth: 0.5,
     padding: 8,
     borderRadius: 50,
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
+    fontWeight: 'bold',
+    color: '#fff',
   },
   searchContainer: {
-    backgroundColor: "#202024",
+    backgroundColor: '#202024',
     borderRadius: 8,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     height: 44,
     marginBottom: 24,
   },
   searchInput: {
     flex: 1,
-    height: "100%",
-    color: "#fff",
+    height: '100%',
+    color: '#fff',
     fontSize: 16,
     marginRight: 8,
   },
   section: {
     marginBottom: 24,
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#8F8F8F",
+    fontWeight: '600',
+    color: '#8F8F8F',
     marginBottom: 16,
   },
   tagsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
   },
   searchTag: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#29292E",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#29292E',
     borderRadius: 999,
     paddingVertical: 8,
     paddingHorizontal: 12,
     gap: 8,
   },
   searchTagText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 14,
   },
   categoriesContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
   },
   categoryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#202024",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#202024',
     borderRadius: 999,
     paddingVertical: 8,
     paddingHorizontal: 16,
     gap: 8,
   },
   categoryButtonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 14,
   },
   mentorsContainer: {
     gap: 12,
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
   },
   mentorCard: {
-    flexDirection: "row",
-    backgroundColor: "#202024",
+    flexDirection: 'row',
+    backgroundColor: '#202024',
     borderRadius: 8,
     padding: 12,
   },
@@ -291,31 +250,31 @@ const styles = StyleSheet.create({
   },
   mentorInfo: {
     flex: 1,
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
   },
   mentorName: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
+    fontWeight: '600',
+    color: '#fff',
     marginBottom: 4,
   },
   mentorTitle: {
     fontSize: 14,
-    color: "#8F8F8F",
+    color: '#8F8F8F',
     marginBottom: 4,
   },
   ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 4,
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
   },
   ratingText: {
     fontSize: 14,
-    color: "#fff",
+    color: '#fff',
   },
   reviewsText: {
     fontSize: 14,
-    color: "#8F8F8F",
+    color: '#8F8F8F',
   },
 });

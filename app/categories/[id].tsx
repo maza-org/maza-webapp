@@ -39,15 +39,17 @@ export default function Category() {
 
   const renderCourseItem = ({ item: course }: { item: Course }) => (
     <TouchableOpacity style={styles.courseCard} onPress={() => handlePressCourse(course)}>
-      <Image
-        style={styles.thumbnail}
-        placeholder={{ blurhash }}
-        contentFit="cover"
-        transition={1000}
-        source={{
-          uri: course.picture?.formats?.thumbnail?.url || course.picture?.formats?.small?.url || course.picture?.url,
-        }}
-      />
+      <View style={styles.thumbnailContainer}>
+        <Image
+          style={styles.thumbnail}
+          placeholder={{ blurhash }}
+          contentFit="cover"
+          transition={1000}
+          source={{
+            uri: course.picture?.formats?.thumbnail?.url || course.picture?.formats?.small?.url || course.picture?.url,
+          }}
+        />
+      </View>
       <View style={styles.courseInfo}>
         <Text style={styles.courseTitle}>{course.title}</Text>
         <View>
@@ -62,20 +64,31 @@ export default function Category() {
     <>
       <Text style={styles.loadingLabel}>Carregando os cursos...</Text>
       <FlatList
-        data={[...Array(7)]}
+        data={[...Array(5)]}
         keyExtractor={(_, index) => `shimmer-${index}`}
-        renderItem={({ index }) => (
-          <View key={index} style={styles.courseCard}>
-            <Shimmer>
-              <View style={styles.thumbnail} />
-            </Shimmer>
+        renderItem={() => (
+          <View style={styles.courseCard}>
+            {/* Thumbnail shimmer */}
+            <View style={styles.thumbnailContainer}>
+              <Shimmer>
+                <View style={styles.thumbnail} />
+              </Shimmer>
+            </View>
+
+            {/* Content shimmer */}
             <View style={styles.courseInfo}>
-              <Shimmer>
-                <View style={styles.titleShimmer} />
+              <Shimmer style={{ marginBottom: 8 }}>
+                <View style={[styles.titleShimmer]} />
               </Shimmer>
-              <Shimmer>
-                <View style={styles.descriptionShimmer} />
-              </Shimmer>
+
+              <View style={{ gap: 8 }}>
+                <Shimmer>
+                  <View style={[styles.descriptionShimmer]} />
+                </Shimmer>
+                <Shimmer>
+                  <View style={[styles.descriptionShimmer, { width: '40%' }]} />
+                </Shimmer>
+              </View>
             </View>
           </View>
         )}
@@ -84,10 +97,28 @@ export default function Category() {
     </>
   );
 
-  const ListEmptyComponent = () => <Text style={styles.noCourses}>Nenhum curso encontrado</Text>;
+  const ListEmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Image
+        style={styles.emptyIcon}
+        source={require('@/assets/images/not-found.png')}
+        contentFit="contain"
+        placeholder={blurhash}
+        transition={300}
+        onError={(error) => {
+          console.error('Error loading empty state image:', error);
+        }}
+        accessible={true}
+        accessibilityLabel="No courses found illustration"
+      />
+      <Text style={styles.emptyTitle}>Nenhum curso disponível</Text>
+      <Text style={styles.emptySubtitle}>Nenhuma opção de aprendizado foi encontrada.</Text>
+      <Text style={styles.emptySubtitle}>Por favor, volte a verificar mais tarde</Text>
+    </View>
+  );
 
   const ListHeaderComponent = () =>
-    !isLoading ? (
+    !isLoading && courses.length > 0 ? (
       <Text style={styles.coursesAvailable}>
         {courses.length} {courses.length === 1 ? 'curso disponível' : 'cursos disponíveis'}
       </Text>
@@ -127,21 +158,23 @@ const styles = StyleSheet.create({
     marginTop: 25,
     marginBottom: 24,
   },
-  noCourses: {
-    color: '#666',
-    fontSize: 16,
-    marginTop: 25,
-  },
   courseCard: {
     flexDirection: 'row',
     padding: 16,
     backgroundColor: '#202024',
     borderRadius: 12,
     marginBottom: 16,
+    alignItems: 'center', // Center items vertically
   },
-  thumbnail: {
+  thumbnailContainer: {
     width: 100,
     height: 70,
+    justifyContent: 'center', // Center image vertically
+    alignItems: 'center', // Center image horizontally
+  },
+  thumbnail: {
+    width: '100%',
+    height: '100%',
     borderRadius: 8,
   },
   courseInfo: {
@@ -190,5 +223,30 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: 16,
     marginLeft: 24,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    marginTop: 40,
+  },
+  emptyIcon: {
+    width: 150,
+    height: 140,
+    marginBottom: 16,
+    backgroundColor: 'transparent',
+  },
+  emptyTitle: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    color: '#666',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
