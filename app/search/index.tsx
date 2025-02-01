@@ -1,46 +1,42 @@
-import { StyleSheet, TextInput, Pressable, Image, ImageSourcePropType, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, TextInput, Pressable, Image, SafeAreaView, ScrollView, ActivityIndicator } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
-interface SearchTagProps {
-  label: string;
-  onRemove: () => void;
-}
-
-interface CategoryButtonProps {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-}
-
-interface MentorCardProps {
-  image: ImageSourcePropType;
-  name: string;
+interface SearchResult {
+  id: number;
   title: string;
-  rating: number;
-  reviews: string;
+  documentId: string;
+  author: string;
+  rating_avg: number;
+  subscribed: number;
+  subjects: Array<{
+    id: number;
+    name: string;
+  }>;
+  picture?: {
+    formats?: {
+      thumbnail?: {
+        url: string;
+      };
+    };
+  };
 }
 
-interface RecentSearch {
-  id: string;
-  label: string;
+interface SearchResponse {
+  data: SearchResult[];
+  meta: {
+    pagination: {
+      page: number;
+      pageSize: number;
+      pageCount: number;
+      total: number;
+    };
+  };
 }
 
-interface Category {
-  id: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-}
-
-interface Mentor {
-  id: string;
-  name: string;
-  title: string;
-  rating: number;
-  reviews: string;
-}
-
-const SearchTag = ({ label, onRemove }: SearchTagProps) => (
+const SearchTag = ({ label, onRemove }: { label: string; onRemove: () => void }) => (
   <View style={styles.searchTag}>
     <Text style={styles.searchTagText}>{label}</Text>
     <Pressable onPress={onRemove}>
@@ -49,61 +45,57 @@ const SearchTag = ({ label, onRemove }: SearchTagProps) => (
   </View>
 );
 
-const CategoryButton = ({ icon, label }: CategoryButtonProps) => (
+const CategoryButton = ({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) => (
   <Pressable style={styles.categoryButton}>
-    <Ionicons name={icon} size={20} color="#00B7FF" />
+    <Ionicons name={icon} size={20} color="#1fa2df" />
     <Text style={styles.categoryButtonText}>{label}</Text>
   </Pressable>
 );
 
-const MentorCard = ({ image, name, title, rating, reviews }: MentorCardProps) => (
-  <Pressable style={styles.mentorCard}>
-    <Image source={image} style={styles.mentorImage} />
-    <View style={styles.mentorInfo}>
-      <Text style={styles.mentorName}>{name}</Text>
-      <Text style={styles.mentorTitle}>{title}</Text>
-      <View style={styles.ratingContainer}>
-        <Ionicons name="star" size={16} color="#FFD700" />
-        <Text style={styles.ratingText}>{rating}</Text>
-        <Text style={styles.reviewsText}>({reviews} reviews)</Text>
-      </View>
-    </View>
-  </Pressable>
-);
+export default function Search() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [resultCount, setResultCount] = useState<number | null>(null);
 
-export default function Search(): JSX.Element {
   const handleBackPress = () => {
     router.back();
   };
-  const recentSearches: RecentSearch[] = [
+
+  const handleSearch = async (keyword: string) => {
+    if (!keyword) {
+      setResults([]);
+      setResultCount(null);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `https://maza-strapi-backend.onrender.com/api/courses?keyword=${encodeURIComponent(keyword)}`
+      );
+      const data: SearchResponse = await response.json();
+      setResults(data.data);
+      setResultCount(data.meta.pagination.total);
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const recentSearches = [
     { id: '1', label: 'Business' },
     { id: '2', label: 'development' },
     { id: '3', label: 'technology' },
     { id: '4', label: 'UI/UX Designer' },
   ];
 
-  const categories: Category[] = [
+  const categories = [
     { id: '1', icon: 'brush', label: 'Design' },
     { id: '2', icon: 'laptop', label: 'Tecnologia' },
     { id: '3', icon: 'heart', label: 'Saúde e Bem-estar' },
     { id: '4', icon: 'cash', label: 'Finanças' },
-  ];
-
-  const mentors: Mentor[] = [
-    {
-      id: '1',
-      name: 'Alex Johnson',
-      title: 'Leadership',
-      rating: 4.8,
-      reviews: '1.8k',
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      title: 'Data Science',
-      rating: 4.3,
-      reviews: '800',
-    },
   ];
 
   return (
@@ -116,27 +108,72 @@ export default function Search(): JSX.Element {
       </View>
 
       <View style={styles.searchContainer}>
-        <TextInput style={styles.searchInput} placeholder="Pesquisar cursos" placeholderTextColor="#666" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Pesquisar cursos"
+          placeholderTextColor="#666"
+          value={searchTerm}
+          onChangeText={(text) => {
+            setSearchTerm(text);
+            handleSearch(text);
+          }}
+        />
         <Ionicons name="search" size={20} color="#666" />
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Últimas pesquisas</Text>
-        <View style={styles.tagsContainer}>
-          {recentSearches.map((search) => (
-            <SearchTag key={search.id} label={search.label} onRemove={() => {}} />
-          ))}
-        </View>
-      </View>
+      {!searchTerm && (
+        <>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Últimas pesquisas</Text>
+            <View style={styles.tagsContainer}>
+              {recentSearches.map((search) => (
+                <SearchTag key={search.id} label={search.label} onRemove={() => {}} />
+              ))}
+            </View>
+          </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Pesquisar por categoria</Text>
-        <View style={styles.categoriesContainer}>
-          {categories.map((category) => (
-            <CategoryButton key={category.id} icon={category.icon} label={category.label} />
-          ))}
-        </View>
-      </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Pesquisar por categoria</Text>
+            <View style={styles.categoriesContainer}>
+              {categories.map((category) => (
+                <CategoryButton
+                  key={category.id}
+                  icon={category.icon as keyof typeof Ionicons.glyphMap}
+                  label={category.label}
+                />
+              ))}
+            </View>
+          </View>
+        </>
+      )}
+
+      {searchTerm && resultCount !== null && (
+        <>
+          <Text style={styles.resultCount}>
+            {resultCount} Resultados para "{searchTerm}"
+          </Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#8257E5" />
+            </View>
+          ) : (
+            <ScrollView style={styles.scrollView}>
+              {results.map((course) => (
+                <Pressable key={course.id} style={styles.courseResult}>
+                  <Image source={{ uri: course?.picture?.formats?.thumbnail?.url }} style={styles.courseImage} />
+                  <View style={styles.courseInfo}>
+                    <Text style={styles.courseCategory}>{course.subjects?.[0]?.name || course.author}</Text>
+                    <Text style={styles.courseTitle} numberOfLines={1}>
+                      {course.title}
+                    </Text>
+                    <Text style={styles.courseDetails}>12 Módulos • {course.subscribed} Inscritos</Text>
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
+          )}
+        </>
+      )}
     </SafeAreaView>
   );
 }
@@ -158,7 +195,7 @@ const styles = StyleSheet.create({
   backButton: {
     marginRight: 16,
     borderStyle: 'solid',
-    borderColor: '#b3b3b3',
+    borderColor: '#333',
     borderWidth: 0.5,
     padding: 8,
     borderRadius: 50,
@@ -232,49 +269,52 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
   },
-  mentorsContainer: {
-    gap: 12,
+  resultCount: {
+    fontSize: 16,
+    color: '#8F8F8F',
+    marginBottom: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121214',
+  },
+  scrollView: {
     backgroundColor: 'transparent',
   },
-  mentorCard: {
+  courseResult: {
     flexDirection: 'row',
-    backgroundColor: '#202024',
+    backgroundColor: '#29292E',
     borderRadius: 8,
     padding: 12,
+    marginBottom: 8,
   },
-  mentorImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 12,
+  courseImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 6,
+    marginRight: 16,
+    backgroundColor: '#202024',
   },
-  mentorInfo: {
+  courseInfo: {
     flex: 1,
     backgroundColor: 'transparent',
   },
-  mentorName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+  courseCategory: {
+    color: '#1fa2df',
+    fontSize: 12,
+    fontWeight: '500',
     marginBottom: 4,
   },
-  mentorTitle: {
+  courseTitle: {
+    color: '#FFF',
     fontSize: 14,
-    color: '#8F8F8F',
+    fontWeight: '500',
     marginBottom: 4,
   },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'transparent',
-  },
-  ratingText: {
-    fontSize: 14,
-    color: '#fff',
-  },
-  reviewsText: {
-    fontSize: 14,
+  courseDetails: {
     color: '#8F8F8F',
+    fontSize: 11,
   },
 });
