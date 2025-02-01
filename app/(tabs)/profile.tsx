@@ -179,6 +179,7 @@ export default function ProfileScreen() {
               )}
             </View>
           </View>
+          <Text style={styles.versionLabel}>Versão 1.0.0</Text>
         </View>
       </ScrollView>
 
@@ -191,6 +192,7 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -409,6 +411,13 @@ const styles = StyleSheet.create({
     padding: 24,
     borderTopWidth: 1,
     borderTopColor: '#323238',
+    gap: 12,
+    alignItems: 'center',
+  },
+  versionLabel: {
+    color: '#A8A8B3',
+    fontSize: 12,
+    textAlign: 'center',
   },
   logoutButton: {
     backgroundColor: '#202024',
@@ -418,6 +427,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    width: '100%',
   },
   logoutButtonText: {
     color: '#FFF',
