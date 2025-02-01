@@ -32,7 +32,7 @@ export default function ProfileScreen() {
       Alert.alert('Erro', 'Falha ao terminar sessão');
     }
   };
-
+  console.log(JSON.stringify(user, null, 2));
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -116,9 +116,9 @@ export default function ProfileScreen() {
               <Text style={styles.infoLabel}>Interesses</Text>
             </View>
             <View style={styles.interestsContainer}>
-              {user.subjects && user.subjects.length > 0 ? (
+              {user.interests && user.interests.length > 0 ? (
                 <View style={styles.interestsList}>
-                  {user.subjects.map((subject: Subject) => (
+                  {user.interests.map((subject: Subject) => (
                     <View key={subject.id} style={styles.interestTag}>
                       <Text style={styles.interestText}>{subject.name}</Text>
                     </View>

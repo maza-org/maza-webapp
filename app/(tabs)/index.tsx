@@ -232,7 +232,10 @@ export default function Home() {
                 </View>
               </View>
 
-              <Image source={{ uri: userCourses[0].course.cover.formats.thumbnail.url }} style={styles.coverImage} />
+              <Image
+                source={{ uri: userCourses[0]?.course?.cover?.formats?.thumbnail?.url }}
+                style={styles.coverImage}
+              />
 
               <Text style={styles.courseTitle}>{userCourses[0].course.title}</Text>
 

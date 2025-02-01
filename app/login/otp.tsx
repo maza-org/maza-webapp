@@ -12,12 +12,49 @@ export default function Otp() {
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef([]);
 
-  const saveUser = async (user: User) => {
+  const fetchUserData = async (token: string) => {
     try {
-      await AsyncStorage.setItem('@user', JSON.stringify(user));
+      const response = await fetch('https://maza-strapi-backend.onrender.com/api/users/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      throw error;
+    }
+  };
+
+  const saveUser = async (loginData: any) => {
+    try {
+      // Get the token from login response
+      const token = loginData.jwt || loginData.data?.jwt;
+
+      if (!token) {
+        throw new Error('No token received from login');
+      }
+
+      // Fetch additional user data
+      const userData = await fetchUserData(token);
+
+      // Combine login data with user data
+      const completeUserData = {
+        ...userData,
+        token,
+      };
+
+      await AsyncStorage.setItem('@user', JSON.stringify(completeUserData));
+      return completeUserData;
     } catch (error) {
       console.error('Error saving user data:', error);
       Alert.alert('Erro', 'Falha ao salvar dados do usuário');
+      throw error;
     }
   };
 
@@ -64,8 +101,7 @@ export default function Otp() {
 
       const data = await response.json();
       if (data.success || (fullName && data.data)) {
-        const userData = mapLoginResponseToUser(data);
-        await saveUser(userData);
+        const userData = await saveUser(data);
 
         // Check if user has interests before navigating
         if (userData.interests && userData.interests.length > 0) {

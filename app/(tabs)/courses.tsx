@@ -80,6 +80,7 @@ const CompletedCourses = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { data: user } = useUser();
+  console.log(JSON.stringify(user, null, 2));
 
   useEffect(() => {
     fetchCompletedCourses();
