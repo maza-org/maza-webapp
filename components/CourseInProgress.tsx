@@ -38,12 +38,21 @@ interface CourseItemProps {
   rating: number;
   duration: string;
   lessons: number;
+  imageUrl: string;
 }
 
-const CourseItem: React.FC<CourseItemProps> = ({ title, instructor, progress, rating, duration, lessons }) => {
+const CourseItem: React.FC<CourseItemProps> = ({
+  title,
+  instructor,
+  progress,
+  rating,
+  duration,
+  lessons,
+  imageUrl,
+}) => {
   return (
     <TouchableOpacity style={styles.courseItem}>
-      <Image source={{ uri: 'https://via.placeholder.com/60' }} style={styles.courseImage} />
+      <Image source={{ uri: imageUrl }} style={styles.courseImage} />
       <View style={styles.courseInfo}>
         <Text style={styles.courseCategory}>{instructor}</Text>
         <Text style={styles.courseItemTitle}>{title.length > 20 ? `${title.substring(0, 20)}...` : title}</Text>
@@ -128,6 +137,7 @@ const CoursesInProgress = () => {
           rating={courseData.course.rating_avg}
           duration="--"
           lessons={0}
+          imageUrl={courseData?.course?.picture?.formats?.thumbnail?.url}
         />
       ))}
     </ScrollView>
@@ -165,35 +175,37 @@ const styles = StyleSheet.create({
   courseItem: {
     flexDirection: 'row',
     backgroundColor: '#29292E',
-    borderRadius: 12,
-    padding: 6,
+    borderRadius: 8,
+    padding: 8,
     alignItems: 'center',
-    margin: 10,
+    marginBottom: 8,
   },
   courseImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
+    width: 64,
+    height: 64,
+    borderRadius: 6,
+    marginRight: 16,
   },
   courseInfo: {
     flex: 1,
-    gap: 4,
+    gap: 2,
   },
   courseItemTitle: {
     color: '#FFF',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
+    marginBottom: 4,
   },
   courseCategory: {
     color: '#2EA8FF',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
+    marginBottom: 2,
   },
   moduleCount: {
     color: '#FFF',
     opacity: 0.7,
-    fontSize: 12,
+    fontSize: 11,
   },
   percentageText: {
     color: '#2EA8FF',

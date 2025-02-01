@@ -267,18 +267,6 @@ export default function MeusCursosScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Meus Cursos</Text>
-        <View style={styles.headerButtons}>
-          <Pressable style={styles.iconButton}>
-            <View style={styles.maximizeButton}>
-              <Ionicons name="grid-outline" size={20} color="#fff" />
-            </View>
-          </Pressable>
-          <Pressable style={styles.iconButton}>
-            <View style={styles.menuButton}>
-              <Ionicons name="menu-outline" size={20} color="#fff" />
-            </View>
-          </Pressable>
-        </View>
       </View>
 
       <Search />
@@ -353,8 +341,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 30,
-    paddingBottom: 20,
+    paddingTop: 24,
+    paddingBottom: 32,
     backgroundColor: '#121214',
   },
   title: {
@@ -418,7 +406,7 @@ const styles = StyleSheet.create({
   },
   radioButton: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 14,
     paddingHorizontal: 12,
     borderRadius: 999,
     alignItems: 'center',
