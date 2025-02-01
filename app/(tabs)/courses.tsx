@@ -1,4 +1,13 @@
-import { StyleSheet, Pressable, Animated, Modal, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import {
+  StyleSheet,
+  Pressable,
+  Animated,
+  Modal,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+  ActivityIndicator,
+} from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Text, View } from '@/components/Themed';
 import { useState, useRef, useEffect } from 'react';
@@ -7,55 +16,7 @@ import Search from '@/components/Search';
 import CourseItem from '@/components/CourseItem';
 import FavoriteCoursesGrid from '@/components/FavoriteCoursesGrid';
 import CoursesInProgress from '@/components/CourseInProgress';
-
-// Sample completed courses data
-const completedCourses = [
-  {
-    id: 1,
-    title: 'Advanced React Development',
-    progress: 100,
-    rating: 4.8,
-    duration: '12h 30m',
-    instructor: 'John Smith',
-    lessons: 24,
-  },
-  {
-    id: 2,
-    title: 'UI/UX Design Fundamentals',
-    progress: 100,
-    rating: 4.5,
-    duration: '8h 45m',
-    instructor: 'Sarah Wilson',
-    lessons: 18,
-  },
-  {
-    id: 3,
-    title: 'Mobile App Architecture',
-    progress: 100,
-    rating: 4.9,
-    duration: '15h 20m',
-    instructor: 'Mike Johnson',
-    lessons: 32,
-  },
-  {
-    id: 4,
-    title: 'Cloud Computing Essentials',
-    progress: 100,
-    rating: 4.7,
-    duration: '10h 15m',
-    instructor: 'Emily Brown',
-    lessons: 22,
-  },
-  {
-    id: 5,
-    title: 'Data Structures & Algorithms',
-    progress: 100,
-    rating: 4.6,
-    duration: '20h 00m',
-    instructor: 'David Chen',
-    lessons: 40,
-  },
-];
+import useUser from '@/hooks/useUser';
 
 // RadioButton Component
 const RadioButton = ({
@@ -93,13 +54,92 @@ const FloatingFilterButton = ({ onPress }: { onPress: () => void }) => (
   </Pressable>
 );
 
+// CompletedCourses Component
+const CompletedCourses = () => {
+  const [courses, setCourses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchCompletedCourses();
+  }, []);
+
+  const fetchCompletedCourses = async () => {
+    try {
+      const response = await fetch('https://maza-strapi-backend.onrender.com/api/user-courses?status=Completed', {
+        headers: {
+          Authorization:
+            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNzM3MTM0NjgzLCJleHAiOjE3Mzk3MjY2ODN9.vtnxuCe_Q2q2LiBvpZrMOINV0wZbqCUL5jcM4eUj7W8',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch completed courses');
+      }
+
+      const data = await response.json();
+      setCourses(data.data || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#8257E5" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centerContainer}>
+        <Feather name="alert-circle" size={48} color="#FF4444" />
+        <Text style={styles.errorText}>Oops! Something went wrong</Text>
+        <Text style={styles.errorSubtext}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchCompletedCourses}>
+          <Text style={styles.retryButtonText}>Try Again</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (courses.length === 0) {
+    return (
+      <View style={styles.centerContainer}>
+        <Feather name="book" size={48} color="#8F8F8F" />
+        <Text style={styles.emptyText}>No completed courses yet</Text>
+        <Text style={styles.emptySubtext}>Complete your first course to see it here</Text>
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView style={styles.courseList}>
+      {courses.map((courseData) => (
+        <CourseItem
+          key={courseData.id}
+          title={courseData.course.title}
+          instructor={courseData.course.author}
+          progress={100}
+          rating={courseData.course.rating_avg}
+        />
+      ))}
+    </ScrollView>
+  );
+};
+
 // Main Screen Component
 export default function MeusCursosScreen() {
   const [selectedFilter, setSelectedFilter] = useState('inProgress');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const animationValue = useRef(new Animated.Value(0)).current;
-
   const buttonWidth = 100; // Approximate width of each button
+  const { data: user } = useUser();
+  console.log(JSON.stringify(user, null, 2));
 
   const getAnimatedPosition = () => {
     switch (selectedFilter) {
@@ -140,7 +180,7 @@ export default function MeusCursosScreen() {
     console.log('Applied filters:', filters);
   };
 
-  // Filter Modal Component (Inlined)
+  // Filter Modal Component
   const FilterModal = ({ visible, onClose, onApply }) => {
     const [selectedLevel, setSelectedLevel] = useState('Intermédio');
     const [selectedRating, setSelectedRating] = useState('4-5');
@@ -305,22 +345,9 @@ export default function MeusCursosScreen() {
       </View>
 
       {selectedFilter === 'favorites' && <FavoriteCoursesGrid />}
-      {selectedFilter === 'completed' && (
-        <ScrollView style={styles.courseList}>
-          {completedCourses.map((course) => (
-            <CourseItem
-              key={course.id}
-              title={course.title}
-              instructor={course.instructor}
-              duration={course.duration}
-              lessons={course.lessons}
-              progress={course.progress}
-              rating={course.rating}
-            />
-          ))}
-        </ScrollView>
-      )}
+      {selectedFilter === 'completed' && <CompletedCourses />}
       {selectedFilter === 'inProgress' && <CoursesInProgress />}
+
       <FloatingFilterButton onPress={() => setFilterModalVisible(true)} />
 
       <FilterModal
@@ -331,6 +358,7 @@ export default function MeusCursosScreen() {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -529,5 +557,50 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     marginTop: 16,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    backgroundColor: '#121214',
+  },
+  errorText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  errorSubtext: {
+    fontSize: 14,
+    color: '#8F8F8F',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#8F8F8F',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 24,
+    backgroundColor: '#8257E5',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });
