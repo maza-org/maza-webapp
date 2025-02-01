@@ -194,7 +194,6 @@ const styles = StyleSheet.create({
   },
   reviewCard: {
     borderRadius: 15,
-    padding: 16,
     marginBottom: 16,
   },
   reviewHeader: {
