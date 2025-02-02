@@ -1,8 +1,18 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, Pressable, Image, SafeAreaView, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  StyleSheet,
+  TextInput,
+  Pressable,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { Course } from '@/types/course';
 
 interface SearchResult {
   id: number;
@@ -98,6 +108,15 @@ export default function Search() {
     { id: '4', icon: 'cash', label: 'Finanças' },
   ];
 
+  function handleOpenCourse(course: Course) {
+    router.push({
+      pathname: '/room/lessons',
+      params: {
+        documentId: course.documentId,
+      },
+    });
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -159,7 +178,13 @@ export default function Search() {
           ) : (
             <ScrollView style={styles.scrollView}>
               {results.map((course) => (
-                <Pressable key={course.id} style={styles.courseResult}>
+                <TouchableOpacity
+                  key={course.id}
+                  style={styles.courseResult}
+                  onPress={() => {
+                    handleOpenCourse(course);
+                  }}
+                >
                   <Image source={{ uri: course?.picture?.formats?.thumbnail?.url }} style={styles.courseImage} />
                   <View style={styles.courseInfo}>
                     <Text style={styles.courseCategory}>{course.subjects?.[0]?.name || course.author}</Text>
@@ -168,7 +193,7 @@ export default function Search() {
                     </Text>
                     <Text style={styles.courseDetails}>12 Módulos • {course.subscribed} Inscritos</Text>
                   </View>
-                </Pressable>
+                </TouchableOpacity>
               ))}
             </ScrollView>
           )}
@@ -182,9 +207,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#121214',
-    padding: 16,
-    paddingStart: 16,
-    paddingEnd: 16,
+    padding: 25,
+    paddingStart: 25,
+    paddingEnd: 25,
   },
   header: {
     flexDirection: 'row',
