@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import React, { useEffect } from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
 
-export default function Shimmer({ children }) {
+export default function Shimmer({ children, style }) {
   const animatedValue = new Animated.Value(0);
 
   useEffect(() => {
@@ -12,7 +12,7 @@ export default function Shimmer({ children }) {
           duration: 1500,
           useNativeDriver: true,
         }),
-      ]),
+      ])
     ).start();
   }, []);
 
@@ -27,7 +27,7 @@ export default function Shimmer({ children }) {
   });
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       {children}
       <Animated.View
         style={[
@@ -44,13 +44,13 @@ export default function Shimmer({ children }) {
 
 const styles = StyleSheet.create({
   container: {
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   shimmer: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    position: "absolute",
-    transform: [{ skewX: "-10deg" }],
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    position: 'absolute',
+    transform: [{ skewX: '-10deg' }],
   },
 });

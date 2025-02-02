@@ -23,6 +23,7 @@ export interface Subject {
 export default function ProfileScreen() {
   const { data: user, isLoading, error } = useUser();
   const [isEditing, setIsEditing] = useState(false);
+  const [deletingInterestId, setDeletingInterestId] = useState<number | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -34,7 +35,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleDeleteInterest = async (interestId: number) => {
+  const handleDeleteInterest = async (subject: Subject) => {
     try {
       Alert.alert('Confirmar', 'Tem certeza que deseja remover este interesse?', [
         {
@@ -45,14 +46,42 @@ export default function ProfileScreen() {
           text: 'Remover',
           style: 'destructive',
           onPress: async () => {
-            // Add your API call here to delete the interest
-            Alert.alert('Sucesso', 'Interesse removido com sucesso');
+            try {
+              setDeletingInterestId(subject.id);
+
+              if (!user?.token) {
+                throw new Error('No authentication token found');
+              }
+
+              const response = await fetch(
+                `https://maza-strapi-backend.onrender.com/api/users-permissions/interests/${subject.documentId}`,
+                {
+                  method: 'DELETE',
+                  headers: {
+                    Authorization: `Bearer ${user?.token}`,
+                  },
+                }
+              );
+
+              if (!response.ok) {
+                throw new Error('Failed to delete interest');
+              }
+
+              Alert.alert('Sucesso', 'Interesse removido com sucesso');
+              user.interests = user.interests.filter((interest) => interest.id !== subject.id);
+            } catch (error) {
+              console.error('Error making DELETE request:', error);
+              Alert.alert('Erro', 'Falha ao remover interesse');
+            } finally {
+              setDeletingInterestId(null);
+            }
           },
         },
       ]);
     } catch (error) {
-      console.error('Error deleting interest:', error);
+      console.error('Error in handleDeleteInterest:', error);
       Alert.alert('Erro', 'Falha ao remover interesse');
+      setDeletingInterestId(null);
     }
   };
 
@@ -153,14 +182,17 @@ export default function ProfileScreen() {
                         <Feather name="hash" size={14} color="#1fa2df" />
                       </View>
                       <Text style={styles.interestText}>{subject.name}</Text>
-                      {isEditing && (
-                        <TouchableOpacity
-                          onPress={() => handleDeleteInterest(subject.id)}
-                          style={styles.deleteInterestButton}
-                        >
-                          <Feather name="x" size={14} color="#1fa2df" />
-                        </TouchableOpacity>
-                      )}
+                      {isEditing &&
+                        (deletingInterestId === subject.id ? (
+                          <ActivityIndicator size="small" color="#1fa2df" style={styles.deleteInterestLoading} />
+                        ) : (
+                          <TouchableOpacity
+                            onPress={() => handleDeleteInterest(subject)}
+                            style={styles.deleteInterestButton}
+                          >
+                            <Feather name="x" size={14} color="#1fa2df" />
+                          </TouchableOpacity>
+                        ))}
                     </View>
                   ))}
                 </View>
@@ -168,10 +200,7 @@ export default function ProfileScreen() {
                 <View style={styles.emptyState}>
                   <Feather name="star" size={24} color="#A8A8B3" style={styles.emptyStateIcon} />
                   <Text style={styles.emptyStateText}>Nenhum interesse adicionado</Text>
-                  <TouchableOpacity
-                    onPress={() => router.push('/user/edit-interests')}
-                    style={styles.addInterestButton}
-                  >
+                  <TouchableOpacity style={styles.addInterestButton}>
                     <Feather name="plus" size={16} color="#FFF" />
                     <Text style={styles.addInterestText}>Adicionar Interesses</Text>
                   </TouchableOpacity>

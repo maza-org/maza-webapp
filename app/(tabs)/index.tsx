@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Course } from '@/types/course';
 import useUser from '@/hooks/useUser';
+import Shimmer from '@/components/Shimmer';
 
 export default function Home() {
   const [subjects, setSubjects] = useState([]);
@@ -108,10 +109,68 @@ export default function Home() {
     router.push('/(tabs)/courses');
   }
 
+  const PopularCoursesShimmer = () => (
+    <View style={styles.popularCourseCard}>
+      <Shimmer style={styles.popularCourseImageShimmer}>
+        <View style={{ width: '100%', height: 140, backgroundColor: '#29292E' }} />
+      </Shimmer>
+
+      <View style={styles.popularCourseInfo}>
+        <Shimmer style={{ width: 80, height: 20, marginBottom: 8 }}>
+          <View style={{ width: '100%', height: '100%', backgroundColor: '#29292E' }} />
+        </Shimmer>
+
+        <Shimmer style={{ height: 40, marginBottom: 12 }}>
+          <View style={{ width: '100%', height: '100%', backgroundColor: '#29292E' }} />
+        </Shimmer>
+
+        <View style={styles.instructorInfo}>
+          <Shimmer style={{ width: 24, height: 24, borderRadius: 12 }}>
+            <View style={{ width: '100%', height: '100%', backgroundColor: '#29292E', borderRadius: 12 }} />
+          </Shimmer>
+
+          <Shimmer style={{ width: 80, height: 16 }}>
+            <View style={{ width: '100%', height: '100%', backgroundColor: '#29292E' }} />
+          </Shimmer>
+
+          <Shimmer style={{ width: 60, height: 16 }}>
+            <View style={{ width: '100%', height: '100%', backgroundColor: '#29292E' }} />
+          </Shimmer>
+        </View>
+      </View>
+    </View>
+  );
+
+  const CourseInProgressShimmer = () => (
+    <View style={styles.courseItem}>
+      <Shimmer style={{ width: 60, height: 60, borderRadius: 8, marginRight: 12 }}>
+        <View style={{ width: '100%', height: '100%', backgroundColor: '#29292E', borderRadius: 8 }} />
+      </Shimmer>
+
+      <View style={styles.courseInfo}>
+        <Shimmer style={{ width: 100, height: 16, marginBottom: 4 }}>
+          <View style={{ width: '100%', height: '100%', backgroundColor: '#29292E' }} />
+        </Shimmer>
+
+        <Shimmer style={{ width: '80%', height: 20, marginBottom: 4 }}>
+          <View style={{ width: '100%', height: '100%', backgroundColor: '#29292E' }} />
+        </Shimmer>
+
+        <Shimmer style={{ width: 60, height: 14 }}>
+          <View style={{ width: '100%', height: '100%', backgroundColor: '#29292E' }} />
+        </Shimmer>
+      </View>
+
+      <Shimmer style={{ width: 40, height: 20 }}>
+        <View style={{ width: '100%', height: '100%', backgroundColor: '#29292E' }} />
+      </Shimmer>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity onPress={() => router.push('/start')}>
+        <TouchableOpacity onPress={() => router.push('/start/photo')}>
           <Text style={{ color: 'white', fontSize: 20 }}>GO</Text>
         </TouchableOpacity>
 
@@ -304,19 +363,11 @@ export default function Home() {
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.popularCoursesList}>
             {loadingCourses ? (
-              // Loading placeholder
-              <View style={styles.popularCourseCard}>
-                <View style={[styles.popularCourseImage, { backgroundColor: '#29292E' }]} />
-                <View style={styles.popularCourseInfo}>
-                  <View style={[styles.courseCategory, { width: 100, height: 20, backgroundColor: '#29292E' }]} />
-                  <View
-                    style={[
-                      styles.popularCourseTitle,
-                      { width: 200, height: 20, backgroundColor: '#29292E', marginTop: 8 },
-                    ]}
-                  />
-                </View>
-              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.popularCoursesList}>
+                {[1, 2, 3].map((key) => (
+                  <PopularCoursesShimmer key={key} />
+                ))}
+              </ScrollView>
             ) : (
               popularCourses.map((course: Course) => (
                 <TouchableOpacity
@@ -751,4 +802,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   coverImage: { width: '100%', height: 160, borderRadius: 5, marginBottom: 12 },
+  popularCourseImageShimmer: {
+    width: '100%',
+    height: 140,
+  },
 });
