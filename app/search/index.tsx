@@ -5,7 +5,7 @@ import {
   Pressable,
   Image,
   SafeAreaView,
-  ScrollView,
+  FlatList,
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
@@ -60,6 +60,25 @@ const CategoryButton = ({ icon, label }: { icon: keyof typeof Ionicons.glyphMap;
     <Ionicons name={icon} size={20} color="#1fa2df" />
     <Text style={styles.categoryButtonText}>{label}</Text>
   </Pressable>
+);
+
+const CourseItem = ({ item, onPress }: { item: SearchResult; onPress: () => void }) => (
+  <TouchableOpacity style={styles.courseResult} onPress={onPress}>
+    <Image source={{ uri: item?.picture?.formats?.thumbnail?.url }} style={styles.courseImage} />
+    <View style={styles.courseInfo}>
+      <Text style={styles.courseCategory}>{item.subjects?.[0]?.name || item.author}</Text>
+      <Text style={styles.courseTitle} numberOfLines={1}>
+        {item.title}
+      </Text>
+      <View style={styles.courseDetails}>
+        <View style={styles.ratingContainer}>
+          <Ionicons name="star" size={12} color="#FFD700" />
+          <Text style={styles.ratingText}>{item.rating_avg ? item.rating_avg.toFixed(1) : 'N/A'}</Text>
+        </View>
+        <Text style={styles.subscriberText}>{item.subscribed} Inscritos</Text>
+      </View>
+    </View>
+  </TouchableOpacity>
 );
 
 export default function Search() {
@@ -122,6 +141,10 @@ export default function Search() {
       },
     });
   }
+
+  const renderItem = ({ item }: { item: SearchResult }) => (
+    <CourseItem item={item} onPress={() => handleOpenCourse(item)} />
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -188,26 +211,13 @@ export default function Search() {
               <ActivityIndicator size="large" color="#8257E5" />
             </View>
           ) : (
-            <ScrollView style={styles.scrollView}>
-              {results.map((course) => (
-                <TouchableOpacity
-                  key={course.id}
-                  style={styles.courseResult}
-                  onPress={() => {
-                    handleOpenCourse(course);
-                  }}
-                >
-                  <Image source={{ uri: course?.picture?.formats?.thumbnail?.url }} style={styles.courseImage} />
-                  <View style={styles.courseInfo}>
-                    <Text style={styles.courseCategory}>{course.subjects?.[0]?.name || course.author}</Text>
-                    <Text style={styles.courseTitle} numberOfLines={1}>
-                      {course.title}
-                    </Text>
-                    <Text style={styles.courseDetails}>12 Módulos • {course.subscribed} Inscritos</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+            <FlatList
+              data={results}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={styles.flatListContent}
+              showsVerticalScrollIndicator={false}
+            />
           )}
         </>
       )}
@@ -320,8 +330,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#121214',
   },
-  scrollView: {
-    backgroundColor: 'transparent',
+  flatListContent: {
+    paddingTop: 8,
   },
   courseResult: {
     flexDirection: 'row',
@@ -354,6 +364,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   courseDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+    backgroundColor: 'transparent',
+  },
+  ratingText: {
+    color: '#FFD700',
+    fontSize: 12,
+    marginLeft: 4,
+  },
+  subscriberText: {
     color: '#8F8F8F',
     fontSize: 11,
   },
