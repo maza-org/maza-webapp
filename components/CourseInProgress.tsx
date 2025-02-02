@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, ActivityIndicator, Alert, StyleSheet, TouchableOpacity, Image, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 
 interface Course {
   id: number;
@@ -39,6 +40,7 @@ interface CourseItemProps {
   duration: string;
   lessons: number;
   imageUrl: string;
+  courseData: UserCourse;
 }
 
 const CourseItem: React.FC<CourseItemProps> = ({
@@ -49,9 +51,15 @@ const CourseItem: React.FC<CourseItemProps> = ({
   duration,
   lessons,
   imageUrl,
+  courseData,
 }) => {
   return (
-    <TouchableOpacity style={styles.courseItem}>
+    <TouchableOpacity
+      style={styles.courseItem}
+      onPress={() => {
+        router.push({ pathname: '/room/lessons', params: { documentId: courseData.course.documentId } });
+      }}
+    >
       <Image source={{ uri: imageUrl }} style={styles.courseImage} />
       <View style={styles.courseInfo}>
         <Text style={styles.courseCategory}>{instructor}</Text>
@@ -126,6 +134,8 @@ const CoursesInProgress = () => {
     );
   }
 
+  console.log(JSON.stringify(courses[0], null, 2));
+
   return (
     <ScrollView style={styles.courseList}>
       {courses.map((courseData) => (
@@ -138,6 +148,7 @@ const CoursesInProgress = () => {
           duration="--"
           lessons={0}
           imageUrl={courseData?.course?.picture?.formats?.thumbnail?.url}
+          courseData={courseData}
         />
       ))}
     </ScrollView>

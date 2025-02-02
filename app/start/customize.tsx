@@ -19,7 +19,11 @@ interface TopicButtonProps extends TouchableOpacityProps {
   isSelected: boolean;
 }
 
-type Topic = string;
+interface Topic {
+  id: number;
+  documentId: string;
+  name: string;
+}
 
 function TopicButton({ topic, isSelected, onPress, ...props }: TopicButtonProps) {
   return (
@@ -47,7 +51,6 @@ export default function Customize() {
         if (userString) {
           const userData = JSON.parse(userString);
           setUser(userData);
-          console.log('Retrieved user data:', userData);
         } else {
           console.log('No user data found');
         }
@@ -99,10 +102,13 @@ export default function Customize() {
         },
         body: JSON.stringify({
           data: {
-            interests: selectedTopics,
+            interests: selectedTopics.map((topic) => topic.documentId),
           },
         }),
       });
+
+      const data = await response.json();
+      console.log(JSON.stringify(selectedTopics, null, 2));
 
       if (!response.ok) {
         throw new Error('Failed to update interests');
@@ -116,6 +122,8 @@ export default function Customize() {
         ...user,
         interests: selectedTopics,
       };
+
+      console.log(JSON.stringify(updatedUser, null, 2));
       await AsyncStorage.setItem('@user', JSON.stringify(updatedUser));
 
       // Navigate to home screen

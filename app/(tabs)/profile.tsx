@@ -114,6 +114,12 @@ export default function ProfileScreen() {
     );
   }
 
+  function handleAddInterest() {
+    router.push('/start/customize');
+  }
+
+  console.log(JSON.stringify(user, null, 2));
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -202,7 +208,7 @@ export default function ProfileScreen() {
               ) : (
                 <View style={styles.emptyState}>
                   <Text style={styles.emptyStateText}>Nenhum interesse adicionado</Text>
-                  <TouchableOpacity style={styles.addInterestButton}>
+                  <TouchableOpacity style={styles.addInterestButton} onPress={handleAddInterest}>
                     <Feather name="plus" size={16} color="#FFF" />
                     <Text style={styles.addInterestText}>Adicionar Interesses</Text>
                   </TouchableOpacity>

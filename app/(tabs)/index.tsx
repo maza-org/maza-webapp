@@ -197,7 +197,7 @@ export default function Home() {
               router.push({
                 pathname: '/categories/[id]',
                 params: {
-                  id: 17,
+                  id: 43,
                   documentId: 'fwubsstwm950034zmd6dnt8r',
                   name: 'Design',
                 },
@@ -216,7 +216,7 @@ export default function Home() {
               router.push({
                 pathname: '/categories/[id]',
                 params: {
-                  id: 35,
+                  id: 71,
                   documentId: 'unz4bv8reqwncrv34zed36zb',
                   name: 'Tecnologia',
                 },
@@ -235,7 +235,7 @@ export default function Home() {
               router.push({
                 pathname: '/categories/[id]',
                 params: {
-                  id: 33,
+                  id: 69,
                   documentId: 'f2tnfg0q70l17lob34ll8w87',
                   name: 'Saúde',
                 },
