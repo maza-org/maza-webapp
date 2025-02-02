@@ -55,11 +55,26 @@ const SearchTag = ({ label, onRemove }: { label: string; onRemove: () => void })
   </View>
 );
 
-const CategoryButton = ({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) => (
-  <Pressable style={styles.categoryButton}>
+const CategoryButton = ({
+  icon,
+  label,
+  category,
+  handlePressCategory,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  category: { id: number; icon: string; label: string };
+  handlePressCategory: (category: { id: number; label: string }) => void;
+}) => (
+  <TouchableOpacity
+    style={styles.categoryButton}
+    onPress={() => {
+      handlePressCategory(category);
+    }}
+  >
     <Ionicons name={icon} size={20} color="#1fa2df" />
     <Text style={styles.categoryButtonText}>{label}</Text>
-  </Pressable>
+  </TouchableOpacity>
 );
 
 const CourseItem = ({ item, onPress }: { item: SearchResult; onPress: () => void }) => (
@@ -127,10 +142,10 @@ export default function Search() {
   ];
 
   const categories = [
-    { id: '1', icon: 'brush', label: 'Design' },
-    { id: '2', icon: 'laptop', label: 'Tecnologia' },
-    { id: '3', icon: 'heart', label: 'Saúde e Bem-estar' },
-    { id: '4', icon: 'cash', label: 'Finanças' },
+    { id: 43, icon: 'brush', label: 'Design' },
+    { id: 71, icon: 'laptop', label: 'Tecnologia' },
+    { id: 69, icon: 'heart', label: 'Saúde e Bem-estar' },
+    { id: 45, icon: 'cash', label: 'Finanças' },
   ];
 
   function handleOpenCourse(course: Course) {
@@ -145,6 +160,16 @@ export default function Search() {
   const renderItem = ({ item }: { item: SearchResult }) => (
     <CourseItem item={item} onPress={() => handleOpenCourse(item)} />
   );
+
+  function handleCategoryPress(category: { id: number; label: string }) {
+    router.push({
+      pathname: '/categories/[id]',
+      params: {
+        id: category.id,
+        name: category.label,
+      },
+    });
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -194,6 +219,8 @@ export default function Search() {
                   key={category.id}
                   icon={category.icon as keyof typeof Ionicons.glyphMap}
                   label={category.label}
+                  category={category}
+                  handlePressCategory={handleCategoryPress}
                 />
               ))}
             </View>

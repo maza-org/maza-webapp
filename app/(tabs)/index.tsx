@@ -237,7 +237,7 @@ export default function Home() {
                 params: {
                   id: 33,
                   documentId: 'f2tnfg0q70l17lob34ll8w87',
-                  name: 'Saude',
+                  name: 'Saúde',
                 },
               });
             }}
