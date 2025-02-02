@@ -72,6 +72,12 @@ export default function Search() {
     router.back();
   };
 
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setResults([]);
+    setResultCount(null);
+  };
+
   const handleSearch = async (keyword: string) => {
     if (!keyword) {
       setResults([]);
@@ -137,7 +143,13 @@ export default function Search() {
             handleSearch(text);
           }}
         />
-        <Ionicons name="search" size={20} color="#666" />
+        {searchTerm ? (
+          <Pressable onPress={handleClearSearch} style={styles.clearButton}>
+            <Ionicons name="close-circle" size={20} color="#666" />
+          </Pressable>
+        ) : (
+          <Ionicons name="search" size={20} color="#666" />
+        )}
       </View>
 
       {!searchTerm && (
@@ -245,6 +257,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     marginRight: 8,
+  },
+  clearButton: {
+    padding: 4,
   },
   section: {
     marginBottom: 24,
