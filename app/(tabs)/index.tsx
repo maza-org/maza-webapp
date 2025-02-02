@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Course } from '@/types/course';
 import useUser from '@/hooks/useUser';
 import Shimmer from '@/components/Shimmer';
+import { Subject } from '@/types/user';
 
 export default function Home() {
   const [subjects, setSubjects] = useState([]);
@@ -14,6 +15,7 @@ export default function Home() {
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [userCourses, setUserCourses] = useState([]);
   const [loadingUserCourses, setLoadingUserCourses] = useState(true);
+  const searchInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     fetchSubjects();
@@ -75,15 +77,10 @@ export default function Home() {
     }
   }
 
-  function handleSubjectClick(subject) {
-    console.log('Selected subject:', {
-      id: subject.id,
-      documentId: subject.documentId,
-      name: subject.name,
-    });
-  }
-
   function handleSearchPress() {
+    if (searchInputRef.current) {
+      searchInputRef.current.blur();
+    }
     router.push('/search');
   }
 
@@ -182,6 +179,7 @@ export default function Home() {
         {/* Search Bar */}
         <TouchableOpacity style={styles.searchContainer} onPress={handleSearchPress} activeOpacity={0.7}>
           <TextInput
+            ref={searchInputRef}
             style={styles.searchInput}
             placeholder="Pesquisar..."
             placeholderTextColor="#666"
