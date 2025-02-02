@@ -169,9 +169,11 @@ export default function ProfileScreen() {
                 <Feather name="star" size={20} color="#1fa2df" />
                 <Text style={styles.infoLabel}>Interesses</Text>
               </View>
-              <TouchableOpacity onPress={() => setIsEditing(!isEditing)} style={styles.editButton}>
-                <Feather name={isEditing ? 'check' : 'edit-2'} size={16} color="#1fa2df" />
-              </TouchableOpacity>
+              {user.interests && user.interests.length > 0 && (
+                <TouchableOpacity onPress={() => setIsEditing(!isEditing)} style={styles.editButton}>
+                  <Feather name={isEditing ? 'check' : 'edit-2'} size={16} color="#1fa2df" />
+                </TouchableOpacity>
+              )}
             </View>
 
             <View style={styles.interestsContainer}>
@@ -199,7 +201,6 @@ export default function ProfileScreen() {
                 </View>
               ) : (
                 <View style={styles.emptyState}>
-                  <Feather name="star" size={24} color="#A8A8B3" style={styles.emptyStateIcon} />
                   <Text style={styles.emptyStateText}>Nenhum interesse adicionado</Text>
                   <TouchableOpacity style={styles.addInterestButton}>
                     <Feather name="plus" size={16} color="#FFF" />
@@ -408,7 +409,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   emptyState: {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',
