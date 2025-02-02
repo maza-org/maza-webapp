@@ -186,6 +186,7 @@ export default function Home() {
             placeholder="Pesquisar..."
             placeholderTextColor="#666"
             selectionColor="#fff"
+            onFocus={handleSearchPress}
           />
           <Feather name="search" size={20} color="#666" style={styles.searchIcon} />
         </TouchableOpacity>
