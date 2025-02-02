@@ -167,9 +167,9 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity onPress={() => router.push('/start/photo')}>
-          <Text style={{ color: 'white', fontSize: 20 }}>GO</Text>
-        </TouchableOpacity>
+        {/*<TouchableOpacity onPress={() => router.push('/start/photo')}>*/}
+        {/*  <Text style={{ color: 'white', fontSize: 20 }}>GO</Text>*/}
+        {/*</TouchableOpacity>*/}
 
         {/* Header with Bell Icon */}
         <View style={styles.header}>
