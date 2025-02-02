@@ -69,6 +69,7 @@ export default function ProfileScreen() {
 
               Alert.alert('Sucesso', 'Interesse removido com sucesso');
               user.interests = user.interests.filter((interest) => interest.id !== subject.id);
+              await AsyncStorage.setItem('@user', JSON.stringify(user));
             } catch (error) {
               console.error('Error making DELETE request:', error);
               Alert.alert('Erro', 'Falha ao remover interesse');
