@@ -72,7 +72,7 @@ export default function Customize() {
     try {
       const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/subjects?fields=name&sort=name&locale=pt`);
       const { data } = await response.json();
-      setTopics(data.map((item: Subject) => item.name));
+      setTopics(data);
     } catch (error) {
       console.error('Error fetching topics:', error);
       Alert.alert('Error', 'Failed to load topics');
@@ -108,7 +108,7 @@ export default function Customize() {
       });
 
       const data = await response.json();
-      console.log(JSON.stringify(selectedTopics, null, 2));
+      console.log(`SELECTED Topics`, JSON.stringify(selectedTopics, null, 2));
 
       if (!response.ok) {
         throw new Error('Failed to update interests');
@@ -123,7 +123,7 @@ export default function Customize() {
         interests: selectedTopics,
       };
 
-      console.log(JSON.stringify(updatedUser, null, 2));
+      console.log(`user in customize`, JSON.stringify(updatedUser, null, 2));
       await AsyncStorage.setItem('@user', JSON.stringify(updatedUser));
 
       // Navigate to home screen
@@ -166,8 +166,8 @@ export default function Customize() {
         <View style={styles.topicsContainer}>
           {topics.map((topic, index) => (
             <TopicButton
-              key={`${topic}-${index}`}
-              topic={topic}
+              key={`${topic.name}-${index}`}
+              topic={topic.name}
               isSelected={selectedTopics.includes(topic)}
               onPress={() => toggleTopic(topic)}
             />

@@ -44,13 +44,15 @@ export default function Otp() {
       const userData = await fetchUserData(token);
 
       // Combine login data with user data
-      const completeUserData = {
+      const user = {
         ...userData,
         token,
       };
 
-      await AsyncStorage.setItem('@user', JSON.stringify(completeUserData));
-      return completeUserData;
+      console.log(`user in otp`, JSON.stringify(user, null, 2));
+
+      await AsyncStorage.setItem('@user', JSON.stringify(user));
+      return user;
     } catch (error) {
       console.error('Error saving user data:', error);
       Alert.alert('Erro', 'Falha ao salvar dados do usuário');
