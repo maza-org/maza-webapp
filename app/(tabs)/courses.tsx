@@ -99,6 +99,7 @@ const CompletedCourses = () => {
       }
 
       const data = await response.json();
+      console.log(`finished courses`, JSON.stringify(data, null, 2));
       setCourses(data.data || []);
     } catch (err) {
       setError(err.message);
@@ -369,7 +370,7 @@ export default function MeusCursosScreen() {
       {selectedFilter === 'completed' && <CompletedCourses />}
       {selectedFilter === 'inProgress' && <CoursesInProgress />}
 
-      <FloatingFilterButton onPress={() => setFilterModalVisible(true)} />
+      {/*<FloatingFilterButton onPress={() => setFilterModalVisible(true)} />*/}
 
       <FilterModal
         visible={filterModalVisible}

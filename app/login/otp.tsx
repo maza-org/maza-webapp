@@ -4,7 +4,6 @@ import { router, useLocalSearchParams } from 'expo-router';
 import Button from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { mapLoginResponseToUser, User } from '@/types/user';
 
 export default function Otp() {
   const { phone, otpId, fullName } = useLocalSearchParams();
