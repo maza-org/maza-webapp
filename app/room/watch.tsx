@@ -18,39 +18,46 @@ interface Content {
   description: string | null;
 }
 
-interface ModuleData {
-  id: number;
-  title: string;
-  quiz: Quiz;
-  contents: Content[];
-}
+const YoutubePlayerModal = ({ videoId, onVideoEnd }: { videoId: string; onVideoEnd: () => void }) => {
+  const onStateChange = (state: string) => {
+    if (state === 'ended') {
+      onVideoEnd();
+    }
+  };
 
-const YoutubePlayerModal = ({ videoId }: { videoId: string }) => (
-  <View>
-    <YoutubePlayer
-      play={true}
-      initialPlayerParams={{
-        loop: false,
-        controls: true,
-      }}
-      width={width}
-      height={height}
-      videoId={videoId}
-      webViewProps={{
-        injectedJavaScript: `
-          var element = document.getElementsByClassName('container')[0];
-          element.style.position = 'unset';
-          element.style.paddingBottom = 'unset';
-          true;
-        `,
-      }}
-    />
-  </View>
-);
+  return (
+    <View style={styles.videoContainer}>
+      <YoutubePlayer
+        play={true}
+        initialPlayerParams={{
+          loop: false,
+          controls: true,
+          modestbranding: true,
+          rel: false,
+        }}
+        width={width}
+        height={height}
+        videoId={videoId}
+        onChangeState={onStateChange}
+        webViewProps={{
+          injectedJavaScript: `
+            var element = document.getElementsByClassName('container')[0];
+            element.style.position = 'unset';
+            element.style.paddingBottom = 'unset';
+            // Force fullscreen when video starts playing
+            var player = document.querySelector('iframe');
+            player.requestFullscreen();
+            true;
+          `,
+        }}
+      />
+    </View>
+  );
+};
 
 export default function CourseScreen() {
-  const params = useLocalSearchParams();
-  const moduleData = JSON.parse(params.module as string) as Module;
+  const { module, author, title, imageUrl } = useLocalSearchParams();
+  const moduleData = JSON.parse(module as string) as Module;
   const [playing, setPlaying] = React.useState(false);
   const [selectedContent, setSelectedContent] = React.useState<Content | undefined>(undefined);
 
@@ -69,6 +76,11 @@ export default function CourseScreen() {
     }
   };
 
+  const handleVideoEnd = () => {
+    setPlaying(false);
+    setSelectedContent(undefined);
+  };
+
   const handleQuizPress = (quiz: Quiz) => {
     router.push({
       pathname: '/room/quiz',
@@ -80,7 +92,9 @@ export default function CourseScreen() {
 
   return (
     <>
-      {playing && selectedContent && <YoutubePlayerModal videoId={selectedContent.youtubeID} />}
+      {playing && selectedContent && (
+        <YoutubePlayerModal videoId={selectedContent.youtubeID} onVideoEnd={handleVideoEnd} />
+      )}
       <SafeAreaView style={styles.container}>
         <ScrollView style={styles.content}>
           {/* Header */}
@@ -97,9 +111,9 @@ export default function CourseScreen() {
           <View style={styles.courseInfo}>
             <Text style={styles.courseTitle}>{moduleData.title}</Text>
             <View style={styles.instructorInfo}>
-              <Image source={{ uri: 'https://placeholder.com/40x40' }} style={styles.instructorAvatar} />
-              <Text style={styles.instructorName}>Instructor</Text>
-              <Text style={styles.courseCategory}>• Course</Text>
+              <Image source={{ uri: imageUrl }} style={styles.instructorAvatar} />
+              <Text style={styles.instructorName}>{author}</Text>
+              <Text style={styles.courseCategory}>• {title}</Text>
             </View>
           </View>
 
@@ -184,7 +198,7 @@ const styles = StyleSheet.create({
   },
   courseCategory: {
     fontSize: 14,
-    color: '#A8A8B3',
+    color: '#1fa2df',
     marginLeft: 4,
   },
   modulesList: {
@@ -230,5 +244,14 @@ const styles = StyleSheet.create({
   moduleDurationText: {
     color: '#A8A8B3',
     fontSize: 12,
+  },
+  videoContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#000',
+    zIndex: 999,
   },
 });

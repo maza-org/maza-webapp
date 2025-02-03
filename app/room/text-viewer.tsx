@@ -4,10 +4,25 @@ import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
 import { Content } from '@/app/room/lessons';
+import { useState } from 'react';
 
 export default function TextViewer() {
   const { content } = useLocalSearchParams();
   const _content = JSON.parse(content as string) as Content;
+  const [hasReachedBottom, setHasReachedBottom] = useState(false);
+
+  const handleScroll = ({ nativeEvent }) => {
+    const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+    const paddingToBottom = 20;
+
+    const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+
+    if (isCloseToBottom && !hasReachedBottom) {
+      setHasReachedBottom(true);
+      console.log('Reached bottom of content');
+      // Add your logic here when bottom is reached
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -21,7 +36,7 @@ export default function TextViewer() {
         <View style={styles.headerRight} />
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView} onScroll={handleScroll} scrollEventThrottle={400}>
         <Markdown style={markdownStyles}>{_content.description || ''}</Markdown>
       </ScrollView>
     </SafeAreaView>

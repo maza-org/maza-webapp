@@ -194,6 +194,9 @@ export default function CourseDetail() {
   };
 
   const handleStartCourse = async () => {
+    if (isInProgress) {
+      return;
+    }
     if (!user?.token) {
       Alert.alert('Erro', 'Você precisa estar logado para iniciar o curso');
       return;
@@ -256,7 +259,7 @@ export default function CourseDetail() {
   if (!courseData) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Failed to load course data</Text>
+        <Text style={styles.errorText}>Erro ao carregar curso</Text>
       </View>
     );
   }
@@ -266,6 +269,9 @@ export default function CourseDetail() {
       pathname: '/room/watch',
       params: {
         module: JSON.stringify(module),
+        author: courseData?.author,
+        title: courseData?.title,
+        imageUrl: courseData?.cover?.formats?.thumbnail?.url,
       },
     });
   }

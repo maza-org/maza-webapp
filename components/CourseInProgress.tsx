@@ -11,7 +11,7 @@ interface Course {
   rating_avg: number;
 }
 
-interface UserCourse {
+export interface UserCourse {
   id: number;
   documentId: string;
   position: string;

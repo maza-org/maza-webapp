@@ -1,19 +1,48 @@
 import { Image, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 import React from 'react';
+import { router } from 'expo-router';
+import { UserCourse } from '@/components/CourseInProgress';
 
-export default function CourseItem() {
+interface CourseItemProps {
+  title: string;
+  instructor: string;
+  progress: number;
+  rating: number;
+  duration: string;
+  lessons: number;
+  imageUrl: string;
+  courseData: UserCourse;
+}
+
+const CourseItem = ({
+  title,
+  instructor,
+  progress,
+  rating,
+  duration,
+  lessons,
+  imageUrl,
+  courseData,
+}: CourseItemProps) => {
   return (
-    <TouchableOpacity style={styles.courseItem}>
-      <Image source={{ uri: 'https://via.placeholder.com/60' }} style={styles.courseImage} />
+    <TouchableOpacity
+      style={styles.courseItem}
+      onPress={() => {
+        router.push({ pathname: '/room/lessons', params: { documentId: courseData.course.documentId } });
+      }}
+    >
+      <Image source={{ uri: imageUrl }} style={styles.courseImage} />
       <View style={styles.courseInfo}>
-        <Text style={styles.courseCategory}>Design</Text>
-        <Text style={styles.courseItemTitle}>Principles of Industri...</Text>
-        <Text style={styles.moduleCount}>7/10 Modulos</Text>
+        <Text style={styles.courseCategory}>{instructor}</Text>
+        <Text style={styles.courseItemTitle}>{title.length > 20 ? `${title.substring(0, 20)}...` : title}</Text>
+        <Text style={styles.moduleCount}>
+          {[lessons && `${lessons} Módulos`, duration, `${rating.toFixed(1)}★`].filter(Boolean).join(' • ')}
+        </Text>
       </View>
-      <Text style={styles.percentageText}>70%</Text>
+      <Text style={styles.percentageText}>{`${Math.round(progress)}%`}</Text>
     </TouchableOpacity>
   );
-}
+};
 
 const styles = StyleSheet.create({
   coursesInProgress: {
@@ -67,3 +96,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+
+export default CourseItem;

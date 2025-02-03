@@ -101,6 +101,7 @@ const CompletedCourses = () => {
       const data = await response.json();
       console.log(`finished courses`, JSON.stringify(data, null, 2));
       setCourses(data.data || []);
+      console.log(`COMPLETED COURSES`, JSON.stringify(data.data, null, 2));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -120,10 +121,10 @@ const CompletedCourses = () => {
     return (
       <View style={styles.centerContainer}>
         <Feather name="alert-circle" size={48} color="#FF4444" />
-        <Text style={styles.errorText}>Oops! Something went wrong</Text>
+        <Text style={styles.errorText}>Erro ao obter cursos terminados</Text>
         <Text style={styles.errorSubtext}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={fetchCompletedCourses}>
-          <Text style={styles.retryButtonText}>Try Again</Text>
+          <Text style={styles.retryButtonText}>Tentar de novo</Text>
         </TouchableOpacity>
       </View>
     );
@@ -143,11 +144,14 @@ const CompletedCourses = () => {
     <ScrollView style={styles.courseList}>
       {courses.map((courseData) => (
         <CourseItem
-          key={courseData.id}
-          title={courseData.course.title}
-          instructor={courseData.course.author}
+          key={courseData?.id}
+          title={courseData?.course.title}
+          instructor={courseData?.course.author}
           progress={100}
-          rating={courseData.course.rating_avg}
+          rating={courseData?.course.rating_avg}
+          imageUrl={courseData?.course?.picture?.formats?.thumbnail?.url}
+          courseData={courseData}
+          duration={courseData?.course?.duration}
         />
       ))}
     </ScrollView>

@@ -42,11 +42,29 @@ export default function EditProfileScreen() {
 
     setIsSubmitting(true);
     try {
-      // Add your API call here to update user data
-      // await updateUserProfile(formData);
-      Alert.alert('Sucesso', 'Perfil atualizado com sucesso', [{ text: 'OK', onPress: () => router.back() }]);
+      const response = await fetch('https://maza-strapi-backend.onrender.com/api/users/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user?.token}`, // Assuming token is stored in user object
+        },
+        body: JSON.stringify({
+          data: {
+            phone: user?.phone,
+            fullname: formData.fullname,
+            email: formData.email,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      Alert.alert('Sucesso', 'Perfil actualizado com sucesso', [{ text: 'OK', onPress: () => router.back() }]);
     } catch (error) {
-      Alert.alert('Erro', 'Falha ao atualizar perfil');
+      Alert.alert('Erro', 'Falha ao actualizar perfil');
+      console.error('Error updating profile:', error);
     } finally {
       setIsSubmitting(false);
     }
