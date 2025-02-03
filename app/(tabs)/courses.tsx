@@ -330,7 +330,7 @@ export default function MeusCursosScreen() {
         <Text style={styles.title}>Meus Cursos</Text>
       </View>
 
-      <Search />
+      {/*<Search />*/}
 
       <View style={styles.radioGroup}>
         <Animated.View
