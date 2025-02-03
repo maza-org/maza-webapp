@@ -18,7 +18,7 @@ export default function Category() {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/courses?subjects=${id}`);
+      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/courses?subjects=${id}`);
       const data: ApiResponse = await response.json();
       setCourses(data.data);
       setIsLoading(false);

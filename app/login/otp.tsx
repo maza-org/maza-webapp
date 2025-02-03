@@ -74,8 +74,8 @@ export default function Otp() {
     setLoading(true);
     try {
       const endpoint = fullName
-        ? `${process.env.EXPO_PUBLIC_BASE_URL}/api/users`
-        : `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/login`;
+        ? `https://maza-strapi-backend.onrender.com/api/users`
+        : `https://maza-strapi-backend.onrender.com/api/auth/login`;
 
       const body = fullName
         ? {

@@ -64,7 +64,7 @@ const FavoriteCoursesGrid = () => {
         throw new Error('Token não encontrado');
       }
 
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses/favorites`, {
+      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/user-courses/favorites`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

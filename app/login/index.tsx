@@ -20,7 +20,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/otps`, {
+      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/otps`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

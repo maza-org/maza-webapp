@@ -49,7 +49,7 @@ export default function Home() {
 
   async function fetchSubjects() {
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/courses`);
+      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/courses`);
       const data = await response.json();
 
       const allSubjects = data.data.flatMap((course) => course.subjects);

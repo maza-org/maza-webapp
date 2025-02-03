@@ -1,59 +1,46 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  Alert,
-} from "react-native";
-import { router } from "expo-router";
-import Button from "@/components/Button";
+import React, { useState } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { router } from 'expo-router';
+import Button from '@/components/Button';
 
 export default function Create() {
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
     // Basic validation
     if (!phoneNumber || !fullName) {
-      Alert.alert("Erro", "Por favor preencha todos os campos");
+      Alert.alert('Erro', 'Por favor preencha todos os campos');
       return;
     }
 
     // Format phone number to include country code if not present
-    const formattedPhone = phoneNumber.startsWith("+258")
-      ? phoneNumber
-      : `+258${phoneNumber}`;
+    const formattedPhone = phoneNumber.startsWith('+258') ? phoneNumber : `+258${phoneNumber}`;
 
     setLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/otps`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            data: {
-              phone: formattedPhone,
-            },
-          }),
+      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/otps`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({
+          data: {
+            phone: formattedPhone,
+          },
+        }),
+      });
 
       if (!response.ok) {
-        throw new Error("Erro ao obter OTP");
+        throw new Error('Erro ao obter OTP');
       }
 
       const data = await response.json();
       console.log(data);
       // Navigate to OTP verification screen
       router.push({
-        pathname: "/login/otp",
+        pathname: '/login/otp',
         params: {
           phone: formattedPhone,
           otpId: data.otpID,
@@ -62,10 +49,7 @@ export default function Create() {
       });
     } catch (error) {
       console.log(error);
-      Alert.alert(
-        "Erro",
-        "Não foi possível processar o cadastro. Por favor, tente novamente.",
-      );
+      Alert.alert('Erro', 'Não foi possível processar o cadastro. Por favor, tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -78,7 +62,7 @@ export default function Create() {
 
         <View style={styles.loginContainer}>
           <Text style={styles.loginText}>Já tem uma conta? </Text>
-          <TouchableOpacity onPress={() => router.push("/login")}>
+          <TouchableOpacity onPress={() => router.push('/login')}>
             <Text style={styles.loginLink}>Faça Login</Text>
           </TouchableOpacity>
         </View>
@@ -110,7 +94,7 @@ export default function Create() {
 
         <View>
           <Button
-            text={loading ? "A processar..." : "Cadastrar"}
+            text={loading ? 'A processar...' : 'Cadastrar'}
             handle={handleRegister}
             disabled={!phoneNumber || !fullName || loading}
             loading={loading}
@@ -124,7 +108,7 @@ export default function Create() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121212",
+    backgroundColor: '#121212',
   },
   content: {
     flex: 1,
@@ -133,20 +117,20 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    fontWeight: '600',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   loginContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginBottom: 32,
   },
   loginText: {
-    color: "#999999",
+    color: '#999999',
     fontSize: 14,
   },
   loginLink: {
-    color: "#2196F3",
+    color: '#2196F3',
     fontSize: 14,
   },
   formContainer: {
@@ -157,16 +141,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   label: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   input: {
     height: 48,
-    backgroundColor: "#252525",
+    backgroundColor: '#252525',
     borderRadius: 24,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: "#FFFFFF",
+    color: '#FFFFFF',
   },
 });

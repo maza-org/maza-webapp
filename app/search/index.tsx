@@ -134,13 +134,6 @@ export default function Search() {
     }
   };
 
-  const recentSearches = [
-    { id: '1', label: 'Business' },
-    { id: '2', label: 'development' },
-    { id: '3', label: 'technology' },
-    { id: '4', label: 'UI/UX Designer' },
-  ];
-
   const categories = [
     { id: 43, icon: 'brush', label: 'Design' },
     { id: 71, icon: 'laptop', label: 'Tecnologia' },

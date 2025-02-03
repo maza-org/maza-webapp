@@ -109,7 +109,7 @@ export default function CourseDetail() {
   const checkCourseProgress = async () => {
     if (!user?.token) return;
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses?status=InProgress`, {
+      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/user-courses?status=InProgress`, {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
@@ -152,7 +152,7 @@ export default function CourseDetail() {
 
   const fetchCourseData = async () => {
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/courses/${documentId}`);
+      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/courses/${documentId}`);
       const data = await response.json();
       setCourseData(data);
     } catch (error) {
@@ -169,7 +169,7 @@ export default function CourseDetail() {
     }
 
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses/favorites`, {
+      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/user-courses/favorites`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -205,7 +205,7 @@ export default function CourseDetail() {
     setUpdating(true);
     try {
       // First, save the course to user's courses
-      const saveResponse = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses`, {
+      const saveResponse = await fetch(`https://maza-strapi-backend.onrender.com/api/user-courses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -222,7 +222,7 @@ export default function CourseDetail() {
         throw new Error('Failed to save course');
       }
 
-      const updateResponse = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/user-courses/${documentId}`, {
+      const updateResponse = await fetch(`https://maza-strapi-backend.onrender.com/api/user-courses/${documentId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -390,21 +390,21 @@ export default function CourseDetail() {
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.startButton, updating && styles.startButtonDisabled, isInProgress && styles.continueButton]}
-          onPress={handleStartCourse}
-          disabled={updating}
-        >
-          {updating ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={[styles.startButtonText, isInProgress && styles.continueButton]}>
-              {isInProgress ? 'Continuar' : 'Iniciar Curso'}
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
+      {/*<View style={styles.footer}>*/}
+      {/*  <TouchableOpacity*/}
+      {/*    style={[styles.startButton, updating && styles.startButtonDisabled, isInProgress && styles.continueButton]}*/}
+      {/*    onPress={handleStartCourse}*/}
+      {/*    disabled={updating}*/}
+      {/*  >*/}
+      {/*    {updating ? (*/}
+      {/*      <ActivityIndicator color="#FFF" />*/}
+      {/*    ) : (*/}
+      {/*      <Text style={[styles.startButtonText, isInProgress && styles.continueButton]}>*/}
+      {/*        {isInProgress ? 'Continuar' : 'Iniciar Curso'}*/}
+      {/*      </Text>*/}
+      {/*    )}*/}
+      {/*  </TouchableOpacity>*/}
+      {/*</View>*/}
     </SafeAreaView>
   );
 }

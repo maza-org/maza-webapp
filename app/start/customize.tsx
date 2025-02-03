@@ -70,7 +70,9 @@ export default function Customize() {
 
   const fetchTopics = async () => {
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/subjects?fields=name&sort=name&locale=pt`);
+      const response = await fetch(
+        `https://maza-strapi-backend.onrender.com/api/subjects?fields=name&sort=name&locale=pt`
+      );
       const { data } = await response.json();
       setTopics(data);
     } catch (error) {
