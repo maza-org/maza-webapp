@@ -1,9 +1,8 @@
-name: Half-Hourly API Check
+name: Frequent API Check
 on:
   schedule:
-    - cron: '*/30 * * * *'  # Runs every 30 minutes
-  workflow_dispatch:      # Allows manual triggering
-
+    - cron: '*/5 * * * *'  # Runs every 30 seconds
+  workflow_dispatch:          # Allows manual triggering
 jobs:
   check-api:
     runs-on: ubuntu-latest
