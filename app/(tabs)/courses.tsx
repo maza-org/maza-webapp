@@ -214,7 +214,7 @@ const FilterModal = ({ visible, onClose, onApply }) => {
                 onPress={() => setSelectedLevel('MAZA')}
               >
                 <Text style={[styles.filterOptionText, selectedLevel === 'MAZA' && styles.filterOptionTextSelected]}>
-                  MAZA
+                  Maza
                 </Text>
               </TouchableOpacity>
             </View>
@@ -351,7 +351,7 @@ export default function MeusCursosScreen() {
           ]}
         />
         <RadioButton
-          label="Em andam..."
+          label="Em progresso"
           selected={selectedFilter === 'inProgress'}
           onPress={() => setSelectedFilter('inProgress')}
           animatedText={animatedText(0)}

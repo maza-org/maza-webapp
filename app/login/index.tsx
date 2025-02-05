@@ -4,19 +4,55 @@ import { router } from 'expo-router';
 import Button from '@/components/Button';
 import { Image } from 'expo-image';
 
+const validateMozambiquePhone = (phoneNumber: string) => {
+  // Remove any spaces, dashes or other characters
+  const cleaned = phoneNumber.replace(/\D/g, '');
+
+  // Remove country code if present
+  const number = cleaned.startsWith('258') ? cleaned.slice(3) : cleaned;
+
+  // Check if the length is exactly 9 digits
+  if (number.length !== 9) {
+    return {
+      isValid: false,
+      error: 'O número deve ter 9 dígitos',
+    };
+  }
+
+  // Check if the number starts with valid Mozambican prefixes
+  const validPrefixes = ['82', '83', '84', '85', '86', '87'];
+  const prefix = number.slice(0, 2);
+
+  if (!validPrefixes.includes(prefix)) {
+    return {
+      isValid: false,
+      error: 'O número deve começar com 82, 83, 84, 85, 86 ou 87',
+    };
+  }
+
+  return {
+    isValid: true,
+    formattedNumber: `+258${number}`,
+  };
+};
+
 export default function Login() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    // Basic validation
+    // Basic validation for empty field
     if (!phoneNumber) {
       Alert.alert('Erro', 'Por favor preencha o número de telefone');
       return;
     }
 
-    // Format phone number to include country code if not present
-    const formattedPhone = phoneNumber.startsWith('+258') ? phoneNumber : `+258${phoneNumber}`;
+    // Validate phone number format
+    const validation = validateMozambiquePhone(phoneNumber);
+    if (!validation.isValid) {
+      Alert.alert('Erro', validation.error);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -27,7 +63,7 @@ export default function Login() {
         },
         body: JSON.stringify({
           data: {
-            phone: formattedPhone,
+            phone: validation.formattedNumber,
           },
         }),
       });
@@ -42,7 +78,7 @@ export default function Login() {
       router.push({
         pathname: '/login/otp',
         params: {
-          phone: formattedPhone,
+          phone: validation.formattedNumber,
           otpId: data.otpID,
         },
       });
@@ -52,6 +88,12 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePhoneNumberChange = (text) => {
+    // Only allow digits and plus sign
+    const sanitizedText = text.replace(/[^\d+]/g, '');
+    setPhoneNumber(sanitizedText);
   };
 
   return (
@@ -66,7 +108,7 @@ export default function Login() {
 
         <View style={styles.loginContainer}>
           <Text style={styles.loginText}>Não possui uma conta? </Text>
-          <TouchableOpacity onPress={() => router.push('/login')}>
+          <TouchableOpacity onPress={() => router.push('/login/create')}>
             <Text style={styles.loginLink}>Registar</Text>
           </TouchableOpacity>
         </View>
@@ -80,7 +122,8 @@ export default function Login() {
               placeholderTextColor="#666"
               keyboardType="phone-pad"
               value={phoneNumber}
-              onChangeText={setPhoneNumber}
+              onChangeText={handlePhoneNumberChange}
+              maxLength={13} // +258 + 9 digits
             />
           </View>
         </View>

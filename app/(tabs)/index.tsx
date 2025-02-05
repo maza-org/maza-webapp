@@ -5,7 +5,6 @@ import { router } from 'expo-router';
 import { Course } from '@/types/course';
 import useUser from '@/hooks/useUser';
 import Shimmer from '@/components/Shimmer';
-import { Subject } from '@/types/user';
 
 export default function Home() {
   const [subjects, setSubjects] = useState([]);
