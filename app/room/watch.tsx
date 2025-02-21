@@ -199,7 +199,8 @@ const styles = StyleSheet.create({
   courseCategory: {
     fontSize: 14,
     color: '#1fa2df',
-    marginLeft: 4,
+    marginLeft: 10,
+    width: 250,
   },
   modulesList: {
     padding: 16,

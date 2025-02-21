@@ -85,6 +85,7 @@ export default function CategorySelection() {
         Idiomas: 'language-outline',
         'Gestão Financeira': 'cash-outline',
         Negócios: 'business-outline',
+        'Meio Ambiente': 'leaf-outline',
       };
 
       // Transform the data into the required format
