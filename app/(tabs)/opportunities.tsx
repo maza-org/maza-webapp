@@ -1,53 +1,108 @@
-import { SafeAreaView, StyleSheet, View, Animated, Dimensions, Pressable } from 'react-native';
+import { SafeAreaView, StyleSheet, View, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { router } from 'expo-router';
 
 export default function Opportunities() {
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const floatAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fade in animation
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      useNativeDriver: true,
-    }).start();
-
-    // Continuous floating animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatAnim, {
-          toValue: -15,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(floatAnim, {
-          toValue: 0,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
-    // Continuous pulse animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
+    fetchJobs();
   }, []);
+
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+
+      // API endpoint
+      const endpoint = 'https://www.emprego.co.mz/wp-api/vacancies/front';
+
+      // Headers based on the curl request
+      const headers = {
+        accept: 'application/json, text/javascript, */*; q=0.01',
+        'accept-language': 'en-US,en;q=0.9',
+        'sec-ch-ua': '"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"',
+        'sec-ch-ua-mobile': '?1',
+        'sec-ch-ua-platform': '"Android"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+      };
+
+      // Make the API request
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: headers,
+        credentials: 'include', // This includes cookies
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setJobs(data.results);
+      console.log(JSON.stringify(data, null, 2));
+      setLoading(false);
+    } catch (err) {
+      setError('Erro ao carregar as oportunidades. Tente novamente mais tarde.');
+      setLoading(false);
+      console.error('Error fetching jobs:', err);
+    }
+  };
+
+  const renderJobItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.jobCard}
+      onPress={() => {
+        router.push({
+          pathname: '/jobs/[id]',
+          params: { slug: item.slug },
+        });
+      }}
+    >
+      <View style={styles.jobHeader}>
+        <View style={styles.companyLogoContainer}>
+          {item.company && item.company.logo ? (
+            <Image source={{ uri: item.company.logo }} style={styles.companyLogo} resizeMode="contain" />
+          ) : (
+            <View style={styles.placeholderLogo}>
+              <Text style={styles.placeholderText}>{item.company?.name?.charAt(0) || '?'}</Text>
+            </View>
+          )}
+        </View>
+        <View style={styles.jobInfo}>
+          <Text style={styles.jobTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+          <Text style={styles.companyName}>{item.company?.name}</Text>
+          <View style={styles.jobMeta}>
+            <View style={styles.metaItem}>
+              <Ionicons name="location-outline" size={14} color="#8F8F8F" />
+              <Text style={styles.metaText}>{item.city?.name}</Text>
+            </View>
+            <View style={styles.metaItem}>
+              <Ionicons name="briefcase-outline" size={14} color="#8F8F8F" />
+              <Text style={styles.metaText}>{item.category?.name}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+      {item.meta?.language && (
+        <View style={styles.languageBadge}>
+          <Text style={styles.languageBadgeText}>{item.meta.language.name}</Text>
+        </View>
+      )}
+      {item.meta?.new_post && (
+        <View style={styles.newBadge}>
+          <Text style={styles.newBadgeText}>Novo</Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -56,21 +111,33 @@ export default function Opportunities() {
       </View>
 
       <View style={styles.content}>
-        <Animated.View
-          style={[
-            styles.iconContainer,
-            {
-              transform: [{ translateY: floatAnim }, { scale: pulseAnim }],
-              opacity: fadeAnim,
-            },
-          ]}
-        >
-          <Ionicons name="rocket-outline" size={64} color="#2EA8FF" />
-        </Animated.View>
-        <Text style={styles.comingSoonText}>Funcionalidade em Breve</Text>
-        <Text style={styles.descriptionText}>
-          Estamos a trabalhar arduamente para trazer novas oportunidades para si. Fique atento!
-        </Text>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#2EA8FF" />
+            <Text style={styles.loadingText}>Carregando oportunidades...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B" />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={fetchJobs}>
+              <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+            </TouchableOpacity>
+          </View>
+        ) : jobs.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="search-outline" size={64} color="#8F8F8F" />
+            <Text style={styles.emptyText}>Nenhuma oportunidade encontrada</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={jobs}
+            renderItem={renderJobItem}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.jobList}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -95,50 +162,152 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  iconButton: {
-    padding: 0,
-  },
-  menuButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#29292E',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
   content: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#8F8F8F',
+    marginTop: 16,
+  },
+  errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
   },
-  iconContainer: {
-    width: 120,
-    height: 120,
-    backgroundColor: 'rgba(46, 168, 255, 0.1)', // Changed to use accent color with opacity
-    borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  comingSoonText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  descriptionText: {
+  errorText: {
     fontSize: 16,
     color: '#8F8F8F',
     textAlign: 'center',
-    lineHeight: 24,
-    maxWidth: '80%',
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#2EA8FF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#8F8F8F',
+    textAlign: 'center',
+    marginTop: 16,
+  },
+  jobList: {
+    paddingTop: 8,
+    paddingBottom: 24,
+  },
+  jobCard: {
+    backgroundColor: '#1C1C1E',
+    borderRadius: 12,
+    marginBottom: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    position: 'relative',
+  },
+  jobHeader: {
+    flexDirection: 'row',
+  },
+  companyLogoContainer: {
+    width: 56,
+    height: 56,
+    marginRight: 12,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#29292E',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  companyLogo: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderLogo: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#29292E',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  jobInfo: {
+    flex: 1,
+  },
+  jobTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  companyName: {
+    fontSize: 14,
+    color: '#2EA8FF',
+    marginBottom: 8,
+  },
+  jobMeta: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+    marginBottom: 4,
+  },
+  metaText: {
+    fontSize: 12,
+    color: '#8F8F8F',
+    marginLeft: 4,
+  },
+  languageBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: '#3A3A3C',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  languageBadgeText: {
+    fontSize: 10,
+    color: '#fff',
+    textTransform: 'uppercase',
+  },
+  newBadge: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    backgroundColor: '#2EA8FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  newBadgeText: {
+    fontSize: 10,
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
