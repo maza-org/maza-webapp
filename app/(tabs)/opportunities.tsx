@@ -3,11 +3,12 @@ import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import { router } from 'expo-router';
+import { Job } from '@/types/job';
 
 export default function Opportunities() {
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] = useState<Job[] | []>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     fetchJobs();
@@ -20,23 +21,9 @@ export default function Opportunities() {
       // API endpoint
       const endpoint = 'https://www.emprego.co.mz/wp-api/vacancies/front';
 
-      // Headers based on the curl request
-      const headers = {
-        accept: 'application/json, text/javascript, */*; q=0.01',
-        'accept-language': 'en-US,en;q=0.9',
-        'sec-ch-ua': '"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"',
-        'sec-ch-ua-mobile': '?1',
-        'sec-ch-ua-platform': '"Android"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-      };
-
       // Make the API request
       const response = await fetch(endpoint, {
         method: 'GET',
-        headers: headers,
-        credentials: 'include', // This includes cookies
       });
 
       if (!response.ok) {
@@ -45,7 +32,6 @@ export default function Opportunities() {
 
       const data = await response.json();
       setJobs(data.results);
-      console.log(JSON.stringify(data, null, 2));
       setLoading(false);
     } catch (err) {
       setError('Erro ao carregar as oportunidades. Tente novamente mais tarde.');
@@ -54,7 +40,7 @@ export default function Opportunities() {
     }
   };
 
-  const renderJobItem = ({ item }) => (
+  const renderJobItem = ({ item }: { item: Job }) => (
     <TouchableOpacity
       style={styles.jobCard}
       onPress={() => {
