@@ -5,21 +5,14 @@ import Button from '@/components/Button';
 import { Image } from 'expo-image';
 
 const validateMozambiquePhone = (phoneNumber: string) => {
-  // Remove any spaces, dashes or other characters
   const cleaned = phoneNumber.replace(/\D/g, '');
-
-  // Remove country code if present
   const number = cleaned.startsWith('258') ? cleaned.slice(3) : cleaned;
-
-  // Check if the length is exactly 9 digits
   if (number.length !== 9) {
     return {
       isValid: false,
       error: 'O número deve ter 9 dígitos',
     };
   }
-
-  // Check if the number starts with valid Mozambican prefixes
   const validPrefixes = ['82', '83', '84', '85', '86', '87'];
   const prefix = number.slice(0, 2);
 
@@ -38,7 +31,7 @@ const validateMozambiquePhone = (phoneNumber: string) => {
 
 export default function Login() {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | undefined>(undefined);
   const [touched, setTouched] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -57,16 +50,13 @@ export default function Login() {
   }, [phoneNumber, touched]);
 
   const handleRegister = async () => {
-    // Mark the field as touched
     setTouched(true);
 
-    // Basic validation for empty field
     if (!phoneNumber) {
       setError('Por favor preencha o número de telefone');
       return;
     }
 
-    // Validate phone number format
     const validation = validateMozambiquePhone(phoneNumber);
     if (!validation.isValid) {
       setError(validation.error);
@@ -92,8 +82,6 @@ export default function Login() {
       }
 
       const data = await response.json();
-      console.log(data);
-      // Navigate to OTP verification screen
       router.push({
         pathname: '/login/otp',
         params: {
@@ -102,15 +90,13 @@ export default function Login() {
         },
       });
     } catch (error) {
-      console.log(error);
       Alert.alert('Erro', 'Não foi possível gerar o código OTP. Por favor, tente novamente.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePhoneNumberChange = (text) => {
-    // Only allow digits and plus sign
+  const handlePhoneNumberChange = (text: string) => {
     const sanitizedText = text.replace(/[^\d+]/g, '');
     setPhoneNumber(sanitizedText);
   };
@@ -120,7 +106,7 @@ export default function Login() {
       <View style={styles.content}>
         <Image
           source={require('@/assets/images/maza-logo.png')}
-          style={{ width: 89, height: 38 }}
+          style={{ width: 129, height: 78 }}
           contentFit={'contain'}
         />
         <Text style={styles.headerText}>Faça login com a sua conta</Text>

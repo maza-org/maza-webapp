@@ -9,7 +9,7 @@ export default function Otp() {
   const { phone, otpId, fullName } = useLocalSearchParams();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
-  const inputRefs = useRef([]);
+  const inputRefs = useRef<Array<TextInput | null>>([]);
 
   const fetchUserData = async (token: string) => {
     try {
@@ -129,17 +129,19 @@ export default function Otp() {
     setOtp(newOtp);
 
     if (value && index < 5) {
-      inputRefs.current[index + 1].focus();
+      // Fix: Add null check before accessing focus method
+      inputRefs.current[index + 1]?.focus();
     }
   };
 
-  const handleKeyPress = (e, index: number) => {
+  const handleKeyPress = (e: any, index: number) => {
     if (e.nativeEvent.key === 'Backspace') {
       if (!otp[index] && index > 0) {
         const newOtp = [...otp];
         newOtp[index - 1] = '';
         setOtp(newOtp);
-        inputRefs.current[index - 1].focus();
+        // Fix: Add null check before accessing focus method
+        inputRefs.current[index - 1]?.focus();
       }
     }
   };
