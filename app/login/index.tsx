@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { router } from 'expo-router';
 import Button from '@/components/Button';
@@ -38,19 +38,38 @@ const validateMozambiquePhone = (phoneNumber: string) => {
 
 export default function Login() {
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [error, setError] = useState('');
+  const [touched, setTouched] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Validate phone number when it changes
+  useEffect(() => {
+    if (touched && phoneNumber) {
+      const validation = validateMozambiquePhone(phoneNumber);
+      if (!validation.isValid) {
+        setError(validation.error);
+      } else {
+        setError('');
+      }
+    } else if (touched && !phoneNumber) {
+      setError('Por favor preencha o número de telefone');
+    }
+  }, [phoneNumber, touched]);
+
   const handleRegister = async () => {
+    // Mark the field as touched
+    setTouched(true);
+
     // Basic validation for empty field
     if (!phoneNumber) {
-      Alert.alert('Erro', 'Por favor preencha o número de telefone');
+      setError('Por favor preencha o número de telefone');
       return;
     }
 
     // Validate phone number format
     const validation = validateMozambiquePhone(phoneNumber);
     if (!validation.isValid) {
-      Alert.alert('Erro', validation.error);
+      setError(validation.error);
       return;
     }
 
@@ -117,14 +136,16 @@ export default function Login() {
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Número de Telemóvel</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, error && touched ? styles.inputError : null]}
               placeholder="821231231"
               placeholderTextColor="#666"
               keyboardType="phone-pad"
               value={phoneNumber}
               onChangeText={handlePhoneNumberChange}
+              onBlur={() => setTouched(true)}
               maxLength={13} // +258 + 9 digits
             />
+            {error && touched && <Text style={styles.errorText}>{error}</Text>}
           </View>
         </View>
 
@@ -132,7 +153,7 @@ export default function Login() {
           <Button
             text={loading ? 'A processar...' : 'Entrar'}
             handle={handleRegister}
-            disabled={!phoneNumber || loading}
+            disabled={!!error || !phoneNumber || loading}
             loading={loading}
           />
         </View>
@@ -189,6 +210,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     color: '#FFFFFF',
+  },
+  inputError: {
+    borderWidth: 1,
+    borderColor: '#FF6B6B',
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 8,
   },
   registerButton: {
     height: 48,
