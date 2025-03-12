@@ -92,6 +92,17 @@ export default function Home() {
     });
   }
 
+  function handleOnPressPopularCourses() {
+    router.push({
+      pathname: '/categories/[id]',
+      params: {
+        type: 'popular',
+        name: 'Cursos Populares',
+        id: 0,
+      },
+    });
+  }
+
   function handleOnInProgressCoursePress(course: Course) {
     router.push({
       pathname: '/room/lessons',
@@ -353,8 +364,8 @@ export default function Home() {
         {/* Popular Courses */}
         <View style={styles.popularCoursesSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Cursos mais populares</Text>
-            <TouchableOpacity>
+            <Text style={styles.sectionTitle}>Cursos populares</Text>
+            <TouchableOpacity onPress={handleOnPressPopularCourses}>
               <Text style={styles.verTodos}>VER TODOS</Text>
             </TouchableOpacity>
           </View>

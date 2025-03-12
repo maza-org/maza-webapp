@@ -8,17 +8,27 @@ import { ApiResponse, Course } from '@/types/course';
 import { blurhash } from '@/util/util';
 
 export default function Category() {
-  const { name, id } = useLocalSearchParams();
+  const { name, id, type } = useLocalSearchParams();
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchCourses();
-  }, [id]);
+  }, [id, type]);
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/courses?subjects=${id}`);
+      let url;
+
+      if (type === 'popular') {
+        // Use the popular courses endpoint
+        url = 'https://maza-strapi-backend.onrender.com/api/courses?sort=subscribed%3Adesc&pageSize=15&page=1';
+      } else {
+        // Use the category-based endpoint
+        url = `https://maza-strapi-backend.onrender.com/api/courses?subjects=${id}`;
+      }
+
+      const response = await fetch(url);
       const data: ApiResponse = await response.json();
       setCourses(data.data);
       setIsLoading(false);
