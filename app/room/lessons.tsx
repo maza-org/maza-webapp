@@ -315,6 +315,9 @@ export default function CourseDetail() {
           <View style={styles.instructor}>
             <Text style={styles.instructorName}>{courseData.author}</Text>
             <Text style={styles.categoryTag}>• {courseData.subjects[0]?.name || ''}</Text>
+            <TouchableOpacity style={styles.pathButton}>
+              <Text style={styles.pathButtonText}>Path</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.tabContainer}>
@@ -481,6 +484,20 @@ const styles = StyleSheet.create({
     color: '#1fa2df',
     fontSize: 14,
     marginLeft: 8,
+    marginRight: 8,
+  },
+  pathButton: {
+    backgroundColor: '#1fa2df',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pathButtonText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '500',
   },
   tabContainer: {
     flexDirection: 'row',

@@ -21,10 +21,8 @@ export default function Category() {
       let url;
 
       if (type === 'popular') {
-        // Use the popular courses endpoint
         url = 'https://maza-strapi-backend.onrender.com/api/courses?sort=subscribed%3Adesc&pageSize=15&page=1';
       } else {
-        // Use the category-based endpoint
         url = `https://maza-strapi-backend.onrender.com/api/courses?subjects=${id}`;
       }
 
@@ -174,13 +172,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#202024',
     borderRadius: 12,
     marginBottom: 16,
-    alignItems: 'center', // Center items vertically
+    alignItems: 'center',
   },
   thumbnailContainer: {
     width: 100,
     height: 70,
-    justifyContent: 'center', // Center image vertically
-    alignItems: 'center', // Center image horizontally
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   thumbnail: {
     width: '100%',

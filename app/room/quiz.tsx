@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 
@@ -25,6 +25,23 @@ interface QuizModule {
 
 type SelectedAnswers = {
   [key: number]: number | number[];
+};
+
+const QUIZ_DURATION = 10 * 60; // 10 minutes in seconds
+
+const formatTime = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+};
+
+const Timer = ({ timeLeft, isWarning }: { timeLeft: number; isWarning: boolean }) => {
+  return (
+    <View style={[styles.timerContainer, isWarning && styles.timerWarning]}>
+      <Feather name="clock" size={16} color={isWarning ? '#FF3B30' : '#FFF'} />
+      <Text style={[styles.timerText, isWarning && styles.timerTextWarning]}>{formatTime(timeLeft)}</Text>
+    </View>
+  );
 };
 
 const ResultsView = ({
@@ -79,6 +96,40 @@ export default function Quiz() {
   const [selectedAnswers, setSelectedAnswers] = useState<SelectedAnswers>({});
   const [showResults, setShowResults] = useState(false);
   const [showCurrentFeedback, setShowCurrentFeedback] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(QUIZ_DURATION);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    // Start the timer when the component mounts
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          // Time's up
+          clearInterval(timerRef.current as NodeJS.Timeout);
+          // Auto-submit the quiz
+          handleTimeUp();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Cleanup on unmount
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+
+  const handleTimeUp = () => {
+    Alert.alert('Tempo Esgotado!', 'O tempo para realização do teste acabou.', [
+      {
+        text: 'OK',
+        onPress: () => setShowResults(true),
+      },
+    ]);
+  };
 
   const getCurrentQuestion = () => quizData.questions[currentQuestion];
 
@@ -155,6 +206,9 @@ export default function Quiz() {
       setShowCurrentFeedback(true);
     } else {
       setShowResults(true);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
     }
   };
 
@@ -163,6 +217,23 @@ export default function Quiz() {
     setSelectedAnswers({});
     setShowResults(false);
     setShowCurrentFeedback(false);
+    setTimeLeft(QUIZ_DURATION);
+
+    // Restart the timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current as NodeJS.Timeout);
+          handleTimeUp();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   const isOptionSelected = (optionId: number) => {
@@ -173,6 +244,9 @@ export default function Quiz() {
     return currentSelected === optionId;
   };
 
+  // Calculate if we should show warning (less than 2 minutes left)
+  const isTimeWarning = timeLeft <= 120;
+
   return (
     <SafeAreaView style={styles.container}>
       {!showResults ? (
@@ -182,9 +256,21 @@ export default function Quiz() {
               <Feather name="chevron-left" size={24} color="#FFF" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Teste Final</Text>
+            <Timer timeLeft={timeLeft} isWarning={isTimeWarning} />
+          </View>
+
+          <View style={styles.progressContainer}>
             <Text style={styles.questionCounter}>
               {currentQuestion + 1}/{quizData.questions.length}
             </Text>
+            <View style={styles.progressBar}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: `${((currentQuestion + 1) / quizData.questions.length) * 100}%` },
+                ]}
+              />
+            </View>
           </View>
 
           <ScrollView style={styles.content}>
@@ -339,6 +425,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  progressContainer: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#323238',
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: '#323238',
+    borderRadius: 3,
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#1fa2df',
+    borderRadius: 3,
   },
   questionCounter: {
     color: '#A8A8B3',
@@ -557,5 +661,29 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Timer styles
+  timerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#323238',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginLeft: 8,
+  },
+  timerWarning: {
+    backgroundColor: 'rgba(255, 59, 48, 0.2)',
+    borderWidth: 1,
+    borderColor: '#FF3B30',
+  },
+  timerText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  timerTextWarning: {
+    color: '#FF3B30',
   },
 });
