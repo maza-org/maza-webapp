@@ -285,6 +285,15 @@ export default function CourseDetail() {
     });
   }
 
+  function handleOnPathPress() {
+    router.push({
+      pathname: '/path',
+      params: {
+        course: JSON.stringify(courseData),
+      },
+    });
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} stickyHeaderIndices={[1]}>
@@ -315,7 +324,7 @@ export default function CourseDetail() {
           <View style={styles.instructor}>
             <Text style={styles.instructorName}>{courseData.author}</Text>
             <Text style={styles.categoryTag}>• {courseData.subjects[0]?.name || ''}</Text>
-            <TouchableOpacity style={styles.pathButton}>
+            <TouchableOpacity style={styles.pathButton} onPress={handleOnPathPress}>
               <Text style={styles.pathButtonText}>Path</Text>
             </TouchableOpacity>
           </View>
