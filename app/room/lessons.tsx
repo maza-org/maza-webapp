@@ -325,6 +325,7 @@ export default function CourseDetail() {
             <Text style={styles.instructorName}>{courseData.author}</Text>
             <Text style={styles.categoryTag}>• {courseData.subjects[0]?.name || ''}</Text>
             <TouchableOpacity style={styles.pathButton} onPress={handleOnPathPress}>
+              <Feather name="play" size={14} color="#FFF" />
               <Text style={styles.pathButtonText}>Path</Text>
             </TouchableOpacity>
           </View>
@@ -500,8 +501,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 12,
     borderRadius: 50,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginLeft: 'auto', // This pushes the button to the right
+    gap: 6, // Adds space between text and icon
   },
   pathButtonText: {
     color: '#FFF',
