@@ -17,17 +17,36 @@ interface Question {
   options: Option[];
 }
 
+interface Duration {
+  id: number;
+  type: 'hours' | 'minutes' | 'seconds';
+  value: number;
+}
+
 interface QuizModule {
   id: number;
   pass_grade: number;
   questions: Question[];
+  duration: Duration;
 }
 
 type SelectedAnswers = {
   [key: number]: number | number[];
 };
 
-const QUIZ_DURATION = 10 * 60; // 10 minutes in seconds
+// This function will convert the duration object to seconds
+const calculateDurationInSeconds = (duration: Duration): number => {
+  switch (duration.type) {
+    case 'hours':
+      return duration.value * 60 * 60;
+    case 'minutes':
+      return duration.value * 60;
+    case 'seconds':
+      return duration.value;
+    default:
+      return 10 * 60; // Default to 10 minutes as fallback
+  }
+};
 
 const formatTime = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60);
@@ -92,6 +111,10 @@ const ResultsView = ({
 export default function Quiz() {
   const { content } = useLocalSearchParams();
   const quizData: QuizModule = JSON.parse(content as string);
+
+  // Calculate quiz duration in seconds based on the duration object
+  const QUIZ_DURATION = calculateDurationInSeconds(quizData.duration);
+
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<SelectedAnswers>({});
   const [showResults, setShowResults] = useState(false);
