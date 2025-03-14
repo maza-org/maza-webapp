@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import useUser from '@/hooks/useUser';
 
 export interface Subject {
@@ -21,9 +21,28 @@ export interface Subject {
 }
 
 export default function ProfileScreen() {
-  const { data: user, isLoading, error } = useUser();
+  const { data: user, isLoading, error, refetch } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [deletingInterestId, setDeletingInterestId] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Refresh profile data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      const refreshProfileData = async () => {
+        setIsRefreshing(true);
+        try {
+          await refetch();
+        } catch (error) {
+          console.error('Error refreshing profile data:', error);
+        } finally {
+          setIsRefreshing(false);
+        }
+      };
+
+      refreshProfileData();
+    }, [refetch])
+  );
 
   const handleLogout = async () => {
     try {
@@ -68,8 +87,8 @@ export default function ProfileScreen() {
               }
 
               Alert.alert('Sucesso', 'Interesse removido com sucesso');
-              user.interests = user.interests.filter((interest) => interest.id !== subject.id);
-              await AsyncStorage.setItem('@user', JSON.stringify(user));
+              // After successful deletion, refresh the user data
+              await refetch();
             } catch (error) {
               console.error('Error making DELETE request:', error);
               Alert.alert('Erro', 'Falha ao remover interesse');
@@ -86,7 +105,7 @@ export default function ProfileScreen() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isRefreshing) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#1fa2df" />
@@ -117,8 +136,6 @@ export default function ProfileScreen() {
   function handleAddInterest() {
     router.push('/start/customize');
   }
-
-  console.log(JSON.stringify(user, null, 2));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -413,6 +430,18 @@ const styles = StyleSheet.create({
     color: '#1fa2df',
     fontSize: 14,
     fontWeight: '500',
+  },
+  deleteInterestButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(31, 162, 223, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteInterestLoading: {
+    width: 24,
+    height: 24,
   },
   emptyState: {
     borderRadius: 12,
