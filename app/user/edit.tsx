@@ -42,7 +42,7 @@ export default function EditProfileScreen() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('https://maza-strapi-backend.onrender.com/api/users/me', {
+      const response = await fetch('https://api.mazas.org/api/users/me', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

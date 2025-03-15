@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  // Timer styles
+
   timerContainer: {
     flexDirection: 'row',
     alignItems: 'center',

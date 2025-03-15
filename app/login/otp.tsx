@@ -13,7 +13,7 @@ export default function Otp() {
 
   const fetchUserData = async (token: string) => {
     try {
-      const response = await fetch('https://maza-strapi-backend.onrender.com/api/users/me', {
+      const response = await fetch('https://api.mazas.org/api/users/me', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -73,9 +73,7 @@ export default function Otp() {
 
     setLoading(true);
     try {
-      const endpoint = fullName
-        ? `https://maza-strapi-backend.onrender.com/api/users`
-        : `https://maza-strapi-backend.onrender.com/api/auth/login`;
+      const endpoint = fullName ? `https://api.mazas.org/api/users` : `https://api.mazas.org/api/auth/login`;
 
       const body = fullName
         ? {

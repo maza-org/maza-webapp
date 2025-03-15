@@ -54,7 +54,7 @@ export default function CategorySelection() {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/courses`);
+      const response = await fetch(`https://api.mazas.org/api/courses`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch categories');

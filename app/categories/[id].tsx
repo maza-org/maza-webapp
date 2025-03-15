@@ -21,9 +21,9 @@ export default function Category() {
       let url;
 
       if (type === 'popular') {
-        url = 'https://maza-strapi-backend.onrender.com/api/courses?sort=subscribed%3Adesc&pageSize=15&page=1';
+        url = 'https://api.mazas.org/api/courses?sort=subscribed%3Adesc&pageSize=15&page=1';
       } else {
-        url = `https://maza-strapi-backend.onrender.com/api/courses?subjects=${id}`;
+        url = `https://api.mazas.org/api/courses?subjects=${id}`;
       }
 
       const response = await fetch(url);

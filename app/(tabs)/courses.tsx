@@ -88,7 +88,7 @@ const CompletedCourses = () => {
 
   const fetchCompletedCourses = async () => {
     try {
-      const response = await fetch('https://maza-strapi-backend.onrender.com/api/user-courses?status=Completed', {
+      const response = await fetch('https://api.mazas.org/api/user-courses?status=Completed', {
         headers: {
           Authorization: `Bearer ${user?.token}`,
         },

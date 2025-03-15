@@ -65,7 +65,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/otps`, {
+      const response = await fetch(`https://api.mazas.org/api/otps`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,12 +77,43 @@ export default function Login() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      // Handle different response status codes
+      if (response.status === 400) {
+        const errorData = await response.json();
+        setError('Número de telefone inválido ou não registado');
+        setLoading(false);
+        return;
+      } else if (response.status === 401) {
+        setError('Não autorizado. Por favor, verifique suas credenciais.');
+        setLoading(false);
+        return;
+      } else if (response.status === 403) {
+        setError('Acesso proibido a este recurso.');
+        setLoading(false);
+        return;
+      } else if (response.status === 404) {
+        setError('Serviço não encontrado. Por favor, tente mais tarde.');
+        setLoading(false);
+        return;
+      } else if (response.status === 429) {
+        setError('Muitas tentativas. Por favor, aguarde alguns minutos e tente novamente.');
+        setLoading(false);
+        return;
+      } else if (response.status >= 500) {
+        setError('Erro no servidor. Por favor, tente novamente mais tarde.');
+        setLoading(false);
+        return;
+      } else if (!response.ok) {
+        // For any other unsuccessful status codes not explicitly handled
+        setError('Ocorreu um erro. Por favor, tente novamente.');
+        setLoading(false);
+        return;
       }
 
+      // If we reach here, the request was successful
       const data = await response.json();
 
+      // Navigate to OTP verification screen
       router.push({
         pathname: '/login/otp',
         params: {
@@ -91,7 +122,12 @@ export default function Login() {
         },
       });
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível gerar o código OTP. Por favor, tente novamente.');
+      // This catches network errors or other exceptions
+      console.error('Login error:', error);
+      Alert.alert(
+        'Erro de conexão',
+        'Não foi possível conectar ao servidor. Verifique sua conexão de internet e tente novamente.'
+      );
     } finally {
       setLoading(false);
     }

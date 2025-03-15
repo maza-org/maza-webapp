@@ -54,7 +54,7 @@ export default function Photo() {
       formData.append('field', 'profile_image');
 
       // Make the upload request
-      const response = await fetch('https://maza-strapi-backend.onrender.com/api/upload', {
+      const response = await fetch('https://api.mazas.org/api/upload', {
         method: 'POST',
         headers: {
           Accept: 'application/json',

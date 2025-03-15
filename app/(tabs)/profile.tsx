@@ -73,7 +73,7 @@ export default function ProfileScreen() {
               }
 
               const response = await fetch(
-                `https://maza-strapi-backend.onrender.com/api/users-permissions/interests/${subject.documentId}`,
+                `https://api.mazas.org/api/users-permissions/interests/${subject.documentId}`,
                 {
                   method: 'DELETE',
                   headers: {

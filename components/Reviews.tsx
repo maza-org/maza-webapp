@@ -85,7 +85,7 @@ export default function Reviews({ courseId }: ReviewsProps) {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/reviews?course=${courseId}`);
+      const response = await fetch(`https://api.mazas.org/api/reviews?course=${courseId}`);
       const data = await response.json();
       setReviews(data);
     } catch (error) {

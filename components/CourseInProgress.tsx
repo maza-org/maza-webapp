@@ -92,7 +92,7 @@ const CoursesInProgress = () => {
     if (!user?.token) return;
 
     try {
-      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/user-courses?status=InProgress`, {
+      const response = await fetch(`https://api.mazas.org/api/user-courses?status=InProgress`, {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },

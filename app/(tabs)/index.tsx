@@ -26,7 +26,7 @@ export default function Home() {
 
   async function fetchUserCourses() {
     try {
-      const response = await fetch('https://maza-strapi-backend.onrender.com/api/user-courses?status=InProgress', {
+      const response = await fetch('https://api.mazas.org/api/user-courses?status=InProgress', {
         headers: {
           Authorization: `Bearer ${user?.token}`,
         },
@@ -48,7 +48,7 @@ export default function Home() {
 
   async function fetchSubjects() {
     try {
-      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/courses`);
+      const response = await fetch(`https://api.mazas.org/api/courses`);
       const data = await response.json();
 
       const allSubjects = data.data.flatMap((course) => course.subjects);
@@ -64,9 +64,7 @@ export default function Home() {
 
   async function fetchPopularCourses() {
     try {
-      const response = await fetch(
-        'https://maza-strapi-backend.onrender.com/api/courses?sort=subscribed%3Adesc&pageSize=15&page=1'
-      );
+      const response = await fetch('https://api.mazas.org/api/courses?sort=subscribed%3Adesc&pageSize=15&page=1');
       const data = await response.json();
       setPopularCourses(data.data);
       setLoadingCourses(false);
