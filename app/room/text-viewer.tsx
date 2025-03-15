@@ -35,8 +35,16 @@ export default function TextViewer() {
         <View style={styles.headerRight} />
       </View>
 
-      <ScrollView style={styles.scrollView} onScroll={handleScroll} scrollEventThrottle={400}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+        onScroll={handleScroll}
+        scrollEventThrottle={400}
+        showsVerticalScrollIndicator={true}
+      >
         <Markdown style={markdownStyles}>{_content.description || ''}</Markdown>
+        {/* Bottom padding to ensure content isn't cut off */}
+        <View style={styles.bottomPadding} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -76,7 +84,14 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollViewContent: {
     padding: 24,
+    // This ensures the content expands to fill the ScrollView
+    flexGrow: 1,
+  },
+  bottomPadding: {
+    height: 80, // Add sufficient padding at the bottom
   },
 });
 
