@@ -16,6 +16,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Reviews from '@/components/Reviews';
 import { Picture } from '@/types/course';
+import AntDesign from '@expo/vector-icons/AntDesign';
 
 export interface Content {
   id: number;
@@ -331,8 +332,7 @@ export default function CourseDetail() {
             <Text style={styles.instructorName}>{courseData.author}</Text>
             <Text style={styles.categoryTag}>• {courseData.subjects[0]?.name || ''}</Text>
             <TouchableOpacity style={styles.pathButton} onPress={handleOnPathPress}>
-              <Feather name="play" size={14} color="#FFF" />
-              <Text style={styles.pathButtonText}>Path</Text>
+              <AntDesign name="fork" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
 
@@ -516,8 +516,8 @@ const styles = StyleSheet.create({
   },
   pathButton: {
     backgroundColor: '#1fa2df',
-    paddingVertical: 4,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
     borderRadius: 50,
     flexDirection: 'row',
     justifyContent: 'space-between',
