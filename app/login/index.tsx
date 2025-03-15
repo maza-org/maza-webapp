@@ -82,6 +82,7 @@ export default function Login() {
       }
 
       const data = await response.json();
+
       router.push({
         pathname: '/login/otp',
         params: {
@@ -107,28 +108,27 @@ export default function Login() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Image
-          source={require('@/assets/images/maza-logo.png')}
-          style={{ width: 129, height: 78 }}
-          contentFit={'contain'}
-        />
-        <View style={styles.skipButtonContainer}>
-          <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-            <Text style={styles.skipButtonText}>Pular</Text>
-          </TouchableOpacity>
+      <View style={styles.topSection}>
+        <View style={styles.header}>
+          <Image
+            source={require('@/assets/images/maza-logo.png')}
+            style={{ width: 129, height: 78 }}
+            contentFit={'contain'}
+          />
+        </View>
+        <View style={styles.titleSection}>
+          <Text style={styles.headerText}>Faça login com a sua conta</Text>
+
+          <View style={styles.loginContainer}>
+            <Text style={styles.loginText}>Não possui uma conta? </Text>
+            <TouchableOpacity onPress={() => router.push('/login/create')}>
+              <Text style={styles.loginLink}>Registar</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
+
       <View style={styles.content}>
-        <Text style={styles.headerText}>Faça login com a sua conta</Text>
-
-        <View style={styles.loginContainer}>
-          <Text style={styles.loginText}>Não possui uma conta? </Text>
-          <TouchableOpacity onPress={() => router.push('/login/create')}>
-            <Text style={styles.loginLink}>Registar</Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.formContainer}>
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Número de Telemóvel</Text>
@@ -140,7 +140,7 @@ export default function Login() {
               value={phoneNumber}
               onChangeText={handlePhoneNumberChange}
               onBlur={() => setTouched(true)}
-              maxLength={13} // +258 + 9 digits
+              maxLength={13}
             />
             {error && touched && <Text style={styles.errorText}>{error}</Text>}
           </View>
@@ -153,6 +153,11 @@ export default function Login() {
             disabled={!!error || !phoneNumber || loading}
             loading={loading}
           />
+
+          {/* Text Button right below the Entrar button */}
+          <TouchableOpacity onPress={handleSkip} style={styles.textButtonContainer}>
+            <Text style={styles.bottomLinkText}>Saltar</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -162,7 +167,12 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#1E1E1E',
+  },
+  topSection: {
+    backgroundColor: '#1E1E1E',
+    paddingBottom: 20,
+    marginBottom: 10,
   },
   header: {
     paddingHorizontal: 24,
@@ -170,6 +180,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  titleSection: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
   skipButtonContainer: {
     alignItems: 'center',
@@ -189,17 +203,17 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     gap: 24,
+    backgroundColor: '#121212',
   },
   headerText: {
     fontSize: 28,
     fontWeight: '600',
     color: '#FFFFFF',
-    marginBottom: 16,
     width: 200,
   },
   loginContainer: {
     flexDirection: 'row',
-    marginBottom: 32,
+    marginTop: 12,
   },
   loginText: {
     color: '#999999',
@@ -212,6 +226,7 @@ const styles = StyleSheet.create({
   formContainer: {
     gap: 24,
     marginBottom: 32,
+    marginTop: 16,
   },
   inputGroup: {
     gap: 12,
@@ -250,5 +265,15 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  textButtonContainer: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  bottomLinkText: {
+    color: '#999999',
+    fontSize: 16,
+    textAlign: 'center',
+    paddingVertical: 8,
   },
 });

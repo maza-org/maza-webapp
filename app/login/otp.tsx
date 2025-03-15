@@ -148,19 +148,23 @@ export default function Otp() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+      <View style={styles.topSection}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.headerText}>Código OTP</Text>
-        <Text style={styles.subText}>
-          Enviamos uma SMS com o código de autenticação{'\n'}
-          para o número <Text style={styles.phoneNumber}>{phone}</Text>
-        </Text>
+        <View style={styles.titleSection}>
+          <Text style={styles.headerText}>Código OTP</Text>
+          <Text style={styles.subText}>
+            Enviamos uma SMS com o código de autenticação{'\n'}
+            para o número <Text style={styles.phoneNumber}>{phone}</Text>
+          </Text>
+        </View>
+      </View>
 
+      <View style={styles.content}>
         <View style={styles.formContainer}>
           <Text style={styles.inputLabel}>Código de Verificação</Text>
           <View style={styles.otpContainer}>
@@ -195,41 +199,54 @@ export default function Otp() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#1E1E1E', // Changed to match the light dark color from other screens
+  },
+  topSection: {
+    backgroundColor: '#1E1E1E', // Light dark background color for the top section
+    paddingBottom: 20,
+    marginBottom: 10,
+    paddingHorizontal: 24,
+    paddingTop: 16,
   },
   content: {
     flex: 1,
     padding: 24,
+    backgroundColor: '#121212', // Darker background for the content section
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  titleSection: {
+    paddingTop: 8,
   },
   backButton: {
-    marginBottom: 16,
     padding: 8,
     borderStyle: 'solid',
     borderColor: '#b3b3b3',
     borderWidth: 0.5,
     borderRadius: 50,
   },
-  backButtonText: {
-    color: '#FFFFFF',
-    fontSize: 24,
-  },
   headerText: {
     fontSize: 28,
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 8,
+    width: 200,
   },
   subText: {
     color: '#999999',
     fontSize: 14,
     lineHeight: 20,
-    marginBottom: 32,
+    marginBottom: 12,
   },
   phoneNumber: {
     color: '#FFFFFF',
   },
   formContainer: {
     marginBottom: 32,
+    marginTop: 16,
   },
   inputLabel: {
     color: '#FFFFFF',
@@ -263,15 +280,5 @@ const styles = StyleSheet.create({
   resendLink: {
     color: '#2196F3',
     fontSize: 14,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 8,
-    color: '#FFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
 });

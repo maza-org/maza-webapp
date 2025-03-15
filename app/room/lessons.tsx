@@ -236,8 +236,6 @@ export default function CourseDetail() {
       });
 
       if (!updateResponse.ok) {
-        const data = await updateResponse.json();
-        console.log(JSON.stringify(data, null, 2));
         throw new Error('Erro ao começar curso');
       }
     } catch (error) {

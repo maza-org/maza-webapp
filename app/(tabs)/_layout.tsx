@@ -20,8 +20,9 @@ export default function TabLayout() {
           height: 80,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          marginTop: 10,
+          fontSize: 10,
+          fontFamily: 'ManropeRegular',
+          marginTop: 6,
         },
         tabBarInactiveTintColor: '#7C7C8A',
       }}

@@ -19,7 +19,6 @@ export default function TextViewer() {
 
     if (isCloseToBottom && !hasReachedBottom) {
       setHasReachedBottom(true);
-      console.log('Reached bottom of content');
       // Add your logic here when bottom is reached
     }
   };

@@ -134,8 +134,6 @@ const CoursesInProgress = () => {
     );
   }
 
-  console.log(JSON.stringify(courses[0], null, 2));
-
   return (
     <ScrollView style={styles.courseList}>
       {courses.map((courseData) => (

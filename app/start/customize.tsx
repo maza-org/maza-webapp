@@ -108,10 +108,6 @@ export default function Customize() {
           },
         }),
       });
-
-      const data = await response.json();
-      console.log(`SELECTED Topics`, JSON.stringify(selectedTopics, null, 2));
-
       if (!response.ok) {
         throw new Error('Failed to update interests');
       }
