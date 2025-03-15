@@ -101,14 +101,25 @@ export default function Login() {
     setPhoneNumber(sanitizedText);
   };
 
+  const handleSkip = () => {
+    router.push('/');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+      <View style={styles.header}>
         <Image
           source={require('@/assets/images/maza-logo.png')}
           style={{ width: 129, height: 78 }}
           contentFit={'contain'}
         />
+        <View style={styles.skipButtonContainer}>
+          <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+            <Text style={styles.skipButtonText}>Pular</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={styles.content}>
         <Text style={styles.headerText}>Faça login com a sua conta</Text>
 
         <View style={styles.loginContainer}>
@@ -152,6 +163,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#121212',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  skipButtonContainer: {
+    alignItems: 'center',
+  },
+  skipButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    backgroundColor: '#252525',
+  },
+  skipButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
   },
   content: {
     flex: 1,
