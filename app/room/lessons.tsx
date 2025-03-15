@@ -30,6 +30,7 @@ export interface Module {
   id: number;
   title: string;
   quiz: any;
+  description: string;
   contents: Content[];
 }
 
@@ -81,6 +82,7 @@ interface Course {
   modules: Module[];
   isFavorite?: boolean;
   cover: Picture;
+  description?: string; // Added description property
 }
 
 interface TabProps {
@@ -104,6 +106,7 @@ export default function CourseDetail() {
   const [user, setUser] = useState<User | null>(null);
   const [updating, setUpdating] = useState(false);
   const [isInProgress, setIsInProgress] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false); // Added state for description toggle
 
   const { documentId } = useLocalSearchParams();
   const checkCourseProgress = async () => {
@@ -246,6 +249,11 @@ export default function CourseDetail() {
     }
   };
 
+  // Toggle description expand/collapse
+  const toggleDescription = () => {
+    setShowFullDescription(!showFullDescription);
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -327,6 +335,18 @@ export default function CourseDetail() {
               <Text style={styles.pathButtonText}>Path</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Course Description Section */}
+          {courseData.description && (
+            <View style={styles.descriptionContainer}>
+              <Text style={styles.descriptionText} numberOfLines={showFullDescription ? undefined : 3}>
+                {courseData.description}
+              </Text>
+              <TouchableOpacity onPress={toggleDescription} style={styles.viewMoreButton}>
+                <Text style={styles.viewMoreText}>{showFullDescription ? 'Ver menos' : 'Ver mais'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View style={styles.tabContainer}>
             <Tab active={activeTab === 'lessons'} onPress={() => setActiveTab('lessons')}>
@@ -502,12 +522,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginLeft: 'auto', // This pushes the button to the right
-    gap: 6, // Adds space between text and icon
+    marginLeft: 'auto',
+    gap: 6,
   },
   pathButtonText: {
     color: '#FFF',
     fontSize: 12,
+    fontWeight: '500',
+  },
+  descriptionContainer: {
+    marginBottom: 16,
+    borderRadius: 8,
+  },
+  descriptionText: {
+    color: '#E1E1E6',
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  viewMoreButton: {
+    marginTop: 8,
+    alignSelf: 'flex-end',
+  },
+  viewMoreText: {
+    color: '#1fa2df',
+    fontSize: 14,
     fontWeight: '500',
   },
   tabContainer: {

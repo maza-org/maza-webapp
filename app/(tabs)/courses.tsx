@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
   },
   radioButton: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 999,
     alignItems: 'center',

@@ -60,6 +60,7 @@ export default function CourseScreen() {
   const moduleData = JSON.parse(module as string) as Module;
   const [playing, setPlaying] = React.useState(false);
   const [selectedContent, setSelectedContent] = React.useState<Content | undefined>(undefined);
+  const [showFullDescription, setShowFullDescription] = React.useState(false);
 
   const handleContentPress = (content: Content) => {
     if (content.format === 'Text' && content.description && !content.youtubeID) {
@@ -90,6 +91,10 @@ export default function CourseScreen() {
     });
   };
 
+  const toggleDescription = () => {
+    setShowFullDescription(!showFullDescription);
+  };
+
   return (
     <>
       {playing && selectedContent && (
@@ -115,6 +120,18 @@ export default function CourseScreen() {
               <Text style={styles.instructorName}>{author}</Text>
               <Text style={styles.courseCategory}>• {title}</Text>
             </View>
+
+            {/* Description Section */}
+            {moduleData.description && (
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.descriptionText} numberOfLines={showFullDescription ? undefined : 3}>
+                  {moduleData.description}
+                </Text>
+                <TouchableOpacity onPress={toggleDescription} style={styles.toggleButton}>
+                  <Text style={styles.toggleButtonText}>{showFullDescription ? 'Ver menos' : 'Ver mais'}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           {/* Modules List */}
@@ -185,6 +202,7 @@ const styles = StyleSheet.create({
   instructorInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 16,
   },
   instructorAvatar: {
     width: 24,
@@ -201,6 +219,23 @@ const styles = StyleSheet.create({
     color: '#1fa2df',
     marginLeft: 10,
     width: 250,
+  },
+  descriptionContainer: {
+    marginTop: 10,
+    padding: 6,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#A8A8B3',
+    lineHeight: 20,
+  },
+  toggleButton: {
+    marginTop: 8,
+  },
+  toggleButtonText: {
+    color: '#4db5ff',
+    fontSize: 14,
+    fontWeight: '500',
   },
   modulesList: {
     padding: 16,

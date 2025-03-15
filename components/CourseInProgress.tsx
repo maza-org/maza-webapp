@@ -64,7 +64,6 @@ const CourseItem: React.FC<CourseItemProps> = ({
       <View style={styles.courseInfo}>
         <Text style={styles.courseCategory}>{instructor}</Text>
         <Text style={styles.courseItemTitle}>{title.length > 20 ? `${title.substring(0, 20)}...` : title}</Text>
-        <Text style={styles.moduleCount}>{`${lessons} Módulos • ${duration} • ${rating.toFixed(1)}★`}</Text>
       </View>
       <Text style={styles.percentageText}>{`${Math.round(progress)}%`}</Text>
     </TouchableOpacity>

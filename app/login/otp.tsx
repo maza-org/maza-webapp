@@ -98,7 +98,34 @@ export default function Otp() {
         body: JSON.stringify(body),
       });
 
+      // Check for 401 status specifically
+      if (response.status === 401) {
+        // Account doesn't exist, show alert and redirect to registration
+        Alert.alert(
+          'Conta não encontrada',
+          'Não existe uma conta associada a este número de telefone. Deseja criar uma nova conta?',
+          [
+            {
+              text: 'Cancelar',
+              style: 'cancel',
+            },
+            {
+              text: 'Criar conta',
+              onPress: () => {
+                router.push({
+                  pathname: '/login/create',
+                  params: { phone: phone },
+                });
+              },
+            },
+          ]
+        );
+        return;
+      }
+
       const data = await response.json();
+      console.log(JSON.stringify(data, null, 2));
+
       if (data.success || (fullName && data.data)) {
         const userData = await saveUser(data);
 
