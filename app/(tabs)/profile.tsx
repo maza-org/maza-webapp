@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,13 +21,35 @@ export interface Subject {
   name: string;
 }
 
+export interface Certificate {
+  id: number;
+  title: string;
+  issuer: string;
+  issueDate: string;
+  imageUrl?: string;
+}
+
 export default function ProfileScreen() {
   const { data: user, isLoading, error, refetch } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [deletingInterestId, setDeletingInterestId] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Refresh profile data when screen comes into focus
+  const [certificates, setCertificates] = useState<Certificate[]>([
+    {
+      id: 1,
+      title: 'Web Development Fundamentals',
+      issuer: 'Mazas Academy',
+      issueDate: '2024-08-15',
+    },
+    {
+      id: 2,
+      title: 'Mobile App Design',
+      issuer: 'Yoma Learning',
+      issueDate: '2024-09-22',
+    },
+  ]);
+
   useFocusEffect(
     useCallback(() => {
       const refreshProfileData = async () => {
@@ -103,6 +126,12 @@ export default function ProfileScreen() {
       Alert.alert('Erro', 'Falha ao remover interesse');
       setDeletingInterestId(null);
     }
+  };
+
+  const viewCertificateDetails = (certificate: Certificate) => {
+    // Navigate to certificate details screen
+    // You would replace this with actual navigation to the details screen
+    Alert.alert('Certificado', `${certificate.title}\nEmitido por: ${certificate.issuer}`);
   };
 
   if (isLoading || isRefreshing) {
@@ -233,6 +262,50 @@ export default function ProfileScreen() {
               )}
             </View>
           </View>
+
+          {/* Certificates Section */}
+          <View style={styles.infoItem}>
+            <View style={styles.infoHeader}>
+              <Feather name="award" size={20} color="#1fa2df" />
+              <Text style={styles.infoLabel}>Certificados</Text>
+            </View>
+
+            <View style={styles.certificatesContainer}>
+              {certificates && certificates.length > 0 ? (
+                <View style={styles.certificatesList}>
+                  {certificates.map((certificate) => (
+                    <TouchableOpacity
+                      key={certificate.id}
+                      style={styles.certificateCard}
+                      onPress={() => viewCertificateDetails(certificate)}
+                    >
+                      <View style={styles.certificateIconContainer}>
+                        <Feather name="award" size={24} color="#1fa2df" />
+                      </View>
+                      <View style={styles.certificateInfo}>
+                        <Text style={styles.certificateTitle}>{certificate.title}</Text>
+                        <Text style={styles.certificateIssuer}>{certificate.issuer}</Text>
+                        <Text style={styles.certificateDate}>
+                          {new Date(certificate.issueDate).toLocaleDateString('pt-PT')}
+                        </Text>
+                      </View>
+                      <Feather name="chevron-right" size={20} color="#A8A8B3" />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateText}>Nenhum certificado disponível</Text>
+                </View>
+              )}
+
+              <TouchableOpacity style={styles.viewAllButton} onPress={() => router.push('/user/certificates')}>
+                <Text style={styles.viewAllText}>Ver Todos os Certificados</Text>
+                <Feather name="arrow-right" size={16} color="#1fa2df" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
           <Text style={styles.versionLabel}>Versão 1.0.0</Text>
         </View>
       </ScrollView>
@@ -398,6 +471,64 @@ const styles = StyleSheet.create({
     color: '#A8A8B3',
     fontSize: 14,
     marginLeft: 28,
+  },
+  // Certificate styles
+  certificatesContainer: {
+    marginLeft: 28,
+    marginTop: 8,
+  },
+  certificatesList: {
+    gap: 12,
+  },
+  certificateCard: {
+    backgroundColor: '#202024',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(31, 162, 223, 0.1)',
+  },
+  certificateIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(31, 162, 223, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  certificateInfo: {
+    flex: 1,
+  },
+  certificateTitle: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  certificateIssuer: {
+    color: '#1fa2df',
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  certificateDate: {
+    color: '#A8A8B3',
+    fontSize: 12,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    gap: 8,
+    padding: 8,
+  },
+  viewAllText: {
+    color: '#1fa2df',
+    fontSize: 14,
+    fontWeight: '500',
   },
   interestsContainer: {
     marginLeft: 28,

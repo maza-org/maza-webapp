@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Reviews from '@/components/Reviews';
 import { Picture } from '@/types/course';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import Entypo from '@expo/vector-icons/Entypo';
 
 export interface Content {
   id: number;
@@ -108,8 +109,40 @@ export default function CourseDetail() {
   const [updating, setUpdating] = useState(false);
   const [isInProgress, setIsInProgress] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false); // Added state for description toggle
+  const [menuVisible, setMenuVisible] = useState(false); // Added for menu visibility
+  const [certificates, setCertificates] = useState([]);
 
   const { documentId } = useLocalSearchParams();
+
+  // Toggle menu visibility
+  const toggleMenu = () => {
+    setMenuVisible(!menuVisible);
+  };
+
+  const handleMenuOption = (option) => {
+    switch (option) {
+      case 'certificate':
+        // Check if this course has a certificate
+        const certificate = certificates.find((cert) => cert.course.documentId === documentId);
+        if (certificate) {
+          router.push({
+            pathname: '/user/certificate',
+            params: { certificateId: certificate.documentId },
+          });
+        } else {
+          Alert.alert('Certificado não disponível', 'Você ainda não tem um certificado para este curso.');
+        }
+        break;
+      case 'report':
+        Alert.alert('Reportar', 'Reportar um problema com este curso');
+        // Implement report bug functionality here
+        break;
+      default:
+        break;
+    }
+    setMenuVisible(false);
+  };
+
   const checkCourseProgress = async () => {
     if (!user?.token) return;
     try {
@@ -134,6 +167,7 @@ export default function CourseDetail() {
         await loadUserData();
         await fetchCourseData();
         await checkCourseProgress();
+        await fetchCertificates();
       } catch (error) {
         console.error('Error initializing data:', error);
       }
@@ -151,6 +185,25 @@ export default function CourseDetail() {
     } catch (error) {
       console.error('Error loading user data:', error);
       Alert.alert('Erro', 'Falha ao carregar dados do utilizador');
+    }
+  };
+
+  const fetchCertificates = async () => {
+    if (!user?.token) return;
+
+    try {
+      const response = await fetch('https://api.mazas.org/api/certificates', {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCertificates(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching certificates:', error);
     }
   };
 
@@ -321,6 +374,23 @@ export default function CourseDetail() {
                     color={isFavorite ? '#ff0000' : '#FFF'}
                   />
                 </TouchableOpacity>
+                <View>
+                  <TouchableOpacity style={styles.iconButton} onPress={toggleMenu}>
+                    <Entypo name="dots-three-horizontal" size={24} color="#fff" />
+                  </TouchableOpacity>
+
+                  {menuVisible && (
+                    <View style={styles.menuContainer}>
+                      <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('certificate')}>
+                        <Text style={styles.menuItemText}>Certificado</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('report')}>
+                        <Text style={styles.menuItemText}>Reportar Problema</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
               </View>
             </View>
           </View>
@@ -488,6 +558,34 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  menuContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 45,
+    backgroundColor: '#202024',
+    borderRadius: 8,
+    padding: 8,
+    width: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 1000,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#323238',
+  },
+  menuItemText: {
+    color: '#FFF',
+    fontSize: 16,
+    marginLeft: 12,
   },
   courseInfo: {
     padding: 24,
