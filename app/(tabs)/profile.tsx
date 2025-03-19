@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Image,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,12 +20,20 @@ export interface Subject {
   name: string;
 }
 
+export interface Course {
+  id: number;
+  documentId: string;
+  title: string;
+  author: string;
+  rating_avg: number;
+  subscribed: number;
+}
+
 export interface Certificate {
   id: number;
-  title: string;
-  issuer: string;
-  issueDate: string;
-  imageUrl?: string;
+  documentId: string;
+  createdAt: string;
+  course: Course;
 }
 
 export default function ProfileScreen() {
@@ -34,21 +41,8 @@ export default function ProfileScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [deletingInterestId, setDeletingInterestId] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const [certificates, setCertificates] = useState<Certificate[]>([
-    {
-      id: 1,
-      title: 'Web Development Fundamentals',
-      issuer: 'Mazas Academy',
-      issueDate: '2024-08-15',
-    },
-    {
-      id: 2,
-      title: 'Mobile App Design',
-      issuer: 'Yoma Learning',
-      issueDate: '2024-09-22',
-    },
-  ]);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [isLoadingCertificates, setIsLoadingCertificates] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -56,6 +50,7 @@ export default function ProfileScreen() {
         setIsRefreshing(true);
         try {
           await refetch();
+          fetchCertificates();
         } catch (error) {
           console.error('Error refreshing profile data:', error);
         } finally {
@@ -66,6 +61,33 @@ export default function ProfileScreen() {
       refreshProfileData();
     }, [refetch])
   );
+
+  const fetchCertificates = async () => {
+    setIsLoadingCertificates(true);
+    try {
+      if (!user?.token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('https://maza-strapi-backend.onrender.com/api/certificates', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch certificates');
+      }
+
+      const responseData = await response.json();
+      setCertificates(responseData.data);
+    } catch (error) {
+      console.error('Error fetching certificates:', error);
+    } finally {
+      setIsLoadingCertificates(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -130,8 +152,10 @@ export default function ProfileScreen() {
 
   const viewCertificateDetails = (certificate: Certificate) => {
     // Navigate to certificate details screen
-    // You would replace this with actual navigation to the details screen
-    Alert.alert('Certificado', `${certificate.title}\nEmitido por: ${certificate.issuer}`);
+    Alert.alert(
+      'Certificado',
+      `${certificate.course.title}\nEmitido por: ${certificate.course.author}\nData: ${new Date(certificate.createdAt).toLocaleDateString('pt-PT')}`
+    );
   };
 
   if (isLoading || isRefreshing) {
@@ -271,7 +295,9 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.certificatesContainer}>
-              {certificates && certificates.length > 0 ? (
+              {isLoadingCertificates ? (
+                <ActivityIndicator size="small" color="#1fa2df" style={{ marginTop: 16 }} />
+              ) : certificates && certificates.length > 0 ? (
                 <View style={styles.certificatesList}>
                   {certificates.map((certificate) => (
                     <TouchableOpacity
@@ -283,10 +309,10 @@ export default function ProfileScreen() {
                         <Feather name="award" size={24} color="#1fa2df" />
                       </View>
                       <View style={styles.certificateInfo}>
-                        <Text style={styles.certificateTitle}>{certificate.title}</Text>
-                        <Text style={styles.certificateIssuer}>{certificate.issuer}</Text>
+                        <Text style={styles.certificateTitle}>{certificate.course.title}</Text>
+                        <Text style={styles.certificateIssuer}>{certificate.course.author}</Text>
                         <Text style={styles.certificateDate}>
-                          {new Date(certificate.issueDate).toLocaleDateString('pt-PT')}
+                          {new Date(certificate.createdAt).toLocaleDateString('pt-PT')}
                         </Text>
                       </View>
                       <Feather name="chevron-right" size={20} color="#A8A8B3" />
