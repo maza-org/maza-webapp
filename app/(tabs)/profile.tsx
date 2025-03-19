@@ -152,11 +152,12 @@ export default function ProfileScreen() {
   };
 
   const viewCertificateDetails = (certificate: Certificate) => {
-    // Navigate to certificate details screen
-    Alert.alert(
-      'Certificado',
-      `${certificate.course.title}\nEmitido por: ${certificate.course.author}\nData: ${new Date(certificate.createdAt).toLocaleDateString('pt-PT')}`
-    );
+    router.push({
+      pathname: '/user/certificate',
+      params: {
+        certificateId: certificate.documentId,
+      },
+    });
   };
 
   if (isLoading || isRefreshing) {

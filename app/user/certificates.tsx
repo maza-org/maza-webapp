@@ -77,11 +77,12 @@ export default function CertificatesScreen() {
   };
 
   const viewCertificateDetails = (certificate: Certificate) => {
-    // Navigate to certificate details screen
-    Alert.alert(
-      certificate.course.title,
-      `Emitido por: ${certificate.course.author}\nData: ${new Date(certificate.createdAt).toLocaleDateString('pt-PT')}`
-    );
+    router.push({
+      pathname: '/user/certificate',
+      params: {
+        certificateId: certificate.documentId,
+      },
+    });
   };
 
   if (isLoading && !refreshing) {

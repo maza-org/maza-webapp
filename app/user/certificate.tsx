@@ -10,16 +10,22 @@ import {
   ActivityIndicator,
   Share,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
 
 export default function Certificate() {
   const { certificateId } = useLocalSearchParams();
   const [certificate, setCertificate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [certificateImageUri, setCertificateImageUri] = useState(null);
+  const [signatureImageUri, setSignatureImageUri] = useState(null);
+  const [downloadingImage, setDownloadingImage] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -32,7 +38,7 @@ export default function Certificate() {
 
           // Fetch certificate details
           if (certificateId) {
-            await fetchCertificateDetails(parsedUser.token, certificateId);
+            await fetchCertificateDetails(parsedUser.token, certificateId as string);
           }
         }
       } catch (error) {
@@ -49,7 +55,7 @@ export default function Certificate() {
   const fetchCertificateDetails = async (token: string, id: string) => {
     try {
       // Using populate=* to get all related data including images
-      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/certificates/${id}?populate=*`, {
+      const response = await fetch(`https://api.mazas.org/api/certificates/${id}?populate=*`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -59,6 +65,26 @@ export default function Certificate() {
         const data = await response.json();
         console.log('Certificate data:', JSON.stringify(data.data));
         setCertificate(data.data);
+
+        // Download certificate image if available
+        if (data.data.image?.url) {
+          await downloadImageToCacheDirectory(
+            `https://api.mazas.org${data.data.image.url}`,
+            token,
+            'certificate.jpg',
+            setCertificateImageUri
+          );
+        }
+
+        // Download signature image if available
+        if (data.data.signature?.url) {
+          await downloadImageToCacheDirectory(
+            `https://api.mazas.org${data.data.signature.url}`,
+            token,
+            'signature.jpg',
+            setSignatureImageUri
+          );
+        }
       } else {
         console.log('Certificate fetch failed with status:', response.status);
         throw new Error('Failed to fetch certificate details');
@@ -66,6 +92,31 @@ export default function Certificate() {
     } catch (error) {
       console.error('Error fetching certificate details:', error);
       Alert.alert('Erro', 'Falha ao carregar detalhes do certificado');
+    }
+  };
+
+  const downloadImageToCacheDirectory = async (url, token, filename, setUriFunction) => {
+    try {
+      // Create a temporary file path
+      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+
+      // Download the file to local filesystem
+      const downloadResult = await FileSystem.downloadAsync(url, fileUri, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (downloadResult.status === 200) {
+        setUriFunction(downloadResult.uri);
+        return downloadResult.uri;
+      } else {
+        console.error('Failed to download image, status:', downloadResult.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      return null;
     }
   };
 
@@ -80,10 +131,42 @@ export default function Certificate() {
     }
   };
 
-  const handleDownloadCertificate = () => {
-    // In a mobile app, this would typically save the certificate as an image
-    // For now, we'll just show an alert
-    Alert.alert('Download', 'Certificado será salvo na galeria', [{ text: 'OK' }]);
+  const handleDownloadCertificate = async () => {
+    try {
+      // Request permissions first (for Android)
+      if (Platform.OS === 'android') {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permissão negada', 'Não temos permissão para salvar o certificado');
+          return;
+        }
+      }
+
+      if (!certificateImageUri) {
+        Alert.alert('Erro', 'Imagem do certificado não disponível');
+        return;
+      }
+
+      setDownloadingImage(true);
+
+      // Save the image to the photo gallery
+      const asset = await MediaLibrary.createAssetAsync(certificateImageUri);
+
+      // Create an album and add the image to it
+      const album = await MediaLibrary.getAlbumAsync('Mazas Certificates');
+      if (album) {
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+      } else {
+        await MediaLibrary.createAlbumAsync('Mazas Certificates', asset, false);
+      }
+
+      Alert.alert('Sucesso', 'Certificado salvo na galeria');
+    } catch (error) {
+      console.error('Error saving certificate to gallery:', error);
+      Alert.alert('Erro', 'Falha ao salvar certificado na galeria');
+    } finally {
+      setDownloadingImage(false);
+    }
   };
 
   if (loading) {
@@ -153,13 +236,14 @@ export default function Certificate() {
             <View style={styles.divider} />
 
             <View style={styles.gradeSection}>
-              {/* Replace placeholder with actual certificate image if available */}
-              <Image
-                source={{
-                  uri: certificate.image?.url || '/api/placeholder/300/120',
-                }}
-                style={styles.gradeImage}
-              />
+              {/* Use the downloaded certificate image or fallback */}
+              {certificateImageUri ? (
+                <Image source={{ uri: certificateImageUri }} style={styles.gradeImage} />
+              ) : (
+                <View style={[styles.gradeImage, styles.imagePlaceholder]}>
+                  <ActivityIndicator size="small" color="#0CA5E9" />
+                </View>
+              )}
 
               <Text style={styles.studentName}>{user?.fullname}</Text>
 
@@ -187,12 +271,14 @@ export default function Certificate() {
               </View>
 
               <View style={styles.signatureSection}>
-                <Image
-                  source={{
-                    uri: certificate.signature?.url || '/api/placeholder/120/40',
-                  }}
-                  style={styles.signatureImage}
-                />
+                {/* Use the downloaded signature image or fallback */}
+                {signatureImageUri ? (
+                  <Image source={{ uri: signatureImageUri }} style={styles.signatureImage} />
+                ) : (
+                  <View style={[styles.signatureImage, styles.imagePlaceholder]}>
+                    <ActivityIndicator size="small" color="#0CA5E9" />
+                  </View>
+                )}
               </View>
             </View>
 
@@ -202,8 +288,16 @@ export default function Certificate() {
       </ScrollView>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.downloadButton} onPress={handleDownloadCertificate}>
-          <Text style={styles.downloadButtonText}>Download</Text>
+        <TouchableOpacity
+          style={[styles.downloadButton, downloadingImage && styles.disabledButton]}
+          onPress={handleDownloadCertificate}
+          disabled={downloadingImage || !certificateImageUri}
+        >
+          {downloadingImage ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.downloadButtonText}>Download</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.shareButton} onPress={handleShareCertificate}>
@@ -331,6 +425,11 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginBottom: 16,
   },
+  imagePlaceholder: {
+    backgroundColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   studentName: {
     fontSize: 18,
     fontWeight: '600',
@@ -387,6 +486,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
+  },
+  disabledButton: {
+    backgroundColor: '#6B7280',
   },
   downloadButtonText: {
     color: '#FFFFFF',
