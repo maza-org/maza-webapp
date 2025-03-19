@@ -61,6 +61,9 @@ export default function Certificate() {
         },
       });
 
+      console.log(response.status);
+      console.log(JSON.stringify(response, null, 2));
+
       if (response.ok) {
         const data = await response.json();
         console.log('Certificate data:', JSON.stringify(data.data));

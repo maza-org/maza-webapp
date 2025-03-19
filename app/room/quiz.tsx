@@ -36,6 +36,11 @@ type SelectedAnswers = {
 
 // This function will convert the duration object to seconds
 const calculateDurationInSeconds = (duration: Duration): number => {
+  // If type is missing but there's a value, default to minutes
+  if (!duration.type && duration.value) {
+    return duration.value * 60;
+  }
+
   switch (duration.type) {
     case 'hours':
       return duration.value * 60 * 60;
@@ -76,30 +81,68 @@ const ResultsView = ({
 }) => {
   const score = (correctAnswers / totalQuestions) * 100;
   const passed = score >= passGrade;
+  const earnedPoints = 137; // Este valor pode ser calculado com base na pontuação real
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Resultado Final</Text>
-      </View>
-
       <ScrollView style={styles.content} contentContainerStyle={styles.resultsContentContainer}>
-        <View style={[styles.scoreCard, passed ? styles.passedCard : styles.failedCard]}>
-          <Text style={styles.scoreTitle}>{passed ? 'Parabéns!' : 'Tente Novamente'}</Text>
-          <Text style={styles.scoreText}>{score.toFixed(1)}%</Text>
-          <View style={styles.statsRow}>
-            <Text style={styles.statText}>Questões Corretas: {correctAnswers}</Text>
-            <Text style={styles.statText}>Questões Incorretas: {totalQuestions - correctAnswers}</Text>
+        <View style={styles.successIconContainer}>
+          <View style={[styles.checkCircle, !passed && styles.failCircle]}>
+            <Feather name={passed ? 'check' : 'x'} size={48} color="#FFF" />
           </View>
-          <Text style={styles.totalText}>Total de Questões: {totalQuestions}</Text>
+        </View>
+
+        {passed ? (
+          <>
+            <Text style={styles.congratsTitle}>Muito bem MAZAAA!</Text>
+
+            <Text style={styles.resultDescription}>
+              Você absolutamente acertou o{'\n'}
+              teste
+            </Text>
+          </>
+        ) : (
+          <>
+            <Text style={styles.failTitle}>Tente Novamente</Text>
+          </>
+        )}
+
+        <View style={styles.statsContainer}>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <View style={styles.statIconContainer}>
+                <Feather name="check-circle" size={24} color="#04D361" />
+              </View>
+              <Text style={styles.statLabel}>Questões Corretas</Text>
+              <Text style={styles.statValue}>{correctAnswers}</Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <View style={styles.statIconContainer}>
+                <Feather name="x-circle" size={24} color="#FF3B30" />
+              </View>
+              <Text style={styles.statLabel}>Questões Incorretas</Text>
+              <Text style={styles.statValue}>{totalQuestions - correctAnswers}</Text>
+            </View>
+          </View>
+
+          <View style={styles.statItem}>
+            <Text style={styles.totalLabel}>Total de Questões</Text>
+            <Text style={styles.totalValue}>{totalQuestions}</Text>
+          </View>
         </View>
 
         <View style={styles.resultsButtonContainer}>
-          <TouchableOpacity style={styles.retakeButton} onPress={onRetake}>
-            <Text style={styles.retakeButtonText}>Tentar Novamente</Text>
-          </TouchableOpacity>
+          {!passed && (
+            <TouchableOpacity style={styles.retakeButton} onPress={onRetake}>
+              <Text style={styles.retakeButtonText}>Tentar Novamente</Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity style={styles.continueButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={[styles.continueButton, !passed && styles.continueButtonSecondary]}
+            onPress={() => router.back()}
+          >
             <Text style={styles.continueButtonText}>Continuar</Text>
           </TouchableOpacity>
         </View>
@@ -478,6 +521,7 @@ const styles = StyleSheet.create({
     padding: 24,
     flexGrow: 1,
     justifyContent: 'center',
+    paddingVertical: 60,
   },
   questionContainer: {
     padding: 24,
@@ -560,52 +604,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   resultsButtonContainer: {
-    gap: 16,
     marginTop: 24,
+    gap: 16,
   },
-  scoreCard: {
-    padding: 32,
-    borderRadius: 12,
+  continueButton: {
+    backgroundColor: '#1fa2df',
+    padding: 16,
+    borderRadius: 8,
     alignItems: 'center',
   },
-  passedCard: {
-    backgroundColor: 'rgba(4, 211, 97, 0.1)',
-    borderWidth: 2,
-    borderColor: '#04D361',
+  continueButtonSecondary: {
+    backgroundColor: '#323238',
   },
-  failedCard: {
-    backgroundColor: 'rgba(255, 59, 48, 0.1)',
-    borderWidth: 2,
-    borderColor: '#FF3B30',
-  },
-  scoreTitle: {
+  continueButtonText: {
     color: '#FFF',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  scoreText: {
-    color: '#FFF',
-    fontSize: 48,
-    fontWeight: 'bold',
-    marginBottom: 24,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 8,
-  },
-  statText: {
-    color: '#A8A8B3',
     fontSize: 16,
-  },
-  totalText: {
-    color: '#A8A8B3',
-    fontSize: 16,
+    fontWeight: '600',
   },
   retakeButton: {
-    backgroundColor: '#1fa2df',
+    backgroundColor: '#FF3B30',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -615,36 +632,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  continueButton: {
-    backgroundColor: '#323238',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  continueButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  bottomCommentContainer: {
-    marginTop: 24,
-    padding: 16,
-    backgroundColor: 'transparent',
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#1fa2df',
-  },
-  bottomCommentText: {
-    color: '#A8A8B3',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  bottomCommentTitle: {
-    color: '#1fa2df',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // New styles for AllThatApply select
   AllThatApplySelectHint: {
     color: '#A8A8B3',
     fontSize: 14,
@@ -685,7 +672,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-
   timerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -708,5 +694,115 @@ const styles = StyleSheet.create({
   },
   timerTextWarning: {
     color: '#FF3B30',
+  },
+  // Novos estilos para tela de resultados
+  successIconContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  checkCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#1fa2df',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  failCircle: {
+    backgroundColor: '#FF3B30',
+  },
+  congratsTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFF',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  failTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FF3B30',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  resultDescription: {
+    fontSize: 22,
+    color: '#FFF',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 32,
+  },
+  pointsContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  pointsLabel: {
+    fontSize: 18,
+    color: '#A8A8B3',
+    marginBottom: 16,
+  },
+  pointsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  pointsValue: {
+    fontSize: 80,
+    fontWeight: 'bold',
+    color: '#1fa2df',
+    marginRight: 8,
+  },
+  failPointsValue: {
+    color: '#FF3B30',
+  },
+  trophyContainer: {
+    marginTop: 8,
+  },
+  pointsUsage: {
+    fontSize: 18,
+    color: '#A8A8B3',
+  },
+  statsContainer: {
+    backgroundColor: '#202024',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 24,
+    width: '100%',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statIconContainer: {
+    marginBottom: 8,
+  },
+  statLabel: {
+    color: '#A8A8B3',
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  statValue: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  totalLabel: {
+    color: '#A8A8B3',
+    fontSize: 16,
+    marginBottom: 4,
+  },
+  totalValue: {
+    color: '#FFF',
+    fontSize: 22,
+    fontWeight: 'bold',
   },
 });
