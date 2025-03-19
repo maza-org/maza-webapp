@@ -1,3 +1,5 @@
+import { Course } from '@/app/(tabs)/profile';
+
 export interface User {
   id: string;
   documentId: string;
@@ -28,6 +30,13 @@ export interface Subject {
   id: number;
   documentId: string;
   name: string;
+}
+
+export interface Certificate {
+  id: number;
+  documentId: string;
+  createdAt: string;
+  course: Course;
 }
 
 export function mapLoginResponseToUser(response: LoginResponse): User {
