@@ -121,7 +121,7 @@ const ResultsView = ({
               <View style={styles.statIconContainer}>
                 <Feather name="x-circle" size={24} color="#FF3B30" />
               </View>
-              <Text style={styles.statLabel}>Questões Incorretas</Text>
+              <Text style={styles.statLabel}>Questões Incorrectas</Text>
               <Text style={styles.statValue}>{totalQuestions - correctAnswers}</Text>
             </View>
           </View>
