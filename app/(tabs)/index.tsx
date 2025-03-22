@@ -1,10 +1,10 @@
+import { Course } from '@/types/course';
+import useUser from '@/hooks/useUser';
+import Shimmer from '@/components/Shimmer';
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Course } from '@/types/course';
-import useUser from '@/hooks/useUser';
-import Shimmer from '@/components/Shimmer';
 
 export default function Home() {
   const [subjects, setSubjects] = useState([]);
@@ -16,12 +16,15 @@ export default function Home() {
   const [loadingUserCourses, setLoadingUserCourses] = useState(true);
   const [newCourses, setNewCourses] = useState([]);
   const [loadingNewCourses, setLoadingNewCourses] = useState(true);
+  const [suggestedCourses, setSuggestedCourses] = useState([]);
+  const [loadingSuggestedCourses, setLoadingSuggestedCourses] = useState(true);
   const searchInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     fetchSubjects();
     fetchPopularCourses();
     fetchNewCourses();
+    fetchSuggestedCourses();
     if (user?.token) {
       fetchUserCourses();
     }
@@ -91,6 +94,32 @@ export default function Home() {
     }
   }
 
+  async function fetchSuggestedCourses() {
+    try {
+      // Fetch courses for suggestions - you could customize this endpoint based on user preferences
+      // For this example, we're using the same endpoint as new courses but could be customized
+      const response = await fetch(
+        'https://maza-strapi-backend.onrender.com/api/courses?sort=rating_avg%3Adesc&pageSize=10&page=1'
+      );
+      const data = await response.json();
+
+      // Filter out courses based on some criteria (e.g., high rating + specific subjects)
+      const filtered = data.data.filter(
+        (course) =>
+          course.rating_avg >= 4 &&
+          // Optional: filter by specific subjects
+          // (course.subjects?.some(subject => ["Saúde", "Tecnologia"].includes(subject.name)) || false)
+          true
+      );
+
+      setSuggestedCourses(filtered);
+      setLoadingSuggestedCourses(false);
+    } catch (error) {
+      console.error('Error fetching suggested courses:', error);
+      setLoadingSuggestedCourses(false);
+    }
+  }
+
   function handleSearchPress() {
     if (searchInputRef.current) {
       searchInputRef.current.blur();
@@ -124,6 +153,17 @@ export default function Home() {
       params: {
         type: 'new',
         name: 'Cursos Recentes',
+        id: 0,
+      },
+    });
+  }
+
+  function handleOnPressSuggestedCourses() {
+    router.push({
+      pathname: '/categories/[id]',
+      params: {
+        type: 'suggested',
+        name: 'Cursos Sugeridos',
         id: 0,
       },
     });
@@ -386,6 +426,80 @@ export default function Home() {
             </View>
           </View>
         )}
+
+        {/* Suggested Courses Section */}
+        <View style={styles.suggestedCoursesSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Cursos sugeridos</Text>
+            <TouchableOpacity onPress={handleOnPressSuggestedCourses}>
+              <Text style={styles.verTodos}>VER TODOS</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.suggestedCoursesList}>
+            {loadingSuggestedCourses
+              ? [1, 2, 3].map((key) => <PopularCoursesShimmer key={key} />)
+              : suggestedCourses.map((course: Course) => (
+                  <TouchableOpacity
+                    key={course.id}
+                    style={styles.popularCourseCard}
+                    onPress={() => handleOnPressPopularCourse(course)}
+                  >
+                    {course.picture ? (
+                      <Image source={{ uri: course?.picture?.formats?.small?.url }} style={styles.popularCourseImage} />
+                    ) : (
+                      <View
+                        style={[
+                          styles.popularCourseImage,
+                          { backgroundColor: '#29292E', justifyContent: 'center', alignItems: 'center' },
+                        ]}
+                      >
+                        <Feather name="image" size={24} color="#666" />
+                      </View>
+                    )}
+
+                    <View style={styles.courseRecommendedBadge}>
+                      <Feather name="thumbs-up" size={12} color="#FFF" style={{ marginRight: 4 }} />
+                      <Text style={styles.recommendedBadgeText}>RECOMENDADO</Text>
+                    </View>
+
+                    <View style={styles.courseRatingBadge}>
+                      <Text style={styles.starIcon}>★</Text>
+                      <Text style={styles.ratingText}>{course.rating_avg}</Text>
+                    </View>
+
+                    <View style={styles.popularCourseInfo}>
+                      {course.subjects && course.subjects[0] && (
+                        <Text style={styles.courseCategory}>{course.subjects[0].name}</Text>
+                      )}
+
+                      <Text style={styles.popularCourseTitle} numberOfLines={2}>
+                        {course.title}
+                      </Text>
+
+                      <View style={styles.instructorInfo}>
+                        <Image
+                          source={{ uri: course?.picture?.formats?.thumbnail?.url }}
+                          style={styles.instructorAvatar}
+                        />
+                        <Text style={styles.instructorName}>
+                          {course.author ? course.author.slice(0, 5) + '...' : 'Instrutor'}
+                        </Text>
+                        <View style={styles.courseStats}>
+                          <Feather name="users" size={12} color="#FFF" />
+                          <Text style={styles.statsText}>
+                            {course.subscribed >= 1000
+                              ? `${(course.subscribed / 1000).toFixed(1)}k`
+                              : course.subscribed}{' '}
+                            inscritos
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+          </ScrollView>
+        </View>
 
         {/* New Courses Section */}
         <View style={styles.newCoursesSection}>
@@ -930,6 +1044,30 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   newBadgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  // New styles for suggested courses section
+  suggestedCoursesSection: {
+    marginVertical: 24,
+  },
+  suggestedCoursesList: {
+    marginHorizontal: -25,
+    paddingHorizontal: 25,
+  },
+  courseRecommendedBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: 'rgba(76, 175, 80, 0.8)', // Green background for recommended
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 16,
+  },
+  recommendedBadgeText: {
     color: '#FFF',
     fontSize: 10,
     fontWeight: '700',
