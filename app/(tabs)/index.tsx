@@ -248,9 +248,14 @@ export default function Home() {
         {/*</TouchableOpacity>*/}
 
         {/* Header with Bell Icon */}
-        <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.header}
+          onPress={() => {
+            router.push('/start/photo');
+          }}
+        >
           <Text style={styles.headerText}>O que pretende aprender hoje?</Text>
-        </View>
+        </TouchableOpacity>
 
         {/* Search Bar */}
         <TouchableOpacity style={styles.searchContainer} onPress={handleSearchPress} activeOpacity={0.7}>

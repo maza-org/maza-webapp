@@ -1,34 +1,89 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  Image,
+  Platform,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import useUser from '@/hooks/useUser';
+import { router } from 'expo-router';
 
 export default function Photo() {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const { data: user } = useUser();
+  const { data: user, refetch } = useUser();
 
   const handleSelectPhoto = async (): Promise<void> => {
-    // Request permissions
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    Alert.alert('Escolher Foto', 'Escolha uma opção', [
+      {
+        text: 'Tirar Foto',
+        onPress: async () => {
+          try {
+            // Request camera permissions
+            const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
 
-    if (status !== 'granted') {
-      alert('Sorry, we need camera roll permissions to make this work!');
-      return;
-    }
+            if (cameraPermission.status !== 'granted') {
+              Alert.alert('Permissão necessária', 'É necessário permitir o acesso à câmera para tirar uma foto.');
+              return;
+            }
 
-    // Launch image picker
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+            // Launch camera
+            const result = await ImagePicker.launchCameraAsync({
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.5,
+            });
 
-    if (!result.canceled) {
-      setPhotoUri(result.assets[0].uri);
-    }
+            if (!result.canceled) {
+              setPhotoUri(result.assets[0].uri);
+            }
+          } catch (error) {
+            console.error('Error taking photo:', error);
+            Alert.alert('Erro', 'Não foi possível tirar a foto.');
+          }
+        },
+      },
+      {
+        text: 'Escolher da Galeria',
+        onPress: async () => {
+          try {
+            // Request media library permissions
+            const galleryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+            if (galleryPermission.status !== 'granted') {
+              Alert.alert('Permissão necessária', 'É necessário permitir o acesso à galeria para escolher uma foto.');
+              return;
+            }
+
+            // Launch image library
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.5,
+            });
+
+            if (!result.canceled) {
+              setPhotoUri(result.assets[0].uri);
+            }
+          } catch (error) {
+            console.error('Error picking image:', error);
+            Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+          }
+        },
+      },
+      {
+        text: 'Cancelar',
+        style: 'cancel',
+      },
+    ]);
   };
 
   const handleConfirm = async (): Promise<void> => {
@@ -37,59 +92,80 @@ export default function Photo() {
     try {
       setIsUploading(true);
 
+      if (!user?.token) {
+        throw new Error('No authentication token found');
+      }
+
       // Create form data
       const formData = new FormData();
 
-      // Append the image file first (Strapi expects 'files' to be the first field)
-      const filename = photoUri.split('/').pop() || 'profile-image.jpg';
-      formData.append('files', {
-        uri: Platform.OS === 'android' ? photoUri : photoUri.replace('file://', ''),
-        name: filename,
-        type: 'image/jpeg',
-      } as any);
+      // Get file name from URI
+      const fileName = photoUri.split('/').pop() || 'profile_image.jpg';
 
-      // Append other fields after the file
+      // Convert URI to file object
+      const fileType = fileName.split('.').pop() || 'jpg';
+
+      // @ts-ignore - FormData accepts File or Blob but React Native's typing doesn't reflect this
+      formData.append('files', {
+        uri: photoUri,
+        name: fileName,
+        type: `image/${fileType}`,
+      });
+
       formData.append('ref', 'plugin::users-permissions.user');
       formData.append('refId', user.id.toString());
       formData.append('field', 'profile_image');
 
-      // Make the upload request
-      const response = await fetch('https://api.mazas.org/api/upload', {
+      // Upload image
+      const response = await fetch('https://maza-strapi-backend.onrender.com/api/upload', {
         method: 'POST',
         headers: {
-          Accept: 'application/json',
+          Authorization: `Bearer ${user.token}`,
           'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${user?.token}`,
         },
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error(`Upload failed with status ${response.status}`);
+        const errorText = await response.text();
+        console.error('Error response body:', errorText);
+        throw new Error(`Upload failed with status ${response.status}: ${errorText}`);
       }
 
-      const data = await response.json();
-      console.log('Upload successful:', data);
-      // Handle success (e.g., navigation, showing success message)
+      const responseData = await response.json();
+
+      if (responseData && responseData.length > 0) {
+        // Refresh user data to get updated profile
+        await refetch();
+
+        Alert.alert('Sucesso', 'Foto de perfil atualizada com sucesso', [
+          {
+            text: 'OK',
+            onPress: () => router.back(), // Navigate back after successful upload
+          },
+        ]);
+      }
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Failed to upload image. Please try again.');
+      Alert.alert('Erro', 'Falha ao enviar a imagem');
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleSkip = (): void => {
-    // Implementation for skip
-    console.log('Skip photo upload');
+    router.back(); // Navigate back to previous screen
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Feather name="chevron-left" size={24} color="#FFF" />
+          </TouchableOpacity>
           <Text style={styles.title}>Carregar{'\n'}Foto de Perfil</Text>
-          <Text style={styles.subtitle}>Escolha uma a foto de perfil</Text>
+          <Text style={styles.subtitle}>Escolha uma foto de perfil</Text>
         </View>
 
         <TouchableOpacity
@@ -114,7 +190,14 @@ export default function Photo() {
             onPress={handleConfirm}
             disabled={!photoUri || isUploading}
           >
-            <Text style={styles.confirmButtonText}>{isUploading ? 'Uploading...' : 'Confirmar'}</Text>
+            {isUploading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#FFFFFF" />
+                <Text style={styles.confirmButtonText}>A carregar...</Text>
+              </View>
+            ) : (
+              <Text style={styles.confirmButtonText}>Confirmar</Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.skipButton} onPress={handleSkip} disabled={isUploading}>
@@ -138,6 +221,15 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 32,
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   title: {
     fontSize: 32,
     fontWeight: '700',
@@ -160,6 +252,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 32,
+    overflow: 'hidden',
   },
   uploadText: {
     color: '#A8A8B3',
@@ -197,5 +290,11 @@ const styles = StyleSheet.create({
   skipButtonText: {
     color: '#A8A8B3',
     fontSize: 16,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
 });
