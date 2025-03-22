@@ -84,20 +84,14 @@ interface Course {
   modules: Module[];
   isFavorite?: boolean;
   cover: Picture;
-  description?: string; // Added description property
+  description?: string;
+  level?: 'Basic' | 'Intermediary' | 'Advanced'; // Added level property
 }
 
 interface TabProps {
   active: boolean;
   onPress: () => void;
   children: string;
-}
-function Tab({ active, onPress, children }: TabProps) {
-  return (
-    <TouchableOpacity onPress={onPress} style={[styles.tab, active && styles.activeTab]}>
-      <Text style={[styles.tabText, active && styles.activeTabText]}>{children}</Text>
-    </TouchableOpacity>
-  );
 }
 
 export default function CourseDetail() {
@@ -108,11 +102,61 @@ export default function CourseDetail() {
   const [user, setUser] = useState<User | null>(null);
   const [updating, setUpdating] = useState(false);
   const [isInProgress, setIsInProgress] = useState(false);
-  const [showFullDescription, setShowFullDescription] = useState(false); // Added state for description toggle
-  const [menuVisible, setMenuVisible] = useState(false); // Added for menu visibility
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
   const [certificates, setCertificates] = useState([]);
 
   const { documentId } = useLocalSearchParams();
+
+  // Inline Level Badge Component
+  type Level = 'Basic' | 'Intermediary' | 'Advanced';
+
+  type LevelMapType = {
+    [key in Level]: string;
+  };
+
+  type LevelColorType = {
+    [key in Level]: string;
+  };
+
+  interface LevelBadgeProps {
+    level?: Level;
+  }
+
+  const LevelBadge = ({ level = 'Basic' }: LevelBadgeProps) => {
+    // Map English levels to Portuguese
+    const levelMap: LevelMapType = {
+      Basic: 'Básico',
+      Intermediary: 'Intermédio',
+      Advanced: 'Avançado',
+    };
+
+    // Define colors for each level
+    const levelColors: LevelColorType = {
+      Basic: '#4db5ff',
+      Intermediary: '#ffa500',
+      Advanced: '#ff4d4d',
+    };
+
+    const label = levelMap[level] || 'Básico';
+    const dotColor = levelColors[level] || '#ffa500';
+
+    return (
+      <View style={styles.levelBadge}>
+        <Text style={styles.levelText}>{label}</Text>
+        <View style={[styles.levelDot, { backgroundColor: dotColor }]} />
+      </View>
+    );
+  };
+
+  // Inline Tab Component
+  function Tab({ active, onPress, children }: TabProps) {
+    return (
+      <TouchableOpacity onPress={onPress} style={[styles.tab, active && styles.activeTab]}>
+        <Text style={[styles.tabText, active && styles.activeTabText]}>{children}</Text>
+      </TouchableOpacity>
+    );
+  }
 
   // Toggle menu visibility
   const toggleMenu = () => {
@@ -393,6 +437,9 @@ export default function CourseDetail() {
                 </View>
               </View>
             </View>
+
+            {/* Level Badge Component */}
+            <LevelBadge level={courseData?.level || 'Intermediary'} />
           </View>
         </ImageBackground>
 
@@ -780,5 +827,32 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     backgroundColor: '#1fa2df',
+  },
+  levelBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingVertical: 5,
+    paddingHorizontal: 24,
+    borderRadius: 50,
+    position: 'absolute',
+    bottom: 5,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  levelText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#121214',
+    marginRight: 8,
+  },
+  levelDot: {
+    width: 15,
+    height: 15,
+    borderRadius: 10,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useFocusEffect } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import useUser from '@/hooks/useUser';
 import CertificateItem from '@/components/CertificateItem';
 
@@ -44,6 +46,8 @@ export default function ProfileScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [isLoadingCertificates, setIsLoadingCertificates] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -52,6 +56,11 @@ export default function ProfileScreen() {
         try {
           await refetch();
           fetchCertificates();
+
+          // Check if user has a profile image
+          if (user?.profileImage?.url) {
+            setProfileImage(user.profileImage.url);
+          }
         } catch (error) {
           console.error('Error refreshing profile data:', error);
         } finally {
@@ -60,7 +69,7 @@ export default function ProfileScreen() {
       };
 
       refreshProfileData();
-    }, [refetch])
+    }, [refetch, user?.profileImage?.url])
   );
 
   const fetchCertificates = async () => {
@@ -76,15 +85,11 @@ export default function ProfileScreen() {
           Authorization: `Bearer ${user.token}`,
         },
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch certificates');
+      if (response.ok) {
+        const responseData = await response.json();
+        setCertificates(responseData.data);
       }
-
-      const responseData = await response.json();
-      setCertificates(responseData.data);
     } catch (error) {
-      console.error('Error fetching certificates:', error);
     } finally {
       setIsLoadingCertificates(false);
     }
@@ -160,6 +165,133 @@ export default function ProfileScreen() {
     });
   };
 
+  const handleChangePhoto = async () => {
+    Alert.alert('Alterar Foto', 'Escolha uma opção', [
+      {
+        text: 'Tirar Foto',
+        onPress: async () => {
+          try {
+            // Request camera permissions
+            const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+
+            if (cameraPermission.status !== 'granted') {
+              Alert.alert('Permissão necessária', 'É necessário permitir o acesso à câmera para tirar uma foto.');
+              return;
+            }
+
+            // Launch camera
+            const result = await ImagePicker.launchCameraAsync({
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.5,
+            });
+
+            if (!result.canceled) {
+              uploadImage(result.assets[0].uri);
+            }
+          } catch (error) {
+            console.error('Error taking photo:', error);
+            Alert.alert('Erro', 'Não foi possível tirar a foto.');
+          }
+        },
+      },
+      {
+        text: 'Escolher da Galeria',
+        onPress: async () => {
+          try {
+            // Request media library permissions
+            const galleryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+            if (galleryPermission.status !== 'granted') {
+              Alert.alert('Permissão necessária', 'É necessário permitir o acesso à galeria para escolher uma foto.');
+              return;
+            }
+
+            // Launch image library
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.5,
+            });
+
+            if (!result.canceled) {
+              uploadImage(result.assets[0].uri);
+            }
+          } catch (error) {
+            console.error('Error picking image:', error);
+            Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+          }
+        },
+      },
+      {
+        text: 'Cancelar',
+        style: 'cancel',
+      },
+    ]);
+  };
+
+  const uploadImage = async (imageUri: string) => {
+    try {
+      setIsUploadingImage(true);
+
+      if (!user?.token) {
+        throw new Error('No authentication token found');
+      }
+
+      // Create form data
+      const formData = new FormData();
+
+      // Get file name from URI
+      const fileName = imageUri.split('/').pop() || 'profile_image.jpg';
+
+      // Convert URI to file object
+      const fileType = fileName.split('.').pop() || 'jpg';
+
+      // @ts-ignore - FormData accepts File or Blob but React Native's typing doesn't reflect this
+      formData.append('files', {
+        uri: imageUri,
+        name: fileName,
+        type: `image/${fileType}`,
+      });
+
+      formData.append('ref', 'plugin::users-permissions.user');
+      formData.append('refId', user.id.toString());
+      formData.append('field', 'profile_image');
+
+      // Upload image
+      const response = await fetch('https://maza-strapi-backend.onrender.com/api/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const responseData = await response.json();
+
+      if (responseData && responseData.length > 0) {
+        // Update profile image state with new URL
+        setProfileImage(responseData[0].url);
+
+        // Refresh user data to get updated profile
+        await refetch();
+
+        Alert.alert('Sucesso', 'Foto de perfil atualizada com sucesso');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Erro', 'Falha ao enviar a imagem');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   if (isLoading || isRefreshing) {
     return (
       <View style={styles.loadingContainer}>
@@ -208,9 +340,25 @@ export default function ProfileScreen() {
 
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
-            <View style={styles.profileImagePlaceholder}>
-              <Text style={styles.profileImagePlaceholderText}>{user.fullname.charAt(0)}</Text>
-            </View>
+            {isUploadingImage ? (
+              <View style={styles.profileImagePlaceholder}>
+                <ActivityIndicator size="large" color="#FFFFFF" />
+              </View>
+            ) : profileImage ? (
+              <View style={styles.profileImageWrapper}>
+                <Image source={{ uri: profileImage }} style={styles.profileImage} />
+                <TouchableOpacity style={styles.changePhotoButton} onPress={handleChangePhoto}>
+                  <Feather name="camera" size={16} color="#1fa2df" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.profileImagePlaceholder}>
+                <Text style={styles.profileImagePlaceholderText}>{user.fullname.charAt(0)}</Text>
+                <TouchableOpacity style={styles.changePhotoButton} onPress={handleChangePhoto}>
+                  <Feather name="camera" size={16} color="#1fa2df" />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
           <Text style={styles.fullname}>{user.fullname}</Text>
           <Text style={styles.documentId}>ID: {user.documentId}</Text>
@@ -426,12 +574,13 @@ const styles = StyleSheet.create({
   },
   profileImageContainer: {
     marginBottom: 16,
+    position: 'relative',
   },
   profileImagePlaceholder: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#1fa2df',
+    backgroundColor: '#3A3A3D',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 4,
@@ -441,6 +590,19 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 36,
     fontWeight: 'bold',
+  },
+  changePhotoButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#121214',
   },
   fullname: {
     fontSize: 24,
@@ -600,5 +762,21 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  profileImageWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 4,
+    borderColor: '#121214',
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
   },
 });

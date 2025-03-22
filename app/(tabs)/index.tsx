@@ -14,11 +14,14 @@ export default function Home() {
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [userCourses, setUserCourses] = useState([]);
   const [loadingUserCourses, setLoadingUserCourses] = useState(true);
+  const [newCourses, setNewCourses] = useState([]);
+  const [loadingNewCourses, setLoadingNewCourses] = useState(true);
   const searchInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     fetchSubjects();
     fetchPopularCourses();
+    fetchNewCourses();
     if (user?.token) {
       fetchUserCourses();
     }
@@ -74,6 +77,20 @@ export default function Home() {
     }
   }
 
+  async function fetchNewCourses() {
+    try {
+      const response = await fetch(
+        'https://maza-strapi-backend.onrender.com/api/courses?sort=publishedAt%3Adesc&pageSize=10&page=1'
+      );
+      const data = await response.json();
+      setNewCourses(data.data);
+      setLoadingNewCourses(false);
+    } catch (error) {
+      console.error('Error fetching new courses:', error);
+      setLoadingNewCourses(false);
+    }
+  }
+
   function handleSearchPress() {
     if (searchInputRef.current) {
       searchInputRef.current.blur();
@@ -96,6 +113,17 @@ export default function Home() {
       params: {
         type: 'popular',
         name: 'Cursos Populares',
+        id: 0,
+      },
+    });
+  }
+
+  function handleOnPressNewCourses() {
+    router.push({
+      pathname: '/categories/[id]',
+      params: {
+        type: 'new',
+        name: 'Cursos Recentes',
         id: 0,
       },
     });
@@ -359,6 +387,80 @@ export default function Home() {
           </View>
         )}
 
+        {/* New Courses Section */}
+        <View style={styles.newCoursesSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Cursos recentes</Text>
+            <TouchableOpacity onPress={handleOnPressNewCourses}>
+              <Text style={styles.verTodos}>VER TODOS</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.newCoursesList}>
+            {loadingNewCourses
+              ? [1, 2, 3].map((key) => <PopularCoursesShimmer key={key} />)
+              : newCourses.map((course: Course) => (
+                  <TouchableOpacity
+                    key={course.id}
+                    style={styles.popularCourseCard}
+                    onPress={() => handleOnPressPopularCourse(course)}
+                  >
+                    {course.picture ? (
+                      <Image source={{ uri: course?.picture?.formats?.small?.url }} style={styles.popularCourseImage} />
+                    ) : (
+                      <View
+                        style={[
+                          styles.popularCourseImage,
+                          { backgroundColor: '#29292E', justifyContent: 'center', alignItems: 'center' },
+                        ]}
+                      >
+                        <Feather name="image" size={24} color="#666" />
+                      </View>
+                    )}
+
+                    <View style={styles.courseBadge}>
+                      <Feather name="clock" size={12} color="#FFF" style={{ marginRight: 4 }} />
+                      <Text style={styles.newBadgeText}>NOVO</Text>
+                    </View>
+
+                    <View style={styles.courseRatingBadge}>
+                      <Text style={styles.starIcon}>★</Text>
+                      <Text style={styles.ratingText}>{course.rating_avg}</Text>
+                    </View>
+
+                    <View style={styles.popularCourseInfo}>
+                      {course.subjects && course.subjects[0] && (
+                        <Text style={styles.courseCategory}>{course.subjects[0].name}</Text>
+                      )}
+
+                      <Text style={styles.popularCourseTitle} numberOfLines={2}>
+                        {course.title}
+                      </Text>
+
+                      <View style={styles.instructorInfo}>
+                        <Image
+                          source={{ uri: course?.picture?.formats?.thumbnail?.url }}
+                          style={styles.instructorAvatar}
+                        />
+                        <Text style={styles.instructorName}>
+                          {course.author ? course.author.slice(0, 5) + '...' : 'Instrutor'}
+                        </Text>
+                        <View style={styles.courseStats}>
+                          <Feather name="users" size={12} color="#FFF" />
+                          <Text style={styles.statsText}>
+                            {course.subscribed >= 1000
+                              ? `${(course.subscribed / 1000).toFixed(1)}k`
+                              : course.subscribed}{' '}
+                            inscritos
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+          </ScrollView>
+        </View>
+
         {/* Popular Courses */}
         <View style={styles.popularCoursesSection}>
           <View style={styles.sectionHeader}>
@@ -369,66 +471,62 @@ export default function Home() {
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.popularCoursesList}>
-            {loadingCourses ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.popularCoursesList}>
-                {[1, 2, 3].map((key) => (
-                  <PopularCoursesShimmer key={key} />
-                ))}
-              </ScrollView>
-            ) : (
-              popularCourses.map((course: Course) => (
-                <TouchableOpacity
-                  key={course.id}
-                  style={styles.popularCourseCard}
-                  onPress={() => handleOnPressPopularCourse(course)}
-                >
-                  {course.picture ? (
-                    <Image source={{ uri: course?.picture?.formats?.small?.url }} style={styles.popularCourseImage} />
-                  ) : (
-                    <View
-                      style={[
-                        styles.popularCourseImage,
-                        { backgroundColor: '#29292E', justifyContent: 'center', alignItems: 'center' },
-                      ]}
-                    >
-                      <Feather name="image" size={24} color="#666" />
-                    </View>
-                  )}
-
-                  <View style={styles.courseRatingBadge}>
-                    <Text style={styles.starIcon}>★</Text>
-                    <Text style={styles.ratingText}>{course.rating_avg}</Text>
-                  </View>
-
-                  <View style={styles.popularCourseInfo}>
-                    {course.subjects && course.subjects[0] && (
-                      <Text style={styles.courseCategory}>{course.subjects[0].name}</Text>
+            {loadingCourses
+              ? [1, 2, 3].map((key) => <PopularCoursesShimmer key={key} />)
+              : popularCourses.map((course: Course) => (
+                  <TouchableOpacity
+                    key={course.id}
+                    style={styles.popularCourseCard}
+                    onPress={() => handleOnPressPopularCourse(course)}
+                  >
+                    {course.picture ? (
+                      <Image source={{ uri: course?.picture?.formats?.small?.url }} style={styles.popularCourseImage} />
+                    ) : (
+                      <View
+                        style={[
+                          styles.popularCourseImage,
+                          { backgroundColor: '#29292E', justifyContent: 'center', alignItems: 'center' },
+                        ]}
+                      >
+                        <Feather name="image" size={24} color="#666" />
+                      </View>
                     )}
 
-                    <Text style={styles.popularCourseTitle} numberOfLines={2}>
-                      {course.title}
-                    </Text>
+                    <View style={styles.courseRatingBadge}>
+                      <Text style={styles.starIcon}>★</Text>
+                      <Text style={styles.ratingText}>{course.rating_avg}</Text>
+                    </View>
 
-                    <View style={styles.instructorInfo}>
-                      <Image
-                        source={{ uri: course?.picture?.formats?.thumbnail?.url }}
-                        style={styles.instructorAvatar}
-                      />
-                      <Text style={styles.instructorName}>
-                        {course.author ? course.author.slice(0, 5) + '...' : 'Instrutor'}
+                    <View style={styles.popularCourseInfo}>
+                      {course.subjects && course.subjects[0] && (
+                        <Text style={styles.courseCategory}>{course.subjects[0].name}</Text>
+                      )}
+
+                      <Text style={styles.popularCourseTitle} numberOfLines={2}>
+                        {course.title}
                       </Text>
-                      <View style={styles.courseStats}>
-                        <Feather name="users" size={12} color="#FFF" />
-                        <Text style={styles.statsText}>
-                          {course.subscribed >= 1000 ? `${(course.subscribed / 1000).toFixed(1)}k` : course.subscribed}{' '}
-                          inscritos
+
+                      <View style={styles.instructorInfo}>
+                        <Image
+                          source={{ uri: course?.picture?.formats?.thumbnail?.url }}
+                          style={styles.instructorAvatar}
+                        />
+                        <Text style={styles.instructorName}>
+                          {course.author ? course.author.slice(0, 5) + '...' : 'Instrutor'}
                         </Text>
+                        <View style={styles.courseStats}>
+                          <Feather name="users" size={12} color="#FFF" />
+                          <Text style={styles.statsText}>
+                            {course.subscribed >= 1000
+                              ? `${(course.subscribed / 1000).toFixed(1)}k`
+                              : course.subscribed}{' '}
+                            inscritos
+                          </Text>
+                        </View>
                       </View>
                     </View>
-                  </View>
-                </TouchableOpacity>
-              ))
-            )}
+                  </TouchableOpacity>
+                ))}
           </ScrollView>
         </View>
       </ScrollView>
@@ -812,5 +910,28 @@ const styles = StyleSheet.create({
   popularCourseImageShimmer: {
     width: '100%',
     height: 140,
+  },
+  newCoursesSection: {
+    marginVertical: 24,
+  },
+  newCoursesList: {
+    marginHorizontal: -25,
+    paddingHorizontal: 25,
+  },
+  courseBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: 'rgba(31, 162, 223, 0.8)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 16,
+  },
+  newBadgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '700',
   },
 });
