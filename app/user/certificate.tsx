@@ -5,8 +5,6 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
-  Image,
-  ScrollView,
   ActivityIndicator,
   Share,
   Alert,
@@ -17,15 +15,15 @@ import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
+import * as DocumentPicker from 'expo-document-picker';
+import { WebView } from 'react-native-webview';
 
 export default function Certificate() {
   const { certificateId } = useLocalSearchParams();
-  const [certificate, setCertificate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const [certificateImageUri, setCertificateImageUri] = useState(null);
-  const [signatureImageUri, setSignatureImageUri] = useState(null);
-  const [downloadingImage, setDownloadingImage] = useState(false);
+  const [pdfUri, setPdfUri] = useState(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -36,9 +34,9 @@ export default function Certificate() {
           const parsedUser = JSON.parse(userData);
           setUser(parsedUser);
 
-          // Fetch certificate details
+          // Fetch certificate PDF
           if (certificateId) {
-            await fetchCertificateDetails(parsedUser.token, certificateId as string);
+            await fetchCertificatePdf(parsedUser.token, certificateId as string);
           }
         }
       } catch (error) {
@@ -52,90 +50,63 @@ export default function Certificate() {
     loadData();
   }, [certificateId]);
 
-  const fetchCertificateDetails = async (token: string, id: string) => {
+  const fetchCertificatePdf = async (token: string, id: string) => {
     try {
-      // Using populate=* to get all related data including images
-      const response = await fetch(`https://api.mazas.org/api/certificates/${id}?populate=*`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      setLoading(true);
 
-      console.log(response.status);
-      console.log(JSON.stringify(response, null, 2));
+      // Create a file path for the PDF in the cache directory
+      const pdfFilePath = `${FileSystem.cacheDirectory}certificate_${id}.pdf`;
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Certificate data:', JSON.stringify(data.data));
-        setCertificate(data.data);
-
-        // Download certificate image if available
-        if (data.data.image?.url) {
-          await downloadImageToCacheDirectory(
-            `https://api.mazas.org${data.data.image.url}`,
-            token,
-            'certificate.jpg',
-            setCertificateImageUri
-          );
+      // Download the PDF directly to the file system
+      const downloadResult = await FileSystem.downloadAsync(
+        `https://maza-strapi-backend.onrender.com/api/certificates/${id}`,
+        pdfFilePath,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-
-        // Download signature image if available
-        if (data.data.signature?.url) {
-          await downloadImageToCacheDirectory(
-            `https://api.mazas.org${data.data.signature.url}`,
-            token,
-            'signature.jpg',
-            setSignatureImageUri
-          );
-        }
-      } else {
-        console.log('Certificate fetch failed with status:', response.status);
-        throw new Error('Failed to fetch certificate details');
-      }
-    } catch (error) {
-      console.error('Error fetching certificate details:', error);
-      Alert.alert('Erro', 'Falha ao carregar detalhes do certificado');
-    }
-  };
-
-  const downloadImageToCacheDirectory = async (url, token, filename, setUriFunction) => {
-    try {
-      // Create a temporary file path
-      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
-
-      // Download the file to local filesystem
-      const downloadResult = await FileSystem.downloadAsync(url, fileUri, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      );
 
       if (downloadResult.status === 200) {
-        setUriFunction(downloadResult.uri);
-        return downloadResult.uri;
+        setPdfUri(downloadResult.uri);
       } else {
-        console.error('Failed to download image, status:', downloadResult.status);
-        return null;
+        console.error('Failed to download PDF, status:', downloadResult.status);
+        Alert.alert('Erro', 'Falha ao baixar o certificado');
       }
     } catch (error) {
-      console.error('Error downloading image:', error);
-      return null;
+      console.error('Error fetching certificate PDF:', error);
+      Alert.alert('Erro', 'Falha ao carregar o certificado');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleShareCertificate = async () => {
     try {
+      if (!pdfUri) {
+        Alert.alert('Erro', 'PDF do certificado não disponível');
+        return;
+      }
+
+      // Share the PDF file
       const result = await Share.share({
-        message: `Certificado de conclusão do curso ${certificate?.course?.title} da Mazas Digital Learning Platform`,
-        url: `https://mazas.org/certificates/${certificateId}`,
+        url: Platform.OS === 'ios' ? pdfUri : `file://${pdfUri}`,
+        message: `Meu certificado de conclusão da Mazas Digital Learning Platform`,
       });
     } catch (error) {
+      console.error('Error sharing certificate:', error);
       Alert.alert('Erro', 'Falha ao compartilhar certificado');
     }
   };
 
   const handleDownloadCertificate = async () => {
     try {
+      if (!pdfUri) {
+        Alert.alert('Erro', 'PDF do certificado não disponível');
+        return;
+      }
+
       // Request permissions first (for Android)
       if (Platform.OS === 'android') {
         const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -145,30 +116,44 @@ export default function Certificate() {
         }
       }
 
-      if (!certificateImageUri) {
-        Alert.alert('Erro', 'Imagem do certificado não disponível');
-        return;
-      }
+      setDownloadingPdf(true);
 
-      setDownloadingImage(true);
+      // For iOS, we need to use DocumentPicker to save to Files
+      if (Platform.OS === 'ios') {
+        // Copy to a temporary location with a more descriptive filename
+        const tempFile = `${FileSystem.cacheDirectory}certificado_mazas_${certificateId}.pdf`;
+        await FileSystem.copyAsync({
+          from: pdfUri,
+          to: tempFile,
+        });
 
-      // Save the image to the photo gallery
-      const asset = await MediaLibrary.createAssetAsync(certificateImageUri);
+        // Open the save dialog
+        await DocumentPicker.getDocumentAsync({
+          type: 'application/pdf',
+          copyToCacheDirectory: false,
+          multiple: false,
+        });
 
-      // Create an album and add the image to it
-      const album = await MediaLibrary.getAlbumAsync('Mazas Certificates');
-      if (album) {
-        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+        Alert.alert('Sucesso', 'Certificado disponível para salvar');
       } else {
-        await MediaLibrary.createAlbumAsync('Mazas Certificates', asset, false);
-      }
+        // For Android, save to the device's Downloads folder
+        const asset = await MediaLibrary.createAssetAsync(pdfUri);
 
-      Alert.alert('Sucesso', 'Certificado salvo na galeria');
+        // Create an album and add the PDF to it
+        const album = await MediaLibrary.getAlbumAsync('Mazas Certificates');
+        if (album) {
+          await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+        } else {
+          await MediaLibrary.createAlbumAsync('Mazas Certificates', asset, false);
+        }
+
+        Alert.alert('Sucesso', 'Certificado salvo na galeria');
+      }
     } catch (error) {
-      console.error('Error saving certificate to gallery:', error);
-      Alert.alert('Erro', 'Falha ao salvar certificado na galeria');
+      console.error('Error saving certificate:', error);
+      Alert.alert('Erro', 'Falha ao salvar certificado');
     } finally {
-      setDownloadingImage(false);
+      setDownloadingPdf(false);
     }
   };
 
@@ -188,7 +173,7 @@ export default function Certificate() {
     );
   }
 
-  if (!certificate) {
+  if (!pdfUri) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
@@ -206,14 +191,6 @@ export default function Certificate() {
     );
   }
 
-  // Format date
-  const issueDate = new Date(certificate.createdAt);
-  const formattedDate = issueDate.toLocaleDateString('pt-BR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -222,88 +199,36 @@ export default function Certificate() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Certificado</Text>
       </View>
-      <ScrollView>
-        <View style={styles.certificateContainer}>
-          <View style={styles.certificateContent}>
-            <Image source={require('@/assets/images/maza-logo.png')} style={styles.logo} />
 
-            <Text style={styles.certificateLabel}>CERTIFICADO DE CONCLUSÃO</Text>
-
-            <Text style={styles.courseName}>{certificate.course.title}</Text>
-
-            <View style={styles.instructorSection}>
-              <Text style={styles.instructorLabel}>Instrutores</Text>
-              <Text style={styles.instructorName}>{certificate.course.author}</Text>
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.gradeSection}>
-              {/* Use the downloaded certificate image or fallback */}
-              {certificateImageUri ? (
-                <Image source={{ uri: certificateImageUri }} style={styles.gradeImage} />
-              ) : (
-                <View style={[styles.gradeImage, styles.imagePlaceholder]}>
-                  <ActivityIndicator size="small" color="#0CA5E9" />
-                </View>
-              )}
-
-              <Text style={styles.studentName}>{user?.fullname}</Text>
-
-              <View style={styles.certificateDetails}>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Data</Text>
-                  <Text style={styles.detailValue}>
-                    {new Date(certificate.createdAt).toLocaleDateString('pt-BR', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </Text>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Duração</Text>
-                  <Text style={styles.detailValue}>6 Horas</Text>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>ID</Text>
-                  <Text style={styles.detailValue}>{certificate.documentId}</Text>
-                </View>
-              </View>
-
-              <View style={styles.signatureSection}>
-                {/* Use the downloaded signature image or fallback */}
-                {signatureImageUri ? (
-                  <Image source={{ uri: signatureImageUri }} style={styles.signatureImage} />
-                ) : (
-                  <View style={[styles.signatureImage, styles.imagePlaceholder]}>
-                    <ActivityIndicator size="small" color="#0CA5E9" />
-                  </View>
-                )}
-              </View>
-            </View>
-
-            <Text style={styles.verifyText}>Verificar em mazas.org/certificados/{certificate.documentId}</Text>
-          </View>
-        </View>
-      </ScrollView>
+      <View style={styles.pdfContainer}>
+        <WebView
+          source={{ uri: pdfUri }}
+          style={styles.pdfView}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          originWhitelist={['*']}
+          scalesPageToFit={true}
+        />
+      </View>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.downloadButton, downloadingImage && styles.disabledButton]}
+          style={[styles.downloadButton, downloadingPdf && styles.disabledButton]}
           onPress={handleDownloadCertificate}
-          disabled={downloadingImage || !certificateImageUri}
+          disabled={downloadingPdf || !pdfUri}
         >
-          {downloadingImage ? (
+          {downloadingPdf ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <Text style={styles.downloadButtonText}>Download</Text>
+            <>
+              <Ionicons name="download-outline" size={20} color="#FFFFFF" style={styles.buttonIcon} />
+              <Text style={styles.downloadButtonText}>Download</Text>
+            </>
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.shareButton} onPress={handleShareCertificate}>
+        <TouchableOpacity style={styles.shareButton} onPress={handleShareCertificate} disabled={!pdfUri}>
+          <Ionicons name="share-social-outline" size={20} color="#FFFFFF" style={styles.buttonIcon} />
           <Text style={styles.shareButtonText}>Partilhar</Text>
         </TouchableOpacity>
       </View>
@@ -321,7 +246,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     height: 60,
-    marginBottom: 30,
+    marginBottom: 16,
     marginTop: 24,
   },
   backButton: {
@@ -360,120 +285,17 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
   },
-  certificateContainer: {
+  pdfContainer: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  certificateContent: {
-    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginBottom: 16,
     borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    overflow: 'hidden',
+    backgroundColor: '#f5f5f5',
   },
-  logo: {
-    width: 80,
-    height: 80,
-    resizeMode: 'contain',
-    marginBottom: 16,
-  },
-  certificateLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  courseName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  instructorSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  instructorLabel: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginRight: 8,
-  },
-  instructorName: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
-    width: '100%',
-    marginBottom: 24,
-  },
-  gradeSection: {
-    width: '100%',
-    backgroundColor: '#F3F4FF',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  gradeImage: {
-    width: 300,
-    height: 120,
-    resizeMode: 'contain',
-    marginBottom: 16,
-  },
-  imagePlaceholder: {
-    backgroundColor: '#E5E7EB',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  studentName: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  certificateDetails: {
-    width: '100%',
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  detailValue: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  signatureSection: {
-    alignItems: 'center',
-    position: 'absolute',
-    right: 24,
-    bottom: 24,
-  },
-  signatureImage: {
-    width: 120,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  organizationName: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginTop: 4,
-  },
-  verifyText: {
-    fontSize: 12,
-    color: '#6B7280',
-    textAlign: 'center',
+  pdfView: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -486,8 +308,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#0CA5E9',
     borderRadius: 36,
     height: 56,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 8,
+  },
+  buttonIcon: {
     marginRight: 8,
   },
   disabledButton: {
@@ -503,6 +329,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#252525',
     borderRadius: 36,
     height: 56,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
