@@ -107,37 +107,46 @@ export default function Certificate() {
         return;
       }
 
-      // Request permissions first (for Android)
-      if (Platform.OS === 'android') {
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permissão negada', 'Não temos permissão para salvar o certificado');
-          return;
-        }
-      }
-
       setDownloadingPdf(true);
 
-      // For iOS, we need to use DocumentPicker to save to Files
+      // For iOS, save directly to the Files app with a proper filename
       if (Platform.OS === 'ios') {
-        // Copy to a temporary location with a more descriptive filename
-        const tempFile = `${FileSystem.cacheDirectory}certificado_mazas_${certificateId}.pdf`;
+        // Create a more descriptive filename
+        const filename = `certificado_mazas_${certificateId}.pdf`;
+
+        // Copy to a temporary location with the descriptive filename
+        const tempFile = `${FileSystem.documentDirectory}${filename}`;
         await FileSystem.copyAsync({
           from: pdfUri,
           to: tempFile,
         });
 
-        // Open the save dialog
-        await DocumentPicker.getDocumentAsync({
-          type: 'application/pdf',
-          copyToCacheDirectory: false,
-          multiple: false,
+        // Share the file with the Files app
+        await Share.share({
+          url: tempFile,
+          title: filename,
+        });
+      }
+      // For Android, save to the Downloads directory
+      else {
+        // Request storage permissions for Android
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permissão negada', 'Não temos permissão para salvar o certificado');
+          return;
+        }
+
+        // For Android 10+ (API level 29+), we'll check if we can use the Downloads directory
+        const fileUri = `${FileSystem.documentDirectory}certificado_mazas_${certificateId}.pdf`;
+
+        // Copy the file to document directory first
+        await FileSystem.copyAsync({
+          from: pdfUri,
+          to: fileUri,
         });
 
-        Alert.alert('Sucesso', 'Certificado disponível para salvar');
-      } else {
-        // For Android, save to the device's Downloads folder
-        const asset = await MediaLibrary.createAssetAsync(pdfUri);
+        // Save to MediaLibrary (this works on most Android versions)
+        const asset = await MediaLibrary.createAssetAsync(fileUri);
 
         // Create an album and add the PDF to it
         const album = await MediaLibrary.getAlbumAsync('Mazas Certificates');
@@ -146,12 +155,10 @@ export default function Certificate() {
         } else {
           await MediaLibrary.createAlbumAsync('Mazas Certificates', asset, false);
         }
-
-        Alert.alert('Sucesso', 'Certificado salvo na galeria');
       }
     } catch (error) {
       console.error('Error saving certificate:', error);
-      Alert.alert('Erro', 'Falha ao salvar certificado');
+      Alert.alert('Erro', 'Falha ao salvar certificado: ' + error.message);
     } finally {
       setDownloadingPdf(false);
     }
@@ -204,7 +211,7 @@ export default function Certificate() {
         <WebView
           source={{ uri: pdfUri }}
           style={styles.pdfView}
-          javaScriptEnabled={true}
+          javaScriptEnabled={false}
           domStorageEnabled={true}
           originWhitelist={['*']}
           scalesPageToFit={true}
