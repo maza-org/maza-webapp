@@ -15,7 +15,6 @@ import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
-import * as DocumentPicker from 'expo-document-picker';
 import { WebView } from 'react-native-webview';
 
 export default function Certificate() {
@@ -37,7 +36,7 @@ export default function Certificate() {
 
           // Fetch certificate URL
           if (certificateId) {
-            await fetchCertificateUrl(parsedUser.token, certificateId);
+            await fetchCertificateUrl(parsedUser.token, certificateId as string);
           }
         }
       } catch (error) {
@@ -51,12 +50,10 @@ export default function Certificate() {
     loadData();
   }, [certificateId]);
 
-  const fetchCertificateUrl = async (token, id) => {
+  const fetchCertificateUrl = async (token: string, id: string) => {
     try {
       setLoading(true);
-
-      // Fetch the certificate URL from the new endpoint
-      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/certificates/${id}`, {
+      const response = await fetch(`https://api.mazas.org/api/certificates/${id}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -71,7 +68,7 @@ export default function Certificate() {
 
       if (data.success && data.url) {
         setCertificateUrl(data.url);
-
+        console.log(JSON.stringify(data, null, 2));
         // Download the PDF using the URL
         await downloadPdf(data.url, id);
       } else {

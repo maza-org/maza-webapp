@@ -538,21 +538,21 @@ export default function CourseDetail() {
         )}
       </ScrollView>
 
-      {/*<View style={styles.footer}>*/}
-      {/*  <TouchableOpacity*/}
-      {/*    style={[styles.startButton, updating && styles.startButtonDisabled, isInProgress && styles.continueButton]}*/}
-      {/*    onPress={handleStartCourse}*/}
-      {/*    disabled={updating}*/}
-      {/*  >*/}
-      {/*    {updating ? (*/}
-      {/*      <ActivityIndicator color="#FFF" />*/}
-      {/*    ) : (*/}
-      {/*      <Text style={[styles.startButtonText, isInProgress && styles.continueButton]}>*/}
-      {/*        {isInProgress ? 'Continuar' : 'Iniciar Curso'}*/}
-      {/*      </Text>*/}
-      {/*    )}*/}
-      {/*  </TouchableOpacity>*/}
-      {/*</View>*/}
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[styles.startButton, updating && styles.startButtonDisabled, isInProgress && styles.continueButton]}
+          onPress={handleStartCourse}
+          disabled={updating}
+        >
+          {updating ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={[styles.startButtonText, isInProgress && styles.continueButton]}>
+              {isInProgress ? 'Continuar' : 'Iniciar Curso'}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }

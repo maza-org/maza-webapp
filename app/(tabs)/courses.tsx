@@ -403,8 +403,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
-
-  // Login prompt styles
   loginContainer: {
     flex: 1,
     justifyContent: 'center',

@@ -13,10 +13,7 @@ import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-
-interface Instructor {
-  name: string;
-}
+import { Picture } from '@/types/course';
 
 interface Course {
   id: number;
@@ -24,6 +21,8 @@ interface Course {
   title: string;
   author: string;
   rating_avg: number;
+  picture: Picture;
+  cover: Picture;
 }
 
 interface FavoriteCourse {
@@ -130,7 +129,15 @@ const FavoriteCoursesGrid = () => {
           >
             {/* Course Image */}
             <View style={styles.imageContainer}>
-              <Image source={{ uri: 'https://picsum.photos/400/320' }} style={styles.courseImage} />
+              <Image
+                source={{
+                  uri:
+                    favorite.course.picture?.formats?.thumbnail?.url ||
+                    favorite.course.picture?.formats?.small?.url ||
+                    favorite.course.picture?.url,
+                }}
+                style={styles.courseImage}
+              />
               <Pressable style={styles.heartButton}>
                 <Ionicons name="heart" size={20} color="#FF4B4B" />
               </Pressable>
@@ -150,7 +157,10 @@ const FavoriteCoursesGrid = () => {
 
               {/* Author */}
               <View style={styles.instructorContainer}>
-                <Image source={{ uri: 'https://i.pravatar.cc/300' }} style={styles.instructorAvatar} />
+                <Image
+                  source={{ uri: favorite.course.cover?.formats?.thumbnail?.url }}
+                  style={styles.instructorAvatar}
+                />
                 <Text style={styles.instructorName}>{favorite.course.author}</Text>
               </View>
 
@@ -247,6 +257,7 @@ const styles = StyleSheet.create({
   instructorName: {
     fontSize: 12,
     color: '#8F8F8F',
+    width: 100,
   },
   footer: {
     flexDirection: 'row',
