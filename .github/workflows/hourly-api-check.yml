@@ -10,7 +10,7 @@ jobs:
     steps:
     - name: Make API Request
       run: |
-        curl --location 'https://maza-strapi-backend.onrender.com/api/subjects?fields=name&sort=name&locale=pt' \
+        curl --location 'https://api.mazas.org/api/subjects?fields=name&sort=name&locale=pt' \
         --fail \
         --retry 3 \
         --retry-delay 5
