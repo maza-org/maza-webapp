@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://maza-strapi-backend.onrender.com/api',
+  baseURL: 'https://api.mazas.org/api',
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
