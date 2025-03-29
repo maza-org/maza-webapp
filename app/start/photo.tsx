@@ -117,7 +117,7 @@ export default function Photo() {
       formData.append('field', 'profile_image');
 
       // Upload image
-      const response = await fetch('https://maza-strapi-backend.onrender.com/api/upload', {
+      const response = await fetch('https://api.mazas.org/api/upload', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${user.token}`,

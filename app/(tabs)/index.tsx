@@ -82,9 +82,7 @@ export default function Home() {
 
   async function fetchNewCourses() {
     try {
-      const response = await fetch(
-        'https://maza-strapi-backend.onrender.com/api/courses?sort=publishedAt%3Adesc&pageSize=10&page=1'
-      );
+      const response = await fetch('https://api.mazas.org/api/courses?sort=publishedAt%3Adesc&pageSize=10&page=1');
       const data = await response.json();
       setNewCourses(data.data);
       setLoadingNewCourses(false);
@@ -98,9 +96,7 @@ export default function Home() {
     try {
       // Fetch courses for suggestions - you could customize this endpoint based on user preferences
       // For this example, we're using the same endpoint as new courses but could be customized
-      const response = await fetch(
-        'https://maza-strapi-backend.onrender.com/api/courses?sort=rating_avg%3Adesc&pageSize=10&page=1'
-      );
+      const response = await fetch('https://api.mazas.org/api/courses?sort=rating_avg%3Adesc&pageSize=10&page=1');
       const data = await response.json();
 
       // Filter out courses based on some criteria (e.g., high rating + specific subjects)

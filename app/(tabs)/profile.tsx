@@ -56,7 +56,6 @@ export default function ProfileScreen() {
         try {
           await refetch();
           fetchCertificates();
-
           // Check if user has a profile image
           if (user?.profileImage?.url) {
             setProfileImage(user.profileImage.url);
@@ -76,6 +75,7 @@ export default function ProfileScreen() {
     setIsLoadingCertificates(true);
     try {
       if (!user?.token) {
+        console.log(JSON.stringify(user, null, 2));
         throw new Error('No authentication token found');
       }
 
@@ -260,7 +260,7 @@ export default function ProfileScreen() {
       formData.append('field', 'profile_image');
 
       // Upload image
-      const response = await fetch('https://maza-strapi-backend.onrender.com/api/upload', {
+      const response = await fetch('https://api.mazas.org/api/upload', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${user.token}`,

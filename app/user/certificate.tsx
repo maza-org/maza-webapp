@@ -22,6 +22,7 @@ export default function Certificate() {
   const { certificateId } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [certificateUrl, setCertificateUrl] = useState(null);
   const [pdfUri, setPdfUri] = useState(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
 
@@ -34,9 +35,9 @@ export default function Certificate() {
           const parsedUser = JSON.parse(userData);
           setUser(parsedUser);
 
-          // Fetch certificate PDF
+          // Fetch certificate URL
           if (certificateId) {
-            await fetchCertificatePdf(parsedUser.token, certificateId as string);
+            await fetchCertificateUrl(parsedUser.token, certificateId);
           }
         }
       } catch (error) {
@@ -50,23 +51,46 @@ export default function Certificate() {
     loadData();
   }, [certificateId]);
 
-  const fetchCertificatePdf = async (token: string, id: string) => {
+  const fetchCertificateUrl = async (token, id) => {
     try {
       setLoading(true);
 
+      // Fetch the certificate URL from the new endpoint
+      const response = await fetch(`https://maza-strapi-backend.onrender.com/api/certificates/${id}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.url) {
+        setCertificateUrl(data.url);
+
+        // Download the PDF using the URL
+        await downloadPdf(data.url, id);
+      } else {
+        console.error('Failed to get certificate URL:', data);
+        Alert.alert('Erro', data.message || 'Falha ao obter o URL do certificado');
+      }
+    } catch (error) {
+      console.error('Error fetching certificate URL:', error);
+      Alert.alert('Erro', 'Falha ao carregar o certificado');
+    }
+  };
+
+  const downloadPdf = async (url, id) => {
+    try {
       // Create a file path for the PDF in the cache directory
       const pdfFilePath = `${FileSystem.cacheDirectory}certificate_${id}.pdf`;
 
       // Download the PDF directly to the file system
-      const downloadResult = await FileSystem.downloadAsync(
-        `https://maza-strapi-backend.onrender.com/api/certificates/${id}`,
-        pdfFilePath,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const downloadResult = await FileSystem.downloadAsync(url, pdfFilePath);
 
       if (downloadResult.status === 200) {
         setPdfUri(downloadResult.uri);
@@ -75,8 +99,8 @@ export default function Certificate() {
         Alert.alert('Erro', 'Falha ao baixar o certificado');
       }
     } catch (error) {
-      console.error('Error fetching certificate PDF:', error);
-      Alert.alert('Erro', 'Falha ao carregar o certificado');
+      console.error('Error downloading PDF:', error);
+      Alert.alert('Erro', 'Falha ao baixar o certificado');
     } finally {
       setLoading(false);
     }
@@ -155,6 +179,8 @@ export default function Certificate() {
         } else {
           await MediaLibrary.createAlbumAsync('Mazas Certificates', asset, false);
         }
+
+        Alert.alert('Sucesso', 'Certificado salvo na galeria');
       }
     } catch (error) {
       console.error('Error saving certificate:', error);
