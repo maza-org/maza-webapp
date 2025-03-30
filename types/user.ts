@@ -1,4 +1,5 @@
 import { Course } from '@/app/(tabs)/profile';
+import { Picture } from '@/types/course';
 
 export interface User {
   id: string;
@@ -9,6 +10,7 @@ export interface User {
   yomaId: string;
   token: string;
   interests: Subject[];
+  profile_image: Picture;
 }
 
 interface LoginResponse {
@@ -37,17 +39,4 @@ export interface Certificate {
   documentId: string;
   createdAt: string;
   course: Course;
-}
-
-export function mapLoginResponseToUser(response: LoginResponse): User {
-  return {
-    id: response.user.id.toString(),
-    documentId: response.user.documentId,
-    email: response.user.email || '',
-    fullname: response.user.fullname,
-    phone: response.user.phone,
-    yomaId: response.user.yoma_id || '',
-    token: response.jwt,
-    interests: response.interests,
-  };
 }

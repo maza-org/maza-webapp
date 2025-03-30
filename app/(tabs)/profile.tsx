@@ -57,8 +57,8 @@ export default function ProfileScreen() {
           await refetch();
           fetchCertificates();
           // Check if user has a profile image
-          if (user?.profileImage?.url) {
-            setProfileImage(user.profileImage.url);
+          if (user?.profile_image?.formats?.thumbnail?.url) {
+            setProfileImage(user?.profile_image?.formats?.thumbnail?.url);
           }
         } catch (error) {
           console.error('Error refreshing profile data:', error);
@@ -68,14 +68,13 @@ export default function ProfileScreen() {
       };
 
       refreshProfileData();
-    }, [refetch, user?.profileImage?.url])
+    }, [refetch, user?.profile_image?.formats?.thumbnail?.url])
   );
 
   const fetchCertificates = async () => {
     setIsLoadingCertificates(true);
     try {
       if (!user?.token) {
-        console.log(JSON.stringify(user, null, 2));
         throw new Error('No authentication token found');
       }
 
@@ -238,14 +237,8 @@ export default function ProfileScreen() {
       if (!user?.token) {
         throw new Error('No authentication token found');
       }
-
-      // Create form data
       const formData = new FormData();
-
-      // Get file name from URI
       const fileName = imageUri.split('/').pop() || 'profile_image.jpg';
-
-      // Convert URI to file object
       const fileType = fileName.split('.').pop() || 'jpg';
 
       // @ts-ignore - FormData accepts File or Blob but React Native's typing doesn't reflect this
@@ -276,10 +269,7 @@ export default function ProfileScreen() {
       const responseData = await response.json();
 
       if (responseData && responseData.length > 0) {
-        // Update profile image state with new URL
         setProfileImage(responseData[0].url);
-
-        // Refresh user data to get updated profile
         await refetch();
 
         Alert.alert('Sucesso', 'Foto de perfil atualizada com sucesso');

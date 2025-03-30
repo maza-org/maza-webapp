@@ -19,7 +19,6 @@ import FavoriteCoursesGrid from '@/components/FavoriteCoursesGrid';
 import CoursesInProgress from '@/components/CourseInProgress';
 import useUser from '@/hooks/useUser';
 
-// Login Prompt Component
 const LoginPrompt = () => {
   return (
     <View style={styles.loginContainer}>
@@ -38,7 +37,6 @@ const LoginPrompt = () => {
   );
 };
 
-// RadioButton Component
 const RadioButton = ({
   label,
   selected,

@@ -55,7 +55,7 @@ const PathScreen = () => {
   };
 
   // Get module icons based on index
-  const getModuleIcon = (index) => {
+  const getModuleIcon = (index: number) => {
     const icons = ['book', 'dollar-sign', 'trending-up'];
     return icons[index % icons.length];
   };
