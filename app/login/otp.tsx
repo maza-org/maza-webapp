@@ -171,6 +171,72 @@ export default function Otp() {
     }
   };
 
+  async function handleResendOtp() {
+    try {
+      setLoading(true);
+
+      // Using the same OTP request endpoint as in the Login component
+      const response = await fetch(`https://api.mazas.org/api/otps`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          data: {
+            phone: phone,
+          },
+        }),
+      });
+
+      // Handle different response status codes
+      if (response.status === 400) {
+        Alert.alert('Erro', 'Número de telefone inválido ou não registado');
+        return;
+      } else if (response.status === 401) {
+        Alert.alert('Erro', 'Não autorizado. Por favor, verifique suas credenciais.');
+        return;
+      } else if (response.status === 403) {
+        Alert.alert('Erro', 'Acesso proibido a este recurso.');
+        return;
+      } else if (response.status === 404) {
+        Alert.alert('Erro', 'Serviço não encontrado. Por favor, tente mais tarde.');
+        return;
+      } else if (response.status === 429) {
+        Alert.alert('Erro', 'Muitas tentativas. Por favor, aguarde alguns minutos e tente novamente.');
+        return;
+      } else if (response.status >= 500) {
+        Alert.alert('Erro', 'Erro no servidor. Por favor, tente novamente mais tarde.');
+        return;
+      } else if (!response.ok) {
+        Alert.alert('Erro', 'Ocorreu um erro. Por favor, tente novamente.');
+        return;
+      }
+
+      // If we reach here, the request was successful
+      const data = await response.json();
+
+      if (data && data.otpID) {
+        // Update the otpId with the new one
+        router.setParams({ otpId: data.otpID });
+
+        // Reset OTP input fields
+        setOtp(['', '', '', '', '', '']);
+
+        Alert.alert('Sucesso', 'Um novo código foi enviado para o seu telefone.', [{ text: 'OK' }]);
+      } else {
+        Alert.alert('Erro', 'Não foi possível enviar um novo código. Tente novamente mais tarde.', [{ text: 'OK' }]);
+      }
+    } catch (error) {
+      console.error('Error resending OTP:', error);
+      Alert.alert(
+        'Erro de conexão',
+        'Não foi possível conectar ao servidor. Verifique sua conexão de internet e tente novamente.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topSection}>
@@ -212,7 +278,7 @@ export default function Otp() {
 
         <View style={styles.resendContainer}>
           <Text style={styles.resendText}>Não recebeu o código? </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handleResendOtp}>
             <Text style={styles.resendLink}>Reenviar Código</Text>
           </TouchableOpacity>
         </View>
