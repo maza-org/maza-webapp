@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import Button from '@/components/Button';
@@ -9,6 +9,7 @@ export default function Otp() {
   const { phone, otpId, fullName } = useLocalSearchParams();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const inputRefs = useRef<Array<TextInput | null>>([]);
 
   const fetchUserData = async (token: string) => {
@@ -174,6 +175,7 @@ export default function Otp() {
   async function handleResendOtp() {
     try {
       setLoading(true);
+      setResending(true);
 
       // Using the same OTP request endpoint as in the Login component
       const response = await fetch(`https://api.mazas.org/api/otps`, {
@@ -234,6 +236,7 @@ export default function Otp() {
       );
     } finally {
       setLoading(false);
+      setResending(false);
     }
   }
 
@@ -274,12 +277,12 @@ export default function Otp() {
           </View>
         </View>
 
-        <Button text="Confirmar" handle={handleConfirm} loading={loading} />
+        <Button text={resending ? 'A reenviar código...' : 'Confirmar'} handle={handleConfirm} loading={loading} />
 
         <View style={styles.resendContainer}>
           <Text style={styles.resendText}>Não recebeu o código? </Text>
-          <TouchableOpacity onPress={handleResendOtp}>
-            <Text style={styles.resendLink}>Reenviar Código</Text>
+          <TouchableOpacity onPress={handleResendOtp} disabled={loading}>
+            <Text style={[styles.resendLink, loading && styles.disabledLink]}>Reenviar Código</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -371,5 +374,8 @@ const styles = StyleSheet.create({
   resendLink: {
     color: '#2196F3',
     fontSize: 14,
+  },
+  disabledLink: {
+    opacity: 0.5,
   },
 });
