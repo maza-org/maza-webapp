@@ -265,7 +265,7 @@ export default function CourseDetail() {
 
   const handleFavoritePress = async () => {
     if (!user?.token) {
-      Alert.alert('Erro', 'Você precisa estar logado para favoritar um curso');
+      Alert.alert('Erro', 'Para marcar um curso como favorito é necessário que tenha feito o login');
       return;
     }
 
@@ -299,7 +299,7 @@ export default function CourseDetail() {
       return;
     }
     if (!user?.token) {
-      Alert.alert('Erro', 'Você precisa estar logado para iniciar o curso');
+      Alert.alert('Erro', 'Para marcar um curso como favorito é necessário que tenha feito o login');
       return;
     }
 
@@ -429,9 +429,9 @@ export default function CourseDetail() {
                         <Text style={styles.menuItemText}>Certificado</Text>
                       </TouchableOpacity>
 
-                      <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('report')}>
-                        <Text style={styles.menuItemText}>Reportar Problema</Text>
-                      </TouchableOpacity>
+                      {/*<TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('report')}>*/}
+                      {/*  <Text style={styles.menuItemText}>Reportar Problema</Text>*/}
+                      {/*</TouchableOpacity>*/}
                     </View>
                   )}
                 </View>
