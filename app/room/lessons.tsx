@@ -28,6 +28,26 @@ export interface Content {
   description: string | null;
 }
 
+interface Certificate {
+  createdAt: string;
+  id: number;
+  documentId: string;
+  course: {
+    id: number;
+    documentId: string;
+    title: string;
+    author: string;
+    rating_avg: number;
+    subscribed: number;
+  };
+  user: {
+    id: number;
+    documentId: string;
+    email: string;
+    phone: string;
+  };
+}
+
 export interface Module {
   id: number;
   title: string;
@@ -104,7 +124,7 @@ export default function CourseDetail() {
   const [isInProgress, setIsInProgress] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [certificates, setCertificates] = useState([]);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
 
   const { documentId } = useLocalSearchParams();
 
@@ -163,7 +183,7 @@ export default function CourseDetail() {
     setMenuVisible(!menuVisible);
   };
 
-  const handleMenuOption = (option) => {
+  const handleMenuOption = (option: string) => {
     switch (option) {
       case 'certificate':
         // Check if this course has a certificate
@@ -380,12 +400,22 @@ export default function CourseDetail() {
     });
   }
 
-  function handleStartQuiz(content: Quiz) {
+  function handleStartQuiz(content: Quiz, isFinalTest = false) {
+    const params: {
+      content: string;
+      isFinalTest?: string | undefined;
+    } = {
+      content: JSON.stringify(content),
+      isFinalTest: undefined,
+    };
+
+    if (isFinalTest) {
+      params.isFinalTest = JSON.stringify(true);
+    }
+
     router.push({
       pathname: '/room/quiz',
-      params: {
-        content: JSON.stringify(content),
-      },
+      params: params,
     });
   }
 
@@ -506,7 +536,10 @@ export default function CourseDetail() {
                   </TouchableOpacity>
                 ))}
                 {courseData.final_test && (
-                  <TouchableOpacity style={styles.moduleItem} onPress={() => handleStartQuiz(courseData.final_test)}>
+                  <TouchableOpacity
+                    style={styles.moduleItem}
+                    onPress={() => handleStartQuiz(courseData.final_test, true)}
+                  >
                     <View style={styles.moduleContent}>
                       <View style={styles.moduleTopRow}>
                         <View style={styles.moduleInfo}>

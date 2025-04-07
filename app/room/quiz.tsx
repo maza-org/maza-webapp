@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Option {
   id: number;
@@ -28,6 +29,11 @@ interface QuizModule {
   pass_grade: number;
   questions: Question[];
   duration: Duration;
+}
+
+interface User {
+  jwt: string;
+  // Add other user properties as needed
 }
 
 type SelectedAnswers = {
@@ -59,6 +65,47 @@ const formatTime = (seconds: number): string => {
   return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
 };
 
+// Function to mark quiz as completed
+const markQuizAsCompleted = async (grade: number) => {
+  try {
+    // Get user data from AsyncStorage
+    const userData = await AsyncStorage.getItem('@user');
+    if (!userData) {
+      console.error('No user data found');
+      return false;
+    }
+
+    const user: User = JSON.parse(userData);
+    const token = user.jwt;
+    console.log(user);
+
+    // Make the API request
+    const response = await fetch('https://maza-strapi-backend.onrender.com/api/user-courses/vhk8vegd1jbb81hbamg1123h', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        data: {
+          grade: grade,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log('Quiz marked as completed:', result);
+    return true;
+  } catch (error) {
+    console.error('Error marking quiz as completed:', error);
+    return false;
+  }
+};
+
 const Timer = ({ timeLeft, isWarning }: { timeLeft: number; isWarning: boolean }) => {
   return (
     <View style={[styles.timerContainer, isWarning && styles.timerWarning]}>
@@ -73,15 +120,18 @@ const ResultsView = ({
   totalQuestions,
   passGrade,
   onRetake,
+  grade,
+  quizCompleted,
 }: {
   correctAnswers: number;
   totalQuestions: number;
   passGrade: number;
   onRetake: () => void;
+  grade: number;
+  quizCompleted: boolean;
 }) => {
   const score = (correctAnswers / totalQuestions) * 100;
   const passed = score >= passGrade;
-  const earnedPoints = 137; // Este valor pode ser calculado com base na pontuação real
 
   return (
     <View style={styles.container}>
@@ -100,6 +150,13 @@ const ResultsView = ({
               Você absolutamente acertou o{'\n'}
               teste
             </Text>
+
+            {quizCompleted && (
+              <View style={styles.completedBadge}>
+                <Feather name="check-circle" size={20} color="#04D361" />
+                <Text style={styles.completedText}>Quiz registrado como concluído</Text>
+              </View>
+            )}
           </>
         ) : (
           <>
@@ -152,7 +209,7 @@ const ResultsView = ({
 };
 
 export default function Quiz() {
-  const { content } = useLocalSearchParams();
+  const { content, isFinalTest } = useLocalSearchParams();
   const quizData: QuizModule = JSON.parse(content as string);
 
   // Calculate quiz duration in seconds based on the duration object
@@ -163,6 +220,8 @@ export default function Quiz() {
   const [showResults, setShowResults] = useState(false);
   const [showCurrentFeedback, setShowCurrentFeedback] = useState(false);
   const [timeLeft, setTimeLeft] = useState(QUIZ_DURATION);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [calculatedGrade, setCalculatedGrade] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -192,7 +251,7 @@ export default function Quiz() {
     Alert.alert('Tempo Esgotado!', 'O tempo para realização do teste acabou.', [
       {
         text: 'OK',
-        onPress: () => setShowResults(true),
+        onPress: () => calculateResultsAndFinish(),
       },
     ]);
   };
@@ -216,11 +275,43 @@ export default function Quiz() {
     } else {
       const selectedArray = selected as number[];
       const correctOptionIds = question.options.filter((o) => o.is_correct).map((o) => o.id);
-      const selectedCorrectly =
+      return (
         selectedArray.length === correctOptionIds.length &&
         selectedArray.every((id) => correctOptionIds.includes(id)) &&
-        correctOptionIds.every((id) => selectedArray.includes(id));
-      return selectedCorrectly;
+        correctOptionIds.every((id) => selectedArray.includes(id))
+      );
+    }
+  };
+
+  const calculateResultsAndFinish = async () => {
+    const correctAnswersCount = Object.keys(selectedAnswers).filter((questionId) =>
+      isAnswerCorrect(Number(questionId))
+    ).length;
+
+    const totalQuestions = quizData.questions.length;
+    const scorePercentage = Math.round((correctAnswersCount / totalQuestions) * 100);
+
+    setCalculatedGrade(scorePercentage);
+
+    // Check if user passed the threshold
+    if (scorePercentage >= quizData.pass_grade) {
+      try {
+        // Mark the quiz as completed
+        const success = await markQuizAsCompleted(scorePercentage);
+        if (success) {
+          setQuizCompleted(true);
+        }
+      } catch (error) {
+        console.error('Failed to mark quiz as completed:', error);
+      }
+    }
+
+    // Show results regardless of pass/fail
+    setShowResults(true);
+
+    // Clear the timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
     }
   };
 
@@ -271,10 +362,7 @@ export default function Quiz() {
     if (getCurrentQuestion().format === 'AllThatApply' && !showCurrentFeedback) {
       setShowCurrentFeedback(true);
     } else {
-      setShowResults(true);
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
+      calculateResultsAndFinish();
     }
   };
 
@@ -284,6 +372,7 @@ export default function Quiz() {
     setShowResults(false);
     setShowCurrentFeedback(false);
     setTimeLeft(QUIZ_DURATION);
+    setQuizCompleted(false);
 
     // Restart the timer
     if (timerRef.current) {
@@ -464,6 +553,8 @@ export default function Quiz() {
           totalQuestions={quizData.questions.length}
           passGrade={quizData.pass_grade}
           onRetake={handleRetake}
+          grade={calculatedGrade}
+          quizCompleted={quizCompleted}
         />
       )}
     </SafeAreaView>
@@ -736,6 +827,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 32,
+  },
+  completedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(4, 211, 97, 0.1)',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    alignSelf: 'center',
+    marginBottom: 24,
+  },
+  completedText: {
+    color: '#04D361',
+    fontSize: 16,
+    marginLeft: 8,
   },
   pointsContainer: {
     alignItems: 'center',

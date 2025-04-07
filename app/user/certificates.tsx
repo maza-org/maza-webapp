@@ -138,7 +138,7 @@ export default function CertificatesScreen() {
             <Text style={styles.emptyText}>
               Você ainda não possui nenhum certificado. Complete cursos para ganhar certificados.
             </Text>
-            <TouchableOpacity style={styles.exploreCourseButton} onPress={() => router.push('/courses')}>
+            <TouchableOpacity style={styles.exploreCourseButton} onPress={() => router.push('/')}>
               <Feather name="book" size={20} color="#FFF" />
               <Text style={styles.exploreCourseButtonText}>Explorar Cursos</Text>
             </TouchableOpacity>
