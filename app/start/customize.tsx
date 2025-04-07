@@ -135,8 +135,11 @@ export default function Customize() {
       console.log(`user in customize`, JSON.stringify(updatedUser, null, 2));
       await AsyncStorage.setItem('@user', JSON.stringify(updatedUser));
 
-      // Navigate to home screen
-      router.push('/');
+      if (userTopics && userTopics.length > 0) {
+        router.push('/profile');
+      } else {
+        router.push('/');
+      }
     } catch (error) {
       console.error('Error saving topics:', error);
       Alert.alert('Error', 'Failed to save topics. Please try again.');

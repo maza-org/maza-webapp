@@ -391,7 +391,7 @@ export default function ProfileScreen() {
                 <Text style={styles.infoLabel}>Interesses</Text>
               </View>
               {user.interests && user.interests.length > 0 && (
-                <TouchableOpacity onPress={() => setIsEditing(!isEditing)} style={styles.editButton}>
+                <TouchableOpacity onPress={handleAddInterest} style={styles.editButton}>
                   <Feather name={isEditing ? 'check' : 'edit-2'} size={16} color="#1fa2df" />
                 </TouchableOpacity>
               )}
@@ -430,13 +430,6 @@ export default function ProfileScreen() {
                 </View>
               )}
             </View>
-
-            {user.interests && user.interests.length > 0 && (
-              <TouchableOpacity style={styles.addMoreInterestsButton} onPress={handleAddInterest}>
-                <Feather name="plus" size={16} color="#1fa2df" />
-                <Text style={styles.addMoreInterestsText}>Adicionar Interesses</Text>
-              </TouchableOpacity>
-            )}
           </View>
 
           {/* Certificates Section */}
