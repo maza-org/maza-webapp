@@ -2,7 +2,17 @@ import { Course } from '@/types/course';
 import useUser from '@/hooks/useUser';
 import Shimmer from '@/components/Shimmer';
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  Platform,
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import HomepageCategories from '@/components/HomepageCategories';
@@ -239,7 +249,7 @@ export default function Home() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <TouchableOpacity
           style={styles.header}
@@ -593,6 +603,9 @@ const styles = StyleSheet.create({
   popularCoursesSection: {
     marginVertical: 24,
   },
+  scrollContainer: {
+    ...(Platform.OS === 'web' ? { paddingHorizontal: 25, paddingVertical: 25 } : undefined),
+  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -600,8 +613,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   popularCoursesList: {
-    marginHorizontal: -25,
-    paddingHorizontal: 25,
+    ...(Platform.OS === 'web' ? { marginHorizontal: 0 } : { marginHorizontal: -25, paddingHorizontal: 25 }),
   },
   popularCourseCard: {
     width: 280,
@@ -932,7 +944,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#1fa2df',
     borderRadius: 4,
   },
-  coverImage: { width: '100%', height: 160, borderRadius: 5, marginBottom: 12 },
+  coverImage: {
+    width: '100%',
+    height: 160,
+    borderRadius: 5,
+    marginBottom: 12,
+  },
   popularCourseImageShimmer: {
     width: '100%',
     height: 140,
@@ -941,8 +958,7 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
   newCoursesList: {
-    marginHorizontal: -25,
-    paddingHorizontal: 25,
+    ...(Platform.OS === 'web' ? { marginHorizontal: 0 } : { marginHorizontal: -25, paddingHorizontal: 25 }),
   },
   courseBadge: {
     position: 'absolute',
@@ -964,8 +980,7 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
   suggestedCoursesList: {
-    marginHorizontal: -25,
-    paddingHorizontal: 25,
+    ...(Platform.OS === 'web' ? { marginHorizontal: 0 } : { marginHorizontal: -25, paddingHorizontal: 25 }),
   },
   courseRecommendedBadge: {
     position: 'absolute',
@@ -982,5 +997,8 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 10,
     fontWeight: '700',
+  },
+  courseSection: {
+    marginVertical: 10,
   },
 });

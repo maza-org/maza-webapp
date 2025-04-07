@@ -17,13 +17,25 @@ import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import { WebView } from 'react-native-webview';
 
+interface User {
+  token: string;
+  [key: string]: any;
+}
+
+interface DownloadResult {
+  uri: string;
+  status: number;
+  [key: string]: any;
+}
+
 export default function Certificate() {
   const { certificateId } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [certificateUrl, setCertificateUrl] = useState(null);
-  const [pdfUri, setPdfUri] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
+  const [pdfUri, setPdfUri] = useState<string | null>(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const isWeb = Platform.OS === 'web';
 
   useEffect(() => {
     const loadData = async () => {
@@ -36,7 +48,7 @@ export default function Certificate() {
 
           // Fetch certificate URL
           if (certificateId) {
-            await fetchCertificateUrl(parsedUser.token, certificateId as string);
+            await fetchCertificateUrl(parsedUser.token, certificateId);
           }
         }
       } catch (error) {
@@ -50,7 +62,7 @@ export default function Certificate() {
     loadData();
   }, [certificateId]);
 
-  const fetchCertificateUrl = async (token: string, id: string) => {
+  const fetchCertificateUrl = async (token: string, id: string | string[]) => {
     try {
       setLoading(true);
       const response = await fetch(`https://api.mazas.org/api/certificates/${id}`, {
@@ -69,28 +81,49 @@ export default function Certificate() {
       if (data.success && data.url) {
         setCertificateUrl(data.url);
         console.log(JSON.stringify(data, null, 2));
-        // Download the PDF using the URL
-        await downloadPdf(data.url, id);
+
+        // For web platform, we'll use the URL directly without downloading
+        if (isWeb) {
+          setPdfUri(data.url);
+          setLoading(false);
+        } else {
+          // For mobile platforms, download the PDF
+          await downloadPdf(data.url, id);
+        }
       } else {
         console.error('Failed to get certificate URL:', data);
         Alert.alert('Erro', data.message || 'Falha ao obter o URL do certificado');
+        setLoading(false);
       }
     } catch (error) {
       console.error('Error fetching certificate URL:', error);
       Alert.alert('Erro', 'Falha ao carregar o certificado');
+      setLoading(false);
     }
   };
 
-  const downloadPdf = async (url, id) => {
+  const downloadPdf = async (url: string, id: string | string[]) => {
+    // Skip downloading for web
+    if (isWeb) {
+      return;
+    }
+
     try {
       // Create a file path for the PDF in the cache directory
       const pdfFilePath = `${FileSystem.cacheDirectory}certificate_${id}.pdf`;
 
+      console.log('Downloading PDF to path:', pdfFilePath);
+
       // Download the PDF directly to the file system
       const downloadResult = await FileSystem.downloadAsync(url, pdfFilePath);
 
+      console.log('Download result:', downloadResult);
+
       if (downloadResult.status === 200) {
+        // Be consistent with URI handling for Android
+        // Store the URI without the 'file://' prefix
         setPdfUri(downloadResult.uri);
+        console.log('PDF URI set to:', downloadResult.uri);
       } else {
         console.error('Failed to download PDF, status:', downloadResult.status);
         Alert.alert('Erro', 'Falha ao baixar o certificado');
@@ -110,9 +143,15 @@ export default function Certificate() {
         return;
       }
 
-      // Share the PDF file
+      // For web, open in a new tab
+      if (isWeb) {
+        window.open(pdfUri, '_blank');
+        return;
+      }
+
+      // Share the PDF file for mobile
       const result = await Share.share({
-        url: Platform.OS === 'ios' ? pdfUri : `file://${pdfUri}`,
+        url: pdfUri,
         message: `Meu certificado de conclusão da Mazas Digital Learning Platform`,
       });
     } catch (error) {
@@ -122,6 +161,12 @@ export default function Certificate() {
   };
 
   const handleDownloadCertificate = async () => {
+    // For web, open in a new tab
+    if (isWeb && pdfUri) {
+      window.open(pdfUri, '_blank');
+      return;
+    }
+
     try {
       if (!pdfUri) {
         Alert.alert('Erro', 'PDF do certificado não disponível');
@@ -157,33 +202,108 @@ export default function Certificate() {
           return;
         }
 
-        // For Android 10+ (API level 29+), we'll check if we can use the Downloads directory
-        const fileUri = `${FileSystem.documentDirectory}certificado_mazas_${certificateId}.pdf`;
+        // Clean the URI - ensure consistent handling
+        let cleanUri = pdfUri;
+        if (cleanUri.startsWith('file://')) {
+          cleanUri = cleanUri.substring(7);
+        }
+        console.log('Clean URI for saving:', cleanUri);
 
-        // Copy the file to document directory first
+        // Create destination file path
+        const fileUri = `${FileSystem.documentDirectory}certificado_mazas_${certificateId}.pdf`;
+        console.log('Destination file path:', fileUri);
+
+        // Copy the file to document directory
         await FileSystem.copyAsync({
-          from: pdfUri,
+          from: cleanUri,
           to: fileUri,
         });
 
-        // Save to MediaLibrary (this works on most Android versions)
+        // Save to MediaLibrary
         const asset = await MediaLibrary.createAssetAsync(fileUri);
+        console.log('Asset created:', asset);
 
-        // Create an album and add the PDF to it
-        const album = await MediaLibrary.getAlbumAsync('Mazas Certificates');
-        if (album) {
-          await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
-        } else {
-          await MediaLibrary.createAlbumAsync('Mazas Certificates', asset, false);
+        // Try to find or create the album
+        try {
+          const album = await MediaLibrary.getAlbumAsync('Mazas Certificates');
+          if (album) {
+            await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+          } else {
+            await MediaLibrary.createAlbumAsync('Mazas Certificates', asset, false);
+          }
+          Alert.alert('Sucesso', 'Certificado salvo na galeria');
+        } catch (error) {
+          console.error('Error saving to album:', error);
+          Alert.alert('Aviso', 'Certificado salvo, mas não foi possível organizá-lo no álbum');
         }
-
-        Alert.alert('Sucesso', 'Certificado salvo na galeria');
       }
     } catch (error) {
       console.error('Error saving certificate:', error);
-      Alert.alert('Erro', 'Falha ao salvar certificado: ' + error.message);
+      Alert.alert('Erro', 'Falha ao salvar certificado: ' + error?.message);
     } finally {
       setDownloadingPdf(false);
+    }
+  };
+
+  const renderWebView = () => {
+    // For web platform, render the PDF directly in an iframe
+    if (isWeb) {
+      return (
+        <iframe
+          src={pdfUri}
+          style={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
+          }}
+          title="Certificate PDF"
+        />
+      );
+    }
+
+    console.log('Rendering WebView with URI:', pdfUri);
+
+    if (Platform.OS === 'android') {
+      // Ensure the URI has the file:// prefix for WebView
+      const fileUrl = pdfUri.startsWith('file://') ? pdfUri : `file://${pdfUri}`;
+      console.log('Android WebView URL:', fileUrl);
+
+      return (
+        <WebView
+          source={{ uri: fileUrl }}
+          style={styles.pdfView}
+          originWhitelist={['*', 'file://*']}
+          allowFileAccess={true}
+          allowFileAccessFromFileURLs={true}
+          allowUniversalAccessFromFileURLs={true}
+          mixedContentMode="always"
+          domStorageEnabled={true}
+          javaScriptEnabled={true}
+          scalesPageToFit={true}
+          renderError={(errorName) => (
+            <View style={styles.errorWebView}>
+              <Text style={styles.errorTitle}>Erro ao carregar PDF</Text>
+              <Text style={styles.errorText}>{errorName}</Text>
+              <Text style={styles.errorText}>URL: {fileUrl}</Text>
+            </View>
+          )}
+          onError={(syntheticEvent) => {
+            const { nativeEvent } = syntheticEvent;
+            console.error('WebView error:', nativeEvent);
+          }}
+        />
+      );
+    } else {
+      return (
+        <WebView
+          source={{ uri: pdfUri }}
+          style={styles.pdfView}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          originWhitelist={['*']}
+          scalesPageToFit={true}
+        />
+      );
     }
   };
 
@@ -230,16 +350,7 @@ export default function Certificate() {
         <Text style={styles.headerTitle}>Certificado</Text>
       </View>
 
-      <View style={styles.pdfContainer}>
-        <WebView
-          source={{ uri: pdfUri }}
-          style={styles.pdfView}
-          javaScriptEnabled={false}
-          domStorageEnabled={true}
-          originWhitelist={['*']}
-          scalesPageToFit={true}
-        />
-      </View>
+      <View style={styles.pdfContainer}>{renderWebView()}</View>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -247,19 +358,19 @@ export default function Certificate() {
           onPress={handleDownloadCertificate}
           disabled={downloadingPdf || !pdfUri}
         >
-          {downloadingPdf ? (
+          {downloadingPdf && !isWeb ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <>
               <Ionicons name="download-outline" size={20} color="#FFFFFF" style={styles.buttonIcon} />
-              <Text style={styles.downloadButtonText}>Download</Text>
+              <Text style={styles.downloadButtonText}>{isWeb ? 'Abrir PDF' : 'Download'}</Text>
             </>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.shareButton} onPress={handleShareCertificate} disabled={!pdfUri}>
           <Ionicons name="share-social-outline" size={20} color="#FFFFFF" style={styles.buttonIcon} />
-          <Text style={styles.shareButtonText}>Partilhar</Text>
+          <Text style={styles.shareButtonText}>{isWeb ? 'Abrir em nova aba' : 'Partilhar'}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -302,6 +413,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+  },
+  errorWebView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: '#f5f5f5',
   },
   errorTitle: {
     fontSize: 20,
