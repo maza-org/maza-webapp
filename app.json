@@ -14,7 +14,8 @@
       "backgroundColor": "#22ACE3"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "org.maza.app"
     },
     "android": {
       "adaptiveIcon": {
