@@ -167,11 +167,6 @@ export default function Create() {
             disabled={!phoneNumber || !fullName || loading || !!error}
             loading={loading}
           />
-
-          {/* Text Button right below the Cadastrar button */}
-          <TouchableOpacity onPress={handleSkip} style={styles.textButtonContainer}>
-            <Text style={styles.bottomLinkText}>Saltar</Text>
-          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>

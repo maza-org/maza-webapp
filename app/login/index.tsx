@@ -189,11 +189,6 @@ export default function Login() {
             disabled={!!error || !phoneNumber || loading}
             loading={loading}
           />
-
-          {/* Text Button right below the Entrar button */}
-          <TouchableOpacity onPress={handleSkip} style={styles.textButtonContainer}>
-            <Text style={styles.bottomLinkText}>Saltar</Text>
-          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
