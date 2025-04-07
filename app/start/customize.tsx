@@ -11,8 +11,8 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Subject, User } from '@/types/user';
-import { router } from 'expo-router';
+import { User } from '@/types/user';
+import { router, useLocalSearchParams } from 'expo-router';
 
 interface TopicButtonProps extends TouchableOpacityProps {
   topic: string;
@@ -42,6 +42,8 @@ export default function Customize() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const { interests } = useLocalSearchParams();
+  const userTopics = interests ? JSON.parse(interests as string) : [];
 
   useEffect(() => {
     const initialize = async () => {
@@ -73,6 +75,18 @@ export default function Customize() {
       const response = await fetch(`https://api.mazas.org/api/subjects?fields=name&sort=name&locale=pt`);
       const { data } = await response.json();
       setTopics(data);
+
+      // Mark user's existing topics as selected
+      if (userTopics && userTopics.length > 0) {
+        // Find the Topic objects that match the user's interests
+        const userSelectedTopics = data.filter((topic: Topic) =>
+          userTopics.some((userTopic: Topic) => userTopic.id === topic.id || userTopic.documentId === topic.documentId)
+        );
+
+        if (userSelectedTopics.length > 0) {
+          setSelectedTopics(userSelectedTopics);
+        }
+      }
     } catch (error) {
       console.error('Error fetching topics:', error);
       Alert.alert('Error', 'Failed to load topics');
@@ -81,7 +95,9 @@ export default function Customize() {
   };
 
   const toggleTopic = (topic: Topic): void => {
-    setSelectedTopics((prev) => (prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic]));
+    setSelectedTopics((prev) =>
+      prev.some((t) => t.id === topic.id) ? prev.filter((t) => t.id !== topic.id) : [...prev, topic]
+    );
   };
 
   const handleConfirm = async (): Promise<void> => {
@@ -92,7 +108,6 @@ export default function Customize() {
 
     try {
       setIsLoading(true);
-
       // Make the API call to update user interests
       const response = await fetch('https://api.mazas.org/api/users-permissions/interests', {
         method: 'POST',
@@ -109,10 +124,8 @@ export default function Customize() {
       if (!response.ok) {
         throw new Error('Failed to update interests');
       }
-
       // Save to AsyncStorage that user has updated their interests
       await AsyncStorage.setItem('@userInterestsUpdated', 'true');
-
       // Update the user object in AsyncStorage with new interests
       const updatedUser = {
         ...user,
@@ -164,7 +177,7 @@ export default function Customize() {
             <TopicButton
               key={`${topic.name}-${index}`}
               topic={topic.name}
-              isSelected={selectedTopics.includes(topic)}
+              isSelected={selectedTopics.some((t) => t.id === topic.id)}
               onPress={() => toggleTopic(topic)}
             />
           ))}

@@ -311,7 +311,12 @@ export default function ProfileScreen() {
   }
 
   function handleAddInterest() {
-    router.push('/start/customize');
+    router.push({
+      pathname: '/start/customize',
+      params: {
+        interests: user?.interests ? JSON.stringify(user?.interests) : undefined,
+      },
+    });
   }
 
   return (
@@ -425,6 +430,13 @@ export default function ProfileScreen() {
                 </View>
               )}
             </View>
+
+            {user.interests && user.interests.length > 0 && (
+              <TouchableOpacity style={styles.addMoreInterestsButton} onPress={handleAddInterest}>
+                <Feather name="plus" size={16} color="#1fa2df" />
+                <Text style={styles.addMoreInterestsText}>Adicionar Interesses</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Certificates Section */}
@@ -723,6 +735,25 @@ const styles = StyleSheet.create({
   },
   addInterestText: {
     color: '#FFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  addMoreInterestsButton: {
+    marginTop: 16,
+    marginLeft: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    gap: 8,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(31, 162, 223, 0.3)',
+    backgroundColor: 'rgba(31, 162, 223, 0.05)',
+  },
+  addMoreInterestsText: {
+    color: '#1fa2df',
     fontSize: 14,
     fontWeight: '500',
   },
