@@ -17,24 +17,54 @@ export default function Opportunities() {
   const fetchJobs = async () => {
     try {
       setLoading(true);
+      setError(undefined);
 
-      // API endpoint
       const endpoint = 'https://www.emprego.co.mz/wp-api/vacancies/front';
 
-      // Make the API request
       const response = await fetch(endpoint, {
         method: 'GET',
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+      // Handle different HTTP response status codes
+      switch (response.status) {
+        // Success responses
+        case 200:
+          const data = await response.json();
+          setJobs(data.results);
+          break;
+        case 204:
+          // No content
+          setJobs([]);
+          break;
+
+        // Client errors
+        case 400:
+          throw new Error('Requisição inválida. Por favor, tente novamente.');
+        case 401:
+          throw new Error('Não autorizado. Por favor, faça login novamente.');
+        case 403:
+          throw new Error('Acesso proibido. Não tem permissão para ver estas oportunidades.');
+        case 404:
+          throw new Error('Recurso não encontrado. A API solicitada não existe.');
+        case 429:
+          throw new Error('Muitas requisições. Atingiu o limite de requisições permitidas.');
+        // Server errors
+        case 500:
+          throw new Error('Erro no servidor. Por favor, tente novamente mais tarde.');
+        case 503:
+          throw new Error('Serviço indisponível. O servidor está temporariamente fora do ar.');
+
+        // Other status codes
+        default:
+          throw new Error(`Erro desconhecido! Status: ${response.status}`);
       }
 
-      const data = await response.json();
-      setJobs(data.results);
       setLoading(false);
     } catch (err) {
-      setError('Erro ao carregar as oportunidades. Tente novamente mais tarde.');
+      // Handle the error message
+      const errorMessage =
+        err instanceof Error ? err.message : 'Erro ao carregar as oportunidades. Tente novamente mais tarde.';
+      setError(errorMessage);
       setLoading(false);
       console.error('Error fetching jobs:', err);
     }
