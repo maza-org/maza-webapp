@@ -171,6 +171,7 @@ export default function JobDetails() {
       <HTML
         source={{ html: htmlContent }}
         contentWidth={windowWidth - 32}
+        // @ts-ignore
         tagsStyles={tagsStyles}
         defaultTextProps={{
           style: { color: '#fff' },
