@@ -18,10 +18,54 @@ import { Dimensions } from 'react-native';
 
 const windowWidth = Dimensions.get('window').width;
 
+type Job = {
+  id: number;
+  filter_id: number;
+  apply_through_filter: boolean;
+  type: string;
+  recommended: boolean;
+  url: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  date: string;
+  date_iso: string;
+  locations: {
+    id: number;
+    slug: string;
+    name: string;
+  }[];
+  categories: {
+    id: number;
+    slug: string;
+    name: string;
+  }[];
+  tags: any[];
+  expire_date: string;
+  expired: boolean;
+  address: string;
+  company: {
+    id: string;
+    logo: string;
+    url: string;
+    name: string;
+    slug: string;
+    description: string;
+  };
+  meta: {
+    language: {
+      id: string;
+      name: string;
+    };
+  };
+  ext_apply_url: string;
+};
+
 export default function JobDetails() {
-  const [job, setJob] = useState(null);
+  const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const { slug } = useLocalSearchParams();
 
   useEffect(() => {
@@ -102,7 +146,7 @@ export default function JobDetails() {
     });
   };
 
-  const renderHTMLContent = (htmlContent) => {
+  const renderHTMLContent = (htmlContent: string) => {
     const baseStyle = {
       color: '#fff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
