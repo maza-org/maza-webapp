@@ -50,14 +50,6 @@
         {
           "iCloudContainerEnvironment": "Production"
         }
-      ],
-      [
-        "@sentry/react-native/expo",
-        {
-          "organization": "maza-75",
-          "project": "react-native",
-          "url": "https://sentry.io/"
-        }
       ]
     ],
     "experiments": {

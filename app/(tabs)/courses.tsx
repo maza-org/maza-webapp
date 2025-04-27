@@ -12,8 +12,6 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { Text, View } from '@/components/Themed';
 import { useState, useRef, useEffect } from 'react';
 import { router } from 'expo-router';
-import DailyScoreChart from '@/components/Daybar';
-import Search from '@/components/Search';
 import CourseItem from '@/components/CourseItem';
 import FavoriteCoursesGrid from '@/components/FavoriteCoursesGrid';
 import CoursesInProgress from '@/components/CourseInProgress';
@@ -92,16 +90,40 @@ const CompletedCourses = () => {
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch completed courses');
-      }
+      switch (response.status) {
+        case 200: {
+          const data = await response.json();
+          console.log(JSON.stringify(data, null, 2));
+          setCourses(data.data || []);
+          break;
+        }
+        case 204:
+          setCourses([]);
+          break;
 
-      const data = await response.json();
-      console.log(`finished courses`, JSON.stringify(data, null, 2));
-      setCourses(data.data || []);
-      console.log(`COMPLETED COURSES`, JSON.stringify(data.data, null, 2));
+        case 400:
+          throw new Error('Requisição inválida (400). Verifique os dados enviados.');
+
+        case 401:
+          throw new Error('Não autorizado (401). Sessão expirada?');
+
+        case 403:
+          throw new Error('Acesso negado (403). Você não tem permissão para ver isto.');
+
+        case 404:
+          throw new Error('Recurso não encontrado (404).');
+
+        case 500:
+          throw new Error('Erro interno do servidor (500). Tente novamente mais tarde.');
+
+        case 503:
+          throw new Error('Serviço temporariamente indisponível (503).');
+
+        default:
+          throw new Error(`Erro inesperado (${response.status}).`);
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || 'Erro desconhecido ao buscar cursos.');
     } finally {
       setIsLoading(false);
     }
