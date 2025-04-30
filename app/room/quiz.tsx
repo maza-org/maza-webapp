@@ -1,8 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const celebrateImage = require('@/assets/images/celebrate.webp');
+const happyImage = require('@/assets/images/happy.webp');
+const sadImage = require('@/assets/images/sad.webp');
 
 interface Option {
   id: number;
@@ -122,6 +126,7 @@ const ResultsView = ({
   onRetake,
   grade,
   quizCompleted,
+  timeSpent,
 }: {
   correctAnswers: number;
   totalQuestions: number;
@@ -129,80 +134,125 @@ const ResultsView = ({
   onRetake: () => void;
   grade: number;
   quizCompleted: boolean;
+  timeSpent: number;
 }) => {
   const score = (correctAnswers / totalQuestions) * 100;
   const passed = score >= passGrade;
+  const formattedTime = formatTime(timeSpent);
+
+  // Determine which image and messages to show based on score
+  const getResultContent = () => {
+    if (score > passGrade + 10) {
+      // Excellent result - celebrate
+      return {
+        image: celebrateImage,
+        title: 'MAZAAA!',
+        subtitle:
+          'Você absolutamente arrasou neste desafio! Sua excelência é extraordinária. Pronto para conquistar ainda mais?',
+        buttonText: 'Reclamar Pontos',
+        cardStyle: {
+          titleColor: '#04D361',
+          buttonColor: '#04D361',
+        },
+      };
+    } else if (score >= passGrade) {
+      // Passing grade - happy
+      return {
+        image: happyImage,
+        title: 'Desafio Concluído!',
+        subtitle: 'Muito bem! Você conquistou este desafio com confiança. Continue com o excelente trabalho!',
+        buttonText: 'Reclamar Pontos',
+        cardStyle: {
+          titleColor: '#1fa2df',
+          buttonColor: '#1fa2df',
+        },
+      };
+    } else {
+      // Below passing - sad
+      return {
+        image: sadImage,
+        title: 'Quase lá',
+        subtitle: 'Não desista! Cada tentativa te aproxima da maestria. Tente novamente e mostre do que você é capaz!',
+        buttonText: 'Tentar Novamente',
+        cardStyle: {
+          titleColor: '#FF3B30',
+          buttonColor: '#FF3B30',
+        },
+      };
+    }
+  };
+
+  const resultContent = getResultContent();
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content} contentContainerStyle={styles.resultsContentContainer}>
-        <View style={styles.successIconContainer}>
-          <View style={[styles.checkCircle, !passed && styles.failCircle]}>
-            <Feather name={passed ? 'check' : 'x'} size={48} color="#FFF" />
-          </View>
+        {/* Globe Character Image */}
+        <View style={styles.globeImageContainer}>
+          <Image source={resultContent.image} style={styles.globeImage} />
         </View>
 
-        {passed ? (
-          <>
-            <Text style={styles.congratsTitle}>Muito bem MAZAAA!</Text>
+        {/* Challenge Title */}
+        <Text style={[styles.challengeCompleteTitle, { color: resultContent.cardStyle.titleColor }]}>
+          {resultContent.title}
+        </Text>
 
-            <Text style={styles.resultDescription}>
-              Você absolutamente acertou o{'\n'}
-              teste
+        {/* Subtitle */}
+        <Text style={styles.challengeSubtitle}>{resultContent.subtitle}</Text>
+
+        {/* Stats Cards */}
+        <View style={styles.statsCardsContainer}>
+          {/* Points Card */}
+          <View style={[styles.statsCard, styles.pointsCard]}>
+            <Text style={styles.statsCardValue}>{grade}</Text>
+            <Text style={styles.statsCardLabel}>Pontos</Text>
+          </View>
+
+          {/* Correct Card */}
+          <View style={[styles.statsCard, styles.correctCard]}>
+            <Text style={styles.statsCardValue}>
+              {correctAnswers}/{totalQuestions}
             </Text>
-
-            {quizCompleted && (
-              <View style={styles.completedBadge}>
-                <Feather name="check-circle" size={20} color="#04D361" />
-                <Text style={styles.completedText}>Quiz registrado como concluído</Text>
-              </View>
-            )}
-          </>
-        ) : (
-          <>
-            <Text style={styles.failTitle}>Tente Novamente</Text>
-          </>
-        )}
-
-        <View style={styles.statsContainer}>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <View style={styles.statIconContainer}>
-                <Feather name="check-circle" size={24} color="#04D361" />
-              </View>
-              <Text style={styles.statLabel}>Questões Corretas</Text>
-              <Text style={styles.statValue}>{correctAnswers}</Text>
-            </View>
-
-            <View style={styles.statItem}>
-              <View style={styles.statIconContainer}>
-                <Feather name="x-circle" size={24} color="#FF3B30" />
-              </View>
-              <Text style={styles.statLabel}>Questões Incorrectas</Text>
-              <Text style={styles.statValue}>{totalQuestions - correctAnswers}</Text>
-            </View>
+            <Text style={styles.statsCardLabel}>Correctas</Text>
           </View>
 
-          <View style={styles.statItem}>
-            <Text style={styles.totalLabel}>Total de Questões</Text>
-            <Text style={styles.totalValue}>{totalQuestions}</Text>
+          {/* Time Card */}
+          <View style={[styles.statsCard, styles.timeCard]}>
+            <Text style={styles.statsCardValue}>{formattedTime}</Text>
+            <Text style={styles.statsCardLabel}>Tempo</Text>
           </View>
         </View>
 
-        <View style={styles.resultsButtonContainer}>
-          {!passed && (
-            <TouchableOpacity style={styles.retakeButton} onPress={onRetake}>
-              <Text style={styles.retakeButtonText}>Tentar Novamente</Text>
-            </TouchableOpacity>
+        {/* Primary Action Button */}
+        <TouchableOpacity
+          style={[styles.claimPointsButton, { backgroundColor: resultContent.cardStyle.buttonColor }]}
+          onPress={() => (passed ? router.back() : onRetake())}
+        >
+          <Text style={styles.claimPointsText}>{resultContent.buttonText}</Text>
+          {passed && (
+            <View style={styles.pointsBadge}>
+              <Text style={styles.pointsBadgeText}>{grade}</Text>
+            </View>
           )}
+        </TouchableOpacity>
 
+        {/* Show Continue button if failed (as secondary action) */}
+        {!passed && (
           <TouchableOpacity
-            style={[styles.continueButton, !passed && styles.continueButtonSecondary]}
+            style={[styles.continueButton, styles.continueButtonSecondary]}
             onPress={() => router.back()}
           >
             <Text style={styles.continueButtonText}>Continuar</Text>
           </TouchableOpacity>
-        </View>
+        )}
+
+        {/* Show completion badge if quiz is marked as completed */}
+        {quizCompleted && (
+          <View style={styles.completedBadge}>
+            <Feather name="check-circle" size={20} color="#04D361" />
+            <Text style={styles.completedText}>Quiz marked as completed</Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -222,6 +272,7 @@ export default function Quiz() {
   const [timeLeft, setTimeLeft] = useState(QUIZ_DURATION);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [calculatedGrade, setCalculatedGrade] = useState(0);
+  const [timeSpent, setTimeSpent] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -235,6 +286,7 @@ export default function Quiz() {
           handleTimeUp();
           return 0;
         }
+        setTimeSpent((prevSpent) => prevSpent + 1);
         return prev - 1;
       });
     }, 1000);
@@ -367,28 +419,38 @@ export default function Quiz() {
   };
 
   const handleRetake = () => {
-    setCurrentQuestion(0);
-    setSelectedAnswers({});
-    setShowResults(false);
-    setShowCurrentFeedback(false);
-    setTimeLeft(QUIZ_DURATION);
-    setQuizCompleted(false);
+    // Add a small animation or feedback effect before resetting
+    Alert.alert('Iniciando novamente', 'Vamos lá! Você consegue desta vez.', [
+      {
+        text: 'Vamos!',
+        onPress: () => {
+          setCurrentQuestion(0);
+          setSelectedAnswers({});
+          setShowResults(false);
+          setShowCurrentFeedback(false);
+          setTimeLeft(QUIZ_DURATION);
+          setTimeSpent(0);
+          setQuizCompleted(false);
 
-    // Restart the timer
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
+          // Restart the timer
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+          }
 
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current as NodeJS.Timeout);
-          handleTimeUp();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+          timerRef.current = setInterval(() => {
+            setTimeLeft((prev) => {
+              if (prev <= 1) {
+                clearInterval(timerRef.current as NodeJS.Timeout);
+                handleTimeUp();
+                return 0;
+              }
+              setTimeSpent((prevSpent) => prevSpent + 1);
+              return prev - 1;
+            });
+          }, 1000);
+        },
+      },
+    ]);
   };
 
   const isOptionSelected = (optionId: number) => {
@@ -555,6 +617,7 @@ export default function Quiz() {
           onRetake={handleRetake}
           grade={calculatedGrade}
           quizCompleted={quizCompleted}
+          timeSpent={QUIZ_DURATION - timeLeft}
         />
       )}
     </SafeAreaView>
@@ -612,7 +675,9 @@ const styles = StyleSheet.create({
     padding: 24,
     flexGrow: 1,
     justifyContent: 'center',
+    alignItems: 'center',
     paddingVertical: 60,
+    paddingHorizontal: 20,
   },
   questionContainer: {
     padding: 24,
@@ -694,29 +759,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  resultsButtonContainer: {
-    marginTop: 24,
-    gap: 16,
-  },
-  continueButton: {
-    backgroundColor: '#1fa2df',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  continueButtonSecondary: {
-    backgroundColor: '#323238',
-  },
-  continueButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   retakeButton: {
     backgroundColor: '#FF3B30',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
+    width: '100%',
+    marginTop: 16,
   },
   retakeButtonText: {
     color: '#FFF',
@@ -786,47 +835,112 @@ const styles = StyleSheet.create({
   timerTextWarning: {
     color: '#FF3B30',
   },
-  // Novos estilos para tela de resultados
-  successIconContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
+
+  // New styles for the challenge complete screen
+  globeImageContainer: {
+    marginBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 10,
   },
-  checkCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#1fa2df',
+  globeImage: {
+    width: 200,
+    height: 200,
+    resizeMode: 'contain',
+    marginBottom: 10,
+  },
+  challengeCompleteTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFF',
+    textAlign: 'center',
+    marginBottom: 16,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 3,
+  },
+  challengeSubtitle: {
+    fontSize: 16,
+    color: '#A8A8B3',
+    textAlign: 'center',
+    marginBottom: 40,
+    lineHeight: 24,
+  },
+  statsCardsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 30,
+  },
+  statsCard: {
+    width: '30%',
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
+    elevation: 2,
   },
-  failCircle: {
-    backgroundColor: '#FF3B30',
+  pointsCard: {
+    backgroundColor: '#FFEEB2',
   },
-  congratsTitle: {
-    fontSize: 32,
+  correctCard: {
+    backgroundColor: '#E3FFEA',
+  },
+  timeCard: {
+    backgroundColor: '#E1F5FF',
+  },
+  statsCardValue: {
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFF',
-    textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
+    color: '#121214',
   },
-  failTitle: {
-    fontSize: 32,
+  statsCardLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#666',
+  },
+  claimPointsButton: {
+    backgroundColor: '#1fa2df',
+    flexDirection: 'row',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  claimPointsText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '600',
+    marginRight: 8,
+  },
+  pointsBadge: {
+    backgroundColor: '#FFC107',
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  pointsBadgeText: {
+    color: '#121214',
     fontWeight: 'bold',
-    color: '#FF3B30',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  resultDescription: {
-    fontSize: 22,
-    color: '#FFF',
-    textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 32,
+    fontSize: 14,
   },
   completedBadge: {
     flexDirection: 'row',
@@ -836,79 +950,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     alignSelf: 'center',
-    marginBottom: 24,
+    marginTop: 16,
   },
   completedText: {
     color: '#04D361',
     fontSize: 16,
     marginLeft: 8,
-  },
-  pointsContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  pointsLabel: {
-    fontSize: 18,
-    color: '#A8A8B3',
-    marginBottom: 16,
-  },
-  pointsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  pointsValue: {
-    fontSize: 80,
-    fontWeight: 'bold',
-    color: '#1fa2df',
-    marginRight: 8,
-  },
-  failPointsValue: {
-    color: '#FF3B30',
-  },
-  trophyContainer: {
-    marginTop: 8,
-  },
-  pointsUsage: {
-    fontSize: 18,
-    color: '#A8A8B3',
-  },
-  statsContainer: {
-    backgroundColor: '#202024',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 24,
-    width: '100%',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statIconContainer: {
-    marginBottom: 8,
-  },
-  statLabel: {
-    color: '#A8A8B3',
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  statValue: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  totalLabel: {
-    color: '#A8A8B3',
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  totalValue: {
-    color: '#FFF',
-    fontSize: 22,
-    fontWeight: 'bold',
   },
 });
