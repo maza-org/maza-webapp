@@ -52,15 +52,15 @@ export default function CertificatesScreen() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch certificates: ${response.status}`);
+        throw new Error(`Falha ao obter os certificados: ${response.status}`);
       }
 
       const result = await response.json();
       setCertificates(result.data || []);
       setError(null);
     } catch (error) {
-      console.error('Error fetching certificates:', error);
-      setError('Failed to load certificates. Please try again later.');
+      console.error('Erro na obtenção de certificados:', error);
+      setError('Falha no carregamento de certificados. Tente novamente mais tarde.');
     } finally {
       setIsLoading(false);
       setRefreshing(false);
