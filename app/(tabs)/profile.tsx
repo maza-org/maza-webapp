@@ -55,7 +55,7 @@ export default function ProfileScreen() {
         setIsRefreshing(true);
         try {
           await refetch();
-          fetchCertificates();
+          await fetchCertificates();
           // Check if user has a profile image
           if (user?.profile_image?.formats?.thumbnail?.url) {
             setProfileImage(user?.profile_image?.formats?.thumbnail?.url);
@@ -186,7 +186,7 @@ export default function ProfileScreen() {
             });
 
             if (!result.canceled) {
-              uploadImage(result.assets[0].uri);
+              await uploadImage(result.assets[0].uri);
             }
           } catch (error) {
             console.error('Error taking photo:', error);
@@ -215,11 +215,11 @@ export default function ProfileScreen() {
             });
 
             if (!result.canceled) {
-              uploadImage(result.assets[0].uri);
+              await uploadImage(result.assets[0].uri);
             }
           } catch (error) {
             console.error('Error picking image:', error);
-            Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+            Alert.alert('Erro', 'Não foi possível seleccionar a imagem.');
           }
         },
       },
@@ -272,7 +272,7 @@ export default function ProfileScreen() {
         setProfileImage(responseData[0].url);
         await refetch();
 
-        Alert.alert('Sucesso', 'Foto de perfil atualizada com sucesso');
+        Alert.alert('Sucesso', 'Foto de perfil actualizada com sucesso');
       }
     } catch (error) {
       console.error('Error uploading image:', error);
