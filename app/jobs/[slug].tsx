@@ -468,11 +468,12 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   applyButton: {
-    backgroundColor: '#2EA8FF',
     paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#1fa2df',
+    padding: 16,
+    borderRadius: 50,
+    alignItems: 'center',
   },
   applyButtonText: {
     fontSize: 16,

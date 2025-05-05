@@ -1,157 +1,292 @@
-import { SafeAreaView, StyleSheet, View, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import {
+  SafeAreaView,
+  StyleSheet,
+  View,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
+} from 'react-native';
 import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { router } from 'expo-router';
+import { Image } from 'expo-image';
+import { StatusBar } from 'expo-status-bar';
 import { Job } from '@/types/job';
 
-export default function Opportunities() {
-  const [jobs, setJobs] = useState<Job[] | []>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | undefined>(undefined);
+// Constants
+const API_ENDPOINT = 'https://www.emprego.co.mz/wp-api/vacancies/front';
 
-  useEffect(() => {
-    fetchJobs();
-  }, []);
+// Custom hook for fetching jobs
+function useJobsData() {
+  const [state, setState] = useState<{
+    jobs: Job[];
+    isLoading: boolean;
+    isRefreshing: boolean;
+    error?: string;
+  }>({
+    jobs: [],
+    isLoading: true,
+    isRefreshing: false,
+    error: undefined,
+  });
 
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async (isRefreshing = false) => {
     try {
-      setLoading(true);
-      setError(undefined);
+      setState((prev) => ({
+        ...prev,
+        isLoading: !isRefreshing,
+        isRefreshing,
+        error: undefined,
+      }));
 
-      const endpoint = 'https://www.emprego.co.mz/wp-api/vacancies/front';
-
-      const response = await fetch(endpoint, {
+      const response = await fetch(API_ENDPOINT, {
         method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
       });
 
       // Handle different HTTP response status codes
-      switch (response.status) {
-        // Success responses
-        case 200:
-          const data = await response.json();
-          setJobs(data.results);
-          break;
-        case 204:
-          // No content
-          setJobs([]);
-          break;
-
-        // Client errors
-        case 400:
-          throw new Error('Requisição inválida. Por favor, tente novamente.');
-        case 401:
-          throw new Error('Não autorizado. Por favor, faça login novamente.');
-        case 403:
-          throw new Error('Acesso proibido. Não tem permissão para ver estas oportunidades.');
-        case 404:
-          throw new Error('Recurso não encontrado. A API solicitada não existe.');
-        case 429:
-          throw new Error('Muitas requisições. Atingiu o limite de requisições permitidas.');
-        // Server errors
-        case 500:
-          throw new Error('Erro no servidor. Por favor, tente novamente mais tarde.');
-        case 503:
-          throw new Error('Serviço indisponível. O servidor está temporariamente fora do ar.');
-
-        // Other status codes
-        default:
-          throw new Error(`Erro desconhecido! Status: ${response.status}`);
+      if (response.ok) {
+        const data = await response.json();
+        setState((prev) => ({
+          ...prev,
+          jobs: data.results || [],
+          isLoading: false,
+          isRefreshing: false,
+        }));
+        return;
       }
 
-      setLoading(false);
+      // Map status codes to user-friendly error messages
+      const errorMessages: Record<number, string> = {
+        400: 'Requisição inválida. Por favor, tente novamente.',
+        401: 'Não autorizado. Por favor, faça login novamente.',
+        403: 'Acesso proibido. Não tem permissão para ver estas oportunidades.',
+        404: 'Recurso não encontrado. A API solicitada não existe.',
+        429: 'Muitas requisições. Atingiu o limite de requisições permitidas.',
+        500: 'Erro no servidor. Por favor, tente novamente mais tarde.',
+        503: 'Serviço indisponível. O servidor está temporariamente fora do ar.',
+      };
+
+      const errorMessage = errorMessages[response.status] || `Erro desconhecido! Status: ${response.status}`;
+
+      throw new Error(errorMessage);
     } catch (err) {
-      // Handle the error message
       const errorMessage =
         err instanceof Error ? err.message : 'Erro ao carregar as oportunidades. Tente novamente mais tarde.';
-      setError(errorMessage);
-      setLoading(false);
+
+      setState((prev) => ({
+        ...prev,
+        error: errorMessage,
+        isLoading: false,
+        isRefreshing: false,
+      }));
+
       console.error('Error fetching jobs:', err);
     }
-  };
+  }, []);
 
-  const renderJobItem = ({ item }: { item: Job }) => (
+  const refreshJobs = useCallback(() => {
+    fetchJobs(true);
+  }, [fetchJobs]);
+
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
+
+  return {
+    ...state,
+    refreshJobs,
+    fetchJobs,
+  };
+}
+
+// Error state component
+const ErrorState = memo(({ message, onRetry }: { message: string; onRetry: () => void }) => (
+  <View style={styles.centerContainer}>
+    <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B" />
+    <Text style={styles.errorText}>{message}</Text>
+    <TouchableOpacity
+      style={styles.retryButton}
+      onPress={onRetry}
+      accessibilityRole="button"
+      accessibilityLabel="Tentar carregar oportunidades novamente"
+    >
+      <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+    </TouchableOpacity>
+  </View>
+));
+
+// Empty state component
+const EmptyState = memo(() => (
+  <View style={styles.centerContainer}>
+    <Ionicons name="search-outline" size={64} color="#8F8F8F" />
+    <Text style={styles.emptyText}>Nenhuma oportunidade encontrada</Text>
+  </View>
+));
+
+// Loading state component
+const LoadingState = memo(() => (
+  <View style={styles.centerContainer}>
+    <ActivityIndicator size="large" color="#2EA8FF" />
+    <Text style={styles.loadingText}>Carregando oportunidades...</Text>
+  </View>
+));
+
+// Job badge component
+interface BadgeProps {
+  text: string;
+  type: 'language' | 'new';
+}
+
+const Badge = memo(({ text, type }: BadgeProps) => (
+  <View style={[styles.badge, type === 'new' ? styles.newBadge : styles.languageBadge]}>
+    <Text style={[type === 'new' ? styles.newBadgeText : styles.languageBadgeText]} numberOfLines={1}>
+      {text}
+    </Text>
+  </View>
+));
+
+// Job card meta item component
+interface MetaItemProps {
+  icon: string;
+  text?: string;
+}
+
+const MetaItem = memo(({ icon, text }: MetaItemProps) => {
+  if (!text) return null;
+
+  return (
+    <View style={styles.metaItem}>
+      <Ionicons name={icon as any} size={14} color="#8F8F8F" />
+      <Text style={styles.metaText} numberOfLines={1}>
+        {text}
+      </Text>
+    </View>
+  );
+});
+
+// Company logo component
+interface CompanyLogoProps {
+  logo?: string;
+  name?: string;
+}
+
+const CompanyLogo = memo(({ logo, name = '?' }: CompanyLogoProps) => (
+  <View style={styles.companyLogoContainer}>
+    {logo ? (
+      <Image
+        source={{ uri: logo }}
+        style={styles.companyLogo}
+        contentFit="contain"
+        transition={300}
+        accessibilityLabel={`Logo da ${name}`}
+      />
+    ) : (
+      <View style={styles.placeholderLogo}>
+        <Text style={styles.placeholderText}>{name.charAt(0)}</Text>
+      </View>
+    )}
+  </View>
+));
+
+// Job card component
+interface JobCardProps {
+  job: Job;
+  onPress: (job: Job) => void;
+}
+
+const JobCard = memo(({ job, onPress }: JobCardProps) => {
+  const handlePress = useCallback(() => {
+    onPress(job);
+  }, [job, onPress]);
+
+  return (
     <TouchableOpacity
       style={styles.jobCard}
-      onPress={() => {
-        router.push({
-          pathname: '/jobs/[id]',
-          params: { slug: item.slug },
-        });
-      }}
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={`Vaga: ${job.title} em ${job.company?.name}`}
+      accessibilityHint="Toque para ver detalhes da vaga"
     >
       <View style={styles.jobHeader}>
-        <View style={styles.companyLogoContainer}>
-          {item.company && item.company.logo ? (
-            <Image source={{ uri: item.company.logo }} style={styles.companyLogo} resizeMode="contain" />
-          ) : (
-            <View style={styles.placeholderLogo}>
-              <Text style={styles.placeholderText}>{item.company?.name?.charAt(0) || '?'}</Text>
-            </View>
-          )}
-        </View>
+        <CompanyLogo logo={job.company?.logo} name={job.company?.name} />
         <View style={styles.jobInfo}>
           <Text style={styles.jobTitle} numberOfLines={2}>
-            {item.title}
+            {job.title}
           </Text>
-          <Text style={styles.companyName}>{item.company?.name}</Text>
+          <Text style={styles.companyName} numberOfLines={1}>
+            {job.company?.name}
+          </Text>
           <View style={styles.jobMeta}>
-            <View style={styles.metaItem}>
-              <Ionicons name="location-outline" size={14} color="#8F8F8F" />
-              <Text style={styles.metaText}>{item.city?.name}</Text>
-            </View>
-            <View style={styles.metaItem}>
-              <Ionicons name="briefcase-outline" size={14} color="#8F8F8F" />
-              <Text style={styles.metaText}>{item.category?.name}</Text>
-            </View>
+            <MetaItem icon="location-outline" text={job.city?.name} />
+            <MetaItem icon="briefcase-outline" text={job.category?.name} />
           </View>
         </View>
       </View>
-      {item.meta?.language && (
-        <View style={styles.languageBadge}>
-          <Text style={styles.languageBadgeText}>{item.meta.language.name}</Text>
-        </View>
-      )}
-      {item.meta?.new_post && (
-        <View style={styles.newBadge}>
-          <Text style={styles.newBadgeText}>Novo</Text>
-        </View>
-      )}
+
+      {job.meta?.language && <Badge type="language" text={job.meta.language.name} />}
+
+      {job.meta?.new_post && <Badge type="new" text="Novo" />}
     </TouchableOpacity>
   );
+});
+
+export default function Opportunities() {
+  const { jobs, isLoading, isRefreshing, error, fetchJobs, refreshJobs } = useJobsData();
+
+  const navigateToJobDetail = useCallback((job: Job) => {
+    router.push({
+      pathname: '/jobs/[slug]',
+      params: { slug: job.slug },
+    });
+  }, []);
+
+  const renderJobItem = useCallback(
+    ({ item }: { item: Job }) => <JobCard job={item} onPress={navigateToJobDetail} />,
+    [navigateToJobDetail]
+  );
+
+  const keyExtractor = useCallback((item: Job) => item.id.toString(), []);
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="light" />
+
       <View style={styles.header}>
         <Text style={styles.title}>Oportunidades</Text>
       </View>
 
       <View style={styles.content}>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#2EA8FF" />
-            <Text style={styles.loadingText}>Carregando oportunidades...</Text>
-          </View>
+        {isLoading ? (
+          <LoadingState />
         ) : error ? (
-          <View style={styles.errorContainer}>
-            <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B" />
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={fetchJobs}>
-              <Text style={styles.retryButtonText}>Tentar Novamente</Text>
-            </TouchableOpacity>
-          </View>
+          <ErrorState message={error} onRetry={fetchJobs} />
         ) : jobs.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={64} color="#8F8F8F" />
-            <Text style={styles.emptyText}>Nenhuma oportunidade encontrada</Text>
-          </View>
+          <EmptyState />
         ) : (
           <FlatList
             data={jobs}
             renderItem={renderJobItem}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={keyExtractor}
             contentContainerStyle={styles.jobList}
             showsVerticalScrollIndicator={false}
+            initialNumToRender={5}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            removeClippedSubviews={true}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={refreshJobs}
+                colors={['#2EA8FF']}
+                tintColor="#2EA8FF"
+              />
+            }
           />
         )}
       </View>
@@ -182,21 +317,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
-  loadingContainer: {
+  centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 32,
   },
   loadingText: {
     fontSize: 16,
     color: '#8F8F8F',
     marginTop: 16,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
   },
   errorText: {
     fontSize: 16,
@@ -214,12 +344,6 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
   },
   emptyText: {
     fontSize: 18,
@@ -298,14 +422,16 @@ const styles = StyleSheet.create({
     color: '#8F8F8F',
     marginLeft: 4,
   },
-  languageBadge: {
+  badge: {
     position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: '#3A3A3C',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+  },
+  languageBadge: {
+    top: 12,
+    right: 12,
+    backgroundColor: '#3A3A3C',
   },
   languageBadgeText: {
     fontSize: 10,
@@ -313,13 +439,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   newBadge: {
-    position: 'absolute',
     bottom: 12,
     right: 12,
     backgroundColor: '#2EA8FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
   },
   newBadgeText: {
     fontSize: 10,
