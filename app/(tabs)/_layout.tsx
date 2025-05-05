@@ -18,7 +18,6 @@ export default function TabLayout() {
           borderTopWidth: 1,
           paddingTop: 5,
           height: 70,
-          // Remove fixed paddingBottom and use safeAreaInsets instead
         },
         tabBarLabelStyle: {
           fontSize: 10,
@@ -26,11 +25,9 @@ export default function TabLayout() {
           marginTop: 6,
         },
         tabBarInactiveTintColor: '#7C7C8A',
-        // Add this to handle safe area properly
         tabBarItemStyle: {
           paddingBottom: 5,
         },
-        // Enable this to respect safe area insets
         safeAreaInsets: { bottom: Platform.OS === 'ios' ? 10 : 5 },
       }}
     >
