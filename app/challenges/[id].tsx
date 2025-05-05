@@ -121,31 +121,35 @@ export default function Challenge(): React.ReactElement {
 
     return (
       <View key={node.id} style={styles.nodeContainer}>
-        <TouchableOpacity
-          style={[styles.nodeCard, !node.isActive && styles.inactiveNode, isEven ? styles.leftNode : styles.rightNode]}
-          onPress={() => handleNodePress(node.id)}
-          disabled={!node.isActive}
-        >
-          <View style={styles.nodeContent}>
-            <Text style={styles.nodeTitle}>{node.title}</Text>
-            <Image source={{ uri: getNodeImage(node) }} style={styles.nodeImage} />
-            <View style={styles.pointsContainer}>
-              <Image
-                source={{ uri: '/api/placeholder/20/20' }} // Coin icon placeholder
-                style={styles.coinIcon}
-              />
-              <Text style={styles.pointsText}>{node.points}</Text>
+        <View style={[styles.nodeCardWrapper, isEven ? styles.leftNodeWrapper : styles.rightNodeWrapper]}>
+          <TouchableOpacity
+            style={[styles.nodeCard, !node.isActive && styles.inactiveNode]}
+            onPress={() => handleNodePress(node.id)}
+            disabled={!node.isActive}
+          >
+            <View style={styles.nodeContent}>
+              <Text style={styles.nodeTitle}>{node.title}</Text>
+              <Image source={{ uri: getNodeImage(node) }} style={styles.nodeImage} />
             </View>
-          </View>
 
-          {!node.isActive && (
-            <View style={styles.lockOverlay}>
-              <View style={styles.lockIconContainer}>
-                <Feather name="lock" size={24} color="#FFFFFF" />
+            {!node.isActive && (
+              <View style={styles.lockOverlay}>
+                <View style={styles.lockIconContainer}>
+                  <Feather name="lock" size={24} color="#FFFFFF" />
+                </View>
               </View>
-            </View>
-          )}
-        </TouchableOpacity>
+            )}
+          </TouchableOpacity>
+
+          {/* Points indicator positioned at the center bottom of the card */}
+          <View style={[styles.pointsContainer, !node.isActive && styles.inactivePointsContainer]}>
+            <Image
+              source={{ uri: 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746050593/maza/coin_xtcp3h.webp' }}
+              style={styles.coinIcon}
+            />
+            <Text style={styles.pointsText}>{node.points}</Text>
+          </View>
+        </View>
 
         {renderConnectionLine(index)}
       </View>
@@ -169,7 +173,7 @@ export default function Challenge(): React.ReactElement {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121214',
+    backgroundColor: '#121214', // Dark background from original code
   },
   header: {
     paddingVertical: 16,
@@ -188,13 +192,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   nodeContainer: {
-    marginBottom: 30,
+    marginBottom: 50,
     position: 'relative',
+  },
+  nodeCardWrapper: {
+    position: 'relative',
+    alignItems: 'center',
+  },
+  leftNodeWrapper: {
+    alignItems: 'flex-start', // For left-aligned nodes
+  },
+  rightNodeWrapper: {
+    alignItems: 'flex-end', // For right-aligned nodes
   },
   nodeCard: {
     width: '70%',
     backgroundColor: '#202024',
-    borderRadius: 16,
+    borderRadius: 25,
     overflow: 'hidden',
     elevation: 5,
     shadowColor: '#000',
@@ -206,50 +220,55 @@ const styles = StyleSheet.create({
   },
   inactiveNode: {
     borderColor: '#323238',
-  },
-  leftNode: {
-    alignSelf: 'flex-start',
-  },
-  rightNode: {
-    alignSelf: 'flex-end',
+    backgroundColor: '#151517', // Darker background for inactive nodes
   },
   nodeContent: {
     padding: 0,
   },
   nodeTitle: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
-    paddingVertical: 8,
+    paddingVertical: 10,
+    position: 'absolute',
+    zIndex: 1,
+    top: 0,
+    left: 0,
+    right: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   nodeImage: {
     width: '100%',
-    height: 100,
-    backgroundColor: '#323238',
+    height: 120,
+    backgroundColor: '#E8E8E8',
   },
   pointsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffc107',
-    paddingVertical: 3,
-    borderRadius: 10,
+    backgroundColor: '#1fa2df', // Blue background to match original code
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    marginTop: -15,
+    zIndex: 2,
     position: 'absolute',
-    bottom: 8,
-    right: 8,
-    paddingHorizontal: 6,
+    bottom: -15, // Position at the bottom of the card
+    alignSelf: 'center', // Center horizontally
+  },
+  inactivePointsContainer: {
+    backgroundColor: '#000000', // Black background for inactive nodes
   },
   coinIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 4,
+    width: 24,
+    height: 24,
+    marginRight: 5,
   },
   pointsText: {
-    color: '#000',
+    color: '#FFFFFF',
     fontWeight: 'bold',
-    fontSize: 12,
+    fontSize: 16,
   },
   lockOverlay: {
     position: 'absolute',
@@ -257,7 +276,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -273,8 +292,8 @@ const styles = StyleSheet.create({
   },
   connectionLine: {
     position: 'absolute',
-    borderWidth: 3,
-    borderColor: '#1fa2df',
+    borderWidth: 15, // Thick lines as in original
+    borderColor: '#1fa2df', // Blue to match original code
     backgroundColor: 'transparent',
     zIndex: -1,
   },
@@ -289,8 +308,8 @@ const styles = StyleSheet.create({
     height: 60,
     borderTopWidth: 0,
     borderRightWidth: 0,
-    borderBottomLeftRadius: 40,
-    top: '50%',
+    borderBottomLeftRadius: 80, // More curved to match screenshot
+    top: '80%',
     left: '65%',
   },
   leftCurve: {
@@ -298,8 +317,8 @@ const styles = StyleSheet.create({
     height: 60,
     borderTopWidth: 0,
     borderLeftWidth: 0,
-    borderBottomRightRadius: 40,
-    top: '50%',
+    borderBottomRightRadius: 80, // More curved to match screenshot
+    top: '80%',
     right: '65%',
   },
 });

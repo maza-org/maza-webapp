@@ -5,26 +5,20 @@ import { Feather } from '@expo/vector-icons';
 export default function Streaks() {
   // Dias da semana
   const daysOfWeek = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-
-  // Status atual da sequência – quais dias estão concluídos
   const completedDays = ['Seg', 'Ter', 'Qua', 'Qui'];
-  const currentDay = 'Sex'; // Hoje é sexta-feira
-  const futureDays = ['Sáb', 'Dom']; // Dias do fim de semana que estão por vir
+  const currentDay = 'Sex';
+  const futureDays = ['Sáb', 'Dom'];
 
-  // Renderizar círculo do dia com base no status
   const renderDayCircle = (day: string) => {
     let circleStyle = styles.dayCircle;
     let content = null;
 
     if (completedDays.includes(day)) {
-      // Dia concluído
       circleStyle = { ...circleStyle, ...styles.completedDay };
       content = <Feather name="check" size={24} color="#FFFFFF" />;
     } else if (day === currentDay) {
-      // Dia atual
       circleStyle = { ...circleStyle, ...styles.currentDay };
     } else {
-      // Dia futuro
       circleStyle = { ...circleStyle, ...styles.futureDay };
     }
 
@@ -107,14 +101,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   dayCircle: {
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
   },
   completedDay: {
-    backgroundColor: '#FF8C00', // Cor laranja para dias concluídos
+    backgroundColor: '#FF8C00',
   },
   currentDay: {
     borderWidth: 2,

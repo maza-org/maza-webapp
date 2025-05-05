@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     color: '#FFFFFF',
-    fontSize: 22,
+    fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',
     lineHeight: 30,
@@ -62,8 +62,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   characterImage: {
-    width: 250,
-    height: 250,
+    width: 230,
+    height: 230,
     resizeMode: 'contain',
   },
   chapterContainer: {
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   },
   chapterTitle: {
     color: '#FFFFFF',
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: 'bold',
   },
 });

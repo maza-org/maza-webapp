@@ -45,7 +45,8 @@
     "react-native-youtube-iframe": "^2.3.0",
     "expo-document-picker": "~13.0.3",
     "@sentry/react-native": "~6.10.0",
-    "@expo/metro-runtime": "~4.0.1"
+    "@expo/metro-runtime": "~4.0.1",
+    "expo-blur": "~14.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

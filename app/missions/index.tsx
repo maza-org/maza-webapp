@@ -11,114 +11,130 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
-export default function Challenges() {
-  interface Challenge {
-    id: number;
-    title: string;
-    description: string;
-    imageUrl: string;
-    points: number;
-    progress: number;
-    currentStep: number;
-    totalSteps: number;
-    locked: boolean;
-  }
-
-  const challenges: Challenge[] = [
-    {
-      id: 1,
-      title: 'Mudanças Climáticas',
-      description: 'Lorem ipsum dolor sit amet, consectetur a...',
-      imageUrl: 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746050596/maza/climate_xkuyks.webp',
-      points: 100,
-      progress: 10,
-      currentStep: 1,
-      totalSteps: 10,
-      locked: false,
-    },
-    {
-      id: 2,
-      title: 'Reciclagem',
-      description: 'Lorem ipsum dolor sit amet, consectetur a...',
-      imageUrl: 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746050595/maza/trash_xiyohd.webp',
-      points: 120,
-      progress: 0,
-      currentStep: 0,
-      totalSteps: 10,
-      locked: true,
-    },
-    {
-      id: 3,
-      title: 'Energias Renováveis',
-      description: 'Lorem ipsum dolor sit amet, consectetur a...',
-      imageUrl: 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746050595/maza/solar_mpxms9.webp',
-      points: 120,
-      progress: 0,
-      currentStep: 0,
-      totalSteps: 10,
-      locked: true,
-    },
-  ];
-
-  const renderChallengeCard = (challenge: Challenge) => {
-    const progressPercentage = (challenge.currentStep / challenge.totalSteps) * 100;
-
-    return (
-      <TouchableOpacity key={challenge.id} style={styles.challengeCard} disabled={challenge.locked}>
-        <ImageBackground
-          source={{ uri: challenge.imageUrl }}
-          style={styles.cardImage}
-          imageStyle={styles.cardImageStyle}
-        >
-          {/* Points badge */}
-          <View style={styles.pointsBadge}>
-            <Image
-              source={{ uri: 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746050593/maza/coin_xtcp3h.webp' }}
-              style={styles.coinIcon}
-            />
-            <Text style={styles.pointsText}>{challenge.points}</Text>
-          </View>
-
-          {/* Lock icon if locked */}
-          {challenge.locked && (
-            <View style={styles.lockContainer}>
-              <View style={styles.lockBackground}>
-                <Feather name="lock" size={24} color="#FFFFFF" />
-              </View>
-            </View>
-          )}
-        </ImageBackground>
-
-        <View style={styles.cardContent}>
-          <Text style={styles.challengeTitle}>{challenge.title}</Text>
-          <Text style={styles.challengeDescription}>{challenge.description}</Text>
-
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${progressPercentage}%` }]} />
-            </View>
-            <Text style={styles.progressText}>
-              {challenge.currentStep} /{challenge.totalSteps}
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
+export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      {/* Main content */}
-      <View style={styles.contentContainer}>
-        <Text style={styles.mainTitle}>Escolher Desafio</Text>
-
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          {challenges.map((challenge) => renderChallengeCard(challenge))}
-
-          {/* Add some bottom padding */}
-          <View style={{ height: 20 }} />
-        </ScrollView>
+      {/* Header with logo and notification */}
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={{ uri: 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746484585/maza/maza_bqsdy2.webp' }}
+            resizeMode="contain"
+            style={styles.logo}
+          />
+        </View>
+        <TouchableOpacity style={styles.notificationButton}>
+          <Feather name="bell" size={24} color="#000" />
+          <View style={styles.notificationBadge} />
+        </TouchableOpacity>
       </View>
+
+      {/* Main content */}
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Welcome section */}
+        <View style={styles.welcomeCard}>
+          <Text style={styles.welcomeHeading}>Welcome back, Clayton!</Text>
+          <Text style={styles.welcomeSubheading}>Are you ready for today's challenge? 😉</Text>
+
+          <View style={styles.statsContainer}>
+            {/* Stats column - Modified to be vertical */}
+            <View style={styles.statsColumn}>
+              <View style={styles.statCard}>
+                <View style={styles.statIconContainer}>
+                  <Image
+                    source={{
+                      uri: 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746082962/maza/fire_r4iaes.webp',
+                    }}
+                    style={styles.statIcon}
+                  />
+                </View>
+                <View style={styles.statTextContainer}>
+                  <Text style={styles.statValue}>3 days</Text>
+                  <Text style={styles.statLabel}>Streak</Text>
+                </View>
+              </View>
+
+              <View style={styles.statCard}>
+                <View style={styles.statIconContainer}>
+                  <Image
+                    source={{
+                      uri: 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746050593/maza/coin_xtcp3h.webp',
+                    }}
+                    style={styles.statIcon}
+                  />
+                </View>
+                <View style={styles.statTextContainer}>
+                  <Text style={styles.statValue}>4263</Text>
+                  <Text style={styles.statLabel}>Points</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Rank card */}
+            <View style={styles.rankCard}>
+              <Image
+                source={{
+                  uri: 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746484475/maza/ctldpyy3f6dtyd7x5rri.webp',
+                }}
+                style={{ width: 90, height: 90 }}
+                resizeMode="contain"
+              />
+              <View style={styles.rankBadge}>
+                <Image
+                  source={{
+                    uri: 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746484475/maza/ctldpyy3f6dtyd7x5rri.webp',
+                  }}
+                  style={styles.rankIcon}
+                />
+                <Text style={styles.rankText}>Gold Rank</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Continue section */}
+        <View style={styles.continueSection}>
+          <Text style={styles.sectionTitle}>Continue where you left off...</Text>
+
+          <View style={styles.challengeCard}>
+            <ImageBackground
+              source={{ uri: 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746050596/maza/climate_xkuyks.webp' }}
+              style={styles.cardImage}
+              imageStyle={styles.cardImageStyle}
+            >
+              <View style={styles.pointsBadge}>
+                <Image
+                  source={{
+                    uri: 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746050593/maza/coin_xtcp3h.webp',
+                  }}
+                  style={styles.coinIcon}
+                />
+                <Text style={styles.pointsText}>100</Text>
+              </View>
+            </ImageBackground>
+
+            <View style={styles.cardContent}>
+              <Text style={styles.challengeTitle}>Mudanças Climáticas</Text>
+              <Text style={styles.challengeDescription}>Lorem ipsum dolor sit amet, consectetur adip...</Text>
+
+              <View style={styles.progressContainer}>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { width: '10%' }]} />
+                </View>
+                <Text style={styles.progressText}>1/10</Text>
+              </View>
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.changeButton}>
+            <Text style={styles.changeButtonTitle}>Change Challenge</Text>
+            <Text style={styles.changeButtonChallenge}>Mudanças Climáticas</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Add some bottom padding */}
+        <View style={{ height: 40 }} />
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -129,58 +145,163 @@ const styles = StyleSheet.create({
     backgroundColor: '#121214',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#323238',
+    paddingTop: 15,
+    paddingBottom: 10,
   },
-  headerTitle: {
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    marginRight: 8,
+  },
+  logoText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
   },
-  contentContainer: {
-    flex: 1,
-    padding: 20,
+  notificationButton: {
+    position: 'relative',
+    width: 50,
+    height: 50,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  mainTitle: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
+  notificationBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 12,
+    height: 12,
+    backgroundColor: 'red',
+    borderRadius: 6,
   },
   scrollView: {
     flex: 1,
+    paddingHorizontal: 20,
+  },
+  welcomeCard: {
+    backgroundColor: '#202024',
+    borderRadius: 20,
+    padding: 20,
+    marginTop: 20,
+  },
+  welcomeHeading: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 5,
+  },
+  welcomeSubheading: {
+    fontSize: 14,
+    color: '#A8A8B3',
+    marginBottom: 20,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  // New style for the vertical column
+  statsColumn: {
+    flexDirection: 'column',
+    width: '45%',
+    gap: 10, // Add space between the stat cards
+  },
+  statCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#323238',
+    borderRadius: 15,
+    padding: 15,
+  },
+  statIconContainer: {
+    marginRight: 10,
+  },
+  statIcon: {
+    width: 30,
+    height: 30,
+  },
+  statTextContainer: {
+    flex: 1,
+  },
+  statValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#A8A8B3',
+  },
+  rankCard: {
+    width: '45%',
+    backgroundColor: '#FDD663',
+    borderRadius: 15,
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rankBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginTop: 5,
+  },
+  rankIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 5,
+  },
+  rankText: {
+    color: '#202024',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  continueSection: {
+    marginTop: 25,
+    backgroundColor: '#202024',
+    padding: 14,
+    borderRadius: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 15,
   },
   challengeCard: {
     backgroundColor: '#202024',
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
     marginBottom: 20,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
   cardImage: {
-    height: 180,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
     padding: 15,
+    height: 130,
   },
   cardImageStyle: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   pointsBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 20,
+    borderRadius: 15,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    alignSelf: 'flex-end',
   },
   coinIcon: {
     width: 20,
@@ -192,21 +313,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  lockContainer: {
-    position: 'absolute',
-    top: 15,
-    left: 15,
-  },
-  lockBackground: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   cardContent: {
     padding: 15,
+    backgroundColor: '#242429',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
+    elevation: 10,
   },
   challengeTitle: {
     color: '#FFFFFF',
@@ -225,15 +342,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   progressBar: {
-    height: 6,
+    height: 8,
     flex: 1,
     backgroundColor: '#323238',
-    borderRadius: 3,
+    borderRadius: 4,
     marginRight: 10,
   },
   progressFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 4,
     backgroundColor: '#1fa2df',
   },
   progressText: {
@@ -241,24 +358,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#202024',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#323238',
-  },
-  navItem: {
+  changeButton: {
+    backgroundColor: '#24B0F2',
+    borderRadius: 20,
+    padding: 20,
     alignItems: 'center',
-    paddingVertical: 5,
   },
-  navText: {
-    fontSize: 12,
-    color: '#A8A8B3',
-    marginTop: 5,
+  changeButtonTitle: {
+    color: '#267DA7',
+    fontSize: 16,
+    opacity: 0.8,
+    marginBottom: 5,
   },
-  activeNavText: {
-    color: '#1fa2df',
+  changeButtonChallenge: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
 });

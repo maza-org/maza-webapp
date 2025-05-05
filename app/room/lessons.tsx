@@ -421,7 +421,7 @@ export default function CourseDetail() {
 
   function handleOnPathPress() {
     router.push({
-      pathname: '/challenges',
+      pathname: '/missions',
       params: {
         course: JSON.stringify(courseData),
       },

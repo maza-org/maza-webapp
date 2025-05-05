@@ -15,14 +15,105 @@ import { Feather } from '@expo/vector-icons';
 
 const { height } = Dimensions.get('window');
 
-export default function Questions() {
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-  const slideAnim = useRef(new Animated.Value(height)).current;
+interface Answer {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+  feedback?: string;
+}
 
-  const showAnswerFeedback = (correct) => {
-    setIsCorrect(correct);
-    setShowAnswer(true);
+interface Question {
+  id: string;
+  questionNumber: string;
+  questionText: string;
+  answers: Answer[];
+  correctFeedback: string;
+  incorrectFeedback: string;
+}
+
+interface Chapter {
+  id: string;
+  title: string;
+  questions: Question[];
+}
+
+// Define interfaces for component props
+interface QuestionsProps {
+  chapter?: Chapter;
+  onExit?: () => void;
+  onComplete?: (score: number) => void;
+}
+
+// Define interfaces for state
+interface FeedbackState {
+  show: boolean;
+  isCorrect: boolean;
+  message: string;
+}
+
+export default function Questions({ chapter, onExit, onComplete }: QuestionsProps): React.ReactElement {
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
+  const [score, setScore] = useState<number>(0);
+
+  const [feedback, setFeedback] = useState<FeedbackState>({
+    show: false,
+    isCorrect: false,
+    message: '',
+  });
+
+  const slideAnim = useRef<Animated.Value>(new Animated.Value(height)).current;
+
+  const mockChapter: Chapter = {
+    id: '1',
+    title: 'Capítulo 1: Mudanças Climáticas',
+    questions: [
+      {
+        id: '1',
+        questionNumber: 'Pergunta 1',
+        questionText: 'O que é o tempo, segundo os conceitos aprendidos?',
+        answers: [
+          {
+            id: 'a1',
+            text: 'O conjunto de condições atmosféricas observadas num dia ou momento específico',
+            isCorrect: true,
+          },
+          {
+            id: 'a2',
+            text: 'O clima característico de uma região durante vários anos',
+            isCorrect: false,
+          },
+          {
+            id: 'a3',
+            text: 'A previsão de catástrofes naturais',
+            isCorrect: false,
+          },
+          {
+            id: 'a4',
+            text: 'O período entre o nascer e o pôr do sol',
+            isCorrect: false,
+          },
+        ],
+        correctFeedback: 'Certo! O tempo muda ao longo do dia e influencia decisões do dia a dia.',
+        incorrectFeedback: 'Errado! Catástrofes podem acontecer por causa do tempo, mas isso não é uma definição.',
+      },
+    ],
+  };
+
+  // Use either provided chapter or mock data
+  const currentChapter = chapter || mockChapter;
+  const currentQuestion = currentChapter.questions[currentQuestionIndex];
+
+  const showAnswerFeedback = (correct: boolean): void => {
+    setFeedback({
+      show: true,
+      isCorrect: correct,
+      message: correct ? currentQuestion.correctFeedback : currentQuestion.incorrectFeedback,
+    });
+
+    if (correct) {
+      setScore((prevScore) => prevScore + 10);
+    }
+
     Animated.spring(slideAnim, {
       toValue: 0,
       useNativeDriver: true,
@@ -31,17 +122,29 @@ export default function Questions() {
     }).start();
   };
 
-  const hideCorrectAnswer = () => {
+  const hideCorrectAnswer = (): void => {
     Animated.timing(slideAnim, {
       toValue: height,
       duration: 300,
       useNativeDriver: true,
-    }).start(() => setShowAnswer(false));
+    }).start(() => setFeedback((prev) => ({ ...prev, show: false })));
   };
 
-  const goToNextQuestion = () => {
+  const goToNextQuestion = (): void => {
     hideCorrectAnswer();
-    // Logic to go to next question would be added here
+
+    // Check if we're at the last question
+    if (currentQuestionIndex < currentChapter.questions.length - 1) {
+      // Move to next question after animation completes
+      setTimeout(() => {
+        setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+      }, 350);
+    } else {
+      // Quiz complete
+      setTimeout(() => {
+        onComplete && onComplete(score);
+      }, 350);
+    }
   };
 
   return (
@@ -50,17 +153,17 @@ export default function Questions() {
 
       {/* Quiz header with title on top */}
       <View style={styles.quizHeader}>
-        <Text style={styles.chapterTitle}>Chapter 1: Mudanças Climáticas</Text>
+        <Text style={styles.chapterTitle}>{currentChapter.title}</Text>
       </View>
 
       {/* Progress bar with points on the right */}
       <View style={styles.progressContainer}>
-        <TouchableOpacity style={styles.backButton}>
-          <Feather name="x" size={24} color="#FFFFFF" />
+        <TouchableOpacity style={styles.backButton} onPress={onExit}>
+          <Feather name="x" size={20} color="#FFFFFF" />
         </TouchableOpacity>
         <View style={styles.progressBarWrapper}>
           <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: '75%' }]} />
+            <View style={[styles.progressFill, { width: '25%' }]} />
           </View>
         </View>
         <View style={styles.pointsBadge}>
@@ -68,35 +171,27 @@ export default function Questions() {
             source={{ uri: 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746050593/maza/coin_xtcp3h.webp' }}
             style={styles.coinIcon}
           />
-          <Text style={styles.pointsText}>10</Text>
+          <Text style={styles.pointsText}>{score}</Text>
         </View>
       </View>
 
       {/* Question */}
       <View style={styles.questionContainer}>
-        <Text style={styles.questionNumber}>Pergunta 1</Text>
-        <Text style={styles.questionText}>O que é o tempo, segundo os conceitos aprendidos?</Text>
+        <Text style={styles.questionNumber}>{currentQuestion.questionNumber}</Text>
+        <Text style={styles.questionText}>{currentQuestion.questionText}</Text>
       </View>
 
       {/* Answer options */}
       <View style={styles.answersContainer}>
-        <TouchableOpacity style={styles.answerOption} onPress={() => showAnswerFeedback(true)}>
-          <Text style={styles.answerText}>
-            O conjunto de condições atmosféricas observadas num dia ou momento específico
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.answerOption} onPress={() => showAnswerFeedback(false)}>
-          <Text style={styles.answerText}>O clima característico de uma região durante vários anos</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.answerOption} onPress={() => showAnswerFeedback(false)}>
-          <Text style={styles.answerText}>A previsão de catástrofes naturais</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.answerOption} onPress={() => showAnswerFeedback(false)}>
-          <Text style={styles.answerText}>O período entre o nascer e o pôr do sol</Text>
-        </TouchableOpacity>
+        {currentQuestion.answers.map((answer) => (
+          <TouchableOpacity
+            key={answer.id}
+            style={styles.answerOption}
+            onPress={() => showAnswerFeedback(answer.isCorrect)}
+          >
+            <Text style={styles.answerText}>{answer.text}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* Bottom indicator */}
@@ -105,7 +200,7 @@ export default function Questions() {
       </View>
 
       {/* Overlay and Bottom Sheet */}
-      {showAnswer && (
+      {feedback.show && (
         <>
           {/* Dark overlay behind the bottom sheet */}
           <TouchableWithoutFeedback onPress={hideCorrectAnswer}>
@@ -122,29 +217,27 @@ export default function Questions() {
             ]}
           >
             <View style={styles.bottomSheetContent}>
-              <Text style={styles.headerText}>{isCorrect ? 'Resposta Correcta' : 'Resposta Incorrecta'}</Text>
+              <Text style={styles.headerText}>{feedback.isCorrect ? 'Resposta Correcta' : 'Resposta Incorrecta'}</Text>
 
               <View style={styles.feedbackContainer}>
                 <Image
                   source={{
-                    uri: isCorrect
+                    uri: feedback.isCorrect
                       ? 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746085773/maza/happy_zkwmth.webp'
                       : 'https://res.cloudinary.com/dsthrsoyj/image/upload/v1746086306/maza/sad_k2d0w8.png',
                   }}
                   style={styles.icon}
                 />
-                <Text style={styles.feedbackText}>
-                  {isCorrect
-                    ? 'Certo! O tempo muda ao longo do dia e influencia decisões do dia a dia.'
-                    : 'Errado! Catástrofes podem acontecer por causa do tempo, mas isso não é uma definição.'}
-                </Text>
+                <Text style={styles.feedbackText}>{feedback.message}</Text>
               </View>
 
               <TouchableOpacity
-                style={[styles.button, !isCorrect && styles.buttonIncorrect]}
+                style={[styles.button, !feedback.isCorrect && styles.buttonIncorrect]}
                 onPress={goToNextQuestion}
               >
-                <Text style={styles.buttonText}>Próxima Questão</Text>
+                <Text style={styles.buttonText}>
+                  {currentQuestionIndex < currentChapter.questions.length - 1 ? 'Próxima Questão' : 'Finalizar Quiz'}
+                </Text>
               </TouchableOpacity>
             </View>
             <View style={styles.bottomSheetIndicatorContainer}>
@@ -170,17 +263,15 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    marginRight: 10,
   },
   chapterTitle: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     flex: 1,
   },
   progressContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -320,7 +411,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   buttonIncorrect: {
-    backgroundColor: '#E83F5B', // Red color for incorrect answers
+    backgroundColor: '#E83F5B',
   },
   buttonText: {
     color: '#FFFFFF',

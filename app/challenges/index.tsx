@@ -11,19 +11,19 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
-export default function Index() {
-  interface Challenge {
-    id: number;
-    title: string;
-    description: string;
-    imageUrl: string;
-    points: number;
-    progress: number;
-    currentStep: number;
-    totalSteps: number;
-    locked: boolean;
-  }
+interface Challenge {
+  id: number;
+  title: string;
+  description: string;
+  imageUrl: string;
+  points: number;
+  progress: number;
+  currentStep: number;
+  totalSteps: number;
+  locked: boolean;
+}
 
+export default function Index() {
   const challenges: Challenge[] = [
     {
       id: 1,
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   mainTitle: {
     color: '#FFFFFF',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
