@@ -62,7 +62,6 @@ const RadioButton = ({
   </Pressable>
 );
 
-// Floating Filter Button Component
 const FloatingFilterButton = ({ onPress }: { onPress: () => void }) => (
   <Pressable style={styles.floatingButton} onPress={onPress}>
     <Feather name="filter" size={16} color="#fff" style={styles.filterIcon} />
@@ -70,7 +69,6 @@ const FloatingFilterButton = ({ onPress }: { onPress: () => void }) => (
   </Pressable>
 );
 
-// CompletedCourses Component
 const CompletedCourses = () => {
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -718,8 +716,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-
-  // Rating icon styles
   ratingIcon: {
     marginRight: 4,
   },
