@@ -105,7 +105,7 @@ interface Course {
   isFavorite?: boolean;
   cover: Picture;
   description?: string;
-  level?: 'Basic' | 'Intermediary' | 'Advanced'; // Added level property
+  level?: 'Basic' | 'Intermediary' | 'Advanced';
 }
 
 interface TabProps {
@@ -421,7 +421,7 @@ export default function CourseDetail() {
 
   function handleOnPathPress() {
     router.push({
-      pathname: '/path',
+      pathname: '/challenges',
       params: {
         course: JSON.stringify(courseData),
       },

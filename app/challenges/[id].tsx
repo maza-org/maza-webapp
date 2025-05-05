@@ -2,9 +2,18 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
-export default function Challenge() {
-  // Challenge nodes with progression data
-  const [nodes, setNodes] = useState([
+interface Node {
+  id: number;
+  title: string;
+  isActive: boolean;
+  isCompleted: boolean;
+  points: number;
+  type: 'introduction' | 'information' | 'impact' | 'action';
+  isColorful: boolean;
+}
+
+export default function Challenge(): React.ReactElement {
+  const [nodes, setNodes] = useState<Node[]>([
     {
       id: 1,
       title: 'Tempo e Clima',
@@ -16,7 +25,7 @@ export default function Challenge() {
     },
     {
       id: 2,
-      title: 'Mudanças Climaticas',
+      title: 'Mudanças Climáticas',
       isActive: true,
       isCompleted: true,
       points: 10,
@@ -62,14 +71,12 @@ export default function Challenge() {
   ]);
 
   // Function to handle node click
-  const handleNodePress = (id) => {
-    // Handle node activation, completion, etc.
+  const handleNodePress = (id: number): void => {
     console.log(`Node ${id} pressed`);
   };
 
   // Get image based on node type and status
-  const getNodeImage = (node) => {
-    // Placeholder function - in a real app, you would use actual images
+  const getNodeImage = (node: Node): string => {
     const baseColor = node.isColorful ? 'colorful' : 'grayscale';
 
     switch (node.type) {
@@ -87,7 +94,7 @@ export default function Challenge() {
   };
 
   // Render a connection line between nodes
-  const renderConnectionLine = (index) => {
+  const renderConnectionLine = (index: number): React.ReactElement | null => {
     // Skip if it's the last node
     if (index === nodes.length - 1) return null;
 
@@ -109,7 +116,7 @@ export default function Challenge() {
   };
 
   // Render challenge node
-  const renderNode = (node, index) => {
+  const renderNode = (node: Node, index: number): React.ReactElement => {
     const isEven = index % 2 === 0;
 
     return (
@@ -185,16 +192,16 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   nodeCard: {
-    width: '70%', // Reduced from 80% to make cards smaller
+    width: '70%',
     backgroundColor: '#202024',
-    borderRadius: 16, // Smaller border radius
+    borderRadius: 16,
     overflow: 'hidden',
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    borderWidth: 2, // Thinner border
+    borderWidth: 2,
     borderColor: '#1fa2df',
   },
   inactiveNode: {
@@ -211,15 +218,15 @@ const styles = StyleSheet.create({
   },
   nodeTitle: {
     color: '#FFFFFF',
-    fontSize: 14, // Smaller font
+    fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
-    paddingVertical: 8, // Less padding
+    paddingVertical: 8,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   nodeImage: {
     width: '100%',
-    height: 100, // Smaller height for the image
+    height: 100,
     backgroundColor: '#323238',
   },
   pointsContainer: {
@@ -266,7 +273,7 @@ const styles = StyleSheet.create({
   },
   connectionLine: {
     position: 'absolute',
-    borderWidth: 3, // Thinner line
+    borderWidth: 3,
     borderColor: '#1fa2df',
     backgroundColor: 'transparent',
     zIndex: -1,
@@ -278,21 +285,21 @@ const styles = StyleSheet.create({
     borderColor: '#323238',
   },
   rightCurve: {
-    width: '60%', // Width of the connection
-    height: 60, // Height/length of the connection
+    width: '60%',
+    height: 60,
     borderTopWidth: 0,
     borderRightWidth: 0,
     borderBottomLeftRadius: 40,
-    top: '50%', // Position at the middle of the card
-    left: '65%', // Start position (from the left card)
+    top: '50%',
+    left: '65%',
   },
   leftCurve: {
-    width: '60%', // Width of the connection
-    height: 60, // Height/length of the connection
+    width: '60%',
+    height: 60,
     borderTopWidth: 0,
     borderLeftWidth: 0,
     borderBottomRightRadius: 40,
-    top: '50%', // Position at the middle of the card
-    right: '65%', // Start position (from the right card)
+    top: '50%',
+    right: '65%',
   },
 });
