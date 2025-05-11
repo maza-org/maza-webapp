@@ -16,6 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import { WebView } from 'react-native-webview';
+import * as RNFS from 'react-native-fs';
+import { PermissionsAndroid } from 'react-native';
 
 interface User {
   token: string;
@@ -36,6 +38,7 @@ export default function Certificate() {
   const [pdfUri, setPdfUri] = useState<string | null>(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const isWeb = Platform.OS === 'web';
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -52,8 +55,9 @@ export default function Certificate() {
           }
         }
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error('Erro ao carregar dados do certificado:', error);
         Alert.alert('Erro', 'Falha ao carregar dados do certificado');
+        setError('Falha ao carregar dados do certificado');
       } finally {
         setLoading(false);
       }
@@ -93,11 +97,13 @@ export default function Certificate() {
       } else {
         console.error('Failed to get certificate URL:', data);
         Alert.alert('Erro', data.message || 'Falha ao obter o URL do certificado');
+        setError(data.message || 'Falha ao obter o URL do certificado');
         setLoading(false);
       }
     } catch (error) {
       console.error('Error fetching certificate URL:', error);
       Alert.alert('Erro', 'Falha ao carregar o certificado');
+      setError('Falha ao carregar o certificado');
       setLoading(false);
     }
   };
@@ -133,30 +139,6 @@ export default function Certificate() {
       Alert.alert('Erro', 'Falha ao baixar o certificado');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleShareCertificate = async () => {
-    try {
-      if (!pdfUri) {
-        Alert.alert('Erro', 'PDF do certificado não disponível');
-        return;
-      }
-
-      // For web, open in a new tab
-      if (isWeb) {
-        window.open(pdfUri, '_blank');
-        return;
-      }
-
-      // Share the PDF file for mobile
-      const result = await Share.share({
-        url: pdfUri,
-        message: `Meu certificado de conclusão da Mazas Digital Learning Platform`,
-      });
-    } catch (error) {
-      console.error('Error sharing certificate:', error);
-      Alert.alert('Erro', 'Falha ao compartilhar certificado');
     }
   };
 
@@ -245,6 +227,30 @@ export default function Certificate() {
     }
   };
 
+  const handleShareCertificate = async () => {
+    try {
+      if (!pdfUri) {
+        Alert.alert('Erro', 'PDF do certificado não disponível');
+        return;
+      }
+
+      // For web, open in a new tab
+      if (isWeb) {
+        window.open(pdfUri, '_blank');
+        return;
+      }
+
+      // Share the PDF file for mobile
+      const result = await Share.share({
+        url: pdfUri,
+        message: `Meu certificado de conclusão da Mazas Digital Learning Platform`,
+      });
+    } catch (error) {
+      console.error('Error sharing certificate:', error);
+      Alert.alert('Erro', 'Falha ao compartilhar certificado');
+    }
+  };
+
   const renderWebView = () => {
     // For web platform, render the PDF directly in an iframe
     if (isWeb) {
@@ -317,7 +323,24 @@ export default function Certificate() {
           <Text style={styles.headerTitle}>Certificado</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0CA5E9" />
+          <ActivityIndicator size="large" color="#2EA8FF" />
+          <Text style={styles.loadingText}>Carregando certificado...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Certificado</Text>
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
         </View>
       </SafeAreaView>
     );
@@ -488,5 +511,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 16,
   },
 });

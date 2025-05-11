@@ -1,0 +1,131 @@
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#8F8F8F',
+    marginTop: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#8F8F8F',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#2EA8FF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#8F8F8F',
+    textAlign: 'center',
+    marginTop: 16,
+  },
+  jobCard: {
+    backgroundColor: '#1C1C1E',
+    borderRadius: 12,
+    marginBottom: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    position: 'relative',
+  },
+  jobHeader: {
+    flexDirection: 'row',
+  },
+  companyLogoContainer: {
+    width: 56,
+    height: 56,
+    marginRight: 12,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#29292E',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  companyLogo: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderLogo: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#29292E',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  jobInfo: {
+    flex: 1,
+  },
+  jobTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  companyName: {
+    fontSize: 14,
+    color: '#2EA8FF',
+    marginBottom: 8,
+  },
+  jobMeta: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+    marginBottom: 4,
+  },
+  metaText: {
+    fontSize: 12,
+    color: '#8F8F8F',
+    marginLeft: 4,
+  },
+  badge: {
+    position: 'absolute',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  languageBadge: {
+    top: 12,
+    right: 12,
+    backgroundColor: '#3A3A3C',
+  },
+  languageBadgeText: {
+    fontSize: 10,
+    color: '#fff',
+    textTransform: 'uppercase',
+  },
+  newBadge: {
+    bottom: 12,
+    right: 12,
+    backgroundColor: '#2EA8FF',
+  },
+  newBadgeText: {
+    fontSize: 10,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+});

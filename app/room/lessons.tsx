@@ -105,7 +105,7 @@ interface Course {
   isFavorite?: boolean;
   cover: Picture;
   description?: string;
-  level?: 'Basic' | 'Intermediary' | 'Advanced';
+  level?: 'Básico' | 'Intermédio' | 'Avançado';
 }
 
 interface TabProps {
@@ -125,11 +125,12 @@ export default function CourseDetail() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const { documentId } = useLocalSearchParams();
 
   // Inline Level Badge Component
-  type Level = 'Basic' | 'Intermediary' | 'Advanced';
+  type Level = 'Básico' | 'Intermédio' | 'Avançado';
 
   type LevelMapType = {
     [key in Level]: string;
@@ -143,27 +144,19 @@ export default function CourseDetail() {
     level?: Level;
   }
 
-  const LevelBadge = ({ level = 'Basic' }: LevelBadgeProps) => {
-    // Map English levels to Portuguese
-    const levelMap: LevelMapType = {
-      Basic: 'Básico',
-      Intermediary: 'Intermédio',
-      Advanced: 'Avançado',
-    };
-
+  const LevelBadge = ({ level = 'Básico' }: LevelBadgeProps) => {
     // Define colors for each level
     const levelColors: LevelColorType = {
-      Basic: '#4db5ff',
-      Intermediary: '#ffa500',
-      Advanced: '#ff4d4d',
+      Básico: '#4db5ff',
+      Intermédio: '#ffa500',
+      Avançado: '#ff4d4d',
     };
 
-    const label = levelMap[level] || 'Básico';
     const dotColor = levelColors[level] || '#ffa500';
 
     return (
       <View style={styles.levelBadge}>
-        <Text style={styles.levelText}>{label}</Text>
+        <Text style={styles.levelText}>{level}</Text>
         <View style={[styles.levelDot, { backgroundColor: dotColor }]} />
       </View>
     );
@@ -221,24 +214,17 @@ export default function CourseDetail() {
         setIsInProgress(data.data.some((course: any) => course.course.documentId === documentId));
       }
     } catch (error) {
-      console.error('Error checking course progress:', error);
+      console.error('Erro ao verificar progresso do curso:', error);
     }
   };
 
-  useEffect(() => {
-    const initializeData = async () => {
-      try {
-        await loadUserData();
-        await fetchCourseData();
-        await checkCourseProgress();
-        await fetchCertificates();
-      } catch (error) {
-        console.error('Error initializing data:', error);
-      }
-    };
-
-    initializeData();
-  }, [documentId, user?.token]);
+  const initializeData = async () => {
+    try {
+      await checkCourseProgress();
+    } catch (error) {
+      console.error('Erro ao inicializar dados:', error);
+    }
+  };
 
   const loadUserData = async () => {
     try {
@@ -247,27 +233,18 @@ export default function CourseDetail() {
         setUser(JSON.parse(userData));
       }
     } catch (error) {
-      console.error('Error loading user data:', error);
+      console.error('Erro ao carregar dados do usuário:', error);
       Alert.alert('Erro', 'Falha ao carregar dados do utilizador');
     }
   };
 
   const fetchCertificates = async () => {
-    if (!user?.token) return;
-
     try {
-      const response = await fetch('https://api.mazas.org/api/certificates', {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCertificates(data.data);
-      }
+      const response = await fetch('https://api.mazas.org/api/certificates');
+      const data = await response.json();
+      setCertificates(data);
     } catch (error) {
-      console.error('Error fetching certificates:', error);
+      console.error('Erro ao buscar certificados:', error);
     }
   };
 
@@ -277,93 +254,68 @@ export default function CourseDetail() {
       const data = await response.json();
       setCourseData(data);
     } catch (error) {
-      console.error('Error fetching course data:', error);
+      console.error('Erro ao buscar dados do curso:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFavoritePress = async () => {
+  const handleFavorite = async () => {
     if (!user?.token) {
       Alert.alert('Erro', 'Para marcar um curso como favorito é necessário que tenha feito o login');
       return;
     }
 
     try {
-      const response = await fetch(`https://api.mazas.org/api/user-courses/favorites`, {
+      const response = await fetch('https://api.mazas.org/api/favorites', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify({
-          data: {
-            course: documentId,
-          },
+          courseId: documentId,
         }),
       });
 
-      if (response.ok) {
-        setIsFavorite(true);
-      } else {
-        throw new Error('Failed to add to favorites');
+      if (!response.ok) {
+        throw new Error('Falha ao adicionar aos favoritos');
       }
+
+      setIsFavorite(true);
     } catch (error) {
-      console.error('Error adding to favorites:', error);
+      console.error('Erro ao adicionar aos favoritos:', error);
       Alert.alert('Erro', 'Falha ao adicionar aos favoritos');
     }
   };
 
   const handleStartCourse = async () => {
-    if (isInProgress) {
-      return;
-    }
     if (!user?.token) {
       Alert.alert('Erro', 'Para marcar um curso como favorito é necessário que tenha feito o login');
       return;
     }
 
-    setUpdating(true);
     try {
-      // First, save the course to user's courses
-      const saveResponse = await fetch(`https://api.mazas.org/api/user-courses`, {
+      const response = await fetch('https://api.mazas.org/api/user-courses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify({
-          data: {
-            course: documentId,
-          },
+          courseId: documentId,
+          status: 'InProgress',
         }),
       });
 
-      if (!saveResponse.ok) {
-        throw new Error('Failed to save course');
-      }
-
-      const updateResponse = await fetch(`https://api.mazas.org/api/user-courses/${documentId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify({
-          data: {
-            progress: 1,
-          },
-        }),
-      });
-
-      if (!updateResponse.ok) {
+      if (!response.ok) {
         throw new Error('Erro ao começar curso');
       }
+
+      router.push(`/path?courseId=${documentId}`);
     } catch (error) {
-      console.error('Error starting course:', error);
+      console.error('Erro ao iniciar curso:', error);
       Alert.alert('Erro', 'Falha ao iniciar o curso');
-    } finally {
-      setUpdating(false);
     }
   };
 
@@ -372,10 +324,37 @@ export default function CourseDetail() {
     setShowFullDescription(!showFullDescription);
   };
 
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await loadUserData();
+        await fetchCourseData();
+        await checkCourseProgress();
+        await fetchCertificates();
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        setError('Erro ao carregar dados do curso');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [documentId, user?.token]);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1fa2df" />
+        <ActivityIndicator size="large" color="#2EA8FF" />
+        <Text style={styles.loadingText}>Carregando...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
@@ -441,7 +420,7 @@ export default function CourseDetail() {
                 <TouchableOpacity style={styles.iconButton}>
                   <Feather name="share" size={24} color="#FFF" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton} onPress={handleFavoritePress}>
+                <TouchableOpacity style={styles.iconButton} onPress={handleFavorite}>
                   <Ionicons
                     name={isFavorite ? 'heart' : 'heart-outline'}
                     size={24}
@@ -469,7 +448,7 @@ export default function CourseDetail() {
             </View>
 
             {/* Level Badge Component */}
-            <LevelBadge level={courseData?.level || 'Intermediary'} />
+            <LevelBadge level={courseData?.level || 'Intermédio'} />
           </View>
         </ImageBackground>
 
@@ -887,5 +866,11 @@ const styles = StyleSheet.create({
     width: 15,
     height: 15,
     borderRadius: 10,
+  },
+  loadingText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '500',
+    marginTop: 16,
   },
 });

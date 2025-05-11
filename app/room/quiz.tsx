@@ -213,7 +213,7 @@ const ResultsView = ({
             <Text style={styles.statsCardValue}>
               {correctAnswers}/{totalQuestions}
             </Text>
-            <Text style={styles.statsCardLabel}>Correctas</Text>
+            <Text style={styles.statsCardLabel}>Corretas</Text>
           </View>
 
           {/* Time Card */}
@@ -300,12 +300,7 @@ export default function Quiz() {
   }, []);
 
   const handleTimeUp = () => {
-    Alert.alert('Tempo Esgotado!', 'O tempo para realização do teste acabou.', [
-      {
-        text: 'OK',
-        onPress: () => calculateResultsAndFinish(),
-      },
-    ]);
+    Alert.alert('Tempo Esgotado!', 'O tempo para realização do teste acabou.', [{ text: 'OK', onPress: handleTimeUp }]);
   };
 
   const getCurrentQuestion = () => quizData.questions[currentQuestion];
@@ -421,35 +416,7 @@ export default function Quiz() {
   const handleRetake = () => {
     // Add a small animation or feedback effect before resetting
     Alert.alert('Iniciando novamente', 'Vamos lá! Você consegue desta vez.', [
-      {
-        text: 'Vamos!',
-        onPress: () => {
-          setCurrentQuestion(0);
-          setSelectedAnswers({});
-          setShowResults(false);
-          setShowCurrentFeedback(false);
-          setTimeLeft(QUIZ_DURATION);
-          setTimeSpent(0);
-          setQuizCompleted(false);
-
-          // Restart the timer
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-          }
-
-          timerRef.current = setInterval(() => {
-            setTimeLeft((prev) => {
-              if (prev <= 1) {
-                clearInterval(timerRef.current as NodeJS.Timeout);
-                handleTimeUp();
-                return 0;
-              }
-              setTimeSpent((prevSpent) => prevSpent + 1);
-              return prev - 1;
-            });
-          }, 1000);
-        },
-      },
+      { text: 'OK', onPress: () => setCurrentQuestion(0) },
     ]);
   };
 

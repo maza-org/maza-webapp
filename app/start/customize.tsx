@@ -44,9 +44,10 @@ export default function Customize() {
   const [user, setUser] = useState<User | null>(null);
   const { interests } = useLocalSearchParams();
   const userTopics = interests ? JSON.parse(interests as string) : [];
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const initialize = async () => {
+    const loadData = async () => {
       try {
         // Read the saved user data
         const userString = await AsyncStorage.getItem('@user');
@@ -58,22 +59,23 @@ export default function Customize() {
         }
 
         // Fetch topics
-        await fetchTopics();
+        await loadTopics();
       } catch (error) {
-        console.error('Error initializing:', error);
-        Alert.alert('Error', 'Failed to load user data or topics');
+        console.error('Erro ao carregar dados do usuário ou tópicos:', error);
+        Alert.alert('Erro', 'Falha ao carregar dados do usuário ou tópicos');
+        setError('Erro ao carregar dados do usuário ou tópicos');
       } finally {
         setIsLoading(false);
       }
     };
 
-    initialize();
-  }, []);
+    loadData();
+  }, [user?.token]);
 
-  const fetchTopics = async () => {
+  const loadTopics = async () => {
     try {
-      const response = await fetch(`https://api.mazas.org/api/subjects?fields=name&sort=name&locale=pt`);
-      const { data } = await response.json();
+      const response = await fetch('https://api.mazas.org/api/topics');
+      const data = await response.json();
       setTopics(data);
 
       // Mark user's existing topics as selected
@@ -88,9 +90,10 @@ export default function Customize() {
         }
       }
     } catch (error) {
-      console.error('Error fetching topics:', error);
-      Alert.alert('Error', 'Failed to load topics');
+      console.error('Erro ao carregar tópicos:', error);
+      Alert.alert('Erro', 'Falha ao carregar tópicos');
       setTopics([]);
+      setError('Erro ao carregar tópicos');
     }
   };
 
@@ -100,49 +103,39 @@ export default function Customize() {
     );
   };
 
-  const handleConfirm = async (): Promise<void> => {
-    if (!user) {
-      Alert.alert('Error', 'No user data found. Please try logging in again.');
+  const handleConfirm = async () => {
+    if (!user?.token) {
+      Alert.alert('Erro', 'Dados do usuário não encontrados. Por favor, faça login novamente.');
       return;
     }
 
+    if (selectedTopics.length === 0) {
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      setIsLoading(true);
-      // Make the API call to update user interests
-      const response = await fetch('https://api.mazas.org/api/users-permissions/interests', {
+      const response = await fetch('https://api.mazas.org/api/user-topics', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify({
-          data: {
-            interests: selectedTopics.map((topic) => topic.documentId),
-          },
+          topics: selectedTopics,
         }),
       });
+
       if (!response.ok) {
-        throw new Error('Failed to update interests');
+        throw new Error('Falha ao salvar tópicos');
       }
-      // Save to AsyncStorage that user has updated their interests
-      await AsyncStorage.setItem('@userInterestsUpdated', 'true');
-      // Update the user object in AsyncStorage with new interests
-      const updatedUser = {
-        ...user,
-        interests: selectedTopics,
-      };
 
-      console.log(`user in customize`, JSON.stringify(updatedUser, null, 2));
-      await AsyncStorage.setItem('@user', JSON.stringify(updatedUser));
-
-      if (userTopics && userTopics.length > 0) {
-        router.push('/profile');
-      } else {
-        router.push('/');
-      }
+      router.push('/start/photo');
     } catch (error) {
-      console.error('Error saving topics:', error);
-      Alert.alert('Error', 'Failed to save topics. Please try again.');
+      console.error('Erro ao salvar tópicos:', error);
+      Alert.alert('Erro', 'Falha ao salvar tópicos. Por favor, tente novamente.');
+      setError('Erro ao salvar tópicos');
     } finally {
       setIsLoading(false);
     }
@@ -155,11 +148,18 @@ export default function Customize() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#00B37E" />
-        </View>
-      </SafeAreaView>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2EA8FF" />
+        <Text style={styles.loadingText}>Carregando...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
     );
   }
 
@@ -289,5 +289,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    marginTop: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: '#FFFFFF',
+    fontSize: 16,
   },
 });

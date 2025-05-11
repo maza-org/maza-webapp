@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import Shimmer from '@/components/Shimmer';
@@ -11,6 +11,7 @@ export default function Category() {
   const { name, id, type } = useLocalSearchParams();
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCourses();
@@ -31,7 +32,8 @@ export default function Category() {
       setCourses(data.data);
       setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching courses:', error);
+      console.error('Erro ao buscar cursos:', error);
+      setError(error instanceof Error ? error.message : 'Ocorreu um erro ao buscar os cursos.');
       setIsLoading(false);
     }
   };
@@ -70,7 +72,10 @@ export default function Category() {
 
   const renderLoadingShimmer = () => (
     <>
-      <Text style={styles.loadingLabel}>Carregando os cursos...</Text>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2EA8FF" />
+        <Text style={styles.loadingText}>Carregando os cursos...</Text>
+      </View>
       <FlatList
         data={[...Array(5)]}
         keyExtractor={(_, index) => `shimmer-${index}`}
@@ -114,10 +119,10 @@ export default function Category() {
         placeholder={blurhash}
         transition={300}
         onError={(error) => {
-          console.error('Error loading empty state image:', error);
+          console.error('Erro ao carregar imagem de estado vazio:', error);
         }}
         accessible={true}
-        accessibilityLabel="No courses found illustration"
+        accessibilityLabel="Ilustração de nenhum curso encontrado"
       />
       <Text style={styles.emptyTitle}>Nenhum curso disponível</Text>
       <Text style={styles.emptySubtitle}>Nenhuma opção de aprendizado foi encontrada.</Text>
@@ -131,6 +136,23 @@ export default function Category() {
         {courses.length} {courses.length === 1 ? 'curso disponível' : 'cursos disponíveis'}
       </Text>
     ) : null;
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2EA8FF" />
+        <Text style={styles.loadingText}>Carregando...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -218,6 +240,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     width: '60%',
   },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
   loadingLabel: {
     color: '#666',
     fontSize: 16,
@@ -256,5 +284,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  errorText: {
+    color: '#FF0000',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 24,
   },
 });

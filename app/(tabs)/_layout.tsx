@@ -18,6 +18,7 @@ export default function TabLayout() {
           borderTopWidth: 1,
           paddingTop: 5,
           height: 70,
+          paddingBottom: Platform.OS === 'ios' ? 10 : 5,
         },
         tabBarLabelStyle: {
           fontSize: 10,
@@ -28,7 +29,6 @@ export default function TabLayout() {
         tabBarItemStyle: {
           paddingBottom: 5,
         },
-        safeAreaInsets: { bottom: Platform.OS === 'ios' ? 10 : 5 },
       }}
     >
       {/* Tab screens remain the same */}

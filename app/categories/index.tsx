@@ -54,52 +54,15 @@ export default function CategorySelection() {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(`https://api.mazas.org/api/courses`);
-
+      const response = await fetch('https://api.mazas.org/api/categories');
       if (!response.ok) {
-        throw new Error('Failed to fetch categories');
+        throw new Error('Falha ao buscar categorias');
       }
-
-      const data: APIResponse = await response.json();
-
-      // Process the API response
-      const coursesBySubject = data.data.reduce((acc: Record<string, { id: number; count: number }>, course) => {
-        course.subjects.forEach((subject) => {
-          if (!acc[subject.name]) {
-            acc[subject.name] = {
-              id: subject.id,
-              count: 1,
-            };
-          } else {
-            acc[subject.name].count++;
-          }
-        });
-        return acc;
-      }, {});
-
-      // Define icon mapping for subjects
-      const subjectToIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
-        Design: 'brush-outline',
-        Tecnologia: 'desktop-outline',
-        Saúde: 'medical-outline',
-        Idiomas: 'language-outline',
-        'Gestão Financeira': 'cash-outline',
-        Negócios: 'business-outline',
-        'Meio Ambiente': 'leaf-outline',
-      };
-
-      // Transform the data into the required format
-      const transformedCategories = Object.entries(coursesBySubject).map(([name, data]) => ({
-        id: data.id,
-        name: name,
-        courses: data.count,
-        icon: subjectToIcon[name] || 'help-outline',
-      }));
-
-      setCategories(transformedCategories);
+      const data = await response.json();
+      setCategories(data);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred');
-      console.error('Error fetching categories:', error);
+      setError(error instanceof Error ? error.message : 'Ocorreu um erro');
+      console.error('Erro ao buscar categorias:', error);
     } finally {
       setIsLoading(false);
     }
@@ -121,7 +84,7 @@ export default function CategorySelection() {
       <SafeAreaView style={styles.container}>
         <Header title={'Escolha uma categoria'} />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#8257e5" />
+          <ActivityIndicator size="large" color="#2EA8FF" />
           <Text style={styles.loadingText}>Carregando categorias...</Text>
         </View>
       </SafeAreaView>

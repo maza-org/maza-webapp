@@ -10,6 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 export default function HomeScreen() {
   return (
@@ -23,18 +24,14 @@ export default function HomeScreen() {
             style={styles.logo}
           />
         </View>
-        <TouchableOpacity style={styles.notificationButton}>
-          <Feather name="bell" size={24} color="#000" />
-          <View style={styles.notificationBadge} />
-        </TouchableOpacity>
       </View>
 
       {/* Main content */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Welcome section */}
         <View style={styles.welcomeCard}>
-          <Text style={styles.welcomeHeading}>Welcome back, Clayton!</Text>
-          <Text style={styles.welcomeSubheading}>Are you ready for today's challenge? 😉</Text>
+          <Text style={styles.welcomeHeading}>Bem-vindo de volta, Clayton!</Text>
+          <Text style={styles.welcomeSubheading}>Estás prontos para o desafio de hoje? 😉</Text>
 
           <View style={styles.statsContainer}>
             {/* Stats column - Modified to be vertical */}
@@ -49,8 +46,8 @@ export default function HomeScreen() {
                   />
                 </View>
                 <View style={styles.statTextContainer}>
-                  <Text style={styles.statValue}>3 days</Text>
-                  <Text style={styles.statLabel}>Streak</Text>
+                  <Text style={styles.statValue}>3 dias</Text>
+                  <Text style={styles.statLabel}>Sequência</Text>
                 </View>
               </View>
 
@@ -65,7 +62,7 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.statTextContainer}>
                   <Text style={styles.statValue}>4263</Text>
-                  <Text style={styles.statLabel}>Points</Text>
+                  <Text style={styles.statLabel}>Pontos</Text>
                 </View>
               </View>
             </View>
@@ -94,7 +91,7 @@ export default function HomeScreen() {
 
         {/* Continue section */}
         <View style={styles.continueSection}>
-          <Text style={styles.sectionTitle}>Continue where you left off...</Text>
+          <Text style={styles.sectionTitle}>Continue de onde parou...</Text>
 
           <View style={styles.challengeCard}>
             <ImageBackground
@@ -126,8 +123,13 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.changeButton}>
-            <Text style={styles.changeButtonTitle}>Change Challenge</Text>
+          <TouchableOpacity
+            style={styles.changeButton}
+            onPress={() => {
+              router.push('/missions/questions');
+            }}
+          >
+            <Text style={styles.changeButtonTitle}>Mudar desafio</Text>
             <Text style={styles.changeButtonChallenge}>Mudanças Climáticas</Text>
           </TouchableOpacity>
         </View>
@@ -150,7 +152,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 15,
-    paddingBottom: 10,
+    paddingBottom: 5,
   },
   logoContainer: {
     flexDirection: 'row',
@@ -238,7 +240,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#A8A8B3',
   },
   rankCard: {
@@ -372,7 +374,7 @@ const styles = StyleSheet.create({
   },
   changeButtonChallenge: {
     color: '#FFFFFF',
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });
