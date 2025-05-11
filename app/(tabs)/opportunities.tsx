@@ -13,7 +13,7 @@ import { JobCardSkeleton } from '@/components/opportunities/JobCardSkeleton';
 
 const SKELETON_COUNT = 5;
 
-const TitleSkeleton = () => <View style={styles.titleSkeleton} />;
+const TitleSkeleton = () => <View testID="title-skeleton" style={styles.titleSkeleton} />;
 
 export default function Opportunities() {
   const { jobs, isLoading, isRefreshing, error, fetchJobs, refreshJobs } = useJobsData();
@@ -66,7 +66,7 @@ export default function Opportunities() {
   }
 
   return (
-    <ErrorBoundary onError={handleError}>
+    <ErrorBoundary onError={handleError} testID="error-boundary">
       <SafeAreaView style={styles.container}>
         <StatusBar style="light" />
 
@@ -83,6 +83,7 @@ export default function Opportunities() {
             <EmptyState />
           ) : (
             <ListComponent
+              testID="job-list"
               data={jobs}
               renderItem={renderJobItem}
               keyExtractor={keyExtractor}

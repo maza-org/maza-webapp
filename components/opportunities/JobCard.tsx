@@ -77,6 +77,7 @@ export const JobCard = memo(({ job, onPress }: JobCardProps) => {
       accessibilityRole="button"
       accessibilityLabel={`Vaga: ${job.title} em ${job.company?.name}`}
       accessibilityHint="Toque para ver detalhes da vaga"
+      testID={`job-card-${job.id}`}
     >
       <View style={styles.jobHeader}>
         <CompanyLogo logo={job.company?.logo} name={job.company?.name} />
