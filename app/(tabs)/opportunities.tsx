@@ -1,15 +1,23 @@
-import { SafeAreaView, StyleSheet, View, FlatList, RefreshControl } from 'react-native';
+import { SafeAreaView, StyleSheet, View, FlatList, RefreshControl, Platform, ActivityIndicator } from 'react-native';
 import { Text } from '@/components/Themed';
-import { useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Job } from '@/types/job';
 import { useJobsData } from '@/hooks/useJobsData';
-import { ErrorState, EmptyState, LoadingState } from '@/components/opportunities/StateComponents';
+import { ErrorState, EmptyState } from '@/components/opportunities/StateComponents';
 import { JobCard } from '@/components/opportunities/JobCard';
+import { FlashList } from '@shopify/flash-list';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { JobCardSkeleton } from '@/components/opportunities/JobCardSkeleton';
+
+const SKELETON_COUNT = 5;
+
+const TitleSkeleton = () => <View style={styles.titleSkeleton} />;
 
 export default function Opportunities() {
   const { jobs, isLoading, isRefreshing, error, fetchJobs, refreshJobs } = useJobsData();
+  const [isErrorBoundary, setIsErrorBoundary] = useState(false);
 
   const navigateToJobDetail = useCallback((job: Job) => {
     router.push({
@@ -23,46 +31,93 @@ export default function Opportunities() {
     [navigateToJobDetail]
   );
 
+  const renderSkeleton = useCallback(() => {
+    return Array(SKELETON_COUNT)
+      .fill(0)
+      .map((_, index) => <JobCardSkeleton key={`skeleton-${index}`} />);
+  }, []);
+
   const keyExtractor = useCallback((item: Job) => item.id.toString(), []);
 
+  const ListComponent = useMemo(() => {
+    return Platform.OS === 'ios' ? FlashList : FlatList;
+  }, []);
+
+  const getItemType = useCallback((item: Job) => {
+    return 'job';
+  }, []);
+
+  const estimatedItemSize = useMemo(() => 120, []);
+
+  const handleError = useCallback(() => {
+    setIsErrorBoundary(true);
+  }, []);
+
+  if (isErrorBoundary) {
+    return (
+      <ErrorState
+        message="Ocorreu um erro inesperado. Por favor, tente novamente."
+        onRetry={() => {
+          setIsErrorBoundary(false);
+          fetchJobs();
+        }}
+      />
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+    <ErrorBoundary onError={handleError}>
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="light" />
 
-      <View style={styles.header}>
-        <Text style={styles.title}>Oportunidades</Text>
-      </View>
+        <View style={styles.header}>
+          {isLoading ? <TitleSkeleton /> : <Text style={styles.title}>Oportunidades</Text>}
+        </View>
 
-      <View style={styles.content}>
-        {isLoading ? (
-          <LoadingState />
-        ) : error ? (
-          <ErrorState message={error} onRetry={fetchJobs} />
-        ) : jobs.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <FlatList
-            data={jobs}
-            renderItem={renderJobItem}
-            keyExtractor={keyExtractor}
-            contentContainerStyle={styles.jobList}
-            showsVerticalScrollIndicator={false}
-            initialNumToRender={5}
-            maxToRenderPerBatch={10}
-            windowSize={10}
-            removeClippedSubviews={true}
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={refreshJobs}
-                colors={['#2EA8FF']}
-                tintColor="#2EA8FF"
-              />
-            }
-          />
-        )}
-      </View>
-    </SafeAreaView>
+        <View style={styles.content}>
+          {isLoading ? (
+            <View style={styles.skeletonContainer}>{renderSkeleton()}</View>
+          ) : error ? (
+            <ErrorState message={error} onRetry={fetchJobs} />
+          ) : jobs.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <ListComponent
+              data={jobs}
+              renderItem={renderJobItem}
+              keyExtractor={keyExtractor}
+              contentContainerStyle={styles.jobList}
+              showsVerticalScrollIndicator={false}
+              estimatedItemSize={estimatedItemSize}
+              getItemType={getItemType}
+              removeClippedSubviews={true}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              initialNumToRender={8}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={refreshJobs}
+                  colors={['#2EA8FF']}
+                  tintColor="#2EA8FF"
+                  progressViewOffset={20}
+                />
+              }
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={
+                isRefreshing ? (
+                  <View style={styles.footerLoader}>
+                    <ActivityIndicator color="#2EA8FF" />
+                  </View>
+                ) : null
+              }
+              accessibilityRole="list"
+              accessibilityLabel="Lista de oportunidades de emprego"
+            />
+          )}
+        </View>
+      </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 
@@ -76,7 +131,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 30,
+    paddingTop: Platform.OS === 'ios' ? 30 : 20,
     paddingBottom: 20,
     backgroundColor: '#121214',
   },
@@ -85,139 +140,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
+  titleSkeleton: {
+    width: 150,
+    height: 24,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 4,
+  },
   content: {
     flex: 1,
     paddingHorizontal: 16,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#8F8F8F',
-    marginTop: 16,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#8F8F8F',
-    textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 24,
-  },
-  retryButton: {
-    backgroundColor: '#2EA8FF',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  emptyText: {
-    fontSize: 18,
-    color: '#8F8F8F',
-    textAlign: 'center',
-    marginTop: 16,
   },
   jobList: {
     paddingTop: 8,
     paddingBottom: 24,
   },
-  jobCard: {
-    backgroundColor: '#1C1C1E',
-    borderRadius: 12,
-    marginBottom: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    position: 'relative',
-  },
-  jobHeader: {
-    flexDirection: 'row',
-  },
-  companyLogoContainer: {
-    width: 56,
-    height: 56,
-    marginRight: 12,
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: '#29292E',
-    justifyContent: 'center',
+  footerLoader: {
+    paddingVertical: 16,
     alignItems: 'center',
   },
-  companyLogo: {
-    width: '100%',
-    height: '100%',
-  },
-  placeholderLogo: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#29292E',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  jobInfo: {
+  skeletonContainer: {
     flex: 1,
-  },
-  jobTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  companyName: {
-    fontSize: 14,
-    color: '#2EA8FF',
-    marginBottom: 8,
-  },
-  jobMeta: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 12,
-    marginBottom: 4,
-  },
-  metaText: {
-    fontSize: 12,
-    color: '#8F8F8F',
-    marginLeft: 4,
-  },
-  badge: {
-    position: 'absolute',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  languageBadge: {
-    top: 12,
-    right: 12,
-    backgroundColor: '#3A3A3C',
-  },
-  languageBadgeText: {
-    fontSize: 10,
-    color: '#fff',
-    textTransform: 'uppercase',
-  },
-  newBadge: {
-    bottom: 12,
-    right: 12,
-    backgroundColor: '#2EA8FF',
-  },
-  newBadgeText: {
-    fontSize: 10,
-    color: '#fff',
-    fontWeight: 'bold',
+    paddingTop: 8,
   },
 });
