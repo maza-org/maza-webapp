@@ -1,6 +1,6 @@
+import React from 'react';
 import {
   SafeAreaView,
-  StyleSheet,
   View,
   ScrollView,
   Image,
@@ -8,121 +8,36 @@ import {
   ActivityIndicator,
   Share,
   Linking,
+  Dimensions,
 } from 'react-native';
 import { Text } from '@/components/Themed';
-import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
-import HTML from 'react-native-render-html';
-import { Dimensions } from 'react-native';
+import HTML, { MixedStyleDeclaration } from 'react-native-render-html';
+import { Job } from '../types/job';
+import { fetchJobDetails } from '../services/jobService';
+import { JobHeader } from '../components/JobHeader';
+import { JobMetadata } from '../components/JobMetadata';
+import { styles } from '../styles/jobDetails.styles';
 
 const windowWidth = Dimensions.get('window').width;
 
-type Job = {
-  id: number;
-  filter_id: number;
-  apply_through_filter: boolean;
-  type: string;
-  recommended: boolean;
-  url: string;
-  slug: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  date: string;
-  date_iso: string;
-  locations: {
-    id: number;
-    slug: string;
-    name: string;
-  }[];
-  categories: {
-    id: number;
-    slug: string;
-    name: string;
-  }[];
-  tags: any[];
-  expire_date: string;
-  expired: boolean;
-  address: string;
-  company: {
-    id: string;
-    logo: string;
-    url: string;
-    name: string;
-    slug: string;
-    description: string;
-  };
-  meta: {
-    language: {
-      id: string;
-      name: string;
-    };
-  };
-  ext_apply_url: string;
-};
-
 export default function JobDetails() {
-  const [job, setJob] = useState<Job | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [job, setJob] = React.useState<Job | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
   const { slug } = useLocalSearchParams();
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (slug) {
-      fetchJobDetails();
+      fetchJobDetails(slug as string)
+        .then(setJob)
+        .catch((err) => setError(err.message))
+        .finally(() => setLoading(false));
     } else {
       setError('Identificador da vaga não encontrado');
       setLoading(false);
     }
   }, [slug]);
-
-  const fetchJobDetails = async () => {
-    try {
-      setLoading(true);
-
-      // API endpoint
-      const endpoint = `https://www.emprego.co.mz/wp-api/vacancies?name=${slug}`;
-
-      // Headers based on the curl request
-      const headers = {
-        accept: 'application/json, text/javascript, */*; q=0.01',
-        'accept-language': 'en-US,en;q=0.9',
-        'sec-ch-ua': '"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"',
-        'sec-ch-ua-mobile': '?1',
-        'sec-ch-ua-platform': '"Android"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'x-requested-with': 'XMLHttpRequest',
-      };
-
-      // Make the API request
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        headers: headers,
-        credentials: 'include', // This includes cookies
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.results && data.results.length > 0) {
-        setJob(data.results[0]);
-      } else {
-        setError('Vaga não encontrada');
-      }
-
-      setLoading(false);
-    } catch (err) {
-      setError('Erro ao carregar os detalhes da vaga. Tente novamente mais tarde.');
-      setLoading(false);
-      console.error('Error fetching job details:', err);
-    }
-  };
 
   const handleShare = async () => {
     if (!job) return;
@@ -147,20 +62,20 @@ export default function JobDetails() {
   };
 
   const renderHTMLContent = (htmlContent: string) => {
-    const baseStyle = {
+    const baseStyle: MixedStyleDeclaration = {
       color: '#fff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
     };
 
-    const tagsStyles = {
+    const tagsStyles: Record<string, MixedStyleDeclaration> = {
       body: { ...baseStyle },
       p: { ...baseStyle, marginBottom: 16, lineHeight: 22, fontSize: 16 },
-      h1: { ...baseStyle, fontSize: 24, fontWeight: 'bold', marginVertical: 16 },
-      h2: { ...baseStyle, fontSize: 22, fontWeight: 'bold', marginVertical: 14 },
-      h3: { ...baseStyle, fontSize: 20, fontWeight: 'bold', marginVertical: 12 },
-      h4: { ...baseStyle, fontSize: 18, fontWeight: 'bold', marginVertical: 10 },
-      h5: { ...baseStyle, fontSize: 16, fontWeight: 'bold', marginVertical: 8, color: '#2EA8FF' },
-      h6: { ...baseStyle, fontSize: 15, fontWeight: 'bold', marginVertical: 6, color: '#2EA8FF' },
+      h1: { ...baseStyle, fontSize: 24, fontWeight: '700', marginVertical: 16 },
+      h2: { ...baseStyle, fontSize: 22, fontWeight: '700', marginVertical: 14 },
+      h3: { ...baseStyle, fontSize: 20, fontWeight: '700', marginVertical: 12 },
+      h4: { ...baseStyle, fontSize: 18, fontWeight: '700', marginVertical: 10 },
+      h5: { ...baseStyle, fontSize: 16, fontWeight: '700', marginVertical: 8, color: '#2EA8FF' },
+      h6: { ...baseStyle, fontSize: 15, fontWeight: '700', marginVertical: 6, color: '#2EA8FF' },
       a: { ...baseStyle, color: '#2EA8FF', textDecorationLine: 'underline' },
       ul: { ...baseStyle, marginBottom: 16 },
       ol: { ...baseStyle, marginBottom: 16 },
@@ -171,7 +86,6 @@ export default function JobDetails() {
       <HTML
         source={{ html: htmlContent }}
         contentWidth={windowWidth - 32}
-        // @ts-ignore
         tagsStyles={tagsStyles}
         defaultTextProps={{
           style: { color: '#fff' },
@@ -182,17 +96,7 @@ export default function JobDetails() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          Detalhes da Vaga
-        </Text>
-        <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-          <Ionicons name="share-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
+      {job && <JobHeader job={job} onShare={handleShare} onBack={() => router.back()} />}
 
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -201,9 +105,8 @@ export default function JobDetails() {
         </View>
       ) : error ? (
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={64} color="#FF6B6B" />
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchJobDetails}>
+          <TouchableOpacity style={styles.retryButton} onPress={() => router.reload()}>
             <Text style={styles.retryButtonText}>Tentar Novamente</Text>
           </TouchableOpacity>
         </View>
@@ -212,7 +115,7 @@ export default function JobDetails() {
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
             <View style={styles.jobHeader}>
               <View style={styles.companyLogoContainer}>
-                {job.company && job.company.logo ? (
+                {job.company?.logo ? (
                   <Image source={{ uri: job.company.logo }} style={styles.companyLogo} resizeMode="contain" />
                 ) : (
                   <View style={styles.placeholderLogo}>
@@ -226,41 +129,7 @@ export default function JobDetails() {
               </View>
             </View>
 
-            <View style={styles.metadataContainer}>
-              {job.locations && job.locations.length > 0 && (
-                <View style={styles.metadataItem}>
-                  <Ionicons name="location-outline" size={18} color="#8F8F8F" />
-                  <Text style={styles.metadataText}>{job.locations[0].name}</Text>
-                </View>
-              )}
-
-              {job.categories && job.categories.length > 0 && (
-                <View style={styles.metadataItem}>
-                  <Ionicons name="briefcase-outline" size={18} color="#8F8F8F" />
-                  <Text style={styles.metadataText}>{job.categories[0].name}</Text>
-                </View>
-              )}
-
-              {job.date && (
-                <View style={styles.metadataItem}>
-                  <Ionicons name="calendar-outline" size={18} color="#8F8F8F" />
-                  <Text style={styles.metadataText}>Publicado em: {job.date}</Text>
-                </View>
-              )}
-
-              {job.expire_date && (
-                <View style={styles.metadataItem}>
-                  <Ionicons name="time-outline" size={18} color="#8F8F8F" />
-                  <Text style={styles.metadataText}>Expira em: {job.expire_date}</Text>
-                </View>
-              )}
-
-              {job.meta?.language && (
-                <View style={styles.languageBadge}>
-                  <Text style={styles.languageBadgeText}>{job.meta.language.name}</Text>
-                </View>
-              )}
-            </View>
+            <JobMetadata job={job} />
 
             {job.excerpt && (
               <View style={styles.excerptContainer}>
@@ -284,200 +153,3 @@ export default function JobDetails() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121214',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 30,
-    paddingBottom: 20,
-    backgroundColor: '#121214',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    flex: 1,
-    textAlign: 'center',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#29292E',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  shareButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#29292E',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#8F8F8F',
-    marginTop: 16,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#8F8F8F',
-    textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 24,
-  },
-  retryButton: {
-    backgroundColor: '#2EA8FF',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  jobHeader: {
-    flexDirection: 'row',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  companyLogoContainer: {
-    width: 64,
-    height: 64,
-    marginRight: 16,
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: '#29292E',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  companyLogo: {
-    width: '100%',
-    height: '100%',
-  },
-  placeholderLogo: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#29292E',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  jobTitleContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  jobTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  companyName: {
-    fontSize: 16,
-    color: '#2EA8FF',
-  },
-  metadataContainer: {
-    padding: 16,
-    backgroundColor: '#1C1C1E',
-    borderRadius: 12,
-    margin: 16,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    position: 'relative',
-  },
-  metadataItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16,
-    marginBottom: 8,
-  },
-  metadataText: {
-    fontSize: 14,
-    color: '#fff',
-    marginLeft: 8,
-  },
-  languageBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: '#3A3A3C',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  languageBadgeText: {
-    fontSize: 12,
-    color: '#fff',
-    textTransform: 'uppercase',
-  },
-  excerptContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  excerptText: {
-    fontSize: 16,
-    color: '#fff',
-    lineHeight: 24,
-    fontStyle: 'italic',
-  },
-  contentContainer: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 16,
-  },
-  footer: {
-    padding: 16,
-    backgroundColor: '#121214',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  applyButton: {
-    paddingVertical: 16,
-    justifyContent: 'center',
-    backgroundColor: '#1fa2df',
-    padding: 16,
-    borderRadius: 50,
-    alignItems: 'center',
-  },
-  applyButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-});
