@@ -98,7 +98,14 @@ const FavoriteCoursesGrid = () => {
   if (error) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.message}>{error}</Text>
+        <View style={styles.emptyIconContainer}>
+          <Ionicons name="alert-circle-outline" size={80} color="#FF4B4B" />
+        </View>
+        <Text style={styles.errorTitle}>Ops! Algo deu errado</Text>
+        <Text style={styles.errorSubtitle}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchFavorites}>
+          <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -106,7 +113,14 @@ const FavoriteCoursesGrid = () => {
   if (favorites.length === 0) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.message}>Não tem cursos favoritos disponíveis</Text>
+        <View style={styles.emptyIconContainer}>
+          <Ionicons name="heart-outline" size={80} color="#8F8F8F" />
+        </View>
+        <Text style={styles.emptyTitle}>Nenhum curso favorito</Text>
+        <Text style={styles.emptySubtitle}>Adicione cursos aos favoritos para acessá-los rapidamente aqui</Text>
+        <TouchableOpacity style={styles.exploreButton} onPress={() => router.push('/categories')}>
+          <Text style={styles.exploreButtonText}>Explorar Cursos</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -190,7 +204,61 @@ const styles = StyleSheet.create({
     backgroundColor: '#121214',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 32,
+  },
+  emptyIconContainer: {
+    marginBottom: 24,
+    opacity: 0.6,
+  },
+  emptyTitle: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    color: '#8F8F8F',
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  exploreButton: {
+    backgroundColor: '#2EA8FF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 50,
+  },
+  exploreButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  errorTitle: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  errorSubtitle: {
+    color: '#8F8F8F',
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  retryButton: {
+    backgroundColor: '#FF4B4B',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   message: {
     color: '#8F8F8F',

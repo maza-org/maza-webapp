@@ -41,27 +41,95 @@ type APIResponse = {
   };
 };
 
+type ErrorState = {
+  message: string;
+  icon: keyof typeof Ionicons.glyphMap;
+};
+
 export default function CategorySelection() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ErrorState | null>(null);
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
+  const getErrorDetails = (response?: Response, error?: Error): ErrorState => {
+    if (response) {
+      const status = response.status;
+
+      switch (true) {
+        case status === 400:
+          return {
+            message: 'Solicitação inválida. Verifique os dados enviados.',
+            icon: 'warning-outline',
+          };
+        case status === 401:
+          return {
+            message: 'Acesso não autorizado. Faça login novamente.',
+            icon: 'lock-closed-outline',
+          };
+        case status === 403:
+          return {
+            message: 'Você não tem permissão para acessar este conteúdo.',
+            icon: 'shield-outline',
+          };
+        case status === 404:
+          return {
+            message: 'Categorias não encontradas. Tente novamente mais tarde.',
+            icon: 'search-outline',
+          };
+        case status >= 500:
+          return {
+            message: 'Erro no servidor. Nossa equipe foi notificada.',
+            icon: 'server-outline',
+          };
+        case status >= 400:
+          return {
+            message: 'Erro na solicitação. Verifique sua conexão.',
+            icon: 'alert-circle-outline',
+          };
+        default:
+          return {
+            message: 'Erro inesperado. Tente novamente.',
+            icon: 'alert-circle-outline',
+          };
+      }
+    }
+
+    // Network or other errors
+    if (error?.message?.includes('fetch')) {
+      return {
+        message: 'Sem conexão com a internet. Verifique sua rede.',
+        icon: 'wifi-outline',
+      };
+    }
+
+    return {
+      message: 'Erro inesperado. Tente novamente.',
+      icon: 'alert-circle-outline',
+    };
+  };
+
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
       setError(null);
+
       const response = await fetch('https://api.mazas.org/api/categories');
+
       if (!response.ok) {
-        throw new Error('Falha ao buscar categorias');
+        const errorDetails = getErrorDetails(response);
+        setError(errorDetails);
+        return;
       }
+
       const data = await response.json();
       setCategories(data);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Ocorreu um erro');
+      const errorDetails = getErrorDetails(undefined, error as Error);
+      setError(errorDetails);
       console.error('Erro ao buscar categorias:', error);
     } finally {
       setIsLoading(false);
@@ -96,8 +164,13 @@ export default function CategorySelection() {
       <SafeAreaView style={styles.container}>
         <Header title={'Escolha uma categoria'} />
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
+          <View style={styles.errorIconContainer}>
+            <Ionicons name={error.icon} size={64} color="#2196F3" />
+          </View>
+          <Text style={styles.errorTitle}>Ops! Algo deu errado</Text>
+          <Text style={styles.errorMessage}>{error.message}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+            <Ionicons name="refresh-outline" size={20} color="#FFF" style={styles.retryIcon} />
             <Text style={styles.retryButtonText}>Tentar novamente</Text>
           </TouchableOpacity>
         </View>
@@ -148,19 +221,42 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: 24,
   },
-  errorText: {
-    color: '#ff4444',
+  errorIconContainer: {
+    marginBottom: 24,
+    opacity: 0.9,
+  },
+  errorTitle: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  errorMessage: {
+    color: '#b3b3b3',
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 32,
+    lineHeight: 22,
+    maxWidth: 280,
   },
   retryButton: {
-    backgroundColor: '#8257e5',
+    backgroundColor: '#2196F3',
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#2196F3',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  retryIcon: {
+    marginRight: 8,
   },
   retryButtonText: {
     color: '#FFF',

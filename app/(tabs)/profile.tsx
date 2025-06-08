@@ -348,14 +348,16 @@ export default function ProfileScreen() {
               </View>
             ) : (
               <View style={styles.profileImagePlaceholder}>
-                <Text style={styles.profileImagePlaceholderText}>{user.fullname.charAt(0)}</Text>
+                <Text style={styles.profileImagePlaceholderText}>{`${user.name} ${user.surname}`.charAt(0)}</Text>
                 <TouchableOpacity style={styles.changePhotoButton} onPress={handleChangePhoto}>
                   <Feather name="camera" size={16} color="#1fa2df" />
                 </TouchableOpacity>
               </View>
             )}
           </View>
-          <Text style={styles.fullname}>{user.fullname}</Text>
+          <Text style={styles.fullname}>
+            {user.name} {user.surname}
+          </Text>
           <Text style={styles.documentId}>ID: {user.documentId}</Text>
         </View>
 

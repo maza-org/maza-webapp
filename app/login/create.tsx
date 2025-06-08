@@ -31,7 +31,8 @@ const validateMozambiquePhone = (phoneNumber) => {
 
 export default function Create() {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(undefined);
   const [touched, setTouched] = useState(false);
@@ -53,7 +54,7 @@ export default function Create() {
   const handleRegister = async () => {
     setTouched(true);
 
-    if (!phoneNumber || !fullName) {
+    if (!phoneNumber || !name || !surname) {
       Alert.alert('Erro', 'Por favor preencha todos os campos');
       return;
     }
@@ -90,11 +91,12 @@ export default function Create() {
         params: {
           phone: validation.formattedNumber,
           otpId: data.otpID,
-          fullName: fullName,
+          name: name,
+          surname: surname,
         },
       });
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível processar o cadastro. Por favor, tente novamente.');
+      Alert.alert('Erro', 'Não foi possível processar o registo. Por favor, tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -120,7 +122,7 @@ export default function Create() {
           />
         </View>
         <View style={styles.titleSection}>
-          <Text style={styles.headerText}>Cadastrar</Text>
+          <Text style={styles.headerText}>Registar</Text>
 
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Já tem uma conta? </Text>
@@ -149,22 +151,35 @@ export default function Create() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Nome Completo</Text>
+            <Text style={styles.inputLabel}>Nome</Text>
             <TextInput
               style={styles.input}
-              placeholder="João Carlos António"
+              placeholder="João"
               placeholderTextColor="#666"
-              value={fullName}
-              onChangeText={setFullName}
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Apelido</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="António"
+              placeholderTextColor="#666"
+              value={surname}
+              onChangeText={setSurname}
+              autoCapitalize="words"
             />
           </View>
         </View>
 
         <View>
           <Button
-            text={loading ? 'A processar...' : 'Cadastrar'}
+            text={loading ? 'A processar...' : 'Registar'}
             handle={handleRegister}
-            disabled={!phoneNumber || !fullName || loading || !!error}
+            disabled={!phoneNumber || !name || !surname || loading || !!error}
             loading={loading}
           />
         </View>

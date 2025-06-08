@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, ActivityIndicator, Alert, StyleSheet, TouchableOpacity, Image, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons'; // Make sure you have expo/vector-icons installed
 
 interface Course {
   id: number;
@@ -9,6 +10,16 @@ interface Course {
   title: string;
   author: string;
   rating_avg: number;
+  picture: {
+    formats: {
+      thumbnail: {
+        url: string;
+      };
+      small?: {
+        url: string;
+      };
+    };
+  };
 }
 
 export interface UserCourse {
@@ -120,7 +131,7 @@ const CoursesInProgress = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#8257E5" />
+        <ActivityIndicator size="large" color="#2EA8FF" />
       </View>
     );
   }
@@ -128,7 +139,14 @@ const CoursesInProgress = () => {
   if (courses.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Nenhum curso em andamento</Text>
+        <View style={styles.emptyIconContainer}>
+          <Ionicons name="school-outline" size={80} color="#8F8F8F" />
+        </View>
+        <Text style={styles.emptyTitle}>Nenhum curso em progresso</Text>
+        <Text style={styles.emptySubtitle}>Comece um novo curso para acompanhar seu progresso aqui</Text>
+        <TouchableOpacity style={styles.exploreButton} onPress={() => router.push('/categories')}>
+          <Text style={styles.exploreButtonText}>Explorar Cursos</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -170,8 +188,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#121214',
-    paddingHorizontal: 16,
+    paddingHorizontal: 32,
     marginTop: 16,
+  },
+  emptyIconContainer: {
+    marginBottom: 24,
+    opacity: 0.6,
+  },
+  emptyTitle: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    color: '#8F8F8F',
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  exploreButton: {
+    backgroundColor: '#2EA8FF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 50,
+  },
+  exploreButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+    borderRadius: 50,
   },
   emptyText: {
     color: '#8F8F8F',

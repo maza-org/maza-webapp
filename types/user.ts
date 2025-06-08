@@ -5,7 +5,9 @@ export interface User {
   id: string;
   documentId: string;
   email: string;
-  fullname: string;
+  fullname?: string;
+  name: string;
+  surname: string;
   phone: string;
   yomaId: string;
   token: string;

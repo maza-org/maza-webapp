@@ -11,7 +11,7 @@ import { FlashList } from '@shopify/flash-list';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { JobCardSkeleton } from '@/components/opportunities/JobCardSkeleton';
 
-const SKELETON_COUNT = 5;
+const SKELETON_COUNT = 6;
 
 const TitleSkeleton = () => <View testID="title-skeleton" style={styles.titleSkeleton} />;
 
@@ -66,7 +66,7 @@ export default function Opportunities() {
   }
 
   return (
-    <ErrorBoundary onError={handleError} testID="error-boundary">
+    <ErrorBoundary onError={handleError}>
       <SafeAreaView style={styles.container}>
         <StatusBar style="light" />
 

@@ -130,7 +130,7 @@ const CompletedCourses = () => {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#8257E5" />
+        <ActivityIndicator size="large" color="#2EA8FF" />
       </View>
     );
   }
@@ -533,6 +533,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     alignItems: 'center',
     zIndex: 1,
+    height: 42,
+    justifyContent: 'center',
   },
   animatedSelection: {
     position: 'absolute',
@@ -550,7 +552,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // Floating filter button styles
   floatingButton: {
     position: 'absolute',
     bottom: 20,
@@ -578,8 +579,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-
-  // Modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',

@@ -5,6 +5,7 @@ import { memo, useCallback } from 'react';
 import { Image } from 'expo-image';
 import { Job } from '@/types/job';
 import { styles } from './styles';
+import he from 'he';
 
 interface BadgeProps {
   text: string;
@@ -83,10 +84,10 @@ export const JobCard = memo(({ job, onPress }: JobCardProps) => {
         <CompanyLogo logo={job.company?.logo} name={job.company?.name} />
         <View style={styles.jobInfo}>
           <Text style={styles.jobTitle} numberOfLines={2}>
-            {job.title}
+            {he.decode(job.title)}
           </Text>
           <Text style={styles.companyName} numberOfLines={1}>
-            {job.company?.name}
+            {he.decode(job.company?.name)}
           </Text>
           <View style={styles.jobMeta}>
             <MetaItem icon="location-outline" text={job.city?.name} />

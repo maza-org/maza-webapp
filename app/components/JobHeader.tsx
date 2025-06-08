@@ -15,7 +15,7 @@ export const JobHeader: React.FC<JobHeaderProps> = ({ job, onShare, onBack }) =>
   return (
     <View style={styles.header}>
       <TouchableOpacity style={styles.backButton} onPress={onBack}>
-        <Ionicons name="arrow-back" size={24} color="#fff" />
+        <Ionicons name="chevron-back" size={24} color="#fff" />
       </TouchableOpacity>
       <Text style={styles.headerTitle} numberOfLines={1}>
         Detalhes da Vaga

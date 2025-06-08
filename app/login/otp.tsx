@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Otp() {
-  const { phone, otpId, fullName } = useLocalSearchParams();
+  const { phone, otpId, name, surname } = useLocalSearchParams();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
@@ -74,22 +74,24 @@ export default function Otp() {
 
     setLoading(true);
     try {
-      const endpoint = fullName ? `https://api.mazas.org/api/users` : `https://api.mazas.org/api/auth/login`;
+      const endpoint = name && surname ? `https://api.mazas.org/api/users` : `https://api.mazas.org/api/auth/login`;
 
-      const body = fullName
-        ? {
-            data: {
-              phone: phone,
+      const body =
+        name && surname
+          ? {
+              data: {
+                phone: phone,
+                otpID: otpId,
+                code: otpCode,
+                name: name,
+                surname: surname,
+              },
+            }
+          : {
+              identifier: phone,
               otpID: otpId,
-              code: otpCode,
-              fullname: fullName,
-            },
-          }
-        : {
-            identifier: phone,
-            otpID: otpId,
-            password: otpCode,
-          };
+              password: otpCode,
+            };
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -127,7 +129,7 @@ export default function Otp() {
       const data = await response.json();
       console.log(JSON.stringify(data, null, 2));
 
-      if (data.success || (fullName && data.data)) {
+      if (data.success || (name && surname && data.data)) {
         const userData = await saveUser(data);
 
         // Check if user has interests before navigating
