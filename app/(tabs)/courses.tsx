@@ -313,9 +313,9 @@ export default function MeusCursosScreen() {
       case 'inProgress':
         return 0;
       case 'favorites':
-        return buttonWidth;
+        return buttonWidth + 30;
       case 'completed':
-        return buttonWidth * 2;
+        return buttonWidth * 2.6;
       default:
         return 0;
     }
@@ -329,11 +329,6 @@ export default function MeusCursosScreen() {
       tension: 150,
     }).start();
   }, [selectedFilter]);
-
-  const animatedBg = animationValue.interpolate({
-    inputRange: [0, buttonWidth, buttonWidth * 2],
-    outputRange: ['#29292E', '#29292E', '#29292E'],
-  });
 
   const animatedText = (buttonIndex: number) => {
     return animationValue.interpolate({

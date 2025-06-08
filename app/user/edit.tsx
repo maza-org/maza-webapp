@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,17 +17,39 @@ import useUser from '@/hooks/useUser';
 export default function EditProfileScreen() {
   const { data: user, isLoading, error } = useUser();
   const [formData, setFormData] = useState({
-    fullname: user?.fullname || '',
+    name: '',
+    surname: '',
     email: user?.email || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Split fullname into name and surname when user data loads
+  useEffect(() => {
+    if (user?.fullname) {
+      const nameParts = user.fullname.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      setFormData((prev) => ({
+        ...prev,
+        name: firstName,
+        surname: lastName,
+        email: user.email || '',
+      }));
+    }
+  }, [user]);
+
   // Check if form data has changed
   const hasChanges = useMemo(() => {
-    return formData.fullname !== user?.fullname || formData.email !== user?.email;
+    if (!user) return false;
+
+    const currentFullname = `${formData.name} ${formData.surname}`.trim();
+    const originalFullname = user.fullname?.trim() || '';
+
+    return currentFullname !== originalFullname || formData.email !== user?.email;
   }, [formData, user]);
 
-  const handleChange = (field, value) => {
+  const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -35,8 +57,14 @@ export default function EditProfileScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.fullname.trim()) {
-      Alert.alert('Erro', 'Nome completo é obrigatório');
+    // Validate required fields
+    if (!formData.name.trim()) {
+      Alert.alert('Erro', 'Nome é obrigatório');
+      return;
+    }
+
+    if (!formData.surname.trim()) {
+      Alert.alert('Erro', 'Apelido é obrigatório');
       return;
     }
 
@@ -46,21 +74,24 @@ export default function EditProfileScreen() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${user?.token}`, // Assuming token is stored in user object
+          Authorization: `Bearer ${user?.token}`,
         },
         body: JSON.stringify({
           data: {
             phone: user?.phone,
-            fullname: formData.fullname,
+            name: formData.name.trim(),
+            surname: formData.surname.trim(),
             email: formData.email,
           },
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error('Erro ao actualizar perfil');
       }
 
+      console.log(response.status);
+      console.log(response.body);
       Alert.alert('Sucesso', 'Perfil actualizado com sucesso', [{ text: 'OK', onPress: () => router.back() }]);
     } catch (error) {
       Alert.alert('Erro', 'Falha ao actualizar perfil');
@@ -115,13 +146,31 @@ export default function EditProfileScreen() {
           <View style={styles.inputGroup}>
             <View style={styles.inputHeader}>
               <Feather name="user" size={20} color="#1fa2df" />
-              <Text style={styles.inputLabel}>Nome Completo</Text>
+              <Text style={styles.inputLabel}>
+                Nome <Text style={styles.required}>*</Text>
+              </Text>
             </View>
             <TextInput
               style={styles.input}
-              value={formData.fullname}
-              onChangeText={(value) => handleChange('fullname', value)}
-              placeholder="Digite seu nome completo"
+              value={formData.name}
+              onChangeText={(value) => handleChange('name', value)}
+              placeholder="Digite seu nome"
+              placeholderTextColor="#A8A8B3"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <View style={styles.inputHeader}>
+              <Feather name="user" size={20} color="#1fa2df" />
+              <Text style={styles.inputLabel}>
+                Apelido <Text style={styles.required}>*</Text>
+              </Text>
+            </View>
+            <TextInput
+              style={styles.input}
+              value={formData.surname}
+              onChangeText={(value) => handleChange('surname', value)}
+              placeholder="Digite seu apelido"
               placeholderTextColor="#A8A8B3"
             />
           </View>
@@ -169,8 +218,7 @@ export default function EditProfileScreen() {
             <ActivityIndicator color="#FFF" size="small" />
           ) : (
             <>
-              <Feather name="save" size={20} color="#FFF" />
-              <Text style={styles.saveButtonText}>Guardar Alterações</Text>
+              <Text style={styles.saveButtonText}>Actualizar</Text>
             </>
           )}
         </TouchableOpacity>
@@ -288,6 +336,11 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '500',
+  },
+  required: {
+    color: '#ff6b6b',
+    fontSize: 16,
+    fontWeight: '600',
   },
   input: {
     backgroundColor: '#202024',

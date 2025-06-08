@@ -176,10 +176,10 @@ export default function Create() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1E1E1E', // Changed to match the light dark color
+    backgroundColor: '#1E1E1E',
   },
   topSection: {
-    backgroundColor: '#1E1E1E', // Light dark background color for the top section
+    backgroundColor: '#1E1E1E',
     paddingBottom: 20,
     marginBottom: 10,
   },
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     gap: 24,
-    backgroundColor: '#121212', // Original dark color for the content section
+    backgroundColor: '#121212',
   },
   headerText: {
     fontSize: 28,
