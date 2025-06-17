@@ -3,31 +3,9 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, SafeAreaView, Aler
 import { router } from 'expo-router';
 import Button from '@/components/Button';
 import { Image } from 'expo-image';
-
-const validateMozambiquePhone = (phoneNumber: string) => {
-  const cleaned = phoneNumber.replace(/\D/g, '');
-  const number = cleaned.startsWith('258') ? cleaned.slice(3) : cleaned;
-  if (number.length !== 9) {
-    return {
-      isValid: false,
-      error: 'O número deve ter 9 dígitos',
-    };
-  }
-  const validPrefixes = ['82', '83', '84', '85', '86', '87'];
-  const prefix = number.slice(0, 2);
-
-  if (!validPrefixes.includes(prefix)) {
-    return {
-      isValid: false,
-      error: 'O número deve começar com 82, 83, 84, 85, 86 ou 87',
-    };
-  }
-
-  return {
-    isValid: true,
-    formattedNumber: `+258${number}`,
-  };
-};
+import { Ionicons } from '@expo/vector-icons';
+import { validateMozambiquePhone } from '@/util/util';
+import api from '@/services/api';
 
 export default function Login() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -146,9 +124,12 @@ export default function Login() {
     <SafeAreaView style={styles.container}>
       <View style={styles.topSection}>
         <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color="#fff" />
+          </TouchableOpacity>
           <Image
             source={require('@/assets/images/maza-logo.png')}
-            style={{ width: 129, height: 78 }}
+            style={{ width: 129, height: 78, marginStart: 20 }}
             contentFit={'contain'}
           />
         </View>
@@ -209,7 +190,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
   titleSection: {
@@ -306,5 +286,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     paddingVertical: 8,
+  },
+  backButton: {
+    padding: 8,
+    borderStyle: 'solid',
+    borderColor: '#b3b3b3',
+    borderWidth: 0.5,
+    borderRadius: 50,
   },
 });

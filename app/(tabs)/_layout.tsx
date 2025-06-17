@@ -31,7 +31,6 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* Tab screens remain the same */}
       <Tabs.Screen
         name="index"
         options={{

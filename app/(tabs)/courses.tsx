@@ -10,12 +10,24 @@ import {
 } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Text, View } from '@/components/Themed';
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { router } from 'expo-router';
 import CourseItem from '@/components/CourseItem';
 import FavoriteCoursesGrid from '@/components/FavoriteCoursesGrid';
 import CoursesInProgress from '@/components/CourseInProgress';
 import useUser from '@/hooks/useUser';
+import { baseUrl } from '@/services/api';
+
+interface FilterOptions {
+  level: string;
+  rating: string;
+}
+
+interface FilterModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onApply: (filters: FilterOptions) => void;
+}
 
 const LoginPrompt = () => {
   return (
@@ -82,7 +94,7 @@ const CompletedCourses = () => {
 
   const fetchCompletedCourses = async () => {
     try {
-      const response = await fetch('https://api.mazas.org/api/user-courses?status=Completed', {
+      const response = await fetch(`${baseUrl}/user-courses?status=Completed`, {
         headers: {
           Authorization: `Bearer ${user?.token}`,
         },
@@ -177,7 +189,7 @@ const CompletedCourses = () => {
 };
 
 // Filter Modal Component
-const FilterModal = ({ visible, onClose, onApply }) => {
+const FilterModal: React.FC<FilterModalProps> = ({ visible, onClose, onApply }) => {
   const [selectedLevel, setSelectedLevel] = useState('Intermédio');
   const [selectedRating, setSelectedRating] = useState('4-5');
 
@@ -466,8 +478,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-
-  // Header button styles
   headerButtons: {
     flexDirection: 'row',
     gap: 8,
@@ -493,8 +503,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
-
-  // Search styles
   searchContainer: {
     marginHorizontal: 16,
     marginTop: 8,
@@ -515,12 +523,9 @@ const styles = StyleSheet.create({
   searchIcon: {
     marginRight: 8,
   },
-
-  // Radio group styles
   radioGroup: {
     flexDirection: 'row',
     marginHorizontal: 16,
-    marginTop: 16,
     backgroundColor: '#202024',
     borderRadius: 999,
     padding: 4,
@@ -603,8 +608,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     backgroundColor: '#29292E',
   },
-
-  // Filter styles
   filterSection: {
     marginBottom: 24,
     backgroundColor: '#29292E',
@@ -640,8 +643,6 @@ const styles = StyleSheet.create({
   filterOptionTextSelected: {
     color: '#8257E5',
   },
-
-  // Button styles
   applyButton: {
     backgroundColor: '#2EA8FF',
     padding: 16,
@@ -654,15 +655,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-
-  // Course list styles
   courseList: {
     flex: 1,
     paddingHorizontal: 16,
     marginTop: 16,
   },
-
-  // Center container styles
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -670,8 +667,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     backgroundColor: '#121214',
   },
-
-  // Loading styles
   loadingContainer: {
     flex: 1,
     backgroundColor: '#121214',
@@ -700,10 +695,10 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     marginTop: 24,
-    backgroundColor: '#8257E5',
+    backgroundColor: '#2EA8FF',
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 50,
   },
   retryButtonText: {
     color: '#fff',

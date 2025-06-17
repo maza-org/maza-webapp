@@ -8,36 +8,17 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Image,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import useUser from '@/hooks/useUser';
-import CertificateItem from '@/components/CertificateItem';
-
-export interface Subject {
-  id: number;
-  documentId: string;
-  name: string;
-}
-
-export interface Course {
-  id: number;
-  documentId: string;
-  title: string;
-  author: string;
-  rating_avg: number;
-  subscribed: number;
-}
-
-export interface Certificate {
-  id: number;
-  documentId: string;
-  createdAt: string;
-  course: Course;
-}
+import useUser from '../hooks/useUser';
+import { ProfileImage } from '../components/ProfileImage';
+import { InterestsSection } from '../components/InterestsSection';
+import { CertificatesSection } from '../components/CertificatesSection';
+import { Certificate, Subject } from '../types/profile';
+import { baseUrl } from '@/services/api';
 
 export default function ProfileScreen() {
   const { data: user, isLoading, error, refetch } = useUser();
@@ -56,7 +37,6 @@ export default function ProfileScreen() {
         try {
           await refetch();
           await fetchCertificates();
-          // Check if user has a profile image
           if (user?.profile_image?.formats?.thumbnail?.url) {
             setProfileImage(user?.profile_image?.formats?.thumbnail?.url);
           }
@@ -78,7 +58,7 @@ export default function ProfileScreen() {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch('https://api.mazas.org/api/certificates', {
+      const response = await fetch(`${baseUrl}/certificates`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${user.token}`,
@@ -89,6 +69,7 @@ export default function ProfileScreen() {
         setCertificates(responseData.data);
       }
     } catch (error) {
+      console.error('Error fetching certificates:', error);
     } finally {
       setIsLoadingCertificates(false);
     }
@@ -122,22 +103,18 @@ export default function ProfileScreen() {
                 throw new Error('No authentication token found');
               }
 
-              const response = await fetch(
-                `https://api.mazas.org/api/users-permissions/interests/${subject.documentId}`,
-                {
-                  method: 'DELETE',
-                  headers: {
-                    Authorization: `Bearer ${user?.token}`,
-                  },
-                }
-              );
+              const response = await fetch(`${baseUrl}/users-permissions/interests/${subject.documentId}`, {
+                method: 'DELETE',
+                headers: {
+                  Authorization: `Bearer ${user?.token}`,
+                },
+              });
 
               if (!response.ok) {
                 throw new Error('Failed to delete interest');
               }
 
               Alert.alert('Sucesso', 'Interesse removido com sucesso');
-              // After successful deletion, refresh the user data
               await refetch();
             } catch (error) {
               console.error('Error making DELETE request:', error);
@@ -155,22 +132,12 @@ export default function ProfileScreen() {
     }
   };
 
-  const viewCertificateDetails = (certificate: Certificate) => {
-    router.push({
-      pathname: '/user/certificate',
-      params: {
-        certificateId: certificate.documentId,
-      },
-    });
-  };
-
   const handleChangePhoto = async () => {
     Alert.alert('Alterar Foto', 'Escolha uma opção', [
       {
         text: 'Tirar Foto',
         onPress: async () => {
           try {
-            // Request camera permissions
             const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
 
             if (cameraPermission.status !== 'granted') {
@@ -178,7 +145,6 @@ export default function ProfileScreen() {
               return;
             }
 
-            // Launch camera
             const result = await ImagePicker.launchCameraAsync({
               allowsEditing: true,
               aspect: [1, 1],
@@ -198,7 +164,6 @@ export default function ProfileScreen() {
         text: 'Escolher da Galeria',
         onPress: async () => {
           try {
-            // Request media library permissions
             const galleryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
             if (galleryPermission.status !== 'granted') {
@@ -206,7 +171,6 @@ export default function ProfileScreen() {
               return;
             }
 
-            // Launch image library
             const result = await ImagePicker.launchImageLibraryAsync({
               mediaTypes: ImagePicker.MediaTypeOptions.Images,
               allowsEditing: true,
@@ -252,8 +216,7 @@ export default function ProfileScreen() {
       formData.append('refId', user.id.toString());
       formData.append('field', 'profile_image');
 
-      // Upload image
-      const response = await fetch('https://api.mazas.org/api/upload', {
+      const response = await fetch(`${baseUrl}/upload`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${user.token}`,
@@ -271,7 +234,6 @@ export default function ProfileScreen() {
       if (responseData && responseData.length > 0) {
         setProfileImage(responseData[0].url);
         await refetch();
-
         Alert.alert('Sucesso', 'Foto de perfil actualizada com sucesso');
       }
     } catch (error) {
@@ -310,15 +272,6 @@ export default function ProfileScreen() {
     );
   }
 
-  function handleAddInterest() {
-    router.push({
-      pathname: '/start/customize',
-      params: {
-        interests: user?.interests ? JSON.stringify(user?.interests) : undefined,
-      },
-    });
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -334,30 +287,13 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.profileSection}>
-          <View style={styles.profileImageContainer}>
-            {isUploadingImage ? (
-              <View style={styles.profileImagePlaceholder}>
-                <ActivityIndicator size="large" color="#FFFFFF" />
-              </View>
-            ) : profileImage ? (
-              <View style={styles.profileImageWrapper}>
-                <Image source={{ uri: profileImage }} style={styles.profileImage} />
-                <TouchableOpacity style={styles.changePhotoButton} onPress={handleChangePhoto}>
-                  <Feather name="camera" size={16} color="#1fa2df" />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.profileImagePlaceholder}>
-                <Text style={styles.profileImagePlaceholderText}>{`${user.name} ${user.surname}`.charAt(0)}</Text>
-                <TouchableOpacity style={styles.changePhotoButton} onPress={handleChangePhoto}>
-                  <Feather name="camera" size={16} color="#1fa2df" />
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-          <Text style={styles.fullname}>
-            {user.name} {user.surname}
-          </Text>
+          <ProfileImage
+            profileImage={profileImage}
+            isUploadingImage={isUploadingImage}
+            userFullname={user.fullname}
+            onPress={handleChangePhoto}
+          />
+          <Text style={styles.fullname}>{user.fullname}</Text>
           <Text style={styles.documentId}>ID: {user.documentId}</Text>
         </View>
 
@@ -386,82 +322,34 @@ export default function ProfileScreen() {
             <Text style={styles.infoValue}>{user.yomaId || 'Não conectado'}</Text>
           </View>
 
-          <View style={styles.infoItem}>
-            <View style={styles.headerContainer}>
-              <View style={styles.infoHeader}>
-                <Feather name="star" size={20} color="#1fa2df" />
-                <Text style={styles.infoLabel}>Interesses</Text>
-              </View>
-              {user.interests && user.interests.length > 0 && (
-                <TouchableOpacity onPress={handleAddInterest} style={styles.editButton}>
-                  <Feather name={isEditing ? 'check' : 'edit-2'} size={16} color="#1fa2df" />
-                </TouchableOpacity>
-              )}
-            </View>
+          <InterestsSection
+            interests={user.interests || []}
+            isEditing={isEditing}
+            deletingInterestId={deletingInterestId}
+            onDeleteInterest={handleDeleteInterest}
+            onAddInterest={() => {
+              router.push({
+                pathname: '/start/customize',
+                params: {
+                  interests: user?.interests ? JSON.stringify(user?.interests) : undefined,
+                },
+              });
+            }}
+          />
 
-            <View style={styles.interestsContainer}>
-              {user.interests && user.interests.length > 0 ? (
-                <View style={styles.interestsList}>
-                  {user.interests.map((subject: Subject) => (
-                    <View key={subject.id} style={styles.interestTag}>
-                      <View style={styles.interestIconContainer}>
-                        <Feather name="hash" size={14} color="#1fa2df" />
-                      </View>
-                      <Text style={styles.interestText}>{subject.name}</Text>
-                      {isEditing &&
-                        (deletingInterestId === subject.id ? (
-                          <ActivityIndicator size="small" color="#1fa2df" style={styles.deleteInterestLoading} />
-                        ) : (
-                          <TouchableOpacity
-                            onPress={() => handleDeleteInterest(subject)}
-                            style={styles.deleteInterestButton}
-                          >
-                            <Feather name="x" size={14} color="#1fa2df" />
-                          </TouchableOpacity>
-                        ))}
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateText}>Nenhum interesse adicionado</Text>
-                  <TouchableOpacity style={styles.addInterestButton} onPress={handleAddInterest}>
-                    <Feather name="plus" size={16} color="#FFF" />
-                    <Text style={styles.addInterestText}>Adicionar Interesses</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          </View>
-
-          {/* Certificates Section */}
-          <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="award" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Certificados</Text>
-            </View>
-
-            <View style={styles.certificatesContainer}>
-              {isLoadingCertificates ? (
-                <ActivityIndicator size="small" color="#1fa2df" style={{ marginTop: 16 }} />
-              ) : certificates && certificates.length > 0 ? (
-                <View style={styles.certificatesList}>
-                  {certificates.map((certificate) => (
-                    <CertificateItem key={certificate.id} certificate={certificate} onPress={viewCertificateDetails} />
-                  ))}
-                </View>
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateText}>Nenhum certificado disponível</Text>
-                </View>
-              )}
-
-              <TouchableOpacity style={styles.viewAllButton} onPress={() => router.push('/user/certificates')}>
-                <Text style={styles.viewAllText}>Ver Todos os Certificados</Text>
-                <Feather name="arrow-right" size={16} color="#1fa2df" />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <CertificatesSection
+            certificates={certificates}
+            isLoadingCertificates={isLoadingCertificates}
+            onViewCertificate={(certificate) => {
+              router.push({
+                pathname: '/user/certificate',
+                params: {
+                  certificateId: certificate.documentId,
+                },
+              });
+            }}
+            onViewAll={() => router.push('/user/certificates')}
+          />
 
           <Text style={styles.versionLabel}>Versão 1.0.0</Text>
         </View>
@@ -569,38 +457,6 @@ const styles = StyleSheet.create({
     padding: 24,
     marginTop: -50,
   },
-  profileImageContainer: {
-    marginBottom: 16,
-    position: 'relative',
-  },
-  profileImagePlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#3A3A3D',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 4,
-    borderColor: '#121214',
-  },
-  profileImagePlaceholderText: {
-    color: '#FFF',
-    fontSize: 36,
-    fontWeight: 'bold',
-  },
-  changePhotoButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#121214',
-  },
   fullname: {
     fontSize: 24,
     fontWeight: '700',
@@ -618,11 +474,6 @@ const styles = StyleSheet.create({
   infoItem: {
     gap: 12,
   },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   infoHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -633,124 +484,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  editButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(31, 162, 223, 0.1)',
-  },
   infoValue: {
     color: '#A8A8B3',
     fontSize: 14,
     marginLeft: 28,
   },
-  certificatesContainer: {
-    marginLeft: 28,
-    marginTop: 8,
-  },
-  certificatesList: {
-    gap: 12,
-  },
-  viewAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-    gap: 8,
-    padding: 8,
-  },
-  viewAllText: {
-    color: '#1fa2df',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  interestsContainer: {
-    marginLeft: 28,
-  },
-  interestsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  interestTag: {
-    backgroundColor: 'rgba(31, 162, 223, 0.08)',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(31, 162, 223, 0.2)',
-  },
-  interestIconContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(31, 162, 223, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  interestText: {
-    color: '#1fa2df',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  deleteInterestButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(31, 162, 223, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  deleteInterestLoading: {
-    width: 24,
-    height: 24,
-  },
-  emptyState: {
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
-    gap: 12,
-  },
-  emptyStateText: {
+  versionLabel: {
     color: '#A8A8B3',
-    fontSize: 14,
+    fontSize: 12,
     textAlign: 'center',
-  },
-  addInterestButton: {
-    marginTop: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1fa2df',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    gap: 8,
-  },
-  addInterestText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  addMoreInterestsButton: {
-    marginTop: 16,
-    marginLeft: 28,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    gap: 8,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: 'rgba(31, 162, 223, 0.3)',
-    backgroundColor: 'rgba(31, 162, 223, 0.05)',
-  },
-  addMoreInterestsText: {
-    color: '#1fa2df',
-    fontSize: 14,
-    fontWeight: '500',
   },
   footer: {
     padding: 24,
@@ -758,11 +500,6 @@ const styles = StyleSheet.create({
     borderTopColor: '#323238',
     gap: 12,
     alignItems: 'center',
-  },
-  versionLabel: {
-    color: '#A8A8B3',
-    fontSize: 12,
-    textAlign: 'center',
   },
   logoutButton: {
     backgroundColor: '#202024',
@@ -778,21 +515,5 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
-  },
-  profileImageWrapper: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 4,
-    borderColor: '#121214',
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  profileImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 50,
   },
 });

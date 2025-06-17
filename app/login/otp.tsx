@@ -1,9 +1,10 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import Button from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '@/services/api';
 
 export default function Otp() {
   const { phone, otpId, name, surname } = useLocalSearchParams();
@@ -14,19 +15,15 @@ export default function Otp() {
 
   const fetchUserData = async (token: string) => {
     try {
-      const response = await fetch('https://api.mazas.org/api/users/me', {
+      const response = await api.get('/users/me', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch user data');
-      }
-
-      return await response.json();
+      return response.data;
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('Erro ao buscar dados do utilizador', error);
       throw error;
     }
   };
@@ -37,7 +34,7 @@ export default function Otp() {
       const token = loginData.jwt || loginData.data?.jwt;
 
       if (!token) {
-        throw new Error('No token received from login');
+        throw new Error('Nenhum token recebido no login');
       }
 
       // Fetch additional user data
@@ -55,7 +52,7 @@ export default function Otp() {
       return user;
     } catch (error) {
       console.error('Error saving user data:', error);
-      Alert.alert('Erro', 'Falha ao salvar dados do usuário');
+      Alert.alert('Erro', 'Falha ao guardar dados do utilizador. Por favor, tente novamente.');
       throw error;
     }
   };
@@ -74,7 +71,7 @@ export default function Otp() {
 
     setLoading(true);
     try {
-      const endpoint = name && surname ? `https://api.mazas.org/api/users` : `https://api.mazas.org/api/auth/login`;
+      const endpoint = name && surname ? '/users' : '/auth/login';
 
       const body =
         name && surname
@@ -93,16 +90,28 @@ export default function Otp() {
               password: otpCode,
             };
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
+      const response = await api.post(endpoint, body);
+      const data = response.data;
 
-      // Check for 401 status specifically
-      if (response.status === 401) {
+      console.log(JSON.stringify(data, null, 2));
+
+      if (data.success || (name && surname && data.data)) {
+        const userData = await saveUser(data);
+
+        // Check if user has interests before navigating
+        if (userData.interests && userData.interests.length > 0) {
+          router.push('/');
+        } else {
+          router.push('/start/customize');
+        }
+      } else {
+        Alert.alert('Erro de Verificação', 'Código OTP incorrecto. Por favor, verifique e tente novamente.', [
+          { text: 'OK' },
+        ]);
+      }
+    } catch (error: any) {
+      // Handle axios error responses
+      if (error.response?.status === 401) {
         // Account doesn't exist, show alert and redirect to registration
         Alert.alert(
           'Conta não encontrada',
@@ -126,24 +135,6 @@ export default function Otp() {
         return;
       }
 
-      const data = await response.json();
-      console.log(JSON.stringify(data, null, 2));
-
-      if (data.success || (name && surname && data.data)) {
-        const userData = await saveUser(data);
-
-        // Check if user has interests before navigating
-        if (userData.interests && userData.interests.length > 0) {
-          router.push('/');
-        } else {
-          router.push('/start/customize');
-        }
-      } else {
-        Alert.alert('Erro de Verificação', 'Código OTP incorreto. Por favor, verifique e tente novamente.', [
-          { text: 'OK' },
-        ]);
-      }
-    } catch (error) {
       console.log(error);
       Alert.alert('Erro', 'Ocorreu um erro ao verificar o código. Por favor, tente novamente.', [{ text: 'OK' }]);
     } finally {
@@ -179,45 +170,13 @@ export default function Otp() {
       setLoading(true);
       setResending(true);
 
-      // Using the same OTP request endpoint as in the Login component
-      const response = await fetch(`https://api.mazas.org/api/otps`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await api.post('/otps', {
+        data: {
+          phone: phone,
         },
-        body: JSON.stringify({
-          data: {
-            phone: phone,
-          },
-        }),
       });
 
-      // Handle different response status codes
-      if (response.status === 400) {
-        Alert.alert('Erro', 'Número de telefone inválido ou não registado');
-        return;
-      } else if (response.status === 401) {
-        Alert.alert('Erro', 'Não autorizado. Por favor, verifique suas credenciais.');
-        return;
-      } else if (response.status === 403) {
-        Alert.alert('Erro', 'Acesso proibido a este recurso.');
-        return;
-      } else if (response.status === 404) {
-        Alert.alert('Erro', 'Serviço não encontrado. Por favor, tente mais tarde.');
-        return;
-      } else if (response.status === 429) {
-        Alert.alert('Erro', 'Muitas tentativas. Por favor, aguarde alguns minutos e tente novamente.');
-        return;
-      } else if (response.status >= 500) {
-        Alert.alert('Erro', 'Erro no servidor. Por favor, tente novamente mais tarde.');
-        return;
-      } else if (!response.ok) {
-        Alert.alert('Erro', 'Ocorreu um erro. Por favor, tente novamente.');
-        return;
-      }
-
-      // If we reach here, the request was successful
-      const data = await response.json();
+      const data = response.data;
 
       if (data && data.otpID) {
         // Update the otpId with the new one
@@ -230,12 +189,42 @@ export default function Otp() {
       } else {
         Alert.alert('Erro', 'Não foi possível enviar um novo código. Tente novamente mais tarde.', [{ text: 'OK' }]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error resending OTP:', error);
-      Alert.alert(
-        'Erro de conexão',
-        'Não foi possível conectar ao servidor. Verifique sua conexão de internet e tente novamente.'
-      );
+
+      // Handle different axios error response status codes
+      if (error.response) {
+        const status = error.response.status;
+
+        switch (status) {
+          case 400:
+            Alert.alert('Erro', 'Número de telefone inválido ou não registado');
+            break;
+          case 401:
+            Alert.alert('Erro', 'Não autorizado. Por favor, verifique suas credenciais.');
+            break;
+          case 403:
+            Alert.alert('Erro', 'Acesso proibido a este recurso.');
+            break;
+          case 404:
+            Alert.alert('Erro', 'Serviço não encontrado. Por favor, tente mais tarde.');
+            break;
+          case 429:
+            Alert.alert('Erro', 'Muitas tentativas. Por favor, aguarde alguns minutos e tente novamente.');
+            break;
+          default:
+            if (status >= 500) {
+              Alert.alert('Erro', 'Erro no servidor. Por favor, tente novamente mais tarde.');
+            } else {
+              Alert.alert('Erro', 'Ocorreu um erro. Por favor, tente novamente.');
+            }
+        }
+      } else {
+        Alert.alert(
+          'Erro de conexão',
+          'Não foi possível conectar ao servidor. Verifique sua conexão de internet e tente novamente.'
+        );
+      }
     } finally {
       setLoading(false);
       setResending(false);
@@ -295,10 +284,10 @@ export default function Otp() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1E1E1E', // Changed to match the light dark color from other screens
+    backgroundColor: '#1E1E1E',
   },
   topSection: {
-    backgroundColor: '#1E1E1E', // Light dark background color for the top section
+    backgroundColor: '#1E1E1E',
     paddingBottom: 20,
     marginBottom: 10,
     paddingHorizontal: 24,
@@ -307,7 +296,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 24,
-    backgroundColor: '#121212', // Darker background for the content section
+    backgroundColor: '#121212',
   },
   header: {
     flexDirection: 'row',

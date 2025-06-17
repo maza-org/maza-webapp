@@ -1,19 +1,10 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
-  Image,
-  Platform,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import useUser from '@/hooks/useUser';
 import { router } from 'expo-router';
+import { baseUrl } from '@/services/api';
 
 export default function Photo() {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -77,7 +68,7 @@ export default function Photo() {
             }
           } catch (error) {
             console.error('Error picking image:', error);
-            Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+            Alert.alert('Erro', 'Não foi possível seleccionar a imagem.');
           }
         },
       },
@@ -119,7 +110,7 @@ export default function Photo() {
       formData.append('field', 'profile_image');
 
       // Upload image
-      const response = await fetch('https://api.mazas.org/api/upload', {
+      const response = await fetch(`${baseUrl}/upload`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${user.token}`,
@@ -140,10 +131,10 @@ export default function Photo() {
         // Refresh user data to get updated profile
         await refetch();
 
-        Alert.alert('Sucesso', 'Foto de perfil atualizada com sucesso', [
+        Alert.alert('Sucesso', 'Foto de perfil actualizada com sucesso', [
           {
             text: 'OK',
-            onPress: () => router.back(), // Navigate back after successful upload
+            onPress: () => router.back(),
           },
         ]);
       }

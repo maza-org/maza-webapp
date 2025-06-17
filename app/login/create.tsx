@@ -3,38 +3,16 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, SafeAreaView, Aler
 import { router } from 'expo-router';
 import Button from '@/components/Button';
 import { Image } from 'expo-image';
-
-const validateMozambiquePhone = (phoneNumber) => {
-  const cleaned = phoneNumber.replace(/\D/g, '');
-  const number = cleaned.startsWith('258') ? cleaned.slice(3) : cleaned;
-  if (number.length !== 9) {
-    return {
-      isValid: false,
-      error: 'O número deve ter 9 dígitos',
-    };
-  }
-  const validPrefixes = ['82', '83', '84', '85', '86', '87'];
-  const prefix = number.slice(0, 2);
-
-  if (!validPrefixes.includes(prefix)) {
-    return {
-      isValid: false,
-      error: 'O número deve começar com 82, 83, 84, 85, 86 ou 87',
-    };
-  }
-
-  return {
-    isValid: true,
-    formattedNumber: `+258${number}`,
-  };
-};
+import { validateMozambiquePhone } from '@/util/util';
+import { Ionicons } from '@expo/vector-icons';
+import api, { baseUrl } from '@/services/api';
 
 export default function Create() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(undefined);
+  const [error, setError] = useState<string | undefined>(undefined);
   const [touched, setTouched] = useState(false);
 
   // Validate phone number when it changes
@@ -68,7 +46,7 @@ export default function Create() {
 
     setLoading(true);
     try {
-      const response = await fetch(`https://api.mazas.org/api/otps`, {
+      const response = await fetch(`${baseUrl}/otps`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +80,7 @@ export default function Create() {
     }
   };
 
-  const handlePhoneNumberChange = (text) => {
+  const handlePhoneNumberChange = (text: string) => {
     const sanitizedText = text.replace(/[^\d+]/g, '');
     setPhoneNumber(sanitizedText);
   };
@@ -115,9 +93,12 @@ export default function Create() {
     <SafeAreaView style={styles.container}>
       <View style={styles.topSection}>
         <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color="#fff" />
+          </TouchableOpacity>
           <Image
             source={require('@/assets/images/maza-logo.png')}
-            style={{ width: 129, height: 78 }}
+            style={{ width: 129, height: 78, marginStart: 20 }}
             contentFit={'contain'}
           />
         </View>
@@ -202,7 +183,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
   titleSection: {
@@ -287,5 +267,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     paddingVertical: 8,
+  },
+  backButton: {
+    padding: 8,
+    borderStyle: 'solid',
+    borderColor: '#b3b3b3',
+    borderWidth: 0.5,
+    borderRadius: 50,
   },
 });

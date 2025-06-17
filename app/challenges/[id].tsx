@@ -173,7 +173,7 @@ export default function Challenge(): React.ReactElement {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121214', // Dark background from original code
+    backgroundColor: '#121214',
   },
   header: {
     paddingVertical: 16,
@@ -200,10 +200,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   leftNodeWrapper: {
-    alignItems: 'flex-start', // For left-aligned nodes
+    alignItems: 'flex-start',
   },
   rightNodeWrapper: {
-    alignItems: 'flex-end', // For right-aligned nodes
+    alignItems: 'flex-end',
   },
   nodeCard: {
     width: '70%',
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   },
   inactiveNode: {
     borderColor: '#323238',
-    backgroundColor: '#151517', // Darker background for inactive nodes
+    backgroundColor: '#151517',
   },
   nodeContent: {
     padding: 0,
@@ -247,18 +247,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1fa2df', // Blue background to match original code
+    backgroundColor: '#1fa2df',
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 20,
     marginTop: -15,
     zIndex: 2,
     position: 'absolute',
-    bottom: -15, // Position at the bottom of the card
-    alignSelf: 'center', // Center horizontally
+    bottom: -15,
+    alignSelf: 'center',
   },
   inactivePointsContainer: {
-    backgroundColor: '#000000', // Black background for inactive nodes
+    backgroundColor: '#000000',
   },
   coinIcon: {
     width: 24,
@@ -292,8 +292,8 @@ const styles = StyleSheet.create({
   },
   connectionLine: {
     position: 'absolute',
-    borderWidth: 15, // Thick lines as in original
-    borderColor: '#1fa2df', // Blue to match original code
+    borderWidth: 15,
+    borderColor: '#1fa2df',
     backgroundColor: 'transparent',
     zIndex: -1,
   },
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderTopWidth: 0,
     borderRightWidth: 0,
-    borderBottomLeftRadius: 80, // More curved to match screenshot
+    borderBottomLeftRadius: 80,
     top: '80%',
     left: '65%',
   },
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderTopWidth: 0,
     borderLeftWidth: 0,
-    borderBottomRightRadius: 80, // More curved to match screenshot
+    borderBottomRightRadius: 80,
     top: '80%',
     right: '65%',
   },

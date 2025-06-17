@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { User } from '@/types/user';
 import { router, useLocalSearchParams } from 'expo-router';
+import { baseUrl } from '@/services/api';
 
 interface TopicButtonProps extends TouchableOpacityProps {
   topic: string;
@@ -74,7 +75,7 @@ export default function Customize() {
 
   const loadTopics = async () => {
     try {
-      const response = await fetch('https://api.mazas.org/api/topics');
+      const response = await fetch(`${baseUrl}/topics`);
       const data = await response.json();
       setTopics(data);
 
@@ -116,7 +117,7 @@ export default function Customize() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://api.mazas.org/api/user-topics', {
+      const response = await fetch(`${baseUrl}/user-topics`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

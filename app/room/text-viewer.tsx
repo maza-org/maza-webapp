@@ -1,4 +1,13 @@
-import { ScrollView, StyleSheet, SafeAreaView, View, Text, TouchableOpacity } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  SafeAreaView,
+  View,
+  Text,
+  TouchableOpacity,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -11,7 +20,7 @@ export default function TextViewer() {
   const _content = JSON.parse(content as string) as Content;
   const [hasReachedBottom, setHasReachedBottom] = useState(false);
 
-  const handleScroll = ({ nativeEvent }) => {
+  const handleScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
     const paddingToBottom = 20;
 
@@ -80,18 +89,17 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   headerRight: {
-    width: 40, // Same width as backButton for alignment
+    width: 40,
   },
   scrollView: {
     flex: 1,
   },
   scrollViewContent: {
     padding: 24,
-    // This ensures the content expands to fill the ScrollView
     flexGrow: 1,
   },
   bottomPadding: {
-    height: 80, // Add sufficient padding at the bottom
+    height: 80,
   },
 });
 

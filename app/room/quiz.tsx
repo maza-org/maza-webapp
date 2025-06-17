@@ -238,11 +238,8 @@ const ResultsView = ({
 
         {/* Show Continue button if failed (as secondary action) */}
         {!passed && (
-          <TouchableOpacity
-            style={[styles.continueButton, styles.continueButtonSecondary]}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.continueButtonText}>Continuar</Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text>Continuar</Text>
           </TouchableOpacity>
         )}
 

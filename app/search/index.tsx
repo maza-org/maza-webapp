@@ -121,7 +121,7 @@ export default function Search() {
 
     setLoading(true);
     try {
-      const response = await fetch(`https://api.mazas.org/api/courses?keyword=${encodeURIComponent(keyword)}`);
+      const response = await fetch(`${baseUrl}/courses?keyword=${encodeURIComponent(keyword)}`);
       const data: SearchResponse = await response.json();
       setResults(data.data);
       setResultCount(data.meta.pagination.total);

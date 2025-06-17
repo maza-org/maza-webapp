@@ -16,6 +16,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import HomepageCategories from '@/components/HomepageCategories';
+import { baseUrl } from '@/services/api';
 
 export default function Home() {
   const [subjects, setSubjects] = useState([]);
@@ -43,7 +44,7 @@ export default function Home() {
 
   async function fetchUserCourses() {
     try {
-      const response = await fetch('https://api.mazas.org/api/user-courses?status=InProgress', {
+      const response = await fetch(`${baseUrl}/user-courses?status=InProgress`, {
         headers: {
           Authorization: `Bearer ${user?.token}`,
         },
@@ -65,7 +66,7 @@ export default function Home() {
 
   async function fetchSubjects() {
     try {
-      const response = await fetch(`https://api.mazas.org/api/courses`);
+      const response = await fetch(`${baseUrl}/courses`);
       const data = await response.json();
 
       const allSubjects = data.data.flatMap((course) => course.subjects);
@@ -81,7 +82,7 @@ export default function Home() {
 
   async function fetchPopularCourses() {
     try {
-      const response = await fetch('https://api.mazas.org/api/courses?sort=subscribed%3Adesc&pageSize=15&page=1');
+      const response = await fetch(`${baseUrl}/courses?sort=subscribed%3Adesc&pageSize=15&page=1`);
       const data = await response.json();
       setPopularCourses(data.data);
       setLoadingCourses(false);
@@ -93,7 +94,7 @@ export default function Home() {
 
   async function fetchNewCourses() {
     try {
-      const response = await fetch('https://api.mazas.org/api/courses?sort=publishedAt%3Adesc&pageSize=10&page=1');
+      const response = await fetch(`${baseUrl}/courses?sort=publishedAt%3Adesc&pageSize=10&page=1`);
       const data = await response.json();
       setNewCourses(data.data);
       setLoadingNewCourses(false);
@@ -107,7 +108,7 @@ export default function Home() {
     try {
       // Fetch courses for suggestions - you could customize this endpoint based on user preferences
       // For this example, we're using the same endpoint as new courses but could be customized
-      const response = await fetch('https://api.mazas.org/api/courses?sort=rating_avg%3Adesc&pageSize=10&page=1');
+      const response = await fetch(`${baseUrl}/courses?sort=rating_avg%3Adesc&pageSize=10&page=1`);
       const data = await response.json();
 
       // Filter out courses based on some criteria (e.g., high rating + specific subjects)

@@ -44,7 +44,7 @@ export default function CertificatesScreen() {
     }
 
     try {
-      const response = await fetch('https://api.mazas.org/api/certificates', {
+      const response = await fetch(`${baseUrl}/certificates`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${user.token}`,

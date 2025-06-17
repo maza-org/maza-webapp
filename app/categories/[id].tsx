@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import Shimmer from '@/components/Shimmer';
 import Header from '@/components/Header';
 import { ApiResponse, Course } from '@/types/course';
 import { blurhash } from '@/util/util';
+import { baseUrl } from '@/services/api';
 
 export default function Category() {
   const { name, id, type } = useLocalSearchParams();
@@ -19,21 +21,33 @@ export default function Category() {
 
   const fetchCourses = async () => {
     try {
+      setIsLoading(true);
+      setError(null);
+
       let url;
 
       if (type === 'popular') {
-        url = 'https://api.mazas.org/api/courses?sort=subscribed%3Adesc&pageSize=15&page=1';
+        url = `${baseUrl}/courses?sort=subscribed%3Adesc&pageSize=15&page=1`;
       } else {
-        url = `https://api.mazas.org/api/courses?subjects=${id}`;
+        url = `${baseUrl}/courses?subjects=${id}`;
       }
 
       const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Falha ao carregar cursos: ${response.status}`);
+      }
+
       const data: ApiResponse = await response.json();
       setCourses(data.data);
-      setIsLoading(false);
     } catch (error) {
       console.error('Erro ao buscar cursos:', error);
-      setError(error instanceof Error ? error.message : 'Ocorreu um erro ao buscar os cursos.');
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível carregar os cursos. Verifique sua conexão e tente novamente.'
+      );
+    } finally {
       setIsLoading(false);
     }
   };
@@ -110,6 +124,19 @@ export default function Category() {
     </>
   );
 
+  const ErrorComponent = () => (
+    <View style={styles.centerContainer}>
+      <View style={styles.emptyIconContainer}>
+        <Ionicons name="alert-circle-outline" size={80} color="#FF4B4B" />
+      </View>
+      <Text style={styles.errorTitle}>Ops! Algo deu errado</Text>
+      <Text style={styles.errorSubtitle}>{error}</Text>
+      <TouchableOpacity style={styles.retryButton} onPress={fetchCourses}>
+        <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   const ListEmptyComponent = () => (
     <View style={styles.emptyContainer}>
       <Image
@@ -139,18 +166,19 @@ export default function Category() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2EA8FF" />
-        <Text style={styles.loadingText}>Carregando...</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <Header title={name as string} />
+        {renderLoadingShimmer()}
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <Header title={name as string} />
+        <ErrorComponent />
+      </SafeAreaView>
     );
   }
 
@@ -158,18 +186,14 @@ export default function Category() {
     <SafeAreaView style={styles.container}>
       <Header title={name as string} />
 
-      {isLoading ? (
-        renderLoadingShimmer()
-      ) : (
-        <FlatList
-          data={courses}
-          renderItem={renderCourseItem}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={ListEmptyComponent}
-          ListHeaderComponent={ListHeaderComponent}
-        />
-      )}
+      <FlatList
+        data={courses}
+        renderItem={renderCourseItem}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={ListEmptyComponent}
+        ListHeaderComponent={ListHeaderComponent}
+      />
     </SafeAreaView>
   );
 }
@@ -285,16 +309,41 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-  errorContainer: {
+  // Error handling styles (from FavoriteCoursesGrid)
+  centerContainer: {
     flex: 1,
-    alignItems: 'center',
+    backgroundColor: '#121214',
     justifyContent: 'center',
-    padding: 24,
+    alignItems: 'center',
+    padding: 32,
   },
-  errorText: {
-    color: '#FF0000',
+  emptyIconContainer: {
+    marginBottom: 24,
+    opacity: 0.6,
+  },
+  errorTitle: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  errorSubtitle: {
+    color: '#8F8F8F',
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  retryButton: {
+    backgroundColor: '#2EA8FF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 50,
+  },
+  retryButtonText: {
+    color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 24,
   },
 });

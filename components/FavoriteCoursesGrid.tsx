@@ -63,7 +63,7 @@ const FavoriteCoursesGrid = () => {
         throw new Error('Token não encontrado');
       }
 
-      const response = await fetch(`https://api.mazas.org/api/user-courses/favorites`, {
+      const response = await fetch(`${baseUrl}/user-courses/favorites`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -250,10 +250,10 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   retryButton: {
-    backgroundColor: '#FF4B4B',
+    backgroundColor: '#2EA8FF',
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 50,
   },
   retryButtonText: {
     color: '#FFF',

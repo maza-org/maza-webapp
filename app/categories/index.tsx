@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicat
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import Header from '@/components/Header';
+import { baseUrl } from '@/services/api';
 
 type Category = {
   id: number;
@@ -117,7 +118,7 @@ export default function CategorySelection() {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch('https://api.mazas.org/api/categories');
+      const response = await fetch(`${baseUrl}/categories`);
 
       if (!response.ok) {
         const errorDetails = getErrorDetails(response);

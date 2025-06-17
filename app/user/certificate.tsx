@@ -16,8 +16,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import { WebView } from 'react-native-webview';
-import * as RNFS from 'react-native-fs';
-import { PermissionsAndroid } from 'react-native';
 
 interface User {
   token: string;
@@ -69,7 +67,7 @@ export default function Certificate() {
   const fetchCertificateUrl = async (token: string, id: string | string[]) => {
     try {
       setLoading(true);
-      const response = await fetch(`https://api.mazas.org/api/certificates/${id}`, {
+      const response = await fetch(`${baseUrl}/certificates/${id}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
