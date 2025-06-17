@@ -24,7 +24,7 @@ export const ProfileImage: React.FC<ProfileImageProps> = ({
         </View>
       ) : (
         <View style={styles.profileImagePlaceholder}>
-          <Text style={styles.profileImagePlaceholderText}>{userFullname.charAt(0)}</Text>
+          <Text style={styles.profileImagePlaceholderText}>{userFullname?.charAt(0)}</Text>
           <TouchableOpacity style={styles.changePhotoButton} onPress={onPress}>
             <Feather name="camera" size={16} color="#1fa2df" />
           </TouchableOpacity>
