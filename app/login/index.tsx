@@ -5,7 +5,7 @@ import Button from '@/components/Button';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { validateMozambiquePhone } from '@/util/util';
-import api from '@/services/api';
+import api, { baseUrl } from '@/services/api';
 
 export default function Login() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -43,7 +43,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await fetch(`https://api.mazas.org/api/otps`, {
+      const response = await fetch(`${baseUrl}/otps`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

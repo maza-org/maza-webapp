@@ -42,96 +42,63 @@ type APIResponse = {
   };
 };
 
-type ErrorState = {
-  message: string;
-  icon: keyof typeof Ionicons.glyphMap;
-};
-
 export default function CategorySelection() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<ErrorState | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  const getErrorDetails = (response?: Response, error?: Error): ErrorState => {
-    if (response) {
-      const status = response.status;
-
-      switch (true) {
-        case status === 400:
-          return {
-            message: 'Solicitação inválida. Verifique os dados enviados.',
-            icon: 'warning-outline',
-          };
-        case status === 401:
-          return {
-            message: 'Acesso não autorizado. Faça login novamente.',
-            icon: 'lock-closed-outline',
-          };
-        case status === 403:
-          return {
-            message: 'Você não tem permissão para acessar este conteúdo.',
-            icon: 'shield-outline',
-          };
-        case status === 404:
-          return {
-            message: 'Categorias não encontradas. Tente novamente mais tarde.',
-            icon: 'search-outline',
-          };
-        case status >= 500:
-          return {
-            message: 'Erro no servidor. Nossa equipe foi notificada.',
-            icon: 'server-outline',
-          };
-        case status >= 400:
-          return {
-            message: 'Erro na solicitação. Verifique sua conexão.',
-            icon: 'alert-circle-outline',
-          };
-        default:
-          return {
-            message: 'Erro inesperado. Tente novamente.',
-            icon: 'alert-circle-outline',
-          };
-      }
-    }
-
-    // Network or other errors
-    if (error?.message?.includes('fetch')) {
-      return {
-        message: 'Sem conexão com a internet. Verifique sua rede.',
-        icon: 'wifi-outline',
-      };
-    }
-
-    return {
-      message: 'Erro inesperado. Tente novamente.',
-      icon: 'alert-circle-outline',
-    };
-  };
-
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
       setError(null);
-
-      const response = await fetch(`${baseUrl}/categories`);
+      const response = await fetch(`${baseUrl}/courses`);
 
       if (!response.ok) {
-        const errorDetails = getErrorDetails(response);
-        setError(errorDetails);
-        return;
+        throw new Error('Failed to fetch categories');
       }
 
-      const data = await response.json();
-      setCategories(data);
+      const data: APIResponse = await response.json();
+
+      const coursesBySubject = data.data.reduce((acc: Record<string, { id: number; count: number }>, course) => {
+        course.subjects.forEach((subject) => {
+          if (!acc[subject.name]) {
+            acc[subject.name] = {
+              id: subject.id,
+              count: 1,
+            };
+          } else {
+            acc[subject.name].count++;
+          }
+        });
+        return acc;
+      }, {});
+
+      // Define icon mapping for subjects
+      const subjectToIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
+        Design: 'brush-outline',
+        Tecnologia: 'desktop-outline',
+        Saude: 'fitness-outline',
+        Idiomas: 'language-outline',
+        'Gestão Financeira': 'cash-outline',
+        Negócios: 'business-outline',
+      };
+
+      // Transform the data into the required format
+      const transformedCategories = Object.entries(coursesBySubject).map(([name, data]) => ({
+        id: data.id,
+        name: name,
+        courses: data.count,
+        icon: subjectToIcon[name] || 'help-outline',
+      }));
+
+      setCategories(transformedCategories);
     } catch (error) {
-      const errorDetails = getErrorDetails(undefined, error as Error);
-      setError(errorDetails);
-      console.error('Erro ao buscar categorias:', error);
+      setError(error instanceof Error ? error.message : 'An error occurred');
+      console.error('Error fetching categories:', error);
     } finally {
       setIsLoading(false);
     }
@@ -153,7 +120,7 @@ export default function CategorySelection() {
       <SafeAreaView style={styles.container}>
         <Header title={'Escolha uma categoria'} />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2EA8FF" />
+          <ActivityIndicator size="large" color="#8257e5" />
           <Text style={styles.loadingText}>Carregando categorias...</Text>
         </View>
       </SafeAreaView>
@@ -165,13 +132,8 @@ export default function CategorySelection() {
       <SafeAreaView style={styles.container}>
         <Header title={'Escolha uma categoria'} />
         <View style={styles.errorContainer}>
-          <View style={styles.errorIconContainer}>
-            <Ionicons name={error.icon} size={64} color="#2196F3" />
-          </View>
-          <Text style={styles.errorTitle}>Ops! Algo deu errado</Text>
-          <Text style={styles.errorMessage}>{error.message}</Text>
+          <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
-            <Ionicons name="refresh-outline" size={20} color="#FFF" style={styles.retryIcon} />
             <Text style={styles.retryButtonText}>Tentar novamente</Text>
           </TouchableOpacity>
         </View>
@@ -191,9 +153,7 @@ export default function CategorySelection() {
             </View>
             <View style={styles.categoryInfo}>
               <Text style={styles.categoryName}>{category.name}</Text>
-              <Text style={styles.coursesCount}>
-                {category.courses} {category.courses === 1 ? 'Curso' : 'Cursos'}
-              </Text>
+              <Text style={styles.coursesCount}>{category.courses} Cursos</Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color="#666" />
           </TouchableOpacity>
@@ -222,42 +182,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: 16,
   },
-  errorIconContainer: {
-    marginBottom: 24,
-    opacity: 0.9,
-  },
-  errorTitle: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  errorMessage: {
-    color: '#b3b3b3',
+  errorText: {
+    color: '#ff4444',
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 22,
-    maxWidth: 280,
+    marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#8257e5',
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#2196F3',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  retryIcon: {
-    marginRight: 8,
+    borderRadius: 8,
   },
   retryButtonText: {
     color: '#FFF',
