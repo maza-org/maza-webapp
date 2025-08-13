@@ -93,7 +93,7 @@ export default function Otp() {
       const response = await api.post(endpoint, body);
       const data = response.data;
 
-      console.log(JSON.stringify(data, null, 2));
+      console.log(`OTP`, JSON.stringify(data, null, 2));
 
       if (data.success || (name && surname && data.data)) {
         const userData = await saveUser(data);

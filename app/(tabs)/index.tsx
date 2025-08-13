@@ -1,4 +1,4 @@
-import { Course } from '@/types/course';
+import { Course, Subject } from '@/types/course';
 import useUser from '@/hooks/useUser';
 import Shimmer from '@/components/Shimmer';
 import React, { useEffect, useRef, useState } from 'react';
@@ -19,7 +19,7 @@ import HomepageCategories from '@/components/HomepageCategories';
 import { baseUrl } from '@/services/api';
 
 export default function Home() {
-  const [subjects, setSubjects] = useState([]);
+  const [subjects, setSubjects] = useState<Subject[] | []>([]);
   const { data: user, isLoading, error } = useUser();
   const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [popularCourses, setPopularCourses] = useState([]);
@@ -51,7 +51,7 @@ export default function Home() {
       });
       const data = await response.json();
       // Explicitly sort by updatedAt in descending order to get the most recently updated course first
-      const sortedCourses = [...data.data].sort((a, b) => {
+      const sortedCourses: Course[] = [...data.data].sort((a, b) => {
         const dateA = new Date(a.updatedAt);
         const dateB = new Date(b.updatedAt);
         return dateB.getTime() - dateA.getTime();
@@ -69,8 +69,8 @@ export default function Home() {
       const response = await fetch(`${baseUrl}/courses`);
       const data = await response.json();
 
-      const allSubjects = data.data.flatMap((course) => course.subjects);
-      const uniqueSubjects = Array.from(new Map(allSubjects.map((subject) => [subject.id, subject])).values());
+      const allSubjects: Subject[] = data.data.flatMap((course: Course) => course.subjects);
+      const uniqueSubjects = Array.from(new Map(allSubjects.map((subject: Subject) => [subject.id, subject])).values());
 
       setSubjects(uniqueSubjects.slice(0, 3));
       setLoadingSubjects(false);
@@ -113,7 +113,7 @@ export default function Home() {
 
       // Filter out courses based on some criteria (e.g., high rating + specific subjects)
       const filtered = data.data.filter(
-        (course) =>
+        (course: Course) =>
           course.rating_avg >= 4 &&
           // Optional: filter by specific subjects
           // (course.subjects?.some(subject => ["Saúde", "Tecnologia"].includes(subject.name)) || false)
@@ -255,7 +255,7 @@ export default function Home() {
         <TouchableOpacity
           style={styles.header}
           onPress={() => {
-            router.push('/start/photo');
+            router.push('/start/customize');
           }}
         >
           <Text style={styles.headerText}>O que pretende aprender hoje?</Text>
@@ -557,7 +557,7 @@ export default function Home() {
                     </View>
 
                     <View style={styles.popularCourseInfo}>
-                      {course.subjects && course.subjects[0] && (
+                      {course.subjects && course?.subjects[0] && (
                         <Text style={styles.courseCategory}>{course.subjects[0].name}</Text>
                       )}
 

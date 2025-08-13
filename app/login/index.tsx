@@ -90,6 +90,7 @@ export default function Login() {
 
       // If we reach here, the request was successful
       const data = await response.json();
+      console.log(`Login`, JSON.stringify(data, null, 2));
 
       // Navigate to OTP verification screen
       router.push({

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { baseUrl } from '@/services/api';
 
 interface ReviewUser {
   id: number;
@@ -63,10 +64,10 @@ const ReviewCard = ({ review }: { review: Review }) => (
   <View style={styles.reviewCard}>
     <View style={styles.reviewHeader}>
       <View style={styles.avatarContainer}>
-        <Text style={styles.avatarText}>{review.user.fullname.charAt(0).toUpperCase()}</Text>
+        <Text style={styles.avatarText}>{review?.user?.fullname?.charAt(0)?.toUpperCase()}</Text>
       </View>
       <View style={styles.reviewUserInfo}>
-        <Text style={styles.userName}>{review.user.fullname}</Text>
+        <Text style={styles.userName}>{review?.user?.fullname}</Text>
         <StarRating rating={review.rating} />
       </View>
     </View>
@@ -85,7 +86,7 @@ export default function Reviews({ courseId }: ReviewsProps) {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch(`https://api.mazas.org/api/reviews?course=${courseId}`);
+      const response = await fetch(`${baseUrl}/reviews?course=${courseId}`);
       const data = await response.json();
       setReviews(data);
     } catch (error) {

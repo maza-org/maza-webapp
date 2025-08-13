@@ -9,7 +9,7 @@ export interface User {
   name: string;
   surname: string;
   phone: string;
-  yomaId: string;
+  yoma_id: string;
   token: string;
   interests: Subject[];
   profile_image: Picture;

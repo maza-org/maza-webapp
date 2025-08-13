@@ -381,7 +381,7 @@ export default function ProfileScreen() {
               <Feather name="tag" size={20} color="#1fa2df" />
               <Text style={styles.infoLabel}>ID Yoma</Text>
             </View>
-            <Text style={styles.infoValue}>{user.yomaId || 'Não conectado'}</Text>
+            <Text style={styles.infoValue}>{user.yoma_id || 'Não conectado'}</Text>
           </View>
 
           <View style={styles.infoItem}>

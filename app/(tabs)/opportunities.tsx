@@ -1,4 +1,14 @@
-import { SafeAreaView, StyleSheet, View, FlatList, RefreshControl, Platform, ActivityIndicator } from 'react-native';
+import {
+  SafeAreaView,
+  StyleSheet,
+  View,
+  FlatList,
+  RefreshControl,
+  Platform,
+  ActivityIndicator,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
 import { Text } from '@/components/Themed';
 import { useCallback, useMemo, useState } from 'react';
 import { router } from 'expo-router';
@@ -10,14 +20,43 @@ import { JobCard } from '@/components/opportunities/JobCard';
 import { FlashList } from '@shopify/flash-list';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { JobCardSkeleton } from '@/components/opportunities/JobCardSkeleton';
+import { Ionicons } from '@expo/vector-icons';
+import Shimmer from '@/components/Shimmer';
 
 const SKELETON_COUNT = 6;
 
 const TitleSkeleton = () => <View testID="title-skeleton" style={styles.titleSkeleton} />;
 
+const SearchBar = ({ onPress }: { onPress: () => void }) => (
+  <View style={styles.searchContainer}>
+    <TouchableOpacity style={styles.searchBar} onPress={onPress} activeOpacity={0.7}>
+      <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Pesquisar oportunidades..."
+        placeholderTextColor="#888"
+        onFocus={onPress}
+        editable={false}
+      />
+    </TouchableOpacity>
+  </View>
+);
+
+const SearchBarSkeleton = () => (
+  <View style={styles.searchContainer}>
+    <Shimmer style={styles.searchBar}>
+      <View style={{ height: 24, borderRadius: 8 }} />
+    </Shimmer>
+  </View>
+);
+
 export default function Opportunities() {
   const { jobs, isLoading, isRefreshing, error, fetchJobs, refreshJobs } = useJobsData();
   const [isErrorBoundary, setIsErrorBoundary] = useState(false);
+
+  const handleSearchPress = useCallback(() => {
+    router.push('/jobs/search');
+  }, []);
 
   const navigateToJobDetail = useCallback((job: Job) => {
     router.push({
@@ -73,6 +112,8 @@ export default function Opportunities() {
         <View style={styles.header}>
           {isLoading ? <TitleSkeleton /> : <Text style={styles.title}>Oportunidades</Text>}
         </View>
+
+        {isLoading ? <SearchBarSkeleton /> : <SearchBar onPress={handleSearchPress} />}
 
         <View style={styles.content}>
           {isLoading ? (
@@ -146,6 +187,29 @@ const styles = StyleSheet.create({
     height: 24,
     backgroundColor: '#2A2A2A',
     borderRadius: 4,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
+  },
+  searchIcon: {
+    marginRight: 12,
+  },
+  searchInput: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   content: {
     flex: 1,

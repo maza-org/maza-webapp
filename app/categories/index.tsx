@@ -81,10 +81,13 @@ export default function CategorySelection() {
       const subjectToIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
         Design: 'brush-outline',
         Tecnologia: 'desktop-outline',
-        Saude: 'fitness-outline',
+        Saúde: 'fitness-outline',
+        Saude: 'fitness-outline', // in case of accent variations
         Idiomas: 'language-outline',
         'Gestão Financeira': 'cash-outline',
         Negócios: 'business-outline',
+        'Meio Ambiente': 'leaf-outline',
+        Marketing: 'megaphone-outline',
       };
 
       // Transform the data into the required format
@@ -92,7 +95,7 @@ export default function CategorySelection() {
         id: data.id,
         name: name,
         courses: data.count,
-        icon: subjectToIcon[name] || 'help-outline',
+        icon: subjectToIcon[name] || 'apps-outline', // fallback icon
       }));
 
       setCategories(transformedCategories);
@@ -149,7 +152,7 @@ export default function CategorySelection() {
         {categories.map((category) => (
           <TouchableOpacity key={category.id} style={styles.categoryItem} onPress={() => handleCategoryPress(category)}>
             <View style={styles.iconContainer}>
-              <Ionicons name={category.icon} size={24} color="#FFF" />
+              <Ionicons name={category.icon} size={24} color="#1fa2df" />
             </View>
             <View style={styles.categoryInfo}>
               <Text style={styles.categoryName}>{category.name}</Text>

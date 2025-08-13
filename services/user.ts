@@ -4,21 +4,88 @@ import { User } from '@/types/user';
 
 export async function getCachedUserData(): Promise<User | null> {
   try {
-    const userData = await AsyncStorage.getItem('@user');
-    if (userData !== null) {
-      return JSON.parse(userData) as User;
+    // Get the stored user object
+    const userDataString = await AsyncStorage.getItem('@user');
+    if (!userDataString) {
+      return null;
     }
-    return null;
+
+    const cachedUser = JSON.parse(userDataString) as User;
+    if (!cachedUser.token) {
+      return null;
+    }
+
+    // Fetch fresh user data from API
+    const response = await api.get('/users/me', {
+      headers: {
+        Authorization: `Bearer ${cachedUser.token}`,
+      },
+    });
+
+    const userData = response.data;
+
+    // Transform the API response to match our User interface
+    const user: User = {
+      id: userData.id.toString(),
+      documentId: userData.documentId,
+      email: userData.email,
+      fullname: userData.fullname,
+      name: userData.name,
+      surname: userData.surname,
+      phone: userData.phone,
+      yoma_id: userData.yoma_id,
+      token: cachedUser.token,
+      interests: userData.interests || [],
+      profile_image: userData.profile_image,
+    };
+
+    // Update the cached data with fresh data
+    await AsyncStorage.setItem('@user', JSON.stringify(user));
+
+    return user;
   } catch (error) {
-    console.error('Error loading user data:', error);
+    console.error('Error fetching user data:', error);
+    // If API call fails, try to return cached data as fallback
+    try {
+      const cachedUserData = await AsyncStorage.getItem('@user');
+      if (cachedUserData !== null) {
+        return JSON.parse(cachedUserData) as User;
+      }
+    } catch (cacheError) {
+      console.error('Error loading cached user data:', cacheError);
+    }
     throw new Error('Falha ao carregar dados do utilizador');
   }
 }
 
-export async function getUserData(token: string) {
+export async function getUserData(token: string): Promise<User | null> {
   try {
-    const response = await api.get('/user');
+    const response = await api.get('/users/me', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const userData = response.data;
+
+    // Transform the API response to match our User interface
+    const user: User = {
+      id: userData.id.toString(),
+      documentId: userData.documentId,
+      email: userData.email,
+      fullname: userData.fullname,
+      name: userData.name,
+      surname: userData.surname,
+      phone: userData.phone,
+      yoma_id: userData.yoma_id,
+      token: token,
+      interests: userData.interests || [],
+      profile_image: userData.profile_image,
+    };
+
+    return user;
   } catch (error) {
+    console.error('Error fetching user data:', error);
     throw new Error('Falha ao carregar dados do utilizador');
   }
 }

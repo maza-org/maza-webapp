@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { User } from '@/types/user';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { baseUrl } from '@/services/api';
 
 interface TopicButtonProps extends TouchableOpacityProps {
@@ -42,13 +43,16 @@ export default function Customize() {
   const [selectedTopics, setSelectedTopics] = useState<Topic[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const { interests } = useLocalSearchParams();
   const userTopics = interests ? JSON.parse(interests as string) : [];
-  const [error, setError] = useState<string | null>(null);
+
+  // Show back button only when coming from profile (when interests param is present)
+  const showBackButton = !!interests;
 
   useEffect(() => {
-    const loadData = async () => {
+    const initialize = async () => {
       try {
         // Read the saved user data
         const userString = await AsyncStorage.getItem('@user');
@@ -60,24 +64,31 @@ export default function Customize() {
         }
 
         // Fetch topics
-        await loadTopics();
+        await fetchTopics();
       } catch (error) {
-        console.error('Erro ao carregar dados do usuário ou tópicos:', error);
-        Alert.alert('Erro', 'Falha ao carregar dados do usuário ou tópicos');
-        setError('Erro ao carregar dados do usuário ou tópicos');
+        console.error('Error initializing:', error);
+        setHasError(true);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadData();
-  }, [user?.token]);
+    initialize();
+  }, []);
 
-  const loadTopics = async () => {
+  const fetchTopics = async () => {
     try {
-      const response = await fetch(`${baseUrl}/topics`);
-      const data = await response.json();
+      const response = await fetch(`${baseUrl}/subjects?fields=name&sort=name`);
+      const { data } = await response.json();
+
+      if (!data || data.length === 0) {
+        setHasError(true);
+        setTopics([]);
+        return;
+      }
+
       setTopics(data);
+      setHasError(false);
 
       // Mark user's existing topics as selected
       if (userTopics && userTopics.length > 0) {
@@ -91,10 +102,9 @@ export default function Customize() {
         }
       }
     } catch (error) {
-      console.error('Erro ao carregar tópicos:', error);
-      Alert.alert('Erro', 'Falha ao carregar tópicos');
+      console.error('Error fetching topics:', error);
+      setHasError(true);
       setTopics([]);
-      setError('Erro ao carregar tópicos');
     }
   };
 
@@ -104,39 +114,57 @@ export default function Customize() {
     );
   };
 
-  const handleConfirm = async () => {
-    if (!user?.token) {
-      Alert.alert('Erro', 'Dados do usuário não encontrados. Por favor, faça login novamente.');
+  const handleConfirm = async (): Promise<void> => {
+    if (!user) {
+      Alert.alert('Error', 'No user data found. Please try logging in again.');
       return;
     }
-
-    if (selectedTopics.length === 0) {
-      return;
-    }
-
-    setIsLoading(true);
-
+    console.log('user data:', { user });
     try {
-      const response = await fetch(`${baseUrl}/user-topics`, {
+      setIsLoading(true);
+      // Make the API call to update user interests
+      const response = await fetch(`${baseUrl}/users-permissions/interests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify({
-          topics: selectedTopics,
+          data: {
+            interests: selectedTopics.map((topic) => topic.documentId),
+          },
         }),
       });
-
       if (!response.ok) {
-        throw new Error('Falha ao salvar tópicos');
+        console.log(response.status);
+        console.log(JSON.stringify(user, null, 2));
+        console.log(
+          JSON.stringify(
+            selectedTopics.map((topic) => topic.documentId),
+            null,
+            2
+          )
+        );
+        throw new Error('Failed to update interests');
       }
+      // Save to AsyncStorage that user has updated their interests
+      await AsyncStorage.setItem('@userInterestsUpdated', 'true');
+      // Update the user object in AsyncStorage with new interests
+      const updatedUser = {
+        ...user,
+        interests: selectedTopics,
+      };
 
-      router.push('/start/photo');
+      console.log(`response`, await response.json());
+      console.log(response.status);
+      console.log(`user in customize`, JSON.stringify(updatedUser, null, 2));
+      await AsyncStorage.setItem('@user', JSON.stringify(updatedUser));
+
+      // Navigate to home screen
+      router.push('/');
     } catch (error) {
-      console.error('Erro ao salvar tópicos:', error);
-      Alert.alert('Erro', 'Falha ao salvar tópicos. Por favor, tente novamente.');
-      setError('Erro ao salvar tópicos');
+      console.error('Error saving topics:', error);
+      Alert.alert('Error', 'Failed to save topics. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -149,25 +177,43 @@ export default function Customize() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2EA8FF" />
-        <Text style={styles.loadingText}>Carregando...</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1fa2df" />
+        </View>
+      </SafeAreaView>
     );
   }
 
-  if (error) {
+  if (hasError) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={64} color="#A8A8B3" />
+          <Text style={styles.errorTitle}>Não foi possível carregar os temas</Text>
+          <Text style={styles.errorMessage}>
+            Ocorreu um erro ao carregar os temas disponíveis. Pode continuar sem personalizar a sua experiência.
+          </Text>
+          <TouchableOpacity style={styles.errorSkipButton} onPress={handleSkip}>
+            <Text style={styles.errorSkipButtonText}>Continuar para a aplicação</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      {showBackButton && (
         <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.contentHeader}>
           <Text style={styles.title}>Personalizar a sua experiência</Text>
           <Text style={styles.subtitle}>
             Escolha os temas que mais lhe interessam para que possamos criar uma experiência personalizada
@@ -214,6 +260,19 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   header: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  backButton: {
+    padding: 8,
+    borderStyle: 'solid',
+    borderColor: '#b3b3b3',
+    borderWidth: 0.5,
+    borderRadius: 50,
+    alignSelf: 'flex-start',
+  },
+  contentHeader: {
     marginBottom: 32,
   },
   title: {
@@ -291,18 +350,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    marginTop: 16,
-  },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 32,
   },
-  errorText: {
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  errorMessage: {
+    fontSize: 16,
+    color: '#A8A8B3',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  errorSkipButton: {
+    backgroundColor: '#1fa2df',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 50,
+  },
+  errorSkipButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '600',
   },
 });

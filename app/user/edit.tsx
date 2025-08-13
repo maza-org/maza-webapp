@@ -13,9 +13,10 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import useUser from '@/hooks/useUser';
+import { baseUrl } from '@/services/api';
 
 export default function EditProfileScreen() {
-  const { data: user, isLoading, error } = useUser();
+  const { data: user, isLoading, error, refresh } = useUser();
   const [formData, setFormData] = useState({
     name: '',
     surname: '',
@@ -26,6 +27,7 @@ export default function EditProfileScreen() {
   // Split fullname into name and surname when user data loads
   useEffect(() => {
     if (user?.fullname) {
+      console.log(user?.token);
       const nameParts = user.fullname.trim().split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
@@ -70,7 +72,7 @@ export default function EditProfileScreen() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('https://api.mazas.org/api/users/me', {
+      const response = await fetch(`${baseUrl}/users/me`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -92,6 +94,10 @@ export default function EditProfileScreen() {
 
       console.log(response.status);
       console.log(response.body);
+
+      // Refresh user data to get the latest information
+      await refresh();
+
       Alert.alert('Sucesso', 'Perfil actualizado com sucesso', [{ text: 'OK', onPress: () => router.back() }]);
     } catch (error) {
       Alert.alert('Erro', 'Falha ao actualizar perfil');

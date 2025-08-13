@@ -13,6 +13,7 @@ import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Course } from '@/types/course';
+import { baseUrl } from '@/services/api';
 
 interface SearchResult {
   id: number;
