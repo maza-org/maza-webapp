@@ -14,6 +14,9 @@ GET {{base_url}}/courses?sort=publishedAt%3Adesc&pageSize=10&page=1
 GET {{base_url}}/courses/suggested?pageSize=10&page=1
 Authorization: Bearer {{token}}
 
+### Course Info
+GET {{base_url}}/courses/b7gppdh1wus5hdj9esy33ldu
+
 
 
 

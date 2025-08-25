@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   StyleSheet,
   View,
@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { Picture } from '@/types/course';
+import { useUserFavorites } from '@/services/catalog';
+import { useAuthUser } from '@/hooks/useAuth';
 
 interface Course {
   id: number;
@@ -47,47 +48,10 @@ interface FavoriteResponse {
 }
 
 const FavoriteCoursesGrid = () => {
-  const [favorites, setFavorites] = useState<FavoriteCourse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: user } = useAuthUser();
+  const { data: favoritesResponse, isLoading, error, refetch } = useUserFavorites(user?.token || '');
 
-  const fetchFavorites = async () => {
-    try {
-      const userData = await AsyncStorage.getItem('@user');
-      if (!userData) {
-        throw new Error('Dados do utilizador não encontrados');
-      }
-
-      const { token } = JSON.parse(userData);
-      if (!token) {
-        throw new Error('Token não encontrado');
-      }
-
-      const response = await fetch(`${baseUrl}/user-courses/favorites`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha ao obter favoritos');
-      }
-
-      const data: FavoriteResponse = await response.json();
-      setFavorites(data.data);
-    } catch (error) {
-      console.error('Erro ao buscar favoritos:', error);
-      setError('Não foi possível carregar os seus favoritos');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchFavorites();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#2EA8FF" />
@@ -102,13 +66,15 @@ const FavoriteCoursesGrid = () => {
           <Ionicons name="alert-circle-outline" size={80} color="#FF4B4B" />
         </View>
         <Text style={styles.errorTitle}>Ops! Algo deu errado</Text>
-        <Text style={styles.errorSubtitle}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchFavorites}>
+        <Text style={styles.errorSubtitle}>Não foi possível carregar os seus favoritos</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
           <Text style={styles.retryButtonText}>Tentar Novamente</Text>
         </TouchableOpacity>
       </View>
     );
   }
+
+  const favorites = favoritesResponse?.data || [];
 
   if (favorites.length === 0) {
     return (
@@ -128,7 +94,7 @@ const FavoriteCoursesGrid = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.gridContainer}>
-        {favorites.map((favorite) => (
+        {favorites.map((favorite: FavoriteCourse) => (
           <TouchableOpacity
             key={favorite.id}
             style={styles.courseCard}

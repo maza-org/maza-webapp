@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,168 +9,135 @@ import {
   ImageBackground,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, useLocalSearchParams } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import Reviews from '@/components/Reviews';
-import { Picture } from '@/types/course';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
-import { baseUrl } from '@/services/api';
-
-export interface Content {
-  id: number;
-  title: string;
-  format: string;
-  youtubeID: string;
-  url: string;
-  description: string | null;
-}
-
-interface Certificate {
-  createdAt: string;
-  id: number;
-  documentId: string;
-  course: {
-    id: number;
-    documentId: string;
-    title: string;
-    author: string;
-    rating_avg: number;
-    subscribed: number;
-  };
-  user: {
-    id: number;
-    documentId: string;
-    email: string;
-    phone: string;
-  };
-}
-
-export interface Module {
-  id: number;
-  title: string;
-  quiz: any;
-  description: string;
-  contents: Content[];
-}
-
-interface Question {
-  id: number;
-  description: string;
-  format: string;
-  options: {
-    id: number;
-    description: string;
-    comment: string | null;
-    is_correct: boolean;
-  }[];
-}
-
-export interface Quiz {
-  id: number;
-  pass_grade: number;
-  questions: Question[];
-}
-
-interface Subject {
-  id: number;
-  documentId: string;
-  name: string;
-}
-
-interface User {
-  id: string;
-  documentId: string;
-  email: string;
-  fullname: string;
-  phone: string;
-  yoma_id: string;
-  token: string;
-}
-
-interface Course {
-  id: number;
-  documentId: string;
-  title: string;
-  author: string;
-  rating_avg: number;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string;
-  subjects: Subject[];
-  final_test: Quiz;
-  modules: Module[];
-  isFavorite?: boolean;
-  cover: Picture;
-  description?: string;
-  level?: 'Básico' | 'Intermédio' | 'Avançado';
-}
-
-interface TabProps {
-  active: boolean;
-  onPress: () => void;
-  children: string;
-}
+import { Module, Quiz } from '@/types/learning';
+import { LevelBadge } from '@/components/LevelBadge';
+import { Tab } from '@/components/Tab';
+import Toast from '@/components/Toast';
+import { useToast } from '@/hooks/useToast';
+import {
+  useCourseDetails,
+  useCertificates,
+  useAddToFavorites,
+  useRemoveFromFavorites,
+  useIsFavorite,
+  useStartCourse,
+  useCourseProgress,
+} from '@/services/catalog';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuthUser } from '@/hooks/useAuth';
 
 export default function CourseDetail() {
   const [activeTab, setActiveTab] = useState<'lessons' | 'opinions'>('lessons');
-  const [courseData, setCourseData] = useState<Course | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [updating, setUpdating] = useState(false);
-  const [isInProgress, setIsInProgress] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { toast, config, showSuccess, showError, showInfo, hideToast } = useToast();
 
-  const { documentId } = useLocalSearchParams();
+  const { documentId } = useLocalSearchParams<{ documentId: string }>();
 
-  // Inline Level Badge Component
-  type Level = 'Básico' | 'Intermédio' | 'Avançado';
+  // Token change detection and query client
+  const previousTokenRef = useRef<string | undefined>(undefined);
+  const queryClient = useQueryClient();
 
-  type LevelMapType = {
-    [key in Level]: string;
-  };
+  // React Query hooks
+  const {
+    data: courseData,
+    isLoading: courseLoading,
+    error: courseError,
+    refetch: refetchCourse,
+  } = useCourseDetails(documentId);
+  const { data: certificates = [], isLoading: certificatesLoading, error: certificatesError } = useCertificates();
+  const { data: user, isLoading: userLoading } = useAuthUser();
+  const { isInProgress, isLoading: progressLoading } = useCourseProgress(documentId, user?.token || '');
+  const { isFavorite, isLoading: favoriteLoading } = useIsFavorite(documentId, user?.token || '');
 
-  type LevelColorType = {
-    [key in Level]: string;
-  };
+  // Loading states
+  const isLoading = courseLoading || userLoading || (!!user?.token && progressLoading);
+  const isRefreshing = courseLoading || certificatesLoading;
+  const isUserDataRefreshing = userLoading || (!!user?.token && (progressLoading || favoriteLoading));
 
-  interface LevelBadgeProps {
-    level?: Level;
-  }
+  // Check for token changes and refresh data
+  useEffect(() => {
+    const currentToken = user?.token;
+    const previousToken = previousTokenRef.current;
 
-  const LevelBadge = ({ level = 'Básico' }: LevelBadgeProps) => {
-    // Define colors for each level
-    const levelColors: LevelColorType = {
-      Básico: '#4db5ff',
-      Intermédio: '#ffa500',
-      Avançado: '#ff4d4d',
-    };
+    if (currentToken !== previousToken) {
+      console.log('Token changed:', { previousToken: !!previousToken, currentToken: !!currentToken });
 
-    const dotColor = levelColors[level] || '#ffa500';
+      // Update the ref
+      previousTokenRef.current = currentToken;
 
-    return (
-      <View style={styles.levelBadge}>
-        <Text style={styles.levelText}>{level}</Text>
-        <View style={[styles.levelDot, { backgroundColor: dotColor }]} />
-      </View>
-    );
-  };
+      // If we now have a token (user logged in), refresh user-dependent data
+      if (currentToken && !previousToken) {
+        console.log('User logged in, refreshing user data...');
+        showSuccess('Bem-vindo de volta! Carregando seus dados...');
+        // Invalidate and refetch user-dependent queries
+        queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
+        queryClient.invalidateQueries({ queryKey: ['user-courses'] });
+        queryClient.invalidateQueries({ queryKey: ['certificates'] });
+      }
+    }
+  }, [user?.token, queryClient, showSuccess]);
 
-  // Inline Tab Component
-  function Tab({ active, onPress, children }: TabProps) {
-    return (
-      <TouchableOpacity onPress={onPress} style={[styles.tab, active && styles.activeTab]}>
-        <Text style={[styles.tabText, active && styles.activeTabText]}>{children}</Text>
-      </TouchableOpacity>
-    );
-  }
+  // Show success message when user data finishes loading after login
+  useEffect(() => {
+    if (user?.token && !isUserDataRefreshing && !userLoading) {
+      // Check if this is the first time we have user data loaded
+      const hasJustLoaded = previousTokenRef.current === user.token && !userLoading;
+      if (hasJustLoaded) {
+        console.log('User data loaded successfully');
+        // Don't show another success message here to avoid spam
+      }
+    }
+  }, [user?.token, isUserDataRefreshing, userLoading]);
+
+  // Refresh data when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Screen focused, checking for token updates...');
+      // Refetch auth user data to check for token updates
+      queryClient.invalidateQueries({ queryKey: ['auth-user'] });
+    }, [queryClient])
+  );
+
+  // Mutations
+  const addToFavoritesMutation = useAddToFavorites();
+  const removeFromFavoritesMutation = useRemoveFromFavorites();
+  const startCourseMutation = useStartCourse();
+
+  // Debug logging
+  console.log('Loading states:', {
+    courseLoading,
+    userLoading,
+    progressLoading,
+    favoriteLoading,
+    userToken: !!user?.token,
+    isLoading,
+    documentId,
+  });
+
+  // Check if certificate exists for this course and no errors
+  const hasCertificate =
+    !certificatesError && certificates.length > 0 && certificates.some((cert) => cert.course.documentId === documentId);
+
+  // Debug certificate state
+  console.log('Certificate state:', {
+    certificatesError,
+    certificatesCount: certificates.length,
+    hasCertificate,
+    documentId,
+    certificates: certificates.map((cert) => ({
+      courseId: cert.course.documentId,
+      certificateId: cert.documentId,
+    })),
+  });
 
   // Toggle menu visibility
   const toggleMenu = () => {
@@ -180,19 +147,15 @@ export default function CourseDetail() {
   const handleMenuOption = (option: string) => {
     switch (option) {
       case 'certificate':
-        // Check if this course has a certificate
+        // Since we only show this option when certificate exists, we can safely find it
         const certificate = certificates.find((cert) => cert.course.documentId === documentId);
-        if (certificate) {
-          router.push({
-            pathname: '/user/certificate',
-            params: { certificateId: certificate.documentId },
-          });
-        } else {
-          Alert.alert('Certificado não disponível', 'Você ainda não tem um certificado para este curso.');
-        }
+        router.push({
+          pathname: '/user/certificate',
+          params: { certificateId: certificate!.documentId },
+        });
         break;
       case 'report':
-        Alert.alert('Reportar', 'Reportar um problema com este curso');
+        showInfo('Funcionalidade de reportar problema em desenvolvimento');
         // Implement report bug functionality here
         break;
       default:
@@ -201,122 +164,49 @@ export default function CourseDetail() {
     setMenuVisible(false);
   };
 
-  const checkCourseProgress = async () => {
-    if (!user?.token) return;
-    try {
-      const response = await fetch(`${baseUrl}/user-courses?status=InProgress`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setIsInProgress(data.data.some((course: any) => course.course.documentId === documentId));
-      }
-    } catch (error) {
-      console.error('Erro ao verificar progresso do curso:', error);
-    }
-  };
-
-  const initializeData = async () => {
-    try {
-      await checkCourseProgress();
-    } catch (error) {
-      console.error('Erro ao inicializar dados:', error);
-    }
-  };
-
-  const loadUserData = async () => {
-    try {
-      const userData = await AsyncStorage.getItem('@user');
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
-    } catch (error) {
-      console.error('Erro ao carregar dados do usuário:', error);
-      Alert.alert('Erro', 'Falha ao carregar dados do utilizador');
-    }
-  };
-
-  const fetchCertificates = async () => {
-    try {
-      const response = await fetch(`${baseUrl}/certificates`);
-      const data = await response.json();
-      setCertificates(data);
-    } catch (error) {
-      console.error('Erro ao buscar certificados:', error);
-    }
-  };
-
-  const fetchCourseData = async () => {
-    try {
-      const response = await fetch(`${baseUrl}/courses/${documentId}`);
-      const data = await response.json();
-      setCourseData(data);
-    } catch (error) {
-      console.error('Erro ao buscar dados do curso:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleFavorite = async () => {
     if (!user?.token) {
-      Alert.alert('Erro', 'Para marcar um curso como favorito é necessário que tenha feito o login');
+      showError('Para marcar um curso como favorito é necessário que tenha feito o login');
       return;
     }
 
     try {
-      const response = await fetch(`${baseUrl}/favorites`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify({
+      if (isFavorite) {
+        // Remove from favorites
+        await removeFromFavoritesMutation.mutateAsync({
           courseId: documentId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha ao adicionar aos favoritos');
+          token: user.token,
+        });
+        showSuccess('Curso removido dos favoritos!');
+      } else {
+        // Add to favorites
+        await addToFavoritesMutation.mutateAsync({
+          courseId: documentId,
+          token: user.token,
+        });
+        showSuccess('Curso adicionado aos favoritos!');
       }
-
-      setIsFavorite(true);
     } catch (error) {
-      console.error('Erro ao adicionar aos favoritos:', error);
-      Alert.alert('Erro', 'Falha ao adicionar aos favoritos');
+      console.error('Erro ao gerenciar favoritos:', error);
+      showError('Falha ao gerenciar favoritos');
     }
   };
 
   const handleStartCourse = async () => {
     if (!user?.token) {
-      Alert.alert('Erro', 'Para marcar um curso como favorito é necessário que tenha feito o login');
+      showError('Para iniciar um curso é necessário que tenha feito o login');
       return;
     }
 
     try {
-      const response = await fetch(`${baseUrl}/user-courses`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify({
-          courseId: documentId,
-          status: 'InProgress',
-        }),
+      await startCourseMutation.mutateAsync({
+        courseId: documentId,
+        token: user.token,
       });
-
-      if (!response.ok) {
-        throw new Error('Erro ao começar curso');
-      }
-
       router.push(`/path?courseId=${documentId}`);
     } catch (error) {
       console.error('Erro ao iniciar curso:', error);
-      Alert.alert('Erro', 'Falha ao iniciar o curso');
+      showError('Falha ao iniciar o curso');
     }
   };
 
@@ -325,25 +215,12 @@ export default function CourseDetail() {
     setShowFullDescription(!showFullDescription);
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        await loadUserData();
-        await fetchCourseData();
-        await checkCourseProgress();
-        await fetchCertificates();
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-        setError('Erro ao carregar dados do curso');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Handle refresh
+  const handleRefresh = () => {
+    refetchCourse();
+  };
 
-    loadData();
-  }, [documentId, user?.token]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2EA8FF" />
@@ -352,10 +229,17 @@ export default function CourseDetail() {
     );
   }
 
-  if (error) {
+  if (courseError) {
+    console.error('Course error:', courseError);
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={styles.errorText}>Erro ao carregar dados do curso</Text>
+        <Text style={[styles.errorText, { fontSize: 12, marginTop: 8 }]}>
+          {courseError.message || 'Erro desconhecido'}
+        </Text>
+        <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
+          <Text style={styles.retryButtonText}>Tentar novamente</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -408,9 +292,44 @@ export default function CourseDetail() {
     });
   }
 
+  // Helper function to convert Portuguese level to English
+  const getEnglishLevel = (portugueseLevel: string): 'Basic' | 'Intermediate' | 'Advanced' => {
+    switch (portugueseLevel) {
+      case 'Básico':
+        return 'Basic';
+      case 'Intermédio':
+      case 'Intermediário':
+        return 'Intermediate';
+      case 'Avançado':
+        return 'Advanced';
+      default:
+        return 'Intermediate';
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} stickyHeaderIndices={[1]}>
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+        duration={config.duration}
+        position={config.position}
+        showIcon={config.showIcon}
+      />
+      <ScrollView
+        style={styles.scrollView}
+        stickyHeaderIndices={[1]}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor="#2EA8FF"
+            colors={['#2EA8FF']}
+          />
+        }
+      >
         <ImageBackground source={{ uri: courseData?.cover?.formats?.thumbnail?.url }} style={styles.header}>
           <View style={styles.headerOverlay}>
             <View style={styles.headerActions}>
@@ -418,38 +337,57 @@ export default function CourseDetail() {
                 <Feather name="chevron-left" size={24} color="#FFF" />
               </TouchableOpacity>
               <View style={styles.rightActions}>
+                {isUserDataRefreshing && (
+                  <View style={styles.refreshIndicator}>
+                    <ActivityIndicator size="small" color="#FFF" />
+                  </View>
+                )}
                 <TouchableOpacity style={styles.iconButton}>
                   <Feather name="share" size={24} color="#FFF" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton} onPress={handleFavorite}>
-                  <Ionicons
-                    name={isFavorite ? 'heart' : 'heart-outline'}
-                    size={24}
-                    color={isFavorite ? '#ff0000' : '#FFF'}
-                  />
-                </TouchableOpacity>
-                <View>
-                  <TouchableOpacity style={styles.iconButton} onPress={toggleMenu}>
-                    <Entypo name="dots-three-horizontal" size={24} color="#fff" />
+                {user?.token && (
+                  <TouchableOpacity
+                    style={styles.iconButton}
+                    onPress={handleFavorite}
+                    disabled={
+                      addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending || favoriteLoading
+                    }
+                  >
+                    {addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending || favoriteLoading ? (
+                      <ActivityIndicator size="small" color="#FFF" />
+                    ) : (
+                      <Ionicons
+                        name={isFavorite ? 'heart' : 'heart-outline'}
+                        size={24}
+                        color={isFavorite ? '#FF4B4B' : '#FFF'}
+                      />
+                    )}
                   </TouchableOpacity>
+                )}
+                {hasCertificate && (
+                  <View>
+                    <TouchableOpacity style={styles.iconButton} onPress={toggleMenu}>
+                      <Entypo name="dots-three-horizontal" size={24} color="#fff" />
+                    </TouchableOpacity>
 
-                  {menuVisible && (
-                    <View style={styles.menuContainer}>
-                      <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('certificate')}>
-                        <Text style={styles.menuItemText}>Certificado</Text>
-                      </TouchableOpacity>
+                    {menuVisible && (
+                      <View style={styles.menuContainer}>
+                        <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('certificate')}>
+                          <Text style={styles.menuItemText}>Certificado</Text>
+                        </TouchableOpacity>
 
-                      {/*<TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('report')}>*/}
-                      {/*  <Text style={styles.menuItemText}>Reportar Problema</Text>*/}
-                      {/*</TouchableOpacity>*/}
-                    </View>
-                  )}
-                </View>
+                        {/*<TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('report')}>*/}
+                        {/*  <Text style={styles.menuItemText}>Reportar Problema</Text>*/}
+                        {/*</TouchableOpacity>*/}
+                      </View>
+                    )}
+                  </View>
+                )}
               </View>
             </View>
 
             {/* Level Badge Component */}
-            <LevelBadge level={courseData?.level || 'Intermédio'} />
+            <LevelBadge level={getEnglishLevel(courseData?.level || 'Intermédio')} />
           </View>
         </ImageBackground>
 
@@ -545,7 +483,7 @@ export default function CourseDetail() {
         ) : (
           <View style={styles.opinionsContainer}>
             <View style={styles.ratingOverview}>
-              <Reviews courseId={documentId as string} />
+              <Reviews courseId={documentId} />
             </View>
           </View>
         )}
@@ -553,11 +491,15 @@ export default function CourseDetail() {
 
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.startButton, updating && styles.startButtonDisabled, isInProgress && styles.continueButton]}
+          style={[
+            styles.startButton,
+            startCourseMutation.isPending && styles.startButtonDisabled,
+            isInProgress && styles.continueButton,
+          ]}
           onPress={handleStartCourse}
-          disabled={updating}
+          disabled={startCourseMutation.isPending}
         >
-          {updating ? (
+          {startCourseMutation.isPending ? (
             <ActivityIndicator color="#FFF" />
           ) : (
             <Text style={[styles.startButtonText, isInProgress && styles.continueButton]}>
@@ -582,10 +524,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#121214',
+    padding: 24,
   },
   errorText: {
     color: '#FFF',
     fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#1fa2df',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  retryButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   container: {
     flex: 1,
@@ -711,23 +667,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#323238',
   },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#1fa2df',
-  },
-  tabText: {
-    color: '#A8A8B3',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  activeTabText: {
-    color: '#1fa2df',
-  },
   modulesList: {
     padding: 24,
   },
@@ -804,23 +743,6 @@ const styles = StyleSheet.create({
   ratingOverview: {
     marginBottom: 24,
   },
-  overallRating: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  ratingNumber: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#FFF',
-    marginBottom: 8,
-  },
-  starsContainer: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  starIcon: {
-    marginHorizontal: 2,
-  },
   noModulesContainer: {
     padding: 24,
     alignItems: 'center',
@@ -841,37 +763,16 @@ const styles = StyleSheet.create({
   continueButton: {
     backgroundColor: '#1fa2df',
   },
-  levelBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    paddingVertical: 5,
-    paddingHorizontal: 24,
-    borderRadius: 50,
-    position: 'absolute',
-    bottom: 5,
-    alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  levelText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#121214',
-    marginRight: 8,
-  },
-  levelDot: {
-    width: 15,
-    height: 15,
-    borderRadius: 10,
-  },
   loadingText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '500',
     marginTop: 16,
+  },
+  refreshIndicator: {
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
