@@ -198,12 +198,14 @@ export function useStartCourse() {
       const response = await api.post(
         '/user-courses',
         {
-          courseId,
-          status: 'InProgress',
+          data: {
+            course: courseId,
+          },
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
         }
       );

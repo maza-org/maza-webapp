@@ -1,6 +1,6 @@
 ### Courses
 GET {{base_url}}/user-courses
-Authorization: Bearer {{token}}
+Authorization: Bearer {{prod_token}}
 
 ### Favorite Courses
 GET {{base_url}}/user-courses/favorites
@@ -12,11 +12,11 @@ Authorization: Bearer {{token}}
 
 ### In Progress Courses
 GET {{base_url}}/user-courses?status=InProgress
-Authorization: Bearer {{token}}
+Authorization: Bearer {{prod_token}}
 
 ### Profile
 GET {{base_url}}/users/me
-Authorization: Bearer {{token}}
+Authorization: Bearer {{prod_token}}
 
 ### Update Profile
 PUT {{base_url}}/users/me
@@ -181,10 +181,6 @@ Content-Type: application/json
   }
 }
 
-###
-
-
-
 ### Login with OTP
 POST {{base_url}}/auth/login
 Content-Type: application/json
@@ -195,7 +191,34 @@ Content-Type: application/json
   "password": "124850"
 }
 
+### Add course to saved courses
+POST {{base_url}}/user-courses
+Authorization: Bearer {{base_url}}
+Authorization: Bearer {{prod_token}}
+Content-Type: application/json
+
+{
+  "data": {
+    "course": "b7gppdh1wus5hdj9esy33ldu"
+  }
+}
+
+### Test
+PUT {{base_url}}/user-courses/ucq5i6dmpvoeg8to9te7nb0o/module/1/content/2
+Authorization: Bearer {{prod_token}}
+
+### Get progress
+GET {{base_url}}/user-courses/ucq5i6dmpvoeg8to9te7nb0o
+Authorization: Bearer {{prod_token}}
+
+### In Progress Courses
+GET {{base_url}}/user-courses?status=InProgress
+Authorization: Bearer {{prod_token}}
+
 ###
+
+
+
 
 
 

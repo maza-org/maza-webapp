@@ -81,6 +81,7 @@ export default function ProfileScreen() {
       if (!user?.token) {
         throw new Error('No authentication token found');
       }
+      console.log(user?.token);
 
       const response = await fetch(`${baseUrl}/certificates`, {
         method: 'GET',
