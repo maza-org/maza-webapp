@@ -186,6 +186,9 @@ export default function CourseDetail() {
         });
         showSuccess('Curso adicionado aos favoritos!');
       }
+
+      // Force refetch the favorites data to ensure UI is updated
+      queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
     } catch (error) {
       console.error('Erro ao gerenciar favoritos:', error);
       showError('Falha ao gerenciar favoritos');
@@ -347,7 +350,11 @@ export default function CourseDetail() {
                 </TouchableOpacity>
                 {user?.token && (
                   <TouchableOpacity
-                    style={styles.iconButton}
+                    style={[
+                      styles.iconButton,
+                      (addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending || favoriteLoading) &&
+                        styles.iconButtonDisabled,
+                    ]}
                     onPress={handleFavorite}
                     disabled={
                       addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending || favoriteLoading
@@ -574,6 +581,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  iconButtonDisabled: {
+    opacity: 0.6,
   },
   menuContainer: {
     position: 'absolute',

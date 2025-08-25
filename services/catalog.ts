@@ -112,8 +112,33 @@ export function useAddToFavorites() {
       );
       return response.data;
     },
-    onSuccess: () => {
-      // Invalidate relevant queries
+    onMutate: async ({ courseId, token }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['user-favorites'] });
+
+      // Snapshot the previous value
+      const previousFavorites = queryClient.getQueryData(['user-favorites']);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['user-favorites'], (old: any) => {
+        if (!old?.data) return old;
+        return {
+          ...old,
+          data: [...old.data, { course: { documentId: courseId } }],
+        };
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousFavorites };
+    },
+    onError: (err, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousFavorites) {
+        queryClient.setQueryData(['user-favorites'], context.previousFavorites);
+      }
+    },
+    onSettled: () => {
+      // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
     },
   });
@@ -132,8 +157,33 @@ export function useRemoveFromFavorites() {
       });
       return response.data;
     },
-    onSuccess: () => {
-      // Invalidate relevant queries
+    onMutate: async ({ courseId, token }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['user-favorites'] });
+
+      // Snapshot the previous value
+      const previousFavorites = queryClient.getQueryData(['user-favorites']);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['user-favorites'], (old: any) => {
+        if (!old?.data) return old;
+        return {
+          ...old,
+          data: old.data.filter((favorite: any) => favorite.course.documentId !== courseId),
+        };
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousFavorites };
+    },
+    onError: (err, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousFavorites) {
+        queryClient.setQueryData(['user-favorites'], context.previousFavorites);
+      }
+    },
+    onSettled: () => {
+      // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
     },
   });

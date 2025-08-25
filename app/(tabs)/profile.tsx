@@ -15,7 +15,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import useUser from '@/hooks/useUser';
+import { useToast } from '@/hooks/useToast';
 import CertificateItem from '@/components/CertificateItem';
+import Toast from '@/components/Toast';
 import { baseUrl } from '@/services/api';
 
 export interface Subject {
@@ -42,6 +44,7 @@ export interface Certificate {
 
 export default function ProfileScreen() {
   const { data: user, isLoading, error, refetch } = useUser();
+  const { toast, config, showLoading, showSuccess, hideToast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [deletingInterestId, setDeletingInterestId] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -97,10 +100,25 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     try {
+      // Show loading toast
+      showLoading('A terminar sessão...');
+
+      // Simulate a small delay to show the loading state
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       await AsyncStorage.removeItem('@user');
-      router.replace('/');
+
+      // Hide loading toast and show success
+      hideToast();
+      showSuccess('Sessão terminada com sucesso');
+
+      // Navigate after a brief delay to show the success message
+      setTimeout(() => {
+        router.replace('/');
+      }, 1000);
     } catch (error) {
       console.error('Error during logout:', error);
+      hideToast();
       Alert.alert('Erro', 'Falha ao terminar sessão');
     }
   };
@@ -319,6 +337,15 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+        duration={config.duration}
+        position={config.position}
+        showIcon={config.showIcon}
+      />
       <ScrollView style={styles.scrollView}>
         <View style={styles.header}>
           <View style={styles.headerActions}>
