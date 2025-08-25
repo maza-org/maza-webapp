@@ -45,6 +45,7 @@ export default function Customize() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [initialSelectedTopics, setInitialSelectedTopics] = useState<Topic[]>([]);
   const { interests } = useLocalSearchParams();
   const userTopics = interests ? JSON.parse(interests as string) : [];
 
@@ -99,6 +100,8 @@ export default function Customize() {
 
         if (userSelectedTopics.length > 0) {
           setSelectedTopics(userSelectedTopics);
+          // Store initial selection for comparison
+          setInitialSelectedTopics(userSelectedTopics);
         }
       }
     } catch (error) {
@@ -114,6 +117,30 @@ export default function Customize() {
     );
   };
 
+  const removeInterest = async (documentId: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${baseUrl}/users-permissions/interests/${documentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error(`Failed to remove interest ${documentId}:`, response.status);
+        return false;
+      }
+
+      const result = await response.json();
+      console.log(`Successfully removed interest ${documentId}:`, result);
+      return true;
+    } catch (error) {
+      console.error(`Error removing interest ${documentId}:`, error);
+      return false;
+    }
+  };
+
   const handleConfirm = async (): Promise<void> => {
     if (!user) {
       Alert.alert('Error', 'No user data found. Please try logging in again.');
@@ -122,6 +149,28 @@ export default function Customize() {
     console.log('user data:', { user });
     try {
       setIsLoading(true);
+
+      // If this is the first open (coming from profile) and there were initially selected topics
+      if (showBackButton && initialSelectedTopics.length > 0) {
+        // Find removed interests (topics that were initially selected but are no longer selected)
+        const removedTopics = initialSelectedTopics.filter(
+          (initialTopic) => !selectedTopics.some((currentTopic) => currentTopic.id === initialTopic.id)
+        );
+
+        console.log('Removed topics:', removedTopics);
+
+        // Remove each unselected interest
+        if (removedTopics.length > 0) {
+          const removalPromises = removedTopics.map((topic) => removeInterest(topic.documentId));
+          const removalResults = await Promise.all(removalPromises);
+
+          const failedRemovals = removalResults.filter((success) => !success).length;
+          if (failedRemovals > 0) {
+            console.warn(`${failedRemovals} interest removals failed`);
+          }
+        }
+      }
+
       // Make the API call to update user interests
       const response = await fetch(`${baseUrl}/users-permissions/interests`, {
         method: 'POST',

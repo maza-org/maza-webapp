@@ -1,0 +1,227 @@
+### Courses
+GET {{base_url}}/user-courses
+Authorization: Bearer {{token}}
+
+### Favorite Courses
+GET {{base_url}}/user-courses/favorites
+Authorization: Bearer {{token}}
+
+### Completed Courses
+GET {{base_url}}/user-courses?status=Completed
+Authorization: Bearer {{token}}
+
+### In Progress Courses
+GET {{base_url}}/user-courses?status=InProgress
+Authorization: Bearer {{token}}
+
+### Profile
+GET {{base_url}}/users/me
+Authorization: Bearer {{token}}
+
+### Update Profile
+PUT {{base_url}}/users/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "data": {
+    "phone": "+258849902443",
+    "name": "Bento Francisco",
+    "surname": "Alberto",
+    "email": "bentotheshit@gmail.com"
+  }
+}
+
+### Upload Profile Image
+POST {{base_url}}/upload
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="ref"
+
+"plugin::users-permissions.user"
+--WebAppBoundary
+Content-Disposition: form-data; name="refId"
+
+"1"
+--WebAppBoundary
+Content-Disposition: form-data; name="field"
+
+"profile_image"
+--WebAppBoundary
+Content-Disposition: form-data; name="files"; filename="cool-profile-picture-ld8f4n1qemczkrig.jpg""
+
+< "/C:/Users/bento/Downloads/cool-profile-picture-ld8f4n1qemczkrig.jpg"
+--WebAppBoundary--
+
+### Add subject to interests
+POST {{base_url}}/users-permissions/interests
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "data": {
+    "interests": [
+      "m3u9vvs2oyfya5c16lypc0kq",
+      "fwubsstwm950034zmd6dnt8r",
+      "bytw5r31pabozzrfn9mbet5y",
+      "kis2q7skyg7diq4vpnxevau4"
+    ]
+  }
+}
+
+### Remove subject from interests
+DELETE {{base_url}}/users-permissions/interests/kis2q7skyg7diq4vpnxevau4
+Authorization: Bearer {{token}}
+
+### Add course to saved courses
+POST {{base_url}}/user-courses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "data": {
+    "course": "x8yoemgcvc9e4mifdwnldr6g"
+  }
+}
+
+### Remove course front saved
+DELETE {{base_url}}/user-courses/x8yoemgcvc9e4mifdwnldr6g
+Authorization: Bearer {{token}}
+
+### Add courses to favorites
+POST {{base_url}}/user-courses/favorites
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "data": {
+    "course": "x8yoemgcvc9e4mifdwnldr6g"
+  }
+}
+
+### Remove course from favorites
+DELETE {{base_url}}/user-courses/favorites/x8yoemgcvc9e4mifdwnldr6g
+Authorization: Bearer {{token}}
+
+### Conclude Final quiz of a course
+PUT {{base_url}}/user-courses/n3drfwi6kik8855whdh0fp9k
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "data": {
+    "grade": 90
+  }
+}
+
+### Conclude Module content of a course
+PUT {{base_url}}/user-courses/n3drfwi6kik8855whdh0fp9k/module/1/content/1
+Content-Type: application/x-www-form-urlencoded
+Authorization: Bearer {{token}}
+
+### Conclude Module quiz of a course
+PUT {{base_url}}/user-courses/n3drfwi6kik8855whdh0fp9k/module/1/quiz
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "data":{
+    "grade": 88
+  }
+}
+
+### Get course my progress
+GET {{base_url}}/user-courses/n3drfwi6kik8855whdh0fp9k
+Authorization: Bearer {{token}}
+
+### Get my Certificates
+GET {{base_url}}/certificates
+Authorization: Bearer {{token}}
+
+### View Certificate
+GET {{base_url}}/certificates/tad5z99xmve8g8pov0gchk2i
+Authorization: Bearer {{token}}
+
+### Review a course
+POST {{base_url}}/reviews
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "data":{
+        "course": "x8yoemgcvc9e4mifdwnldr6g",
+        "rating": 5,
+        "comment": "Nahhh aint that cool.but props for the initiative"
+    }
+}
+
+### Generate OTP
+POST {{base_url}}/otps
+Content-Type: application/json
+
+{
+  "data": {
+    "phone": "+258863049968"
+  }
+}
+
+### Create Account
+POST {{base_url}}/users
+Content-Type: application/json
+
+{
+  "data": {
+    "phone": "+258863049968",
+    "otpID": "VE0d3efc80670e133c53eff280b257ecd8",
+    "code": "545818",
+    "name": "Neil",
+    "surname": "Bohr"
+  }
+}
+
+###
+
+
+
+### Login with OTP
+POST {{base_url}}/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "+258849902307",
+  "otpID": "VEb05dd5405fd762c0971fb2a4252af84d",
+  "password": "124850"
+}
+
+###
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

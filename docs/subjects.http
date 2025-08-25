@@ -1,0 +1,22 @@
+### Interests
+GET {{base_url}}/subjects?fields=name&sort=name
+
+### Courses
+GET {{base_url}}/courses
+
+### Popular Courses
+GET {{base_url}}/courses?sort=subscribed%3Adesc&pageSize=15&page=1
+
+### Recent Courses
+GET {{base_url}}/courses?sort=publishedAt%3Adesc&pageSize=10&page=1
+
+### Suggested Courses
+GET {{base_url}}/courses/suggested?pageSize=10&page=1
+Authorization: Bearer {{token}}
+
+
+
+
+
+
+

@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   saveButtonDisabled: {
-    opacity: 0.5,
+    backgroundColor: '#202024',
   },
   saveButtonText: {
     color: '#FFF',
