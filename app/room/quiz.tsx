@@ -272,14 +272,14 @@ export default function Quiz() {
   const [timeSpent, setTimeSpent] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    // Start the timer when the component mounts
+  const startTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          // Time's up
           clearInterval(timerRef.current as NodeJS.Timeout);
-          // Auto-submit the quiz
           handleTimeUp();
           return 0;
         }
@@ -287,6 +287,11 @@ export default function Quiz() {
         return prev - 1;
       });
     }, 1000);
+  };
+
+  useEffect(() => {
+    // Start the timer when the component mounts
+    startTimer();
 
     // Cleanup on unmount
     return () => {
@@ -410,11 +415,23 @@ export default function Quiz() {
     }
   };
 
+  const resetQuiz = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    setCurrentQuestion(0);
+    setSelectedAnswers({});
+    setShowResults(false);
+    setShowCurrentFeedback(false);
+    setTimeLeft(QUIZ_DURATION);
+    setTimeSpent(0);
+    setCalculatedGrade(0);
+    setQuizCompleted(false);
+    startTimer();
+  };
+
   const handleRetake = () => {
-    // Add a small animation or feedback effect before resetting
-    Alert.alert('Iniciando novamente', 'Vamos lá! Você consegue desta vez.', [
-      { text: 'OK', onPress: () => setCurrentQuestion(0) },
-    ]);
+    resetQuiz();
   };
 
   const isOptionSelected = (optionId: number) => {
