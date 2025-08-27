@@ -12,7 +12,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
-import { Content } from '@/app/room/lessons';
+import { Content } from '@/types/learning';
 import { useState } from 'react';
 
 export default function TextViewer() {

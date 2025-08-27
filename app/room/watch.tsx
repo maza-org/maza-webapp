@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollVi
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import YoutubePlayer from 'react-native-youtube-iframe';
-import { Module, Quiz } from '@/app/room/lessons';
+import { Module, Quiz } from '@/types/learning';
 import ModuleItem from '@/components/ModuleItem';
 
 const width = Dimensions.get('screen').width;

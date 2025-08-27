@@ -309,7 +309,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-  // Error handling styles (from FavoriteCoursesGrid)
   centerContainer: {
     flex: 1,
     backgroundColor: '#121214',

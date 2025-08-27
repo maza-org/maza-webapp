@@ -3,50 +3,13 @@ import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, Vi
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { Duration, QuizModule, SelectedAnswersMap, StoredAuthUser } from '@/types/quiz';
+import { baseUrl } from '@/services/api';
 const celebrateImage = require('@/assets/images/celebrate.webp');
 const happyImage = require('@/assets/images/happy.webp');
 const sadImage = require('@/assets/images/sad.webp');
 
-interface Option {
-  id: number;
-  description: string;
-  comment: string | null;
-  is_correct: boolean;
-}
-
-interface Question {
-  id: number;
-  description: string;
-  format: 'SingleOption' | 'AllThatApply';
-  options: Option[];
-}
-
-interface Duration {
-  id: number;
-  type: 'hours' | 'minutes' | 'seconds';
-  value: number;
-}
-
-interface QuizModule {
-  id: number;
-  pass_grade: number;
-  questions: Question[];
-  duration: Duration;
-}
-
-interface User {
-  jwt: string;
-  // Add other user properties as needed
-}
-
-type SelectedAnswers = {
-  [key: number]: number | number[];
-};
-
-// This function will convert the duration object to seconds
 const calculateDurationInSeconds = (duration: Duration): number => {
-  // If type is missing but there's a value, default to minutes
   if (!duration.type && duration.value) {
     return duration.value * 60;
   }
@@ -79,12 +42,9 @@ const markQuizAsCompleted = async (grade: number) => {
       return false;
     }
 
-    const user: User = JSON.parse(userData);
+    const user: StoredAuthUser = JSON.parse(userData);
     const token = user.jwt;
-    console.log(user);
-
-    // Make the API request
-    const response = await fetch('https://maza-strapi-backend.onrender.com/api/user-courses/vhk8vegd1jbb81hbamg1123h', {
+    const response = await fetch(`${baseUrl}/user-courses/vhk8vegd1jbb81hbamg1123h`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -263,7 +223,7 @@ export default function Quiz() {
   const QUIZ_DURATION = calculateDurationInSeconds(quizData.duration);
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<SelectedAnswers>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<SelectedAnswersMap>({});
   const [showResults, setShowResults] = useState(false);
   const [showCurrentFeedback, setShowCurrentFeedback] = useState(false);
   const [timeLeft, setTimeLeft] = useState(QUIZ_DURATION);

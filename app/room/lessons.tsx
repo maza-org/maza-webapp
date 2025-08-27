@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   ImageBackground,
   ActivityIndicator,
-  Alert,
   RefreshControl,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
