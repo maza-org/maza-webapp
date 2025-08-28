@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#323238',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 50,
     alignItems: 'center',
     marginHorizontal: 8,
   },
