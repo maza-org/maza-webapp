@@ -87,6 +87,7 @@ const ResultsView = ({
   grade,
   quizCompleted,
   timeSpent,
+  timeExpired,
 }: {
   correctAnswers: number;
   totalQuestions: number;
@@ -95,6 +96,7 @@ const ResultsView = ({
   grade: number;
   quizCompleted: boolean;
   timeSpent: number;
+  timeExpired: boolean;
 }) => {
   const score = (correctAnswers / totalQuestions) * 100;
   const passed = score >= passGrade;
@@ -102,6 +104,20 @@ const ResultsView = ({
 
   // Determine which image and messages to show based on score
   const getResultContent = () => {
+    // If time expired, show special message regardless of score
+    if (timeExpired) {
+      return {
+        image: sadImage,
+        title: 'Tempo Esgotado!',
+        subtitle: 'O tempo para realização do teste acabou. Suas respostas foram enviadas automaticamente.',
+        buttonText: score >= passGrade ? 'Reclamar Pontos' : 'Tentar Novamente',
+        cardStyle: {
+          titleColor: '#FF9500',
+          buttonColor: score >= passGrade ? '#1fa2df' : '#FF3B30',
+        },
+      };
+    }
+
     if (score > passGrade + 10) {
       // Excellent result - celebrate
       return {
@@ -183,6 +199,14 @@ const ResultsView = ({
           </View>
         </View>
 
+        {/* Time Expired Indicator */}
+        {timeExpired && (
+          <View style={styles.timeExpiredBadge}>
+            <Feather name="clock" size={20} color="#FF9500" />
+            <Text style={styles.timeExpiredText}>Quiz finalizado por tempo</Text>
+          </View>
+        )}
+
         {/* Primary Action Button */}
         <TouchableOpacity
           style={[styles.claimPointsButton, { backgroundColor: resultContent.cardStyle.buttonColor }]}
@@ -230,6 +254,7 @@ export default function Quiz() {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [calculatedGrade, setCalculatedGrade] = useState(0);
   const [timeSpent, setTimeSpent] = useState(0);
+  const [timeExpired, setTimeExpired] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const startTimer = () => {
@@ -261,8 +286,40 @@ export default function Quiz() {
     };
   }, []);
 
-  const handleTimeUp = () => {
-    Alert.alert('Tempo Esgotado!', 'O tempo para realização do teste acabou.', [{ text: 'OK', onPress: handleTimeUp }]);
+  const handleTimeUp = async () => {
+    // Set time expired flag
+    setTimeExpired(true);
+
+    // Calculate results based on current answers
+    const correctAnswersCount = Object.keys(selectedAnswers).filter((questionId) =>
+      isAnswerCorrect(Number(questionId))
+    ).length;
+
+    const totalQuestions = quizData.questions.length;
+    const scorePercentage = Math.round((correctAnswersCount / totalQuestions) * 100);
+
+    setCalculatedGrade(scorePercentage);
+
+    // Check if user passed the threshold
+    if (scorePercentage >= quizData.pass_grade) {
+      try {
+        // Mark the quiz as completed
+        const success = await markQuizAsCompleted(scorePercentage);
+        if (success) {
+          setQuizCompleted(true);
+        }
+      } catch (error) {
+        console.error('Failed to mark quiz as completed:', error);
+      }
+    }
+
+    // Show results regardless of pass/fail
+    setShowResults(true);
+
+    // Clear the timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
   };
 
   const getCurrentQuestion = () => quizData.questions[currentQuestion];
@@ -387,6 +444,7 @@ export default function Quiz() {
     setTimeSpent(0);
     setCalculatedGrade(0);
     setQuizCompleted(false);
+    setTimeExpired(false);
     startTimer();
   };
 
@@ -493,7 +551,38 @@ export default function Quiz() {
                         )}
                       </View>
 
-                      {showComment && <Text style={styles.commentText}>{option.comment}</Text>}
+                      {showComment && (
+                        <View
+                          style={[
+                            styles.commentContainer,
+                            option.is_correct ? styles.correctCommentContainer : styles.incorrectCommentContainer,
+                          ]}
+                        >
+                          <View style={styles.commentHeader}>
+                            <Feather
+                              name={option.is_correct ? 'check-circle' : 'info'}
+                              size={16}
+                              color={option.is_correct ? '#04D361' : '#1fa2df'}
+                            />
+                            <Text
+                              style={[
+                                styles.commentLabel,
+                                option.is_correct ? styles.correctCommentLabel : styles.incorrectCommentLabel,
+                              ]}
+                            >
+                              {option.is_correct ? 'Explicação' : 'Por que não é correto'}
+                            </Text>
+                          </View>
+                          <Text
+                            style={[
+                              styles.commentText,
+                              option.is_correct ? styles.correctCommentText : styles.incorrectCommentText,
+                            ]}
+                          >
+                            {option.comment}
+                          </Text>
+                        </View>
+                      )}
                     </TouchableOpacity>
                   );
                 })}
@@ -559,6 +648,7 @@ export default function Quiz() {
           grade={calculatedGrade}
           quizCompleted={quizCompleted}
           timeSpent={QUIZ_DURATION - timeLeft}
+          timeExpired={timeExpired}
         />
       )}
     </SafeAreaView>
@@ -670,6 +760,56 @@ const styles = StyleSheet.create({
     color: '#A8A8B3',
     fontSize: 14,
     marginTop: 8,
+    lineHeight: 20,
+    fontStyle: 'italic',
+  },
+  commentContainer: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: 'rgba(31, 162, 223, 0.08)',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#1fa2df',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  commentLabel: {
+    color: '#1fa2df',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  correctCommentContainer: {
+    backgroundColor: 'rgba(4, 211, 97, 0.08)',
+    borderLeftColor: '#04D361',
+  },
+  incorrectCommentContainer: {
+    backgroundColor: 'rgba(255, 59, 48, 0.08)',
+    borderLeftColor: '#FF3B30',
+  },
+  correctCommentLabel: {
+    color: '#04D361',
+  },
+  incorrectCommentLabel: {
+    color: '#FF3B30',
+  },
+  correctCommentText: {
+    color: '#04D361',
+    fontWeight: '500',
+  },
+  incorrectCommentText: {
+    color: '#FF3B30',
+    fontWeight: '500',
   },
   iconContainer: {
     paddingTop: 4,
@@ -897,5 +1037,21 @@ const styles = StyleSheet.create({
     color: '#04D361',
     fontSize: 16,
     marginLeft: 8,
+  },
+  timeExpiredBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 149, 0, 0.1)',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  timeExpiredText: {
+    color: '#FF9500',
+    fontSize: 16,
+    marginLeft: 8,
+    fontWeight: '500',
   },
 });
