@@ -195,6 +195,7 @@ export function useStartCourse() {
 
   return useMutation({
     mutationFn: async ({ courseId, token }: { courseId: string; token: string }) => {
+      // 1) Add course to saved courses
       const response = await api.post(
         '/user-courses',
         {
@@ -209,7 +210,41 @@ export function useStartCourse() {
           },
         }
       );
-      return response.data;
+      const saveResult = response.data;
+
+      // 2) Get user courses to find the newly saved course user-course documentId
+      const listResponse = await api.get('/user-courses', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const userCourses: any[] = listResponse?.data?.data || [];
+      const matching = userCourses.find((uc: any) => uc?.course?.documentId === courseId);
+
+      if (!matching?.documentId) {
+        throw new Error('Falha ao localizar o curso guardado do utilizador');
+      }
+
+      const userCourseDocumentId: string = matching.documentId;
+
+      // 3) Get this user-course progress (not strictly needed for the next step, but per spec)
+      const userCourseDetails = await api.get(`/user-courses/${userCourseDocumentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const module = userCourseDetails.data.modules[0];
+      const content = module.contents[0];
+      // 4) Conclude first module/content to initialize progress
+      // Assumes module index 1 and content index 1 per provided spec
+
+      const updateProgressResponse = await api.put(
+        `/user-courses/${userCourseDetails.data.documentId}/module/${module.moduleId}/content/${content.contentId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      console.log(`ERROR Updating Progress`, updateProgressResponse);
+
+      return saveResult;
     },
     onSuccess: () => {
       // Invalidate user courses queries
@@ -222,8 +257,11 @@ export function useStartCourse() {
 export function useCourseProgress(courseId: string, token: string) {
   const { data: userCourses, isLoading: userCoursesLoading } = useUserCoursesInProgress(token);
 
+  const courseInProgress = userCourses?.data?.find((course: any) => course.course.documentId === courseId);
+
   return {
-    isInProgress: userCourses?.data?.some((course: any) => course.course.documentId === courseId) || false,
+    isInProgress: !!courseInProgress,
+    progress: courseInProgress?.progress || 0,
     isLoading: !!token && userCoursesLoading,
   };
 }

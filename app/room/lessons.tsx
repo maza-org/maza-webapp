@@ -54,7 +54,7 @@ export default function CourseDetail() {
   } = useCourseDetails(documentId);
   const { data: certificates = [], isLoading: certificatesLoading, error: certificatesError } = useCertificates();
   const { data: user, isLoading: userLoading } = useAuthUser();
-  const { isInProgress, isLoading: progressLoading } = useCourseProgress(documentId, user?.token || '');
+  const { isInProgress, progress, isLoading: progressLoading } = useCourseProgress(documentId, user?.token || '');
   const { isFavorite, isLoading: favoriteLoading } = useIsFavorite(documentId, user?.token || '');
 
   // Loading states
@@ -205,7 +205,6 @@ export default function CourseDetail() {
         courseId: documentId,
         token: user.token,
       });
-      router.push(`/path?courseId=${documentId}`);
     } catch (error) {
       console.error('Erro ao iniciar curso:', error);
       showError('Falha ao iniciar o curso');
@@ -496,23 +495,32 @@ export default function CourseDetail() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={[
-            styles.startButton,
-            startCourseMutation.isPending && styles.startButtonDisabled,
-            isInProgress && styles.continueButton,
-          ]}
-          onPress={handleStartCourse}
-          disabled={startCourseMutation.isPending}
-        >
-          {startCourseMutation.isPending ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={[styles.startButtonText, isInProgress && styles.continueButton]}>
-              {isInProgress ? 'Continuar' : 'Iniciar Curso'}
-            </Text>
-          )}
-        </TouchableOpacity>
+        {isInProgress ? (
+          <View style={styles.progressContainer}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressTitle}>Progresso do Curso</Text>
+              <Text style={styles.progressPercentage}>{Math.round(progress)}%</Text>
+            </View>
+            <View style={styles.progressBarContainer}>
+              <View style={styles.progressBar}>
+                <View style={[styles.progressFill, { width: `${progress}%` }]} />
+              </View>
+            </View>
+            <Text style={styles.progressText}>{Math.round(progress)}% concluído</Text>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={[styles.startButton, startCourseMutation.isPending && styles.startButtonDisabled]}
+            onPress={handleStartCourse}
+            disabled={startCourseMutation.isPending}
+          >
+            {startCourseMutation.isPending ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <Text style={styles.startButtonText}>Iniciar Curso</Text>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -783,5 +791,46 @@ const styles = StyleSheet.create({
     height: 20,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  progressContainer: {
+    marginBottom: 16,
+    backgroundColor: '#202024',
+    borderRadius: 12,
+    padding: 16,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  progressTitle: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  progressPercentage: {
+    color: '#1fa2df',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  progressBarContainer: {
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: '#323238',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#1fa2df',
+    borderRadius: 3,
+  },
+  progressText: {
+    color: '#A8A8B3',
+    fontSize: 12,
+    textAlign: 'center',
   },
 });
