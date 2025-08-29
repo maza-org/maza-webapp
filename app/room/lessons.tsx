@@ -269,6 +269,7 @@ export default function CourseDetail() {
     const params: {
       content: string;
       isFinalTest?: string | undefined;
+      courseId?: string | undefined;
     } = {
       content: JSON.stringify(content),
       isFinalTest: undefined,
@@ -276,6 +277,7 @@ export default function CourseDetail() {
 
     if (isFinalTest) {
       params.isFinalTest = JSON.stringify(true);
+      params.courseId = documentId;
     }
 
     router.push({

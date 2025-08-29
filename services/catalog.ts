@@ -253,6 +253,51 @@ export function useStartCourse() {
   });
 }
 
+// Mark quiz as completed (for final tests)
+export function useMarkQuizAsCompleted() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ grade, courseId, token }: { grade: number; courseId: string; token: string }) => {
+      // First, get the user courses to find the specific user-course document ID
+      const listResponse = await api.get('/user-courses', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const userCourses: any[] = listResponse?.data?.data || [];
+      const matchingUserCourse = userCourses.find((uc: any) => uc?.course?.documentId === courseId);
+
+      if (!matchingUserCourse?.documentId) {
+        throw new Error('User course not found for course ID: ' + courseId);
+      }
+
+      const userCourseDocumentId = matchingUserCourse.documentId;
+
+      // Update the user course with the grade
+      const response = await api.put(
+        `/user-courses/${userCourseDocumentId}`,
+        {
+          data: {
+            grade: grade,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate user courses queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['user-courses'] });
+    },
+  });
+}
+
 // Check if course is in progress
 export function useCourseProgress(courseId: string, token: string) {
   const { data: userCourses, isLoading: userCoursesLoading } = useUserCoursesInProgress(token);

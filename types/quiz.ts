@@ -25,10 +25,6 @@ export interface QuizModule {
   duration: Duration;
 }
 
-export interface StoredAuthUser {
-  jwt: string;
-}
-
 export interface SelectedAnswersMap {
   [key: number]: number | number[];
 }

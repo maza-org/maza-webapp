@@ -1,10 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
+import {
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Duration, QuizModule, SelectedAnswersMap, StoredAuthUser } from '@/types/quiz';
-import { baseUrl } from '@/services/api';
+import { Duration, QuizModule, SelectedAnswersMap } from '@/types/quiz';
+import { useMarkQuizAsCompleted } from '@/services/catalog';
+import { User } from '@/types/user';
 const celebrateImage = require('@/assets/images/celebrate.webp');
 const happyImage = require('@/assets/images/happy.webp');
 const sadImage = require('@/assets/images/sad.webp');
@@ -32,44 +43,6 @@ const formatTime = (seconds: number): string => {
   return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
 };
 
-// Function to mark quiz as completed
-const markQuizAsCompleted = async (grade: number) => {
-  try {
-    // Get user data from AsyncStorage
-    const userData = await AsyncStorage.getItem('@user');
-    if (!userData) {
-      console.error('No user data found');
-      return false;
-    }
-
-    const user: StoredAuthUser = JSON.parse(userData);
-    const token = user.jwt;
-    const response = await fetch(`${baseUrl}/user-courses/vhk8vegd1jbb81hbamg1123h`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        data: {
-          grade: grade,
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log('Quiz marked as completed:', result);
-    return true;
-  } catch (error) {
-    console.error('Error marking quiz as completed:', error);
-    return false;
-  }
-};
-
 const Timer = ({ timeLeft, isWarning }: { timeLeft: number; isWarning: boolean }) => {
   return (
     <View style={[styles.timerContainer, isWarning && styles.timerWarning]}>
@@ -88,6 +61,7 @@ const ResultsView = ({
   quizCompleted,
   timeSpent,
   timeExpired,
+  isLoading,
 }: {
   correctAnswers: number;
   totalQuestions: number;
@@ -97,6 +71,7 @@ const ResultsView = ({
   quizCompleted: boolean;
   timeSpent: number;
   timeExpired: boolean;
+  isLoading: boolean;
 }) => {
   const score = (correctAnswers / totalQuestions) * 100;
   const passed = score >= passGrade;
@@ -209,14 +184,28 @@ const ResultsView = ({
 
         {/* Primary Action Button */}
         <TouchableOpacity
-          style={[styles.claimPointsButton, { backgroundColor: resultContent.cardStyle.buttonColor }]}
+          style={[
+            styles.claimPointsButton,
+            { backgroundColor: resultContent.cardStyle.buttonColor },
+            isLoading && styles.claimPointsButtonDisabled,
+          ]}
           onPress={() => (passed ? router.back() : onRetake())}
+          disabled={isLoading}
         >
-          <Text style={styles.claimPointsText}>{resultContent.buttonText}</Text>
-          {passed && (
-            <View style={styles.pointsBadge}>
-              <Text style={styles.pointsBadgeText}>{grade}</Text>
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color="#FFF" size="small" />
+              <Text style={styles.claimPointsText}>Processando...</Text>
             </View>
+          ) : (
+            <>
+              <Text style={styles.claimPointsText}>{resultContent.buttonText}</Text>
+              {passed && (
+                <View style={styles.pointsBadge}>
+                  <Text style={styles.pointsBadgeText}>{grade}</Text>
+                </View>
+              )}
+            </>
           )}
         </TouchableOpacity>
 
@@ -231,7 +220,7 @@ const ResultsView = ({
         {quizCompleted && (
           <View style={styles.completedBadge}>
             <Feather name="check-circle" size={20} color="#04D361" />
-            <Text style={styles.completedText}>Quiz marked as completed</Text>
+            <Text style={styles.completedText}>Teste marcado como completo</Text>
           </View>
         )}
       </ScrollView>
@@ -240,8 +229,9 @@ const ResultsView = ({
 };
 
 export default function Quiz() {
-  const { content, isFinalTest } = useLocalSearchParams();
+  const { content, isFinalTest, courseId } = useLocalSearchParams();
   const quizData: QuizModule = JSON.parse(content as string);
+  const isFinalTestQuiz = isFinalTest === 'true';
 
   // Calculate quiz duration in seconds based on the duration object
   const QUIZ_DURATION = calculateDurationInSeconds(quizData.duration);
@@ -256,6 +246,36 @@ export default function Quiz() {
   const [timeSpent, setTimeSpent] = useState(0);
   const [timeExpired, setTimeExpired] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // React Query mutation for marking quiz as completed
+  const markQuizAsCompletedMutation = useMarkQuizAsCompleted();
+
+  // Helper function to handle quiz completion
+  const handleQuizCompletion = async (scorePercentage: number) => {
+    if (!isFinalTestQuiz || !courseId) return;
+
+    try {
+      // Get user data from AsyncStorage
+      const userData = await AsyncStorage.getItem('@user');
+      if (!userData) {
+        console.error('No user data found');
+        return;
+      }
+
+      const user: User = JSON.parse(userData);
+
+      // Use the mutation to mark quiz as completed
+      await markQuizAsCompletedMutation.mutateAsync({
+        grade: scorePercentage,
+        courseId: courseId as string,
+        token: user.token,
+      });
+
+      setQuizCompleted(true);
+    } catch (error) {
+      console.error('Failed to mark quiz as completed:', error);
+    }
+  };
 
   const startTimer = () => {
     if (timerRef.current) {
@@ -300,17 +320,9 @@ export default function Quiz() {
 
     setCalculatedGrade(scorePercentage);
 
-    // Check if user passed the threshold
-    if (scorePercentage >= quizData.pass_grade) {
-      try {
-        // Mark the quiz as completed
-        const success = await markQuizAsCompleted(scorePercentage);
-        if (success) {
-          setQuizCompleted(true);
-        }
-      } catch (error) {
-        console.error('Failed to mark quiz as completed:', error);
-      }
+    // Check if user passed the threshold and it's a final test
+    if (scorePercentage >= quizData.pass_grade && isFinalTestQuiz && courseId) {
+      await handleQuizCompletion(scorePercentage);
     }
 
     // Show results regardless of pass/fail
@@ -359,17 +371,9 @@ export default function Quiz() {
 
     setCalculatedGrade(scorePercentage);
 
-    // Check if user passed the threshold
-    if (scorePercentage >= quizData.pass_grade) {
-      try {
-        // Mark the quiz as completed
-        const success = await markQuizAsCompleted(scorePercentage);
-        if (success) {
-          setQuizCompleted(true);
-        }
-      } catch (error) {
-        console.error('Failed to mark quiz as completed:', error);
-      }
+    // Check if user passed the threshold and it's a final test
+    if (scorePercentage >= quizData.pass_grade && isFinalTestQuiz && courseId) {
+      await handleQuizCompletion(scorePercentage);
     }
 
     // Show results regardless of pass/fail
@@ -649,6 +653,7 @@ export default function Quiz() {
           quizCompleted={quizCompleted}
           timeSpent={QUIZ_DURATION - timeLeft}
           timeExpired={timeExpired}
+          isLoading={markQuizAsCompletedMutation.isPending}
         />
       )}
     </SafeAreaView>
@@ -1053,5 +1058,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 8,
     fontWeight: '500',
+  },
+  claimPointsButtonDisabled: {
+    opacity: 0.6,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
 });
