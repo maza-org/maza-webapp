@@ -1,7 +1,7 @@
 export interface Option {
   id: number;
   description: string;
-  comment: string | null;
+  comment: string | undefined;
   is_correct: boolean;
 }
 

@@ -1,0 +1,28 @@
+### Course Info
+GET {{base_url}}/courses/b7gppdh1wus5hdj9esy33ldu
+
+### Add course to saved courses
+POST {{base_url}}/user-courses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "data": {
+    "course": "b7gppdh1wus5hdj9esy33ldu"
+  }
+}
+
+### Get my course progress
+GET {{base_url}}/user-courses/
+Authorization: Bearer {{prod_token}}
+
+### Get a course given progress progress
+GET {{base_url}}/user-courses/y34ndffcgavudhcx2sn244mo
+Authorization: Bearer {{prod_token}}
+
+### Conclude Module content of a course
+PUT {{base_url}}/user-courses/y34ndffcgavudhcx2sn244mo/module/1/content/1
+Authorization: Bearer {{token}}
+
+
+

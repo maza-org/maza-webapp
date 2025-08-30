@@ -7,7 +7,6 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
-  Platform,
   Pressable,
 } from 'react-native';
 import { Text } from '@/components/Themed';
