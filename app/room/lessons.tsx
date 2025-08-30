@@ -29,6 +29,7 @@ import {
   useIsFavorite,
   useStartCourse,
   useCourseProgress,
+  useUserCourseDetails,
 } from '@/services/catalog';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthUser } from '@/hooks/useAuth';
@@ -56,11 +57,16 @@ export default function CourseDetail() {
   const { data: user, isLoading: userLoading } = useAuthUser();
   const { isInProgress, progress, isLoading: progressLoading } = useCourseProgress(documentId, user?.token || '');
   const { isFavorite, isLoading: favoriteLoading } = useIsFavorite(documentId, user?.token || '');
+  const { data: userCourseDetails, isLoading: userCourseDetailsLoading } = useUserCourseDetails(
+    documentId,
+    user?.token || ''
+  );
 
   // Loading states
   const isLoading = courseLoading || userLoading || (!!user?.token && progressLoading);
   const isRefreshing = courseLoading || certificatesLoading;
-  const isUserDataRefreshing = userLoading || (!!user?.token && (progressLoading || favoriteLoading));
+  const isUserDataRefreshing =
+    userLoading || (!!user?.token && (progressLoading || favoriteLoading || userCourseDetailsLoading));
 
   // Check for token changes and refresh data
   useEffect(() => {
@@ -261,6 +267,8 @@ export default function CourseDetail() {
         author: courseData?.author,
         title: courseData?.title,
         imageUrl: courseData?.cover?.formats?.thumbnail?.url,
+        userCourseId: userCourseDetails?.userCourseId,
+        moduleId: module.id?.toString(),
       },
     });
   }

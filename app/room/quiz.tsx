@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -14,7 +13,7 @@ import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Duration, QuizModule, SelectedAnswersMap } from '@/types/quiz';
-import { useMarkQuizAsCompleted } from '@/services/catalog';
+import { useMarkQuizAsCompleted, useConcludeModuleQuiz } from '@/services/catalog';
 import { User } from '@/types/user';
 const celebrateImage = require('@/assets/images/celebrate.webp');
 const happyImage = require('@/assets/images/happy.webp');
@@ -229,7 +228,7 @@ const ResultsView = ({
 };
 
 export default function Quiz() {
-  const { content, isFinalTest, courseId } = useLocalSearchParams();
+  const { content, isFinalTest, courseId, userCourseId, moduleId } = useLocalSearchParams();
   const quizData: QuizModule = JSON.parse(content as string);
   const isFinalTestQuiz = isFinalTest === 'true';
 
@@ -249,11 +248,10 @@ export default function Quiz() {
 
   // React Query mutation for marking quiz as completed
   const markQuizAsCompletedMutation = useMarkQuizAsCompleted();
+  const concludeModuleQuizMutation = useConcludeModuleQuiz();
 
   // Helper function to handle quiz completion
   const handleQuizCompletion = async (scorePercentage: number) => {
-    if (!isFinalTestQuiz || !courseId) return;
-
     try {
       // Get user data from AsyncStorage
       const userData = await AsyncStorage.getItem('@user');
@@ -264,12 +262,22 @@ export default function Quiz() {
 
       const user: User = JSON.parse(userData);
 
-      // Use the mutation to mark quiz as completed
-      await markQuizAsCompletedMutation.mutateAsync({
-        grade: scorePercentage,
-        courseId: courseId as string,
-        token: user.token,
-      });
+      if (isFinalTestQuiz && courseId) {
+        // Handle final test quiz
+        await markQuizAsCompletedMutation.mutateAsync({
+          grade: scorePercentage,
+          courseId: courseId as string,
+          token: user.token,
+        });
+      } else if (userCourseId && moduleId) {
+        // Handle module quiz
+        await concludeModuleQuizMutation.mutateAsync({
+          userCourseId: userCourseId as string,
+          moduleId: parseInt(moduleId as string),
+          grade: scorePercentage,
+          token: user.token,
+        });
+      }
 
       setQuizCompleted(true);
     } catch (error) {
@@ -320,8 +328,8 @@ export default function Quiz() {
 
     setCalculatedGrade(scorePercentage);
 
-    // Check if user passed the threshold and it's a final test
-    if (scorePercentage >= quizData.pass_grade && isFinalTestQuiz && courseId) {
+    // Check if user passed the threshold and handle quiz completion
+    if (scorePercentage >= quizData.pass_grade && ((isFinalTestQuiz && courseId) || (userCourseId && moduleId))) {
       await handleQuizCompletion(scorePercentage);
     }
 
@@ -371,8 +379,8 @@ export default function Quiz() {
 
     setCalculatedGrade(scorePercentage);
 
-    // Check if user passed the threshold and it's a final test
-    if (scorePercentage >= quizData.pass_grade && isFinalTestQuiz && courseId) {
+    // Check if user passed the threshold and handle quiz completion
+    if (scorePercentage >= quizData.pass_grade && ((isFinalTestQuiz && courseId) || (userCourseId && moduleId))) {
       await handleQuizCompletion(scorePercentage);
     }
 
@@ -653,7 +661,7 @@ export default function Quiz() {
           quizCompleted={quizCompleted}
           timeSpent={QUIZ_DURATION - timeLeft}
           timeExpired={timeExpired}
-          isLoading={markQuizAsCompletedMutation.isPending}
+          isLoading={markQuizAsCompletedMutation.isPending || concludeModuleQuizMutation.isPending}
         />
       )}
     </SafeAreaView>

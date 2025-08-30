@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Image, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
-import { Job } from '../types/job';
+import { Job } from '@/types/job';
 import { styles } from '../styles/jobDetails.styles';
 
 interface JobHeaderProps {

@@ -56,7 +56,7 @@ const YoutubePlayerModal = ({ videoId, onVideoEnd }: { videoId: string; onVideoE
 };
 
 export default function CourseScreen() {
-  const { module, author, title, imageUrl } = useLocalSearchParams();
+  const { module, author, title, imageUrl, userCourseId, moduleId } = useLocalSearchParams();
   const moduleData = JSON.parse(module as string) as Module;
   const [playing, setPlaying] = React.useState(false);
   const [selectedContent, setSelectedContent] = React.useState<Content | undefined>(undefined);
@@ -87,6 +87,8 @@ export default function CourseScreen() {
       pathname: '/room/quiz',
       params: {
         content: JSON.stringify(quiz),
+        userCourseId: userCourseId as string,
+        moduleId: moduleId as string,
       },
     });
   };

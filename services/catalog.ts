@@ -310,3 +310,79 @@ export function useCourseProgress(courseId: string, token: string) {
     isLoading: !!token && userCoursesLoading,
   };
 }
+
+// Conclude module quiz
+export function useConcludeModuleQuiz() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      userCourseId,
+      moduleId,
+      grade,
+      token,
+    }: {
+      userCourseId: string;
+      moduleId: number;
+      grade: number;
+      token: string;
+    }) => {
+      const response = await api.put(
+        `/user-courses/${userCourseId}/module/${moduleId}/quiz`,
+        {
+          data: {
+            grade: grade,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate user courses queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['user-courses'] });
+      queryClient.invalidateQueries({ queryKey: ['user-courses', 'in-progress'] });
+    },
+  });
+}
+
+// Get user course details by course ID
+export function useUserCourseDetails(courseId: string, token: string) {
+  return useQuery({
+    queryKey: ['user-course-details', courseId],
+    queryFn: async () => {
+      // First, get the user courses to find the specific user-course document ID
+      const listResponse = await api.get('/user-courses', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const userCourses: any[] = listResponse?.data?.data || [];
+      const matchingUserCourse = userCourses.find((uc: any) => uc?.course?.documentId === courseId);
+
+      if (!matchingUserCourse?.documentId) {
+        throw new Error('User course not found for course ID: ' + courseId);
+      }
+
+      const userCourseDocumentId = matchingUserCourse.documentId;
+
+      // Get the user course details
+      const response = await api.get(`/user-courses/${userCourseDocumentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return {
+        ...response.data,
+        userCourseId: userCourseDocumentId,
+      };
+    },
+    enabled: !!token && !!courseId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+}

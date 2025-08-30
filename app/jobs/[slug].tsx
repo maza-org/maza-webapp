@@ -13,8 +13,8 @@ import {
 import { Text } from '@/components/Themed';
 import { useLocalSearchParams, router } from 'expo-router';
 import HTML, { MixedStyleDeclaration } from 'react-native-render-html';
-import { Job } from '../types/job';
-import { fetchJobDetails } from '../services/jobService';
+import { Job } from '@/types/job';
+import { useJobDetails } from '@/hooks/useJobs';
 import { JobHeader } from '../components/JobHeader';
 import { JobMetadata } from '../components/JobMetadata';
 import { styles } from '../styles/jobDetails.styles';
@@ -22,22 +22,24 @@ import { styles } from '../styles/jobDetails.styles';
 const windowWidth = Dimensions.get('window').width;
 
 export default function JobDetails() {
-  const [job, setJob] = React.useState<Job | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
   const { slug } = useLocalSearchParams();
+  const {
+    data: job,
+    isLoading: loading,
+    error: queryError,
+  }: {
+    data: Job | undefined;
+    isLoading: boolean;
+    error: any;
+  } = useJobDetails(slug as string);
 
-  React.useEffect(() => {
-    if (slug) {
-      fetchJobDetails(slug as string)
-        .then(setJob)
-        .catch((err) => setError(err.message))
-        .finally(() => setLoading(false));
-    } else {
-      setError('Identificador da vaga não encontrado');
-      setLoading(false);
-    }
-  }, [slug]);
+  const error = !slug
+    ? 'Identificador da vaga não encontrado'
+    : queryError instanceof Error
+      ? queryError.message
+      : typeof queryError === 'string'
+        ? queryError
+        : null;
 
   const handleShare = async () => {
     if (!job) return;

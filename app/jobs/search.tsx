@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   SafeAreaView,
   View,
@@ -11,7 +11,7 @@ import {
   Pressable,
 } from 'react-native';
 import { Text } from '@/components/Themed';
-import { searchJobs } from '../services/jobService';
+import { useJobSearch } from '@/hooks/useJobs';
 import { Job } from '@/types/job';
 import { JobCard } from '@/components/opportunities/JobCard';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,56 +20,29 @@ import { StatusBar } from 'expo-status-bar';
 
 export default function Search() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Job[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | undefined>(undefined);
-  const [resultCount, setResultCount] = useState<number | null>(null);
+  const { data: searchResults = [], isLoading, error } = useJobSearch(query);
 
   const handleBackPress = () => {
     router.back();
   };
 
-  const handleSearch = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) {
-      setResults([]);
-      setResultCount(null);
-      setError(undefined);
-      return;
-    }
+  const results = useMemo(() => {
+    return searchResults.map((job: any) => ({
+      ...job,
+      is_from_anonymous_company: false,
+    }));
+  }, [searchResults]);
 
-    setIsLoading(true);
-    setError(undefined);
-
-    try {
-      const jobs = await searchJobs(searchQuery.trim());
-      const processedJobs = jobs.map((job: any) => ({
-        ...job,
-        city: job.locations && job.locations.length > 0 ? job.locations[0] : undefined,
-        category: job.categories && job.categories.length > 0 ? job.categories[0] : undefined,
-        is_from_anonymous_company: false,
-      }));
-
-      setResults(processedJobs);
-      setResultCount(processedJobs.length);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao buscar oportunidades. Tente novamente.');
-      setResults([]);
-      setResultCount(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const resultCount = useMemo(() => {
+    return query.trim() ? results.length : null;
+  }, [query, results.length]);
 
   const handleInputChange = (text: string) => {
     setQuery(text);
-    handleSearch(text);
   };
 
   const handleClearSearch = () => {
     setQuery('');
-    setResults([]);
-    setResultCount(null);
-    setError(undefined);
   };
 
   const navigateToJobDetail = useCallback((job: Job) => {
@@ -120,8 +93,10 @@ export default function Search() {
         </View>
       ) : error ? (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={() => handleSearch(query)} style={styles.retryButton}>
+          <Text style={styles.errorText}>
+            {error instanceof Error ? error.message : 'Erro ao buscar oportunidades. Tente novamente.'}
+          </Text>
+          <TouchableOpacity onPress={() => setQuery(query)} style={styles.retryButton}>
             <Text style={styles.retryButtonText}>Tentar novamente</Text>
           </TouchableOpacity>
         </View>
