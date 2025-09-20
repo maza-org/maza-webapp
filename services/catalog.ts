@@ -40,6 +40,24 @@ export function useUserCoursesInProgress(token: string) {
   });
 }
 
+// Get all user courses (with all states)
+export function useUserCourses(token: string) {
+  return useQuery({
+    queryKey: ['user-courses', 'all'],
+    queryFn: async () => {
+      const response = await api.get('/user-courses', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    },
+    enabled: !!token,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
 // Get certificates
 export function useCertificates() {
   return useQuery({
@@ -385,4 +403,27 @@ export function useUserCourseDetails(courseId: string, token: string) {
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
   });
+}
+
+// Check if course is finished and certificates should be available
+export function useCourseStateAndCertificates(courseId: string, token: string) {
+  const { data: userCourses, isLoading: userCoursesLoading } = useUserCourses(token);
+  const { data: certificates = [], isLoading: certificatesLoading } = useCertificates();
+
+  const userCourse = userCourses?.data?.find((course: any) => course.course.documentId === courseId);
+  const courseState = userCourse?.state; // Expected states: 'Started', 'InProgress', 'NotStarted', 'Finished'
+  const isCourseFinished = courseState === 'Finished';
+
+  // Only fetch certificates if user is logged in and course is finished
+  const shouldFetchCertificates = !!token && isCourseFinished;
+  const hasCertificate = shouldFetchCertificates && certificates.some((cert) => cert.course.documentId === courseId);
+
+  return {
+    courseState,
+    isCourseFinished,
+    shouldFetchCertificates,
+    hasCertificate,
+    certificates: shouldFetchCertificates ? certificates : [],
+    isLoading: !!token && (userCoursesLoading || (shouldFetchCertificates && certificatesLoading)),
+  };
 }

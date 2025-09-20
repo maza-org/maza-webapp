@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useCourseStateAndCertificates } from '@/services/catalog';
+import { useAuthUser } from '@/hooks/useAuth';
 
 const celebrateImage = require('@/assets/images/celebrate.webp');
 const happyImage = require('@/assets/images/happy.webp');
@@ -25,6 +27,7 @@ interface ResultsViewProps {
   timeSpent: number;
   timeExpired: boolean;
   isLoading: boolean;
+  courseId?: string; // Optional courseId for certificate checking
 }
 
 const formatTime = (seconds: number): string => {
@@ -43,10 +46,37 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   timeSpent,
   timeExpired,
   isLoading,
+  courseId,
 }) => {
   const score = (correctAnswers / totalQuestions) * 100;
   const passed = score >= passGrade;
   const formattedTime = formatTime(timeSpent);
+
+  // Get user authentication data
+  const { data: user } = useAuthUser();
+  
+  // Check course state and certificate availability
+  const {
+    courseState,
+    isCourseFinished,
+    shouldFetchCertificates,
+    hasCertificate,
+    certificates,
+    isLoading: certificateLoading,
+  } = useCourseStateAndCertificates(courseId || '', user?.token || '');
+
+  // Handler for certificate navigation
+  const handleViewCertificate = () => {
+    if (hasCertificate && certificates.length > 0) {
+      const certificate = certificates.find((cert) => cert.course.documentId === courseId);
+      if (certificate) {
+        router.push({
+          pathname: '/user/certificate',
+          params: { certificateId: certificate.documentId },
+        });
+      }
+    }
+  };
 
   const getResultContent = () => {
     if (timeExpired) {
@@ -176,6 +206,36 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           <View style={styles.completedBadge}>
             <Feather name="check-circle" size={20} color="#04D361" />
             <Text style={styles.completedText}>Teste marcado como completo</Text>
+          </View>
+        )}
+
+        {/* Certificate button - only show if user is logged in, course is finished, and has certificate */}
+        {user?.token && hasCertificate && (
+          <TouchableOpacity
+            style={styles.certificateButton}
+            onPress={handleViewCertificate}
+            disabled={certificateLoading}
+          >
+            {certificateLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color="#FFF" size="small" />
+                <Text style={styles.certificateButtonText}>Carregando...</Text>
+              </View>
+            ) : (
+              <>
+                <Feather name="award" size={20} color="#FFF" />
+                <Text style={styles.certificateButtonText}>Ver Certificado</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+
+        {/* Debug information - remove in production */}
+        {user?.token && courseId && (
+          <View style={styles.debugContainer}>
+            <Text style={styles.debugText}>
+              Estado do curso: {courseState || 'N/A'} | Certificados: {shouldFetchCertificates ? 'Sim' : 'Não'}
+            </Text>
           </View>
         )}
       </ScrollView>
@@ -343,5 +403,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+  },
+  certificateButton: {
+    backgroundColor: '#FFC107',
+    flexDirection: 'row',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
+    gap: 8,
+  },
+  certificateButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  debugContainer: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: 'rgba(168, 168, 179, 0.1)',
+    borderRadius: 8,
+    width: '100%',
+  },
+  debugText: {
+    color: '#A8A8B3',
+    fontSize: 12,
+    textAlign: 'center',
   },
 });

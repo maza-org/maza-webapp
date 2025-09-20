@@ -22,13 +22,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "ACCESS_MEDIA_LOCATION"
-      ],
-      "package": "org.maza.app",
-      "sdkVersion": 35
+      "permissions": ["READ_MEDIA_IMAGES", "READ_MEDIA_VIDEO", "READ_MEDIA_AUDIO", "ACCESS_MEDIA_LOCATION"],
+      "package": "org.maza.app"
     },
     "web": {
       "bundler": "metro",
@@ -50,6 +45,20 @@
         "expo-document-picker",
         {
           "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "packagingOptions": {
+              "jniLibs": {
+                "useLegacyPackaging": true
+              }
+            }
+          }
         }
       ]
     ],

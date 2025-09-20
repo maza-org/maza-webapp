@@ -413,6 +413,7 @@ export default function Quiz() {
           timeSpent={QUIZ_DURATION - timeLeft}
           timeExpired={timeExpired}
           isLoading={markQuizAsCompletedMutation.isPending || concludeModuleQuizMutation.isPending}
+          courseId={isFinalTestQuiz ? (courseId as string) : undefined}
         />
       )}
     </SafeAreaView>
