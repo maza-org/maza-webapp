@@ -1,8 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Dimensions,
+  Platform,
+} from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import YoutubePlayer from 'react-native-youtube-iframe';
+import YoutubeIframe from 'react-native-youtube-iframe';
 import { Module, Quiz } from '@/types/learning';
 import ModuleItem from '@/components/ModuleItem';
 
@@ -18,6 +28,85 @@ interface Content {
   description: string | null;
 }
 
+const NativeYoutubeIframe = ({ videoId, onVideoEnd }: { videoId: string; onVideoEnd: () => void }) => {
+  React.useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data === 'video-ended') {
+        onVideoEnd();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onVideoEnd]);
+
+  const iframeHtml = `
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <style>
+          body { margin: 0; padding: 0; background: #000; }
+          #player { width: 100vw; height: 100vh; }
+        </style>
+      </head>
+      <body>
+        <div id="player"></div>
+        <script>
+          const tag = document.createElement('script');
+          tag.src = "https://www.youtube.com/iframe_api";
+          const firstScriptTag = document.getElementsByTagName('script')[0];
+          firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+          let player;
+          window.onYouTubeIframeAPIReady = function() {
+            player = new window.YT.Player('player', {
+              height: '100%',
+              width: '100%',
+              videoId: '${videoId}',
+              playerVars: {
+                'autoplay': 1,
+                'controls': 1,
+                'modestbranding': 1,
+                'rel': 0,
+                'loop': 0
+              },
+              events: {
+                'onStateChange': onPlayerStateChange
+              }
+            });
+          }
+
+          function onPlayerStateChange(event) {
+            if (event.data === window.YT.PlayerState.ENDED) {
+              window.parent.postMessage('video-ended', '*');
+            }
+          }
+        </script>
+      </body>
+    </html>
+  `;
+
+  return (
+    <View style={styles.videoContainer}>
+      {Platform.OS === 'web' && (
+        <iframe
+          src={`data:text/html;charset=utf-8,${encodeURIComponent(iframeHtml)}`}
+          style={
+            {
+              width: '100%',
+              height: '100%',
+              border: 'none',
+            } as React.CSSProperties
+          }
+          allowFullScreen
+        />
+      )}
+    </View>
+  );
+};
+
 const YoutubePlayerModal = ({ videoId, onVideoEnd }: { videoId: string; onVideoEnd: () => void }) => {
   const onStateChange = (state: string) => {
     if (state === 'ended') {
@@ -25,9 +114,13 @@ const YoutubePlayerModal = ({ videoId, onVideoEnd }: { videoId: string; onVideoE
     }
   };
 
+  if (Platform.OS === 'web') {
+    return <NativeYoutubeIframe videoId={videoId} onVideoEnd={onVideoEnd} />;
+  }
+
   return (
     <View style={styles.videoContainer}>
-      <YoutubePlayer
+      <YoutubeIframe
         play={true}
         initialPlayerParams={{
           loop: false,
@@ -118,7 +211,7 @@ export default function CourseScreen() {
           <View style={styles.courseInfo}>
             <Text style={styles.courseTitle}>{moduleData.title}</Text>
             <View style={styles.instructorInfo}>
-              <Image source={{ uri: imageUrl }} style={styles.instructorAvatar} />
+              <Image source={{ uri: imageUrl as string }} style={styles.instructorAvatar} />
               <Text style={styles.instructorName}>{author}</Text>
               <Text style={styles.courseCategory}>• {title}</Text>
             </View>

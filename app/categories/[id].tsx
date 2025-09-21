@@ -8,9 +8,11 @@ import Header from '@/components/Header';
 import { ApiResponse, Course } from '@/types/course';
 import { blurhash } from '@/util/util';
 import { baseUrl } from '@/services/api';
+import useUser from '@/hooks/useUser';
 
 export default function Category() {
   const { name, id, type } = useLocalSearchParams();
+  const { data: user } = useUser();
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,14 +27,24 @@ export default function Category() {
       setError(null);
 
       let url;
+      let headers: HeadersInit = {};
 
       if (type === 'popular') {
         url = `${baseUrl}/courses?sort=subscribed%3Adesc&pageSize=15&page=1`;
+      } else if (type === 'new') {
+        url = `${baseUrl}/courses?sort=publishedAt:desc&pageSize=10&page=1`;
+      } else if (type === 'suggested') {
+        url = `${baseUrl}/courses/suggested?pageSize=10&page=1`;
+        if (user?.token) {
+          headers = {
+            Authorization: `Bearer ${user.token}`,
+          };
+        }
       } else {
         url = `${baseUrl}/courses?subjects=${id}`;
       }
 
-      const response = await fetch(url);
+      const response = await fetch(url, { headers });
 
       if (!response.ok) {
         throw new Error(`Falha ao carregar cursos: ${response.status}`);

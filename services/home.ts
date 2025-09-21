@@ -48,18 +48,18 @@ export function useNewCourses() {
 }
 
 // Get suggested courses
-export function useSuggestedCourses() {
+export function useSuggestedCourses(token?: string) {
   return useQuery({
     queryKey: ['courses', 'suggested'],
     queryFn: async (): Promise<Course[]> => {
-      const response = await api.get('/courses?sort=rating_avg%3Adesc&pageSize=10&page=1');
-      const data = response.data.data;
-
-      // Filter courses with high rating
-      const filtered = data.filter((course: Course) => course.rating_avg >= 4);
-
-      return filtered;
+      const response = await api.get('/courses/suggested?pageSize=10&page=1', {
+        headers: token ? {
+          Authorization: `Bearer ${token}`,
+        } : {},
+      });
+      return response.data.data;
     },
+    enabled: !!token,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 15 * 60 * 1000, // 15 minutes
   });

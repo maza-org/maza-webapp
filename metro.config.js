@@ -1,7 +1,11 @@
+const { getDefaultConfig } = require('@expo/metro-config');
 const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 
-// Get the base config with Sentry integration
-const config = getSentryExpoConfig(__dirname);
+// Get the default Expo config first
+const defaultConfig = getDefaultConfig(__dirname);
+
+// Then apply Sentry configuration on top of it
+const config = getSentryExpoConfig(__dirname, defaultConfig);
 
 // Add resolver for the missing module
 if (!config.resolver) {

@@ -22,7 +22,7 @@ export default function Home() {
   // React Query hooks
   const { data: popularCourses = [], isLoading: loadingPopularCourses } = usePopularCourses();
   const { data: newCourses = [], isLoading: loadingNewCourses } = useNewCourses();
-  const { data: suggestedCourses = [], isLoading: loadingSuggestedCourses } = useSuggestedCourses();
+  const { data: suggestedCourses = [], isLoading: loadingSuggestedCourses } = useSuggestedCourses(user?.token);
   const { data: userCourses = [], isLoading: loadingUserCourses } = useUserCourses(user?.token || '');
 
   // Navigation handlers
@@ -84,14 +84,16 @@ export default function Home() {
         )}
 
         {/* Suggested Courses Section */}
-        <CourseSection
-          title="Cursos sugeridos"
-          courses={suggestedCourses}
-          loading={loadingSuggestedCourses}
-          onViewAll={handleSuggestedCoursesViewAll}
-          onCoursePress={handleCoursePress}
-          badge={{ type: 'recommended', icon: 'thumbs-up' }}
-        />
+        {user?.token && (
+          <CourseSection
+            title="Cursos sugeridos"
+            courses={suggestedCourses}
+            loading={loadingSuggestedCourses}
+            onViewAll={handleSuggestedCoursesViewAll}
+            onCoursePress={handleCoursePress}
+            badge={{ type: 'recommended', icon: 'thumbs-up' }}
+          />
+        )}
 
         {/* New Courses Section */}
         <CourseSection
