@@ -9,6 +9,7 @@ import { ApiResponse, Course } from '@/types/course';
 import { blurhash } from '@/util/util';
 import { baseUrl } from '@/services/api';
 import useUser from '@/hooks/useUser';
+import { toLower } from 'ramda';
 
 export default function Category() {
   const { name, id, type } = useLocalSearchParams();
@@ -41,7 +42,7 @@ export default function Category() {
           };
         }
       } else {
-        url = `${baseUrl}/courses?subjects=${id}`;
+        url = `${baseUrl}/courses?keyword=${toLower(name)}`;
       }
 
       const response = await fetch(url, { headers });

@@ -194,15 +194,6 @@ export default function Search() {
 
       {!searchTerm && (
         <>
-          {/*<View style={styles.section}>*/}
-          {/*  <Text style={styles.sectionTitle}>Últimas pesquisas</Text>*/}
-          {/*  <View style={styles.tagsContainer}>*/}
-          {/*    {recentSearches.map((search) => (*/}
-          {/*      <SearchTag key={search.id} label={search.label} onRemove={() => {}} />*/}
-          {/*    ))}*/}
-          {/*  </View>*/}
-          {/*</View>*/}
-
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Pesquisar por categoria</Text>
             <View style={styles.categoriesContainer}>

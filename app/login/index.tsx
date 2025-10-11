@@ -172,6 +172,12 @@ export default function Login() {
             loading={loading}
           />
         </View>
+
+        <View style={styles.textButtonContainer}>
+          <TouchableOpacity onPress={() => router.push('/login/login-email')}>
+            <Text style={styles.bottomLinkText}>Prefere usar email e palavra-passe?</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );

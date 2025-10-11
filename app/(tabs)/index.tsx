@@ -84,7 +84,7 @@ export default function Home() {
         )}
 
         {/* Suggested Courses Section */}
-        {user?.token && (
+        {user?.token && suggestedCourses && suggestedCourses.length > 0 && (
           <CourseSection
             title="Cursos sugeridos"
             courses={suggestedCourses}

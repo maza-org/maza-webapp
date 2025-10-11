@@ -9,6 +9,8 @@ import {
   ImageBackground,
   ActivityIndicator,
   RefreshControl,
+  Linking,
+  Platform,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -217,6 +219,36 @@ export default function CourseDetail() {
     }
   };
 
+  // Cross-platform share handler for store/website links
+  const handleShare = async () => {
+    try {
+      const url = Platform.select({
+        ios: 'https://apps.apple.com/mz/app/maza/id6748351782',
+        android: 'https://play.google.com/store/apps/details?id=org.maza.app',
+        default: 'https://mazas.org/',
+      });
+
+      if (!url) return;
+
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+        return;
+      }
+
+      // Fallback for web environments if Linking fails
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.open(url, '_blank');
+        return;
+      }
+
+      showError('Não foi possível abrir a página de partilha');
+    } catch (err) {
+      console.error('Erro ao partilhar:', err);
+      showError('Falha ao tentar abrir a partilha');
+    }
+  };
+
   // Toggle description expand/collapse
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
@@ -353,7 +385,7 @@ export default function CourseDetail() {
                     <ActivityIndicator size="small" color="#FFF" />
                   </View>
                 )}
-                <TouchableOpacity style={styles.iconButton}>
+                <TouchableOpacity style={styles.iconButton} onPress={handleShare}>
                   <Feather name="share" size={24} color="#FFF" />
                 </TouchableOpacity>
                 {user?.token && (
@@ -390,10 +422,6 @@ export default function CourseDetail() {
                         <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('certificate')}>
                           <Text style={styles.menuItemText}>Certificado</Text>
                         </TouchableOpacity>
-
-                        {/*<TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('report')}>*/}
-                        {/*  <Text style={styles.menuItemText}>Reportar Problema</Text>*/}
-                        {/*</TouchableOpacity>*/}
                       </View>
                     )}
                   </View>
@@ -411,9 +439,9 @@ export default function CourseDetail() {
           <View style={styles.instructor}>
             <Text style={styles.instructorName}>{courseData.author}</Text>
             <Text style={styles.categoryTag}>• {courseData.subjects[0]?.name || ''}</Text>
-            <TouchableOpacity style={styles.pathButton} onPress={handleOnPathPress}>
-              <AntDesign name="fork" size={20} color="#fff" />
-            </TouchableOpacity>
+            {/*<TouchableOpacity style={styles.pathButton} onPress={handleOnPathPress}>*/}
+            {/*  <AntDesign name="fork" size={20} color="#fff" />*/}
+            {/*</TouchableOpacity>*/}
           </View>
 
           {/* Course Description Section */}

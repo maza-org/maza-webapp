@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '@/services/api';
 
 export default function Otp() {
-  const { phone, otpId, name, surname } = useLocalSearchParams();
+  const { phone, otpId, fullname, name, surname } = useLocalSearchParams();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
@@ -71,24 +71,46 @@ export default function Otp() {
 
     setLoading(true);
     try {
-      const endpoint = name && surname ? '/users' : '/auth/login';
+      const hasNameParams = Boolean(fullname || (name && surname));
+      const endpoint = hasNameParams ? '/users' : '/auth/login';
 
-      const body =
-        name && surname
-          ? {
-              data: {
-                phone: phone,
-                otpID: otpId,
-                code: otpCode,
-                name: name,
-                surname: surname,
-              },
-            }
-          : {
-              identifier: phone,
-              otpID: otpId,
-              password: otpCode,
-            };
+      let body: any;
+      if (hasNameParams) {
+        // If fullname provided, split into name/middlename/surname
+        let first = name as string | undefined;
+        let middle: string | undefined = undefined;
+        let last = surname as string | undefined;
+        if (fullname) {
+          const parts = String(fullname).trim().split(/\s+/).filter(Boolean);
+          if (parts.length === 1) {
+            first = parts[0];
+            last = parts[0];
+          } else if (parts.length === 2) {
+            first = parts[0];
+            last = parts[1];
+          } else if (parts.length > 2) {
+            first = parts[0];
+            last = parts[parts.length - 1];
+            middle = parts.slice(1, -1).join(' ');
+          }
+        }
+        body = {
+          data: {
+            phone: phone,
+            otpID: otpId,
+            code: otpCode,
+            name: first,
+            middlename: middle,
+            surname: last,
+          },
+        };
+      } else {
+        body = {
+          identifier: phone,
+          otpID: otpId,
+          password: otpCode,
+        };
+      }
 
       const response = await api.post(endpoint, body);
       const data = response.data;

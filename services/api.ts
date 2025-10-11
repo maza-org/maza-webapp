@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseUrl = 'https://maza-strapi-backend.onrender.com/api';
+const baseUrl = 'https://maza-backend-api.onrender.com/api';
 //production: const baseUrl = 'https://maza-strapi-backend.onrender.com/api';
 //stage: const baseUrl = 'https://maza-backend-api.onrender.com/api';
 const api = axios.create({

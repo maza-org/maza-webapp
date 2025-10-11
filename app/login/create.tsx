@@ -9,8 +9,7 @@ import api, { baseUrl } from '@/services/api';
 
 export default function Create() {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [name, setName] = useState('');
-  const [surname, setSurname] = useState('');
+  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [touched, setTouched] = useState(false);
@@ -32,7 +31,7 @@ export default function Create() {
   const handleRegister = async () => {
     setTouched(true);
 
-    if (!phoneNumber || !name || !surname) {
+    if (!phoneNumber || !fullName) {
       Alert.alert('Erro', 'Por favor preencha todos os campos');
       return;
     }
@@ -69,8 +68,7 @@ export default function Create() {
         params: {
           phone: validation.formattedNumber,
           otpId: data.otpID,
-          name: name,
-          surname: surname,
+          fullname: fullName,
         },
       });
     } catch (error) {
@@ -132,25 +130,13 @@ export default function Create() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Nome</Text>
+            <Text style={styles.inputLabel}>Nome Completo</Text>
             <TextInput
               style={styles.input}
-              placeholder="João"
+              placeholder="João Manuel António"
               placeholderTextColor="#666"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Apelido</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="António"
-              placeholderTextColor="#666"
-              value={surname}
-              onChangeText={setSurname}
+              value={fullName}
+              onChangeText={setFullName}
               autoCapitalize="words"
             />
           </View>
@@ -160,9 +146,15 @@ export default function Create() {
           <Button
             text={loading ? 'A processar...' : 'Registar'}
             handle={handleRegister}
-            disabled={!phoneNumber || !name || !surname || loading || !!error}
+            disabled={!phoneNumber || !fullName || loading || !!error}
             loading={loading}
           />
+        </View>
+
+        <View style={styles.textButtonContainer}>
+          <TouchableOpacity onPress={() => router.push('/login/create-email')}>
+            <Text style={styles.bottomLinkText}>Prefere usar email e palavra-passe?</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
