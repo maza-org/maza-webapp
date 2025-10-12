@@ -381,9 +381,7 @@ export default function ProfileScreen() {
               </View>
             )}
           </View>
-          <Text style={styles.fullname}>
-            {user.name} {user.surname}
-          </Text>
+          <Text style={styles.fullname}>{user.fullname}</Text>
           <Text style={styles.documentId}>ID: {user.documentId}</Text>
         </View>
 
@@ -402,6 +400,78 @@ export default function ProfileScreen() {
               <Text style={styles.infoLabel}>Email</Text>
             </View>
             <Text style={styles.infoValue}>{user.email || 'Não fornecido'}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <View style={styles.infoHeader}>
+              <Feather name="credit-card" size={20} color="#1fa2df" />
+              <Text style={styles.infoLabel}>BI Nacional</Text>
+            </View>
+            <Text style={styles.infoValue}>{user.nationalID || 'Não fornecido'}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <View style={styles.infoHeader}>
+              <Feather name="calendar" size={20} color="#1fa2df" />
+              <Text style={styles.infoLabel}>Data de Nascimento</Text>
+            </View>
+            <Text style={styles.infoValue}>
+              {user.dateOfBirth
+                ? new Date(user.dateOfBirth).toLocaleDateString('pt-MZ', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                  })
+                : 'Não fornecido'}
+            </Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <View style={styles.infoHeader}>
+              <Feather name="user" size={20} color="#1fa2df" />
+              <Text style={styles.infoLabel}>Género</Text>
+            </View>
+            <Text style={styles.infoValue}>{user.gender || 'Não fornecido'}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <View style={styles.infoHeader}>
+              <Feather name="map-pin" size={20} color="#1fa2df" />
+              <Text style={styles.infoLabel}>Província</Text>
+            </View>
+            <Text style={styles.infoValue}>{user.province || 'Não fornecido'}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <View style={styles.infoHeader}>
+              <Feather name="map" size={20} color="#1fa2df" />
+              <Text style={styles.infoLabel}>Distrito</Text>
+            </View>
+            <Text style={styles.infoValue}>{user.district || 'Não fornecido'}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <View style={styles.infoHeader}>
+              <Feather name="briefcase" size={20} color="#1fa2df" />
+              <Text style={styles.infoLabel}>Ocupação</Text>
+            </View>
+            <Text style={styles.infoValue}>{user.occupation || 'Não fornecido'}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <View style={styles.infoHeader}>
+              <Feather name="book" size={20} color="#1fa2df" />
+              <Text style={styles.infoLabel}>Instituição Académica</Text>
+            </View>
+            <Text style={styles.infoValue}>{user.academicInstitution || 'Não fornecido'}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <View style={styles.infoHeader}>
+              <Feather name="award" size={20} color="#1fa2df" />
+              <Text style={styles.infoLabel}>Nível Académico</Text>
+            </View>
+            <Text style={styles.infoValue}>{user.academicLevel || 'Não fornecido'}</Text>
           </View>
 
           <View style={styles.infoItem}>

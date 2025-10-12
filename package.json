@@ -45,6 +45,7 @@
     "expo-system-ui": "~6.0.7",
     "expo-web-browser": "~15.0.8",
     "he": "^1.2.0",
+    "isomorphic-dompurify": "^2.28.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-native": "0.81.4",

@@ -45,9 +45,6 @@ export default function Otp() {
         ...userData,
         token,
       };
-
-      console.log(`user in otp`, JSON.stringify(user, null, 2));
-
       await AsyncStorage.setItem('@user', JSON.stringify(user));
       return user;
     } catch (error) {

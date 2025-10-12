@@ -260,8 +260,6 @@ export function useStartCourse() {
         }
       );
 
-      console.log(`ERROR Updating Progress`, updateProgressResponse);
-
       return saveResult;
     },
     onSuccess: () => {

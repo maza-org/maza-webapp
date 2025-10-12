@@ -1,128 +1,179 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { Alert, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
+import { useMutation } from '@tanstack/react-query';
+import axios, { AxiosError } from 'axios';
 import Button from '@/components/Button';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useSetUserData } from '@/hooks/useAuth';
-import { AuthUser } from '@/types/learning';
 import { baseUrl } from '@/services/api';
+import { ErrorResponse, LoginResponse, User } from '@/types/user';
+import { useQueryClient } from '@tanstack/react-query';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DOMPurify from 'isomorphic-dompurify';
 
 export default function LoginEmail() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
 
+  const queryClient = useQueryClient();
   const setUserData = useSetUserData();
 
-  const fetchUserData = async (token: string) => {
-    try {
-      const response = await fetch(`${baseUrl}/users/me`, {
-        method: 'GET',
+  // Mutation to fetch user data
+  const fetchUserDataMutation = useMutation({
+    mutationFn: async (token: string): Promise<User> => {
+      const response = await axios.get<User>(`${baseUrl}/users/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch user data');
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Erro ao buscar dados do utilizador', error);
+      return response.data;
+    },
+    onError: (error: AxiosError) => {
+      console.error('Erro ao buscar dados do utilizador:', error);
       throw error;
-    }
-  };
+    },
+  });
 
-  const handleLogin = async () => {
-    if (!identifier || !password) {
-      setError('Por favor preencha todos os campos');
-      return;
-    }
-
-    setLoading(true);
-    setError(undefined);
-
-    try {
-      // Use the staging API endpoint for authentication
-      const response = await fetch(`${baseUrl}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+  // Mutation to handle login
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: { identifier: string; password: string }) => {
+      const response = await axios.post<LoginResponse>(
+        `${baseUrl}/auth/login`,
+        {
+          identifier: credentials.identifier,
+          password: credentials.password,
         },
-        body: JSON.stringify({
-          identifier: identifier.trim(),
-          password: password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.status === 401) {
-        setError(data?.error?.details?.message || 'Credenciais inválidas');
-        return;
-      }
-
-      if (response.status === 400) {
-        setError(data?.error?.message || 'Pedido inválido');
-        return;
-      }
-
-      if (!response.ok) {
-        setError('Ocorreu um erro ao fazer login. Tente novamente.');
-        return;
-      }
-
-      // Successful login
-      if (data.success && data.jwt && data.user) {
-        const token = data.jwt;
-
-        // Fetch additional user data using the production endpoint
-        const userData = await fetchUserData(token);
-
-        // Create AuthUser object
-        const authUser: AuthUser = {
-          id: String(userData.id),
-          documentId: userData.documentId,
-          email: userData.email,
-          fullname: userData.fullname,
-          phone: userData.phone,
-          yoma_id: userData.yoma_id || '',
-          token: token,
-        };
-
-        // Save user data
-        await setUserData.mutateAsync(authUser);
-
-        Alert.alert('Sucesso', 'Login realizado com sucesso.');
-
-        // Check if user has interests before navigating
-        if (userData.interests && userData.interests.length > 0) {
-          router.replace('/');
-        } else {
-          router.replace('/start/customize');
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
         }
-      } else {
-        setError('Resposta inválida do servidor');
+      );
+      return response.data;
+    },
+    onSuccess: async (data) => {
+      try {
+        if (data.success && data.jwt && data.user) {
+          const token = data.jwt;
+          // Fetch additional user data
+          const userData = await fetchUserDataMutation.mutateAsync(token);
+
+          console.log('userData', JSON.stringify(userData, null, 2));
+          console.log('data', JSON.stringify(data, null, 2));
+
+          // Create User object with token
+          const userWithToken: User = {
+            ...userData,
+            token: token,
+          };
+
+          // Save user data
+          await setUserData.mutateAsync(userWithToken);
+          await AsyncStorage.setItem('@user', JSON.stringify(userWithToken));
+          // Invalidate user query to trigger a refetch
+          queryClient.invalidateQueries({ queryKey: ['user'] });
+
+          Alert.alert('Sucesso', 'Login realizado com sucesso.');
+
+          // Check if user has interests before navigating
+          if (userData.interests && userData.interests.length > 0) {
+            router.replace('/');
+          } else {
+            router.replace('/start/customize');
+          }
+        } else {
+          setError('Resposta inválida do servidor');
+        }
+      } catch (error) {
+        console.error('Error processing login:', error);
+        setError('Erro ao processar dados do utilizador');
       }
-    } catch (error: any) {
+    },
+    onError: (error: AxiosError<ErrorResponse>) => {
       console.error('Login error:', error);
-      if (error.message.includes('Network')) {
+
+      // Handle specific HTTP status codes
+      if (error.response) {
+        const status = error.response.status;
+        const errorData = error.response.data;
+
+        switch (status) {
+          case 400:
+            setError(errorData?.error?.message || 'Pedido inválido. Verifique os dados inseridos.');
+            break;
+          case 401:
+            setError(
+              errorData?.error?.details?.message || 'Credenciais inválidas. Verifique o email/telefone e palavra-passe.'
+            );
+            break;
+          case 403:
+            setError('Acesso negado. A sua conta pode estar desactivada.');
+            break;
+          case 404:
+            setError('Serviço não encontrado. Tente novamente mais tarde.');
+            break;
+          case 429:
+            setError('Demasiadas tentativas. Por favor, aguarde alguns minutos.');
+            break;
+          case 500:
+            setError('Erro interno do servidor. Por favor, tente novamente mais tarde.');
+            Alert.alert(
+              'Erro do Servidor',
+              'O servidor está temporariamente indisponível. Por favor, tente novamente em alguns instantes.'
+            );
+            break;
+          case 502:
+          case 503:
+          case 504:
+            setError('Servidor temporariamente indisponível. Tente novamente em alguns instantes.');
+            break;
+          default:
+            setError('Ocorreu um erro ao fazer login. Por favor, tente novamente.');
+        }
+      } else if (error.request) {
+        // Network error
+        setError('Erro de conexão. Verifique sua internet.');
         Alert.alert(
-          'Erro de conexão',
+          'Erro de Conexão',
           'Não foi possível conectar ao servidor. Verifique sua conexão de internet e tente novamente.'
         );
       } else {
         setError('Não foi possível fazer login. Por favor, tente novamente.');
       }
-    } finally {
-      setLoading(false);
+    },
+  });
+
+  const handleLogin = async () => {
+    // Validate inputs
+    const _identifier = DOMPurify.sanitize(identifier.trim());
+    const _password = DOMPurify.sanitize(password.trim());
+    if (!identifier || !password) {
+      setError('Por favor preencha todos os campos');
+      return;
     }
+
+    if (_identifier.length === 0) {
+      setError('Email ou telefone inválido');
+      return;
+    }
+
+    if (_password.length < 6) {
+      setError('A palavra-passe deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    // Clear previous error
+    setError(undefined);
+
+    // Execute login mutation
+    loginMutation.mutate({ identifier: _identifier, password: _password });
   };
+
+  const isLoading = loginMutation.isPending || fetchUserDataMutation.isPending;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -164,7 +215,7 @@ export default function LoginEmail() {
                 if (error) setError(undefined);
               }}
               autoCapitalize="none"
-              editable={!loading}
+              editable={!isLoading}
             />
           </View>
 
@@ -182,12 +233,12 @@ export default function LoginEmail() {
                 }}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
-                editable={!loading}
+                editable={!isLoading}
               />
               <TouchableOpacity
                 style={styles.eyeButton}
                 onPress={() => setShowPassword(!showPassword)}
-                disabled={loading}
+                disabled={isLoading}
               >
                 <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#999" />
               </TouchableOpacity>
@@ -203,10 +254,10 @@ export default function LoginEmail() {
 
         <View>
           <Button
-            text={loading ? 'A processar...' : 'Entrar'}
+            text={isLoading ? 'A processar...' : 'Entrar'}
             handle={handleLogin}
-            disabled={!identifier || !password || loading}
-            loading={loading}
+            disabled={!identifier || !password || isLoading}
+            loading={isLoading}
           />
         </View>
 

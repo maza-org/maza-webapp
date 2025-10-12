@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthUser } from '@/types/learning';
 import api from '@/services/api';
+import { User } from '@/types/user';
 
 // Get cached user data with API refresh
 export function useAuthUser() {
@@ -100,15 +101,14 @@ export function useGetUserData(token: string) {
 // Set user data in cache
 export function useSetUserData() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (userData: AuthUser) => {
-      await AsyncStorage.setItem('@user', JSON.stringify(userData));
-      return userData;
+    mutationFn: async (user: User) => {
+      await AsyncStorage.setItem('@user', JSON.stringify(user));
+      return user;
     },
-    onSuccess: (userData) => {
+    onSuccess: (user) => {
       // Update the auth user query
-      queryClient.setQueryData(['auth-user'], userData);
+      queryClient.setQueryData(['auth-user'], user);
     },
   });
 }

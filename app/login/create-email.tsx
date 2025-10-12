@@ -17,308 +17,29 @@ import Button from '@/components/Button';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useSetUserData } from '@/hooks/useAuth';
-import { AuthUser } from '@/types/learning';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { baseUrl } from '@/services/api';
 
-// Mozambique Provinces
-const MOZAMBIQUE_PROVINCES = [
-  'Maputo Cidade',
-  'Maputo',
-  'Gaza',
-  'Inhambane',
-  'Sofala',
-  'Manica',
-  'Tete',
-  'Zambézia',
-  'Nampula',
-  'Niassa',
-  'Cabo Delgado',
-];
+// Import data from JSON files
+import MOZAMBIQUE_PROVINCES from '@/data/mozambique/provinces.json';
+import MOZAMBIQUE_DISTRICTS_DATA from '@/data/mozambique/districts.json';
+import ACADEMIC_INSTITUTIONS from '@/data/mozambique/academic-institutions.json';
+import ACADEMIC_LEVELS from '@/data/mozambique/academic-levels.json';
+import OCCUPATIONS from '@/data/mozambique/occupations.json';
+import GENDER_OPTIONS from '@/data/mozambique/gender-options.json';
 
-// Mozambique Districts by Province
-const MOZAMBIQUE_DISTRICTS: { [key: string]: string[] } = {
-  'Maputo Cidade': ['KaMpfumo', 'Nlhamankulu', 'KaMaxaquene', 'KaMubukwana', 'KaMavota', 'KaTembe', 'KaNyaka'],
-  Maputo: ['Boane', 'Magude', 'Manhiça', 'Marracuene', 'Matola', 'Matutuíne', 'Moamba', 'Namaacha'],
-  Gaza: [
-    'Bilene',
-    'Chibuto',
-    'Chicualacuala',
-    'Chigubo',
-    'Chókwè',
-    'Guijá',
-    'Mabalane',
-    'Manjacaze',
-    'Massangena',
-    'Massingir',
-    'Xai-Xai',
-  ],
-  Inhambane: [
-    'Funhalouro',
-    'Govuro',
-    'Homoíne',
-    'Inhambane',
-    'Inharrime',
-    'Inhassoro',
-    'Jangamo',
-    'Mabote',
-    'Massinga',
-    'Morrumbene',
-    'Panda',
-    'Vilankulo',
-    'Zavala',
-  ],
-  Sofala: [
-    'Búzi',
-    'Caia',
-    'Chemba',
-    'Cheringoma',
-    'Chibabava',
-    'Dondo',
-    'Gorongosa',
-    'Machanga',
-    'Maringué',
-    'Marromeu',
-    'Muanza',
-    'Nhamatanda',
-  ],
-  Manica: [
-    'Báruè',
-    'Gondola',
-    'Guro',
-    'Macate',
-    'Machaze',
-    'Macossa',
-    'Manica',
-    'Mossurize',
-    'Sussundenga',
-    'Tambara',
-    'Vanduzi',
-  ],
-  Tete: [
-    'Angónia',
-    'Cahora-Bassa',
-    'Changara',
-    'Chifunde',
-    'Chiuta',
-    'Dôa',
-    'Macanga',
-    'Magoe',
-    'Marávia',
-    'Moatize',
-    'Mutarara',
-    'Tsangano',
-    'Zumbo',
-  ],
-  Zambézia: [
-    'Alto Molócuè',
-    'Chinde',
-    'Derre',
-    'Gilé',
-    'Gurué',
-    'Ile',
-    'Inhassunge',
-    'Luabo',
-    'Lugela',
-    'Maganja da Costa',
-    'Milange',
-    'Mocuba',
-    'Mocubela',
-    'Molumbo',
-    'Mopeia',
-    'Morrumbala',
-    'Namacurra',
-    'Namarroi',
-    'Nicoadala',
-    'Pebane',
-  ],
-  Nampula: [
-    'Angoche',
-    'Eráti',
-    'Lalaua',
-    'Larde',
-    'Liúpo',
-    'Malema',
-    'Meconta',
-    'Mecubúri',
-    'Memba',
-    'Mogincual',
-    'Mogovolas',
-    'Moma',
-    'Monapo',
-    'Mossuril',
-    'Muecate',
-    'Murrupula',
-    'Nacala-a-Velha',
-    'Nacala Porto',
-    'Nacarôa',
-    'Nampula',
-    'Rapale',
-    'Ribáuè',
-  ],
-  Niassa: [
-    'Cuamba',
-    'Lago',
-    'Lichinga',
-    'Majune',
-    'Mandimba',
-    'Marrupa',
-    'Maúa',
-    'Mavago',
-    'Mecanhelas',
-    'Mecula',
-    'Metarica',
-    'Muembe',
-    "N'gauma",
-    'Nipepe',
-    'Sanga',
-  ],
-  'Cabo Delgado': [
-    'Ancuabe',
-    'Balama',
-    'Chiúre',
-    'Ibo',
-    'Macomia',
-    'Mecúfi',
-    'Meluco',
-    'Metuge',
-    'Mocímboa da Praia',
-    'Montepuez',
-    'Mueda',
-    'Muidumbe',
-    'Namuno',
-    'Nangade',
-    'Palma',
-    'Pemba',
-    'Quissanga',
-  ],
-};
+// Import validation utilities
+import {
+  validateEmail,
+  validateFullName,
+  validateMozambicanPhone,
+  validateMozambicanID,
+  splitFullName,
+} from '@/utils/validation';
+import { User } from '@/types/user';
 
-// Academic Institutions in Mozambique
-const ACADEMIC_INSTITUTIONS = [
-  'Universidade Eduardo Mondlane (UEM)',
-  'Universidade Pedagógica (UP)',
-  'Instituto Superior de Ciências e Tecnologia de Moçambique (ISCTEM)',
-  'Instituto Superior de Relações Internacionais (ISRI)',
-  'Instituto Superior de Transportes e Comunicações (ISUTC)',
-  'Universidade Católica de Moçambique (UCM)',
-  'Universidade São Tomás de Moçambique (USTM)',
-  'Universidade Politécnica (UP)',
-  'Universidade Zambeze',
-  'Universidade Lúrio',
-  'Universidade Rovuma',
-  'Instituto Industrial de Maputo',
-  'Instituto Comercial de Maputo',
-  'Escola Secundária Josina Machel',
-  'Escola Secundária Francisco Manyanga',
-  'Escola Secundária da Matola',
-  'Escola Secundária Samora Machel',
-  'Escola Secundária 12 de Outubro',
-  'Escola Secundária Noroeste 1',
-  'Outro',
-];
-
-// Academic Levels
-const ACADEMIC_LEVELS = [
-  'Ensino Primário (EP1)',
-  'Ensino Primário (EP2)',
-  'Ensino Secundário Geral (ESG1)',
-  'Ensino Secundário Geral (ESG2)',
-  'Ensino Técnico Profissional',
-  'Licenciatura',
-  'Mestrado',
-  'Doutoramento',
-  'Pós-Graduação',
-  'Outro',
-];
-
-// Occupations - Common in Mozambique
-const OCCUPATIONS = [
-  'Estudante',
-  'Agricultor',
-  'Professor',
-  'Enfermeiro',
-  'Médico',
-  'Comerciante',
-  'Motorista',
-  'Carpinteiro',
-  'Pedreiro',
-  'Eletricista',
-  'Mecânico',
-  'Pescador',
-  'Vendedor',
-  'Cozinheiro',
-  'Empregado Doméstico',
-  'Funcionário Público',
-  'Contador',
-  'Engenheiro',
-  'Advogado',
-  'Técnico de Informática',
-  'Segurança',
-  'Auxiliar Administrativo',
-  'Empresário',
-  'Artesão',
-  'Costureira',
-  'Cabeleireiro',
-  'Taxista',
-  'Operador de Máquinas',
-  'Soldador',
-  'Pintor',
-  'Bancário',
-  'Jornalista',
-  'Designer',
-  'Farmacêutico',
-  'Veterinário',
-  'Assistente Social',
-  'Arquiteto',
-  'Desempregado',
-  'Outro',
-];
-
-// Gender options
-const GENDER_OPTIONS = ['Masculino', 'Feminino', 'Outro'];
-
-// Validation functions
-function validateEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-function validateFullName(fullName: string): boolean {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  return parts.length >= 2;
-}
-
-function validateMozambicanPhone(phone: string): string | null {
-  // Remove all spaces and special characters
-  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
-
-  // Check if it starts with +258 or 258
-  if (cleaned.startsWith('+258')) {
-    const number = cleaned.substring(4);
-    // Mozambican numbers should have 9 digits after country code
-    if (/^[0-9]{9}$/.test(number)) {
-      return cleaned;
-    }
-  } else if (cleaned.startsWith('258')) {
-    const number = cleaned.substring(3);
-    if (/^[0-9]{9}$/.test(number)) {
-      return '+' + cleaned;
-    }
-  } else if (/^[0-9]{9}$/.test(cleaned)) {
-    // No country code, add it
-    return '+258' + cleaned;
-  }
-
-  return null; // Invalid
-}
-
-function validateMozambicanID(id: string): boolean {
-  // Mozambican ID format: XXXXXXXXXXS where X is digit and S is a letter
-  // Total 13 characters: 11 digits + 1 letter
-  const idRegex = /^[0-9]{12}[A-Z]$/;
-  return idRegex.test(id.toUpperCase());
-}
+// Type-safe districts object
+const MOZAMBIQUE_DISTRICTS = MOZAMBIQUE_DISTRICTS_DATA as { [key: string]: string[] };
 
 // Searchable Picker Component
 interface SearchablePickerProps {
@@ -471,17 +192,6 @@ export default function CreateEmail() {
     }
   }, [province, district]);
 
-  function splitFullName(input: string) {
-    const parts = input.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return { name: '', middlename: undefined as string | undefined, surname: '' };
-    if (parts.length === 1) return { name: parts[0], middlename: undefined, surname: parts[0] };
-    if (parts.length === 2) return { name: parts[0], middlename: undefined, surname: parts[1] };
-    const name = parts[0];
-    const surname = parts[parts.length - 1];
-    const middlename = parts.slice(1, -1).join(' ');
-    return { name, middlename, surname };
-  }
-
   const handleRegister = async () => {
     // Clear previous errors
     setEmailError('');
@@ -489,7 +199,6 @@ export default function CreateEmail() {
     setPhoneError('');
     setNationalIDError('');
     setError(undefined);
-
     // Validate email
     if (!validateEmail(email)) {
       setEmailError('Email inválido');
@@ -533,7 +242,6 @@ export default function CreateEmail() {
       const formattedDate = dateOfBirth
         ? `${dateOfBirth.getFullYear()}-${String(dateOfBirth.getMonth() + 1).padStart(2, '0')}-${String(dateOfBirth.getDate()).padStart(2, '0')}`
         : '';
-
       const response = await fetch(`${baseUrl}/users`, {
         method: 'POST',
         headers: {
@@ -580,13 +288,8 @@ export default function CreateEmail() {
       const data = await response.json();
       const { user, jwt } = data;
 
-      const authUser: AuthUser = {
-        id: String(user.id),
-        documentId: user.documentId,
-        email: user.email,
-        fullname: user.fullname,
-        phone: user.phone,
-        yoma_id: '',
+      const authUser: User = {
+        ...user,
         token: jwt,
       };
 
@@ -849,7 +552,7 @@ export default function CreateEmail() {
           <Button
             text={loading ? 'A processar...' : 'Registar'}
             handle={handleRegister}
-            disabled={loading}
+            disabled={loading || !isFormValid}
             loading={loading}
           />
         </View>
