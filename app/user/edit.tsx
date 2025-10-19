@@ -528,37 +528,58 @@ export default function EditProfileScreen() {
               }}
             />
           ) : (
-            <>
-              <TouchableOpacity
-                style={styles.pickerButton}
-                onPress={() => setShowDatePicker(true)}
-                disabled={isSubmitting}
-              >
-                <Text style={[styles.pickerButtonText, !dateOfBirth && styles.placeholderText]}>
-                  {dateOfBirth
-                    ? `${dateOfBirth.getDate()}/${dateOfBirth.getMonth() + 1}/${dateOfBirth.getFullYear()}`
-                    : 'Selecionar data'}
-                </Text>
-                <Ionicons name="calendar-outline" size={20} color="#999" />
-              </TouchableOpacity>
-              {showDatePicker && (
+            <TouchableOpacity
+              style={styles.pickerButton}
+              onPress={() => setShowDatePicker(true)}
+              disabled={isSubmitting}
+            >
+              <Text style={[styles.pickerButtonText, !dateOfBirth && styles.placeholderText]}>
+                {dateOfBirth
+                  ? `${dateOfBirth.getDate()}/${dateOfBirth.getMonth() + 1}/${dateOfBirth.getFullYear()}`
+                  : 'Selecionar data'}
+              </Text>
+              <Ionicons name="calendar-outline" size={20} color="#999" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Custom Date Picker Modal for Android and iOS */}
+        {Platform.OS !== 'web' && (
+          <Modal
+            visible={showDatePicker}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setShowDatePicker(false)}
+          >
+            <View style={styles.datePickerModalOverlay}>
+              <View style={styles.datePickerModalContent}>
+                <View style={styles.datePickerHeader}>
+                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                    <Text style={styles.datePickerCancelText}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.datePickerTitle}>Data de Nascimento</Text>
+                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                    <Text style={styles.datePickerDoneText}>Concluído</Text>
+                  </TouchableOpacity>
+                </View>
                 <DateTimePicker
                   value={dateOfBirth || maxDate}
                   mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  display="spinner"
                   onChange={(event: any, selectedDate?: Date) => {
-                    setShowDatePicker(Platform.OS === 'ios');
                     if (selectedDate) {
                       setDateOfBirth(selectedDate);
                     }
                   }}
                   maximumDate={maxDate}
                   minimumDate={minDate}
+                  textColor="#FFFFFF"
+                  style={styles.datePickerStyle}
                 />
-              )}
-            </>
-          )}
-        </View>
+              </View>
+            </View>
+          </Modal>
+        )}
 
         <SearchablePicker
           label="Género *"
@@ -848,5 +869,42 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  datePickerModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'flex-end',
+  },
+  datePickerModalContent: {
+    backgroundColor: '#1E1E1E',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 20,
+  },
+  datePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  datePickerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  datePickerCancelText: {
+    fontSize: 16,
+    color: '#999',
+  },
+  datePickerDoneText: {
+    fontSize: 16,
+    color: '#1fa2df',
+    fontWeight: '600',
+  },
+  datePickerStyle: {
+    backgroundColor: '#1E1E1E',
   },
 });

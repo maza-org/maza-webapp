@@ -6,10 +6,8 @@ import axios, { AxiosError } from 'axios';
 import Button from '@/components/Button';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { useSetUserData } from '@/hooks/useAuth';
 import { baseUrl } from '@/services/api';
 import { ErrorResponse, LoginResponse, User } from '@/types/user';
-import { useQueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DOMPurify from 'isomorphic-dompurify';
 
@@ -18,9 +16,6 @@ export default function LoginEmail() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
-
-  const queryClient = useQueryClient();
-  const setUserData = useSetUserData();
 
   // Mutation to fetch user data
   const fetchUserDataMutation = useMutation({
@@ -62,9 +57,6 @@ export default function LoginEmail() {
           // Fetch additional user data
           const userData = await fetchUserDataMutation.mutateAsync(token);
 
-          console.log('userData', JSON.stringify(userData, null, 2));
-          console.log('data', JSON.stringify(data, null, 2));
-
           // Create User object with token
           const userWithToken: User = {
             ...userData,
@@ -72,10 +64,8 @@ export default function LoginEmail() {
           };
 
           // Save user data
-          await setUserData.mutateAsync(userWithToken);
+          // await setUserData.mutateAsync(userWithToken);
           await AsyncStorage.setItem('@user', JSON.stringify(userWithToken));
-          // Invalidate user query to trigger a refetch
-          queryClient.invalidateQueries({ queryKey: ['user'] });
 
           Alert.alert('Sucesso', 'Login realizado com sucesso.');
 
