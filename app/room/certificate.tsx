@@ -3,16 +3,16 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Image,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from "@expo/vector-icons";
 
 export default function Certificate() {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}

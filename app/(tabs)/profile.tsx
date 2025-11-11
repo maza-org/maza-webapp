@@ -3,17 +3,16 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
   Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useFocusEffect } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
 import useUser from '@/hooks/useUser';
 import { useToast } from '@/hooks/useToast';
 import CertificateItem from '@/components/CertificateItem';
@@ -181,123 +180,6 @@ export default function ProfileScreen() {
     });
   };
 
-  const handleChangePhoto = async () => {
-    Alert.alert('Alterar Foto', 'Escolha uma opção', [
-      {
-        text: 'Tirar Foto',
-        onPress: async () => {
-          try {
-            // Request camera permissions
-            const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-
-            if (cameraPermission.status !== 'granted') {
-              Alert.alert('Permissão necessária', 'É necessário permitir o acesso à câmera para tirar uma foto.');
-              return;
-            }
-
-            // Launch camera
-            const result = await ImagePicker.launchCameraAsync({
-              allowsEditing: true,
-              aspect: [1, 1],
-              quality: 0.5,
-            });
-
-            if (!result.canceled) {
-              await uploadImage(result.assets[0].uri);
-            }
-          } catch (error) {
-            console.error('Error taking photo:', error);
-            Alert.alert('Erro', 'Não foi possível tirar a foto.');
-          }
-        },
-      },
-      {
-        text: 'Escolher da Galeria',
-        onPress: async () => {
-          try {
-            // Request media library permissions
-            const galleryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-            if (galleryPermission.status !== 'granted') {
-              Alert.alert('Permissão necessária', 'É necessário permitir o acesso à galeria para escolher uma foto.');
-              return;
-            }
-
-            // Launch image library
-            const result = await ImagePicker.launchImageLibraryAsync({
-              mediaTypes: ImagePicker.MediaTypeOptions.Images,
-              allowsEditing: true,
-              aspect: [1, 1],
-              quality: 0.5,
-            });
-
-            if (!result.canceled) {
-              await uploadImage(result.assets[0].uri);
-            }
-          } catch (error) {
-            console.error('Error picking image:', error);
-            Alert.alert('Erro', 'Não foi possível seleccionar a imagem.');
-          }
-        },
-      },
-      {
-        text: 'Cancelar',
-        style: 'cancel',
-      },
-    ]);
-  };
-
-  const uploadImage = async (imageUri: string) => {
-    try {
-      setIsUploadingImage(true);
-
-      if (!user?.token) {
-        throw new Error('No authentication token found');
-      }
-      const formData = new FormData();
-      const fileName = imageUri.split('/').pop() || 'profile_image.jpg';
-      const fileType = fileName.split('.').pop() || 'jpg';
-
-      // @ts-ignore - FormData accepts File or Blob but React Native's typing doesn't reflect this
-      formData.append('files', {
-        uri: imageUri,
-        name: fileName,
-        type: `image/${fileType}`,
-      });
-
-      formData.append('ref', 'plugin::users-permissions.user');
-      formData.append('refId', user.id.toString());
-      formData.append('field', 'profile_image');
-
-      // Upload image
-      const response = await fetch(`${baseUrl}/upload`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
-      }
-
-      const responseData = await response.json();
-
-      if (responseData && responseData.length > 0) {
-        setProfileImage(responseData[0].url);
-        await refetch();
-
-        Alert.alert('Sucesso', 'Foto de perfil actualizada com sucesso');
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      Alert.alert('Erro', 'Falha ao enviar a imagem');
-    } finally {
-      setIsUploadingImage(false);
-    }
-  };
 
   if (isLoading || isRefreshing) {
     return (
@@ -337,7 +219,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Toast
         visible={toast.visible}
         message={toast.message}
@@ -368,16 +250,10 @@ export default function ProfileScreen() {
             ) : profileImage ? (
               <View style={styles.profileImageWrapper}>
                 <Image source={{ uri: profileImage }} style={styles.profileImage} />
-                <TouchableOpacity style={styles.changePhotoButton} onPress={handleChangePhoto}>
-                  <Feather name="camera" size={16} color="#1fa2df" />
-                </TouchableOpacity>
               </View>
             ) : (
               <View style={styles.profileImagePlaceholder}>
                 <Text style={styles.profileImagePlaceholderText}>{`${user.name} ${user.surname}`.charAt(0)}</Text>
-                <TouchableOpacity style={styles.changePhotoButton} onPress={handleChangePhoto}>
-                  <Feather name="camera" size={16} color="#1fa2df" />
-                </TouchableOpacity>
               </View>
             )}
           </View>

@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Image,
   ScrollView,
   Dimensions,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import YoutubeIframe from 'react-native-youtube-iframe';
@@ -195,7 +195,7 @@ export default function CourseScreen() {
       {playing && selectedContent && (
         <YoutubePlayerModal videoId={selectedContent.youtubeID} onVideoEnd={handleVideoEnd} />
       )}
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <ScrollView style={styles.content}>
           {/* Header */}
           <View style={styles.header}>

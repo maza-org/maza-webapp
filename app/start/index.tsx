@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Image,
   Dimensions,
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '@/components/Button';
 import { router } from 'expo-router';
 
@@ -20,7 +20,7 @@ export default function OnboardingScreen() {
   const [error, setError] = React.useState(null);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" />
 
       {/* Status Bar Content */}

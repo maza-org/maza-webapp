@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import Header from '@/components/Header';
@@ -120,7 +121,7 @@ export default function CategorySelection() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <Header title={'Escolha uma categoria'} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#8257e5" />
@@ -132,7 +133,7 @@ export default function CategorySelection() {
 
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <Header title={'Escolha uma categoria'} />
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
@@ -145,7 +146,7 @@ export default function CategorySelection() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Header title={'Escolha uma categoria'} />
 
       <View style={styles.categoriesList}>

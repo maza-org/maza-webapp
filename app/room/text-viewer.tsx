@@ -1,13 +1,13 @@
 import {
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   View,
   Text,
   TouchableOpacity,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -33,7 +33,7 @@ export default function TextViewer() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Feather name="chevron-left" size={24} color="#FFF" />

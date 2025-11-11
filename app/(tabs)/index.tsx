@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, SafeAreaView, ScrollView, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import useUser from '@/hooks/useUser';
 import HomepageCategories from '@/components/HomepageCategories';
 import HomeHeader from '@/components/HomeHeader';
@@ -55,7 +56,7 @@ export default function Home() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <HomeHeader onPress={handleHeaderPress} />

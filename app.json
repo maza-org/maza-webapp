@@ -2,7 +2,7 @@
   "expo": {
     "name": "Maza",
     "slug": "org-maza-app",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -22,12 +22,6 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "READ_MEDIA_IMAGES",
-        "READ_MEDIA_VIDEO",
-        "READ_MEDIA_AUDIO",
-        "ACCESS_MEDIA_LOCATION"
-      ],
       "package": "org.maza.app"
     },
     "web": {
@@ -38,14 +32,6 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      [
-        "expo-media-library",
-        {
-          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
-          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
-          "isAccessMediaLocationEnabled": true
-        }
-      ],
       [
         "expo-document-picker",
         {
@@ -69,7 +55,8 @@
       "expo-web-browser"
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "reactCanary": true
     },
     "extra": {
       "router": {

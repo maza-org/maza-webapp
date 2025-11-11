@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Image,
   StatusBar,
@@ -11,6 +10,7 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 
 const { height } = Dimensions.get('window');
@@ -148,7 +148,7 @@ export default function Questions({ chapter, onExit, onComplete }: QuestionsProp
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" backgroundColor="#121214" />
 
       {/* Quiz header with title on top */}

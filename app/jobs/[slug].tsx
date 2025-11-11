@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  SafeAreaView,
   View,
   ScrollView,
   Image,
@@ -10,6 +9,7 @@ import {
   Linking,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/Themed';
 import { useLocalSearchParams, router } from 'expo-router';
 import HTML, { MixedStyleDeclaration } from 'react-native-render-html';
@@ -97,7 +97,7 @@ export default function JobDetails() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {job && <JobHeader job={job} onShare={handleShare} onBack={() => router.back()} />}
 
       {loading ? (

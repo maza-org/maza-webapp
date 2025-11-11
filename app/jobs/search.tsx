@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
 import {
-  SafeAreaView,
   View,
   StyleSheet,
   TextInput,
@@ -9,6 +8,7 @@ import {
   TouchableOpacity,
   Pressable,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/Themed';
 import { useJobSearch } from '@/hooks/useJobs';
 import { Job } from '@/types/job';
@@ -52,7 +52,7 @@ export default function Search() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar style="light" />
 
       <View style={styles.header}>

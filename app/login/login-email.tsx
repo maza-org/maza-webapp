@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Alert, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import axios, { AxiosError } from 'axios';
@@ -9,7 +10,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { baseUrl } from '@/services/api';
 import { ErrorResponse, LoginResponse, User } from '@/types/user';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DOMPurify from 'isomorphic-dompurify';
 
 export default function LoginEmail() {
   const [identifier, setIdentifier] = useState('');
@@ -62,7 +62,7 @@ export default function LoginEmail() {
             ...userData,
             token: token,
           };
-
+          console.log(`USER WITH TOKEN:`, JSON.stringify(userWithToken, null, 2));
           // Save user data
           // await setUserData.mutateAsync(userWithToken);
           await AsyncStorage.setItem('@user', JSON.stringify(userWithToken));
@@ -139,8 +139,8 @@ export default function LoginEmail() {
 
   const handleLogin = async () => {
     // Validate inputs
-    const _identifier = DOMPurify.sanitize(identifier.trim());
-    const _password = DOMPurify.sanitize(password.trim());
+    const _identifier = identifier.trim();
+    const _password = password.trim();
     if (!identifier || !password) {
       setError('Por favor preencha todos os campos');
       return;
@@ -166,7 +166,7 @@ export default function LoginEmail() {
   const isLoading = loginMutation.isPending || fetchUserDataMutation.isPending;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.topSection}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>

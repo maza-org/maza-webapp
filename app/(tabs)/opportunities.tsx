@@ -1,5 +1,4 @@
 import {
-  SafeAreaView,
   StyleSheet,
   View,
   FlatList,
@@ -9,6 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/Themed';
 import { useCallback, useMemo, useState } from 'react';
 import { router } from 'expo-router';
@@ -106,7 +106,7 @@ export default function Opportunities() {
 
   return (
     <ErrorBoundary onError={handleError}>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <StatusBar style="light" />
 
         <View style={styles.header}>

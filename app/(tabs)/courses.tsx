@@ -5,9 +5,9 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Text, View } from '@/components/Themed';
 import React, { useState, useRef, useEffect } from 'react';
@@ -355,7 +355,7 @@ export default function MeusCursosScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <Text style={styles.title}>Meus Cursos</Text>
       </View>

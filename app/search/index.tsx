@@ -4,11 +4,11 @@ import {
   TextInput,
   Pressable,
   Image,
-  SafeAreaView,
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -164,7 +164,7 @@ export default function Search() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={handleBackPress}>
           <Ionicons name="chevron-back" size={24} color="#fff" />

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   ImageBackground,
@@ -12,6 +11,7 @@ import {
   Linking,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
@@ -351,7 +351,7 @@ export default function CourseDetail() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Toast
         visible={toast.visible}
         message={toast.message}
