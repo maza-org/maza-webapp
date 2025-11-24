@@ -140,7 +140,7 @@ export default function Login() {
 
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Não possui uma conta? </Text>
-            <TouchableOpacity onPress={() => router.push('/login/create')}>
+            <TouchableOpacity onPress={() => router.push('/login/create-email')}>
               <Text style={styles.loginLink}>Registar</Text>
             </TouchableOpacity>
           </View>

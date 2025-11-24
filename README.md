@@ -21,7 +21,6 @@ A comprehensive React Native mobile application built with Expo that combines ed
 
 ### User Experience
 
-- **Onboarding Flow**: Guided introduction to platform features
 - **Profile Management**: Customize user profile and preferences
 - **Dark/Light Mode**: Automatic theme switching based on system preferences
 - **Responsive Design**: Optimized for both iOS and Android devices
@@ -140,7 +139,6 @@ Environment variables are managed through Expo's configuration system.
 org.maza.app/
 ├── app/                    # Expo Router app directory
 │   ├── (tabs)/            # Tab-based navigation screens
-│   ├── onboarding/        # Onboarding flow
 │   ├── login/             # Authentication screens
 │   ├── courses/           # Course-related screens
 │   ├── jobs/              # Job-related screens

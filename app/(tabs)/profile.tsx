@@ -275,7 +275,7 @@ export default function ProfileScreen() {
               <Feather name="mail" size={20} color="#1fa2df" />
               <Text style={styles.infoLabel}>Email</Text>
             </View>
-            <Text style={styles.infoValue}>{user.email || 'Não fornecido'}</Text>
+            <Text style={styles.infoValue}>{user.email || 'Campo não preenchido'}</Text>
           </View>
 
           <View style={styles.infoItem}>
@@ -283,7 +283,7 @@ export default function ProfileScreen() {
               <Feather name="credit-card" size={20} color="#1fa2df" />
               <Text style={styles.infoLabel}>BI Nacional</Text>
             </View>
-            <Text style={styles.infoValue}>{user.nationalID || 'Não fornecido'}</Text>
+            <Text style={styles.infoValue}>{user.nationalID || 'Campo não preenchido'}</Text>
           </View>
 
           <View style={styles.infoItem}>
@@ -298,7 +298,7 @@ export default function ProfileScreen() {
                     month: 'long',
                     year: 'numeric',
                   })
-                : 'Não fornecido'}
+                : 'Campo não preenchido'}
             </Text>
           </View>
 
@@ -307,7 +307,7 @@ export default function ProfileScreen() {
               <Feather name="user" size={20} color="#1fa2df" />
               <Text style={styles.infoLabel}>Género</Text>
             </View>
-            <Text style={styles.infoValue}>{user.gender || 'Não fornecido'}</Text>
+            <Text style={styles.infoValue}>{user.gender || 'Campo não preenchido'}</Text>
           </View>
 
           <View style={styles.infoItem}>
@@ -315,7 +315,7 @@ export default function ProfileScreen() {
               <Feather name="map-pin" size={20} color="#1fa2df" />
               <Text style={styles.infoLabel}>Província</Text>
             </View>
-            <Text style={styles.infoValue}>{user.province || 'Não fornecido'}</Text>
+            <Text style={styles.infoValue}>{user.province || 'Campo não preenchido'}</Text>
           </View>
 
           <View style={styles.infoItem}>
@@ -323,7 +323,7 @@ export default function ProfileScreen() {
               <Feather name="map" size={20} color="#1fa2df" />
               <Text style={styles.infoLabel}>Distrito</Text>
             </View>
-            <Text style={styles.infoValue}>{user.district || 'Não fornecido'}</Text>
+            <Text style={styles.infoValue}>{user.district || 'Campo não preenchido'}</Text>
           </View>
 
           <View style={styles.infoItem}>
@@ -331,7 +331,7 @@ export default function ProfileScreen() {
               <Feather name="briefcase" size={20} color="#1fa2df" />
               <Text style={styles.infoLabel}>Ocupação</Text>
             </View>
-            <Text style={styles.infoValue}>{user.occupation || 'Não fornecido'}</Text>
+            <Text style={styles.infoValue}>{user.occupation || 'Campo não preenchido'}</Text>
           </View>
 
           <View style={styles.infoItem}>
@@ -339,7 +339,7 @@ export default function ProfileScreen() {
               <Feather name="book" size={20} color="#1fa2df" />
               <Text style={styles.infoLabel}>Instituição Académica</Text>
             </View>
-            <Text style={styles.infoValue}>{user.academicInstitution || 'Não fornecido'}</Text>
+            <Text style={styles.infoValue}>{user.academicInstitution || 'Campo não preenchido'}</Text>
           </View>
 
           <View style={styles.infoItem}>
@@ -347,7 +347,7 @@ export default function ProfileScreen() {
               <Feather name="award" size={20} color="#1fa2df" />
               <Text style={styles.infoLabel}>Nível Académico</Text>
             </View>
-            <Text style={styles.infoValue}>{user.academicLevel || 'Não fornecido'}</Text>
+            <Text style={styles.infoValue}>{user.academicLevel || 'Campo não preenchido'}</Text>
           </View>
 
           <View style={styles.infoItem}>
