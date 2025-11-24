@@ -37,6 +37,7 @@ import {
   splitFullName,
 } from '@/utils/validation';
 import { User } from '@/types/user';
+import { navigateAfterLogin } from '@/util/onboarding';
 
 // Type-safe districts object
 const MOZAMBIQUE_DISTRICTS = MOZAMBIQUE_DISTRICTS_DATA as { [key: string]: string[] };
@@ -294,8 +295,9 @@ export default function CreateEmail() {
       };
 
       await setUserData.mutateAsync(authUser);
-      Alert.alert('Sucesso', 'Conta criada com sucesso.');
-      router.replace('/');
+
+      // Navigate based on onboarding status
+      await navigateAfterLogin(authUser.interests);
     } catch (e) {
       Alert.alert('Erro', 'Não foi possível processar o registo. Por favor, tente novamente.');
     } finally {

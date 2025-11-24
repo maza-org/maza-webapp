@@ -47,7 +47,7 @@ export default function Home() {
   };
 
   const handleHeaderPress = () => {
-    router.push('/onboarding/survey');
+    // router.push('//missions/');
   };
 
   return (
