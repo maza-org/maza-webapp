@@ -317,7 +317,7 @@ export default function CreateEmail() {
           />
         </View>
         <View style={styles.titleSection}>
-          <Text style={styles.headerText}>Registar com Email</Text>
+          <Text style={styles.headerText}>Registar</Text>
 
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Já tem uma conta? </Text>
@@ -331,7 +331,7 @@ export default function CreateEmail() {
       <View style={styles.content}>
         <ScrollView contentContainerStyle={styles.formContainer} showsVerticalScrollIndicator={false}>
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Nome de Utilizador</Text>
+            <Text style={[styles.inputLabel, { marginTop: 15 }]}>Nome de Utilizador</Text>
             <TextInput
               style={styles.input}
               placeholder="username"
@@ -548,7 +548,7 @@ export default function CreateEmail() {
           )}
         </ScrollView>
 
-        <View>
+        <View style={styles.buttonContainer}>
           <Button
             text={loading ? 'A processar...' : 'Registar'}
             handle={handleRegister}
@@ -589,7 +589,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 24,
     gap: 24,
     backgroundColor: '#121212',
   },
@@ -613,8 +612,8 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     gap: 24,
-    marginBottom: 32,
-    marginTop: 16,
+    paddingHorizontal: 24,
+    paddingBottom: 120,
   },
   inputGroup: {
     gap: 12,
@@ -726,9 +725,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
   },
+  buttonContainer: {
+    paddingHorizontal: 24,
+  },
   textButtonContainer: {
     alignItems: 'center',
     marginTop: 16,
+    paddingHorizontal: 24,
   },
   bottomLinkText: {
     color: '#999999',
