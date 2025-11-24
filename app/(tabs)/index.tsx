@@ -9,13 +9,8 @@ import ContinueCourseCard from '@/components/ContinueCourseCard';
 import UserCoursesSection from '@/components/UserCoursesSection';
 import CourseSection from '@/components/CourseSection';
 import { usePopularCourses, useNewCourses, useSuggestedCourses, useUserCourses } from '@/services/home';
-import {
-  navigateToCourse,
-  navigateToCategories,
-  navigateToSearch,
-  navigateToCourses,
-  navigateToCustomize,
-} from '@/util/navigation';
+import { navigateToCourse, navigateToCategories, navigateToSearch, navigateToCourses } from '@/util/navigation';
+import { router } from 'expo-router';
 
 export default function Home() {
   const { data: user } = useUser();
@@ -52,7 +47,7 @@ export default function Home() {
   };
 
   const handleHeaderPress = () => {
-    navigateToCustomize();
+    router.push('/onboarding/survey');
   };
 
   return (

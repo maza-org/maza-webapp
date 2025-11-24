@@ -2,15 +2,16 @@ import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import * as Sentry from '@sentry/react-native';
 import { isRunningInExpoGo } from 'expo';
 import { useColorScheme } from '@/components/useColorScheme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { hasSeenOnboarding } from '@/util/onboarding';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -19,7 +20,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: 'onboarding/survey',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -82,6 +83,32 @@ export default Sentry.wrap(RootLayout);
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      try {
+        const hasCompleted = await hasSeenOnboarding();
+
+        // If user has seen onboarding, redirect to main app
+        if (hasCompleted) {
+          router.replace('/(tabs)');
+        }
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, []);
+
+  // Don't render anything until we've checked the onboarding status
+  if (isChecking) {
+    return null;
+  }
 
   return (
     <SafeAreaProvider>

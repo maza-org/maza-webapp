@@ -6,6 +6,7 @@ import Button from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '@/services/api';
+import { navigateAfterLogin } from '@/util/onboarding';
 
 export default function Otp() {
   const { phone, otpId, fullname, name, surname } = useLocalSearchParams();
@@ -118,12 +119,8 @@ export default function Otp() {
       if (data.success || (name && surname && data.data)) {
         const userData = await saveUser(data);
 
-        // Check if user has interests before navigating
-        if (userData.interests && userData.interests.length > 0) {
-          router.push('/');
-        } else {
-          router.push('/start/customize');
-        }
+        // Navigate based on onboarding status and interests
+        await navigateAfterLogin(userData.interests);
       } else {
         Alert.alert('Erro de Verificação', 'Código OTP incorrecto. Por favor, verifique e tente novamente.', [
           { text: 'OK' },

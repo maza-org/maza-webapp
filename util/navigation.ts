@@ -28,7 +28,3 @@ export function navigateToSearch() {
 export function navigateToCourses() {
   router.push('/(tabs)/courses');
 }
-
-export function navigateToCustomize() {
-  router.push('/start/customize');
-}

@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { baseUrl } from '@/services/api';
 import { ErrorResponse, LoginResponse, User } from '@/types/user';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { navigateAfterLogin } from '@/util/onboarding';
 
 export default function LoginEmail() {
   const [identifier, setIdentifier] = useState('');
@@ -69,12 +70,8 @@ export default function LoginEmail() {
 
           Alert.alert('Sucesso', 'Login realizado com sucesso.');
 
-          // Check if user has interests before navigating
-          if (userData.interests && userData.interests.length > 0) {
-            router.replace('/');
-          } else {
-            router.replace('/start/customize');
-          }
+          // Navigate based on onboarding status and interests
+          await navigateAfterLogin(userData.interests);
         } else {
           setError('Resposta inválida do servidor');
         }
