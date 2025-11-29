@@ -315,11 +315,6 @@ export default function MeusCursosScreen() {
   const animationValue = useRef(new Animated.Value(0)).current;
   const buttonWidth = 100;
 
-  // If user is not authenticated, show login prompt
-  if (!user?.token) {
-    return <LoginPrompt />;
-  }
-
   const getAnimatedPosition = () => {
     switch (selectedFilter) {
       case 'inProgress':
@@ -341,6 +336,11 @@ export default function MeusCursosScreen() {
       tension: 150,
     }).start();
   }, [selectedFilter]);
+
+  // If user is not authenticated, show login prompt
+  if (!user?.token) {
+    return <LoginPrompt />;
+  }
 
   const animatedText = (buttonIndex: number) => {
     return animationValue.interpolate({

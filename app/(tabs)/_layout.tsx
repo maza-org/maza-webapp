@@ -2,8 +2,16 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
+// 1. IMPORT the useSafeAreaInsets hook
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
+  // 2. CALL the hook inside the functional component
+  const insets = useSafeAreaInsets();
+
+  // Define a base height for the content (icons/labels) inside the tab bar
+  const baseTabContentHeight = 65; // Keeping this close to your original 70
+
   return (
     <Tabs
       screenOptions={{
@@ -14,17 +22,18 @@ export default function TabLayout() {
           borderTopColor: 'rgba(255, 255, 255, 0.1)',
           borderTopWidth: 1,
           paddingTop: 5,
-          height: 70,
-          paddingBottom: Platform.OS === 'ios' ? 10 : 5,
+          height: baseTabContentHeight + insets.bottom,
+          paddingBottom: insets.bottom,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 12,
           fontFamily: 'ManropeRegular',
           marginTop: 6,
         },
         tabBarInactiveTintColor: '#7C7C8A',
         tabBarItemStyle: {
-          paddingBottom: 5,
+          // You can remove this or keep it, as paddingBottom is now handled in tabBarStyle
+          paddingBottom: 0,
         },
       }}
     >

@@ -400,7 +400,7 @@ export default function EditProfileScreen() {
           <Text style={styles.errorText}>
             A sua sessão expirou ou não está autenticado. Por favor, inicie sessão novamente.
           </Text>
-          <TouchableOpacity style={styles.loginButton} onPress={() => router.replace('/login')}>
+          <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/login')}>
             <Feather name="log-in" size={20} color="#FFF" style={styles.loginButtonIcon} />
             <Text style={styles.loginButtonText}>Iniciar Sessão</Text>
           </TouchableOpacity>

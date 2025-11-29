@@ -142,7 +142,7 @@ export default function Otp() {
               text: 'Criar conta',
               onPress: () => {
                 router.push({
-                  pathname: '/login/create',
+                  pathname: '/login/create-email',
                   params: { phone: phone },
                 });
               },

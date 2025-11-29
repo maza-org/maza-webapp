@@ -1,14 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  Image,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -180,7 +171,6 @@ export default function ProfileScreen() {
     });
   };
 
-
   if (isLoading || isRefreshing) {
     return (
       <View style={styles.loadingContainer}>
@@ -200,7 +190,7 @@ export default function ProfileScreen() {
           <Text style={styles.errorText}>
             A sua sessão expirou ou não está autenticado. Por favor, inicie sessão novamente para aceder ao seu perfil.
           </Text>
-          <TouchableOpacity style={styles.loginButton} onPress={() => router.replace('/login')}>
+          <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/login')}>
             <Feather name="log-in" size={20} color="#FFF" style={styles.loginButtonIcon} />
             <Text style={styles.loginButtonText}>Iniciar Sessão</Text>
           </TouchableOpacity>
