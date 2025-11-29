@@ -43,13 +43,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="missions"
-        options={{
-          title: 'Missões',
-          tabBarIcon: ({ color, size }) => <Ionicons name="flag" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="opportunities"
         options={{
           title: 'Oportunidades',
