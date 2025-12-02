@@ -46,6 +46,7 @@ interface UpdateUserResponse {
   user: {
     id: number;
     documentId: string;
+    username: string; // Added username
     email: string;
     phone: string;
     name: string;
@@ -143,6 +144,7 @@ export default function EditProfileScreen() {
 
   // Form states
   const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState(''); // Added username state
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [nationalID, setNationalID] = useState('');
@@ -158,6 +160,7 @@ export default function EditProfileScreen() {
   // Field errors
   const [emailError, setEmailError] = useState('');
   const [fullNameError, setFullNameError] = useState('');
+  const [usernameError, setUsernameError] = useState(''); // Added username error
   const [phoneError, setPhoneError] = useState('');
   const [nationalIDError, setNationalIDError] = useState('');
   const [formError, setFormError] = useState<string | undefined>(undefined);
@@ -166,6 +169,7 @@ export default function EditProfileScreen() {
   useEffect(() => {
     if (user) {
       setFullName(`${user.name || ''} ${user.middlename || ''} ${user.surname || ''}`.trim());
+      setUsername(user.username || '');
       setPhone(user.phone || '');
       setEmail(user.email || '');
       setNationalID(user.nationalID || '');
@@ -273,8 +277,9 @@ export default function EditProfileScreen() {
             Alert.alert('Erro', 'Utilizador não encontrado.');
             break;
           case 409:
-            setFormError(errorData?.error?.message || 'Email ou telefone já em uso.');
-            Alert.alert('Erro', 'Email ou telefone já está em uso por outra conta.');
+            // Check if it's specifically a username conflict based on message, otherwise generic
+            setFormError(errorData?.error?.message || 'Email, telefone ou nome de utilizador já em uso.');
+            Alert.alert('Erro', 'Email, telefone ou nome de utilizador já está em uso.');
             break;
           case 429:
             setFormError('Demasiadas tentativas. Por favor, aguarde alguns minutos.');
@@ -315,6 +320,7 @@ export default function EditProfileScreen() {
     // Clear previous errors
     setEmailError('');
     setFullNameError('');
+    setUsernameError('');
     setPhoneError('');
     setNationalIDError('');
     setFormError(undefined);
@@ -328,6 +334,12 @@ export default function EditProfileScreen() {
     // Validate full name
     if (!validateFullName(fullName)) {
       setFullNameError('Nome completo deve ter pelo menos duas partes (nome e apelido)');
+      return;
+    }
+
+    // Validate Username
+    if (!username || username.trim().length < 3) {
+      setUsernameError('Nome de utilizador deve ter pelo menos 3 caracteres');
       return;
     }
 
@@ -349,7 +361,7 @@ export default function EditProfileScreen() {
     }
 
     // Basic validations for mandatory fields
-    if (!fullName || !gender || !occupation) {
+    if (!fullName || !gender || !occupation || !username) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios');
       return;
     }
@@ -363,6 +375,7 @@ export default function EditProfileScreen() {
 
     // Execute update mutation
     updateProfileMutation.mutate({
+      username: username.trim(),
       name,
       middlename: middlename || undefined,
       surname,
@@ -423,9 +436,7 @@ export default function EditProfileScreen() {
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.formContainer}>
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>
-            Nome Completo <Text style={styles.required}>*</Text>
-          </Text>
+          <Text style={styles.inputLabel}>Nome Completo</Text>
           <TextInput
             style={[styles.input, fullNameError ? styles.inputError : null]}
             placeholder="João Manuel António"
@@ -439,6 +450,24 @@ export default function EditProfileScreen() {
             editable={!isSubmitting}
           />
           {fullNameError ? <Text style={styles.errorText}>{fullNameError}</Text> : null}
+        </View>
+
+        {/* Username Field */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Nome de Utilizador</Text>
+          <TextInput
+            style={[styles.input, usernameError ? styles.inputError : null]}
+            placeholder="joao.antonio"
+            placeholderTextColor="#666"
+            value={username}
+            onChangeText={(text) => {
+              setUsername(text);
+              if (usernameError) setUsernameError('');
+            }}
+            autoCapitalize="none"
+            editable={!isSubmitting}
+          />
+          {usernameError ? <Text style={styles.errorText}>{usernameError}</Text> : null}
         </View>
 
         <View style={styles.inputGroup}>
@@ -582,7 +611,7 @@ export default function EditProfileScreen() {
         )}
 
         <SearchablePicker
-          label="Género *"
+          label="Género"
           value={gender}
           options={GENDER_OPTIONS}
           onSelect={setGender}
@@ -611,7 +640,7 @@ export default function EditProfileScreen() {
         )}
 
         <SearchablePicker
-          label="Ocupação *"
+          label="Ocupação"
           value={occupation}
           options={OCCUPATIONS}
           onSelect={setOccupation}

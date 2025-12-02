@@ -50,7 +50,6 @@ export default function ProfileScreen() {
         try {
           await refetch();
           await fetchCertificates();
-          // Check if user has a profile image
           if (user?.profile_image?.formats?.thumbnail?.url) {
             setProfileImage(user?.profile_image?.formats?.thumbnail?.url);
           }
@@ -71,7 +70,6 @@ export default function ProfileScreen() {
       if (!user?.token) {
         throw new Error('No authentication token found');
       }
-      console.log(user?.token);
 
       const response = await fetch(`${baseUrl}/certificates`, {
         method: 'GET',
@@ -91,19 +89,11 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     try {
-      // Show loading toast
       showLoading('A terminar sessão...');
-
-      // Simulate a small delay to show the loading state
       await new Promise((resolve) => setTimeout(resolve, 500));
-
       await AsyncStorage.removeItem('@user');
-
-      // Hide loading toast and show success
       hideToast();
       showSuccess('Sessão terminada com sucesso');
-
-      // Navigate after a brief delay to show the success message
       setTimeout(() => {
         router.replace('/');
       }, 1000);
@@ -117,34 +107,23 @@ export default function ProfileScreen() {
   const handleDeleteInterest = async (subject: Subject) => {
     try {
       Alert.alert('Confirmar', 'Tem certeza que deseja remover este interesse?', [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
+        { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Remover',
           style: 'destructive',
           onPress: async () => {
             try {
               setDeletingInterestId(subject.id);
-
-              if (!user?.token) {
-                throw new Error('No authentication token found');
-              }
+              if (!user?.token) throw new Error('No authentication token found');
 
               const response = await fetch(`${baseUrl}/users-permissions/interests/${subject.documentId}`, {
                 method: 'DELETE',
-                headers: {
-                  Authorization: `Bearer ${user?.token}`,
-                },
+                headers: { Authorization: `Bearer ${user?.token}` },
               });
 
-              if (!response.ok) {
-                throw new Error('Failed to delete interest');
-              }
+              if (!response.ok) throw new Error('Failed to delete interest');
 
               Alert.alert('Sucesso', 'Interesse removido com sucesso');
-              // After successful deletion, refresh the user data
               await refetch();
             } catch (error) {
               console.error('Error making DELETE request:', error);
@@ -165,9 +144,7 @@ export default function ProfileScreen() {
   const viewCertificateDetails = (certificate: Certificate) => {
     router.push({
       pathname: '/user/certificate',
-      params: {
-        certificateId: certificate.documentId,
-      },
+      params: { certificateId: certificate.documentId },
     });
   };
 
@@ -247,7 +224,13 @@ export default function ProfileScreen() {
               </View>
             )}
           </View>
+
+          {/* Full Name Display */}
           <Text style={styles.fullname}>{user.fullname}</Text>
+
+          {/* Username Display - Read Only */}
+          <Text style={styles.usernameText}>@{user.username || ' Utilizador não definido'}</Text>
+
           <Text style={styles.documentId}>ID: {user.documentId}</Text>
         </View>
 
@@ -550,28 +533,40 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: 'bold',
   },
-  changePhotoButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+  profileImageWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 4,
+    borderColor: '#121214',
+    overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#121214',
+    position: 'relative',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
   },
   fullname: {
     fontSize: 24,
     fontWeight: '700',
     color: '#FFF',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  usernameText: {
+    fontSize: 16,
+    color: '#A8A8B3',
+    fontWeight: '500',
     marginBottom: 8,
+    textAlign: 'center',
   },
   documentId: {
-    color: '#A8A8B3',
-    fontSize: 14,
+    color: '#555',
+    fontSize: 12,
+    marginTop: 4,
   },
   infoSection: {
     padding: 24,
@@ -695,28 +690,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  addMoreInterestsButton: {
-    marginTop: 16,
-    marginLeft: 28,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    gap: 8,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: 'rgba(31, 162, 223, 0.3)',
-    backgroundColor: 'rgba(31, 162, 223, 0.05)',
-  },
-  addMoreInterestsText: {
-    color: '#1fa2df',
-    fontSize: 14,
-    fontWeight: '500',
-  },
   footer: {
-    padding: 24,
+    paddingHorizontal: 24, // Keep padding on sides
+    paddingTop: 24,
+    paddingBottom: 0,
     borderTopWidth: 1,
+    paddingVertical: 0,
     borderTopColor: '#323238',
     gap: 12,
     alignItems: 'center',
@@ -740,21 +719,5 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
-  },
-  profileImageWrapper: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 4,
-    borderColor: '#121214',
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  profileImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 50,
   },
 });

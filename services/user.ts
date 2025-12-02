@@ -46,6 +46,7 @@ export async function getCachedUserData(): Promise<User | null> {
       token: cachedUser.token,
       interests: userData.interests || [],
       profile_image: userData.profile_image,
+      survey: userData.survey || [],
     };
 
     // Update the cached data with fresh data
@@ -99,6 +100,7 @@ export async function getUserData(token: string): Promise<User | null> {
       token: token,
       interests: userData.interests || [],
       profile_image: userData.profile_image,
+      survey: userData.survey || [],
     };
 
     return user;

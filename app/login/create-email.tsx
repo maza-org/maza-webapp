@@ -560,7 +560,7 @@ export default function CreateEmail() {
         </View>
 
         <View style={styles.textButtonContainer}>
-          <TouchableOpacity onPress={() => router.push('/login/create')}>
+          <TouchableOpacity onPress={() => router.push('/login/create-email')}>
             <Text style={styles.bottomLinkText}>Prefere usar número de telefone?</Text>
           </TouchableOpacity>
         </View>

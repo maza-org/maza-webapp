@@ -1,6 +1,20 @@
 import { Course } from '@/app/(tabs)/profile';
 import { Picture } from '@/types/course';
 
+export interface SurveyAnswer {
+  id: number;
+  question: {
+    id: number;
+    documentId: string;
+    question: string;
+  };
+  answer: {
+    id: number;
+    documentId: string;
+    answer: string;
+  };
+}
+
 export interface User {
   id: number;
   documentId: string;
@@ -10,6 +24,7 @@ export interface User {
   surname: string;
   middlename?: string;
   fullname: string;
+  username: string;
   yoma_id: string | null;
   gender?: string;
   dateOfBirth?: string;
@@ -22,6 +37,7 @@ export interface User {
   token?: string;
   interests: Subject[];
   profile_image: Picture | null;
+  survey?: SurveyAnswer[];
 }
 
 export interface Subject {
