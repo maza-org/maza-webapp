@@ -49,9 +49,10 @@ interface SearchablePickerProps {
   options: string[];
   onSelect: (value: string) => void;
   placeholder: string;
+  error?: string; // Added error prop
 }
 
-function SearchablePicker({ label, value, options, onSelect, placeholder }: SearchablePickerProps) {
+function SearchablePicker({ label, value, options, onSelect, placeholder, error }: SearchablePickerProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -63,10 +64,14 @@ function SearchablePicker({ label, value, options, onSelect, placeholder }: Sear
   return (
     <View style={styles.inputGroup}>
       <Text style={styles.inputLabel}>{label}</Text>
-      <TouchableOpacity style={styles.pickerButton} onPress={() => setModalVisible(true)}>
+      <TouchableOpacity
+        style={[styles.pickerButton, error ? styles.inputError : null]}
+        onPress={() => setModalVisible(true)}
+      >
         <Text style={[styles.pickerButtonText, !value && styles.placeholderText]}>{value || placeholder}</Text>
-        <Ionicons name="chevron-down" size={20} color="#999" />
+        <Ionicons name="chevron-down" size={20} color={error ? '#FF6B6B' : '#999'} />
       </TouchableOpacity>
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <Modal
         visible={modalVisible}
@@ -125,7 +130,7 @@ export default function CreateEmail() {
 
   // Profile fields
   const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState(''); // optional raw phone if user wants to enter
+  const [phone, setPhone] = useState('');
   const [nationalID, setNationalID] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -135,24 +140,42 @@ export default function CreateEmail() {
   const [occupation, setOccupation] = useState('');
   const [academicInstitution, setAcademicInstitution] = useState('');
   const [academicLevel, setAcademicLevel] = useState('');
+  const [underageConsent, setUnderageConsent] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | undefined>(undefined);
+  const [globalError, setGlobalError] = useState<string | undefined>(undefined);
 
   // Field errors
+  const [usernameError, setUsernameError] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [fullNameError, setFullNameError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [nationalIDError, setNationalIDError] = useState('');
+  const [dobError, setDobError] = useState('');
+  const [genderError, setGenderError] = useState('');
+  const [occupationError, setOccupationError] = useState('');
+  const [consentError, setConsentError] = useState('');
 
   const setUserData = useSetUserData();
 
-  // Calculate max date (16 years ago from today)
-  const maxDate = useMemo(() => {
+  // Calculate max date (today)
+  const maxDate = useMemo(() => new Date(), []);
+
+  // Calculate the date 16 years ago (for underage check)
+  const sixteenYearsAgo = useMemo(() => {
     const date = new Date();
     date.setFullYear(date.getFullYear() - 16);
     return date;
   }, []);
+
+  // Check if user is under 16
+  const isUnderage = useMemo(() => {
+    if (!dateOfBirth) return false;
+    const birthDate = new Date(dateOfBirth.getFullYear(), dateOfBirth.getMonth(), dateOfBirth.getDate());
+    const cutoffDate = new Date(sixteenYearsAgo.getFullYear(), sixteenYearsAgo.getMonth(), sixteenYearsAgo.getDate());
+    return birthDate > cutoffDate;
+  }, [dateOfBirth, sixteenYearsAgo]);
 
   // Calculate min date (100 years ago)
   const minDate = useMemo(() => {
@@ -166,23 +189,6 @@ export default function CreateEmail() {
     return province ? MOZAMBIQUE_DISTRICTS[province] || [] : [];
   }, [province]);
 
-  // Check if all required fields are filled
-  const isFormValid = useMemo(() => {
-    return (
-      username.trim().length > 0 &&
-      email.trim().length > 0 &&
-      validateEmail(email) &&
-      password.length >= 6 &&
-      fullName.trim().length > 0 &&
-      validateFullName(fullName) &&
-      nationalID.trim().length > 0 &&
-      validateMozambicanID(nationalID) &&
-      dateOfBirth !== undefined &&
-      gender.length > 0 &&
-      occupation.trim().length > 0
-    );
-  }, [username, email, password, fullName, nationalID, dateOfBirth, gender, occupation]);
-
   // Update district when province changes
   useEffect(() => {
     if (province && district) {
@@ -194,47 +200,84 @@ export default function CreateEmail() {
   }, [province, district]);
 
   const handleRegister = async () => {
-    // Clear previous errors
+    setUsernameError('');
     setEmailError('');
+    setPasswordError('');
     setFullNameError('');
     setPhoneError('');
     setNationalIDError('');
-    setError(undefined);
-    // Validate email
+    setDobError('');
+    setGenderError('');
+    setOccupationError('');
+    setConsentError('');
+    setGlobalError(undefined);
+
+    let isValid = true;
+
+    // 2. Validate Fields
+    if (!username.trim()) {
+      setUsernameError('Nome de utilizador é obrigatório');
+      isValid = false;
+    }
+
     if (!validateEmail(email)) {
       setEmailError('Email inválido');
-      return;
+      isValid = false;
     }
 
-    // Validate full name
+    if (password.length < 6) {
+      setPasswordError('A palavra-passe deve ter pelo menos 6 caracteres');
+      isValid = false;
+    }
+
     if (!validateFullName(fullName)) {
-      setFullNameError('Nome completo deve ter pelo menos duas partes (nome e apelido)');
-      return;
+      setFullNameError('Insira pelo menos nome e apelido');
+      isValid = false;
     }
 
-    // Validate phone if provided
+    // Phone is optional, but if entered, must be valid
     let validatedPhone = phone;
     if (phone.trim()) {
       const phoneResult = validateMozambicanPhone(phone);
       if (!phoneResult) {
-        setPhoneError('Número de telefone moçambicano inválido. Formato: +258821231231 ou 821231231');
-        return;
+        setPhoneError('Número inválido. Ex: 841231231');
+        isValid = false;
+      } else {
+        validatedPhone = phoneResult;
       }
-      validatedPhone = phoneResult;
     }
 
-    // Validate national ID
     if (!validateMozambicanID(nationalID)) {
-      setNationalIDError('Bilhete de identidade inválido. Formato: 12 dígitos + 1 letra (ex: 110100987331S)');
+      setNationalIDError('BI inválido (12 números + 1 letra)');
+      isValid = false;
+    }
+
+    if (!dateOfBirth) {
+      setDobError('Data de nascimento é obrigatória');
+      isValid = false;
+    }
+
+    if (!gender) {
+      setGenderError('Selecione o género');
+      isValid = false;
+    }
+
+    if (!occupation) {
+      setOccupationError('Selecione a ocupação');
+      isValid = false;
+    }
+
+    if (isUnderage && !underageConsent) {
+      setConsentError('Para menores de 16 anos, é necessário confirmar o consentimento');
+      isValid = false;
+    }
+
+    if (!isValid) {
+      // Stop here if validation fails. The UI will update with red borders/text.
       return;
     }
 
-    // Basic validations for mandatory fields
-    if (!username || !password || !fullName || !gender || !occupation || !nationalID || !dateOfBirth) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios');
-      return;
-    }
-
+    // 3. Proceed with API call
     setLoading(true);
     try {
       const { name, middlename, surname } = splitFullName(fullName);
@@ -243,6 +286,7 @@ export default function CreateEmail() {
       const formattedDate = dateOfBirth
         ? `${dateOfBirth.getFullYear()}-${String(dateOfBirth.getMonth() + 1).padStart(2, '0')}-${String(dateOfBirth.getDate()).padStart(2, '0')}`
         : '';
+
       const response = await fetch(`${baseUrl}/users`, {
         method: 'POST',
         headers: {
@@ -271,18 +315,18 @@ export default function CreateEmail() {
 
       if (response.status === 409) {
         const err = await response.json();
-        setError(err?.error?.details?.description || 'Utilizador já registado');
+        setGlobalError(err?.error?.details?.description || 'Utilizador já registado');
         return;
       }
 
       if (response.status === 400) {
         const err = await response.json();
-        setError(err?.error?.details?.message || 'Pedido inválido');
+        setGlobalError(err?.error?.details?.message || 'Dados inválidos. Verifique os campos.');
         return;
       }
 
       if (!response.ok) {
-        setError('Ocorreu um erro ao registar. Tente novamente.');
+        setGlobalError('Erro de conexão. Tente novamente.');
         return;
       }
 
@@ -295,11 +339,9 @@ export default function CreateEmail() {
       };
 
       await setUserData.mutateAsync(authUser);
-
-      // Navigate based on onboarding status
       await navigateAfterLogin(authUser.interests);
     } catch (e) {
-      Alert.alert('Erro', 'Não foi possível processar o registo. Por favor, tente novamente.');
+      setGlobalError('Não foi possível processar o registo. Verifique a sua internet.');
     } finally {
       setLoading(false);
     }
@@ -320,7 +362,6 @@ export default function CreateEmail() {
         </View>
         <View style={styles.titleSection}>
           <Text style={styles.headerText}>Registar</Text>
-
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Já tem uma conta? </Text>
             <TouchableOpacity onPress={() => router.push('/login/login-email')}>
@@ -332,18 +373,24 @@ export default function CreateEmail() {
 
       <View style={styles.content}>
         <ScrollView contentContainerStyle={styles.formContainer} showsVerticalScrollIndicator={false}>
+          {/* Username */}
           <View style={styles.inputGroup}>
             <Text style={[styles.inputLabel, { marginTop: 15 }]}>Nome de Utilizador</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, usernameError ? styles.inputError : null]}
               placeholder="username"
               placeholderTextColor="#666"
               value={username}
-              onChangeText={setUsername}
+              onChangeText={(text) => {
+                setUsername(text);
+                if (usernameError) setUsernameError('');
+              }}
               autoCapitalize="none"
             />
+            {usernameError ? <Text style={styles.errorText}>{usernameError}</Text> : null}
           </View>
 
+          {/* Email */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput
@@ -361,15 +408,19 @@ export default function CreateEmail() {
             {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
           </View>
 
+          {/* Password */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Palavra-passe</Text>
             <View style={styles.passwordContainer}>
               <TextInput
-                style={[styles.input, styles.passwordInput]}
+                style={[styles.input, styles.passwordInput, passwordError ? styles.inputError : null]}
                 placeholder="********"
                 placeholderTextColor="#666"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (passwordError) setPasswordError('');
+                }}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
               />
@@ -377,8 +428,10 @@ export default function CreateEmail() {
                 <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#999" />
               </TouchableOpacity>
             </View>
+            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
           </View>
 
+          {/* Full Name */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Nome Completo</Text>
             <TextInput
@@ -395,6 +448,7 @@ export default function CreateEmail() {
             {fullNameError ? <Text style={styles.errorText}>{fullNameError}</Text> : null}
           </View>
 
+          {/* Phone */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Número de Telemóvel (opcional)</Text>
             <TextInput
@@ -412,6 +466,7 @@ export default function CreateEmail() {
             {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
           </View>
 
+          {/* National ID */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Bilhete de Identidade</Text>
             <TextInput
@@ -429,6 +484,7 @@ export default function CreateEmail() {
             {nationalIDError ? <Text style={styles.errorText}>{nationalIDError}</Text> : null}
           </View>
 
+          {/* Date of Birth */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Data de Nascimento</Text>
             {Platform.OS === 'web' ? (
@@ -442,7 +498,7 @@ export default function CreateEmail() {
                   paddingRight: 16,
                   fontSize: 16,
                   color: '#FFFFFF',
-                  border: 'none',
+                  border: dobError ? '1px solid #FF6B6B' : 'none',
                   outline: 'none',
                   fontFamily: 'inherit',
                 }}
@@ -458,18 +514,22 @@ export default function CreateEmail() {
                   if (value) {
                     const [year, month, day] = value.split('-').map(Number);
                     setDateOfBirth(new Date(year, month - 1, day));
+                    setDobError('');
                   }
                 }}
               />
             ) : (
               <>
-                <TouchableOpacity style={styles.pickerButton} onPress={() => setShowDatePicker(true)}>
+                <TouchableOpacity
+                  style={[styles.pickerButton, dobError ? styles.inputError : null]}
+                  onPress={() => setShowDatePicker(true)}
+                >
                   <Text style={[styles.pickerButtonText, !dateOfBirth && styles.placeholderText]}>
                     {dateOfBirth
                       ? `${dateOfBirth.getDate()}/${dateOfBirth.getMonth() + 1}/${dateOfBirth.getFullYear()}`
-                      : 'Selecionar data (idade mínima: 16 anos)'}
+                      : 'Selecionar data de nascimento'}
                   </Text>
-                  <Ionicons name="calendar-outline" size={20} color="#999" />
+                  <Ionicons name="calendar-outline" size={20} color={dobError ? '#FF6B6B' : '#999'} />
                 </TouchableOpacity>
                 {showDatePicker && (
                   <DateTimePicker
@@ -480,6 +540,7 @@ export default function CreateEmail() {
                       setShowDatePicker(Platform.OS === 'ios');
                       if (selectedDate) {
                         setDateOfBirth(selectedDate);
+                        setDobError('');
                       }
                     }}
                     maximumDate={maxDate}
@@ -488,14 +549,19 @@ export default function CreateEmail() {
                 )}
               </>
             )}
+            {dobError ? <Text style={styles.errorText}>{dobError}</Text> : null}
           </View>
 
           <SearchablePicker
             label="Género"
             value={gender}
             options={GENDER_OPTIONS}
-            onSelect={setGender}
+            onSelect={(val) => {
+              setGender(val);
+              setGenderError('');
+            }}
             placeholder="Selecionar género"
+            error={genderError}
           />
 
           <SearchablePicker
@@ -504,7 +570,7 @@ export default function CreateEmail() {
             options={MOZAMBIQUE_PROVINCES}
             onSelect={(value) => {
               setProvince(value);
-              setDistrict(''); // Reset district when province changes
+              setDistrict('');
             }}
             placeholder="Selecionar província"
           />
@@ -523,8 +589,12 @@ export default function CreateEmail() {
             label="Ocupação"
             value={occupation}
             options={OCCUPATIONS}
-            onSelect={setOccupation}
+            onSelect={(val) => {
+              setOccupation(val);
+              setOccupationError('');
+            }}
             placeholder="Selecionar ocupação"
+            error={occupationError}
           />
 
           <SearchablePicker
@@ -543,9 +613,31 @@ export default function CreateEmail() {
             placeholder="Selecionar nível académico"
           />
 
-          {error && (
+          {isUnderage && (
+            <View style={[styles.consentContainer, consentError ? styles.consentContainerError : null]}>
+              <TouchableOpacity
+                style={styles.consentRow}
+                onPress={() => {
+                  setUnderageConsent(!underageConsent);
+                  if (consentError) setConsentError('');
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.checkbox, underageConsent && styles.checkboxChecked, consentError && !underageConsent ? styles.checkboxError : null]}>
+                  {underageConsent && <Ionicons name="checkmark" size={16} color="#fff" />}
+                </View>
+                <Text style={styles.consentText}>
+                  Estou a criar uma conta para um utilizador menor de 16 anos e confirmo que tenho autorização do
+                  responsável legal para o fazer.
+                </Text>
+              </TouchableOpacity>
+              {consentError ? <Text style={styles.consentErrorText}>{consentError}</Text> : null}
+            </View>
+          )}
+
+          {globalError && (
             <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
+              <Text style={styles.errorText}>{globalError}</Text>
             </View>
           )}
         </ScrollView>
@@ -554,7 +646,7 @@ export default function CreateEmail() {
           <Button
             text={loading ? 'A processar...' : 'Registar'}
             handle={handleRegister}
-            disabled={loading || !isFormValid}
+            disabled={loading}
             loading={loading}
           />
         </View>
@@ -632,9 +724,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     color: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   inputError: {
-    borderWidth: 1,
     borderColor: '#FF6B6B',
   },
   errorText: {
@@ -649,6 +742,50 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#FF6B6B',
+  },
+  consentContainer: {
+    backgroundColor: '#1E3A5F',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#2196F3',
+  },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#2196F3',
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  checkboxChecked: {
+    backgroundColor: '#2196F3',
+  },
+  consentText: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  consentContainerError: {
+    borderColor: '#FF6B6B',
+    backgroundColor: '#3D1E2A',
+  },
+  checkboxError: {
+    borderColor: '#FF6B6B',
+  },
+  consentErrorText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    marginTop: 12,
   },
   passwordContainer: {
     position: 'relative',
@@ -672,6 +809,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   pickerButtonText: {
     fontSize: 16,
