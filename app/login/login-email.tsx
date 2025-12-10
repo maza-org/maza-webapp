@@ -230,6 +230,9 @@ export default function LoginEmail() {
                 <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#999" />
               </TouchableOpacity>
             </View>
+            <TouchableOpacity onPress={() => router.push('/login/forgot-password')} disabled={isLoading}>
+              <Text style={styles.forgotPasswordLink}>Esqueceu a palavra-passe?</Text>
+            </TouchableOpacity>
           </View>
 
           {error && (
@@ -334,6 +337,12 @@ const styles = StyleSheet.create({
     right: 16,
     top: 14,
     padding: 4,
+  },
+  forgotPasswordLink: {
+    color: '#2196F3',
+    fontSize: 14,
+    textAlign: 'right',
+    marginTop: 8,
   },
   errorContainer: {
     backgroundColor: '#3D1E1E',

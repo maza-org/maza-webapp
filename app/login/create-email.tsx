@@ -314,8 +314,7 @@ export default function CreateEmail() {
       });
 
       if (response.status === 409) {
-        const err = await response.json();
-        setGlobalError(err?.error?.details?.description || 'Utilizador já registado');
+        setGlobalError('Já existe um utilizador registado com este email, telefone, BI ou nome de utilizador.');
         return;
       }
 
@@ -395,7 +394,6 @@ export default function CreateEmail() {
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput
               style={[styles.input, emailError ? styles.inputError : null]}
-              placeholder="email@exemplo.com"
               placeholderTextColor="#666"
               keyboardType="email-address"
               value={email}
@@ -623,7 +621,13 @@ export default function CreateEmail() {
                 }}
                 activeOpacity={0.7}
               >
-                <View style={[styles.checkbox, underageConsent && styles.checkboxChecked, consentError && !underageConsent ? styles.checkboxError : null]}>
+                <View
+                  style={[
+                    styles.checkbox,
+                    underageConsent && styles.checkboxChecked,
+                    consentError && !underageConsent ? styles.checkboxError : null,
+                  ]}
+                >
                   {underageConsent && <Ionicons name="checkmark" size={16} color="#fff" />}
                 </View>
                 <Text style={styles.consentText}>
