@@ -1,15 +1,11 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
-// 1. IMPORT the useSafeAreaInsets hook
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
-  // 2. CALL the hook inside the functional component
   const insets = useSafeAreaInsets();
-
-  // Define a base height for the content (icons/labels) inside the tab bar
   const baseTabContentHeight = 65; // Keeping this close to your original 70
 
   return (

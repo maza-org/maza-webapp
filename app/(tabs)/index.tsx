@@ -8,6 +8,8 @@ import SearchBar from '@/components/SearchBar';
 import ContinueCourseCard from '@/components/ContinueCourseCard';
 import UserCoursesSection from '@/components/UserCoursesSection';
 import CourseSection from '@/components/CourseSection';
+import CreateAccountSection from '@/components/CreateAccountSection';
+import ExploreOpportunitiesSection from '@/components/ExploreOpportunitiesSection';
 import { usePopularCourses, useNewCourses, useSuggestedCourses, useUserCourses } from '@/services/home';
 import { navigateToCourse, navigateToCategories, navigateToSearch, navigateToCourses } from '@/util/navigation';
 import { router } from 'expo-router';
@@ -62,6 +64,9 @@ export default function Home() {
         {/* Category Icons */}
         <HomepageCategories />
 
+        {/* Create Account Section - Only shown when user is not authenticated */}
+        {!user?.token && <CreateAccountSection />}
+
         {/* Continue Course Section */}
         {user?.token && !loadingUserCourses && userCourses.length > 0 && (
           <View style={styles.courseSection}>
@@ -109,6 +114,9 @@ export default function Home() {
           onViewAll={handlePopularCoursesViewAll}
           onCoursePress={handleCoursePress}
         />
+
+        {/* Explore Opportunities Section */}
+        <ExploreOpportunitiesSection />
       </ScrollView>
     </SafeAreaView>
   );
@@ -118,7 +126,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#121214',
-    padding: 25,
+    padding: Platform.OS === 'web' ? 0 : 25,
     paddingEnd: 25,
     paddingStart: 25,
   },
