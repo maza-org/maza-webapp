@@ -19,6 +19,7 @@ import ProfileInfoItem from '@/app/components/profile/ProfileInfoItem';
 import InterestsSection from '@/app/components/profile/InterestsSection';
 import CertificatesSection from '@/app/components/profile/CertificatesSection';
 import ProfileErrorState from '@/app/components/profile/ProfileErrorState';
+import { formatDate } from '@/util/util';
 
 export default function ProfileScreen() {
   const { data: user, isLoading, error } = useUser();
@@ -27,8 +28,7 @@ export default function ProfileScreen() {
   const [deletingInterestId, setDeletingInterestId] = useState<number | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  
-  // React Query hooks
+
   const { data: certificates = [], isLoading: isLoadingCertificates, refetch: refetchCertificates } = useCertificates();
   const deleteInterestMutation = useDeleteInterest();
   const logoutMutation = useLogout();
@@ -51,8 +51,6 @@ export default function ProfileScreen() {
       refreshProfileData();
     }, [profileRefreshMutation, refetchCertificates, user?.profile_image?.formats?.thumbnail?.url])
   );
-
-  // fetchCertificates is now handled by useCertificates hook
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
@@ -151,11 +149,7 @@ export default function ProfileScreen() {
             icon="calendar" 
             label="Data de Nascimento" 
             value={user.dateOfBirth
-              ? new Date(user.dateOfBirth).toLocaleDateString('pt-MZ', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                })
+              ? formatDate(user?.dateOfBirth)
               : 'Campo não preenchido'} 
           />
 

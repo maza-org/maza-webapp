@@ -71,12 +71,10 @@ export default function Challenge(): React.ReactElement {
     },
   ]);
 
-  // Function to handle node click
   const handleNodePress = (id: number): void => {
     console.log(`Node ${id} pressed`);
   };
 
-  // Get image based on node type and status
   const getNodeImage = (node: Node): string => {
     const baseColor = node.isColorful ? 'colorful' : 'grayscale';
 
@@ -116,7 +114,6 @@ export default function Challenge(): React.ReactElement {
     );
   };
 
-  // Render challenge node
   const renderNode = (node: Node, index: number): React.ReactElement => {
     const isEven = index % 2 === 0;
 

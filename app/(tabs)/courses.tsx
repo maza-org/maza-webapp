@@ -25,14 +25,11 @@ const FloatingFilterButton = ({ onPress }: { onPress: () => void }) => (
 );
 
 
-
-// Main Screen Component
-export default function MeusCursosScreen() {
+export default function Courses() {
   const { data: user } = useUser();
   const [selectedFilter, setSelectedFilter] = useState<CourseTabType>('inProgress');
   const [filterModalVisible, setFilterModalVisible] = useState(false);
 
-  // If user is not authenticated, show login prompt
   if (!user?.token) {
     return <LoginPrompt />;
   }

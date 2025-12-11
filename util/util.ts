@@ -24,3 +24,13 @@ export const validateMozambiquePhone = (phoneNumber: string) => {
     formattedNumber: `+258${number}`,
   };
 };
+
+export const formatDate = (date: string) => {
+  if(!date) return '';
+
+  return new Date(date).toLocaleDateString('pt-MZ', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
+}
