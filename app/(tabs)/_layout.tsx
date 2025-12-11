@@ -3,36 +3,16 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { tabStyles } from '@/app/types/tabs';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const baseTabContentHeight = 65; // Keeping this close to your original 70
+  const baseTabContentHeight = 65;
+
+  const screenOptions = tabStyles.screenOptions(insets, baseTabContentHeight);
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: '#3485FF',
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#202024',
-          borderTopColor: 'rgba(255, 255, 255, 0.1)',
-          borderTopWidth: 1,
-          paddingTop: 5,
-          height: baseTabContentHeight + insets.bottom,
-          paddingBottom: insets.bottom,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontFamily: 'ManropeRegular',
-          marginTop: 6,
-        },
-        tabBarInactiveTintColor: '#7C7C8A',
-        tabBarItemStyle: {
-          // You can remove this or keep it, as paddingBottom is now handled in tabBarStyle
-          paddingBottom: 0,
-        },
-      }}
-    >
+    <Tabs screenOptions={screenOptions}>
       <Tabs.Screen
         name="index"
         options={{

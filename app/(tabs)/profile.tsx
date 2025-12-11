@@ -1,144 +1,79 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useFocusEffect } from 'expo-router';
 import useUser from '@/hooks/useUser';
 import { useToast } from '@/hooks/useToast';
-import CertificateItem from '@/components/CertificateItem';
 import Toast from '@/components/Toast';
-import { baseUrl } from '@/services/api';
-
-export interface Subject {
-  id: number;
-  documentId: string;
-  name: string;
-}
-
-export interface Course {
-  id: number;
-  documentId: string;
-  title: string;
-  author: string;
-  rating_avg: number;
-  subscribed: number;
-}
-
-export interface Certificate {
-  id: number;
-  documentId: string;
-  createdAt: string;
-  course: Course;
-}
+import { Subject, Certificate } from '@/app/types/profile';
+import { 
+  useCertificates, 
+  useDeleteInterest, 
+  useLogout, 
+  useProfileRefresh 
+} from '@/app/hooks/useProfileQueries';
+import ProfileHeader from '@/app/components/profile/ProfileHeader';
+import ProfileImageSection from '@/app/components/profile/ProfileImageSection';
+import ProfileInfoItem from '@/app/components/profile/ProfileInfoItem';
+import InterestsSection from '@/app/components/profile/InterestsSection';
+import CertificatesSection from '@/app/components/profile/CertificatesSection';
+import ProfileErrorState from '@/app/components/profile/ProfileErrorState';
 
 export default function ProfileScreen() {
-  const { data: user, isLoading, error, refetch } = useUser();
-  const { toast, config, showLoading, showSuccess, hideToast } = useToast();
+  const { data: user, isLoading, error } = useUser();
+  const { toast, config, hideToast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [deletingInterestId, setDeletingInterestId] = useState<number | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [isLoadingCertificates, setIsLoadingCertificates] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  
+  // React Query hooks
+  const { data: certificates = [], isLoading: isLoadingCertificates, refetch: refetchCertificates } = useCertificates();
+  const deleteInterestMutation = useDeleteInterest();
+  const logoutMutation = useLogout();
+  const profileRefreshMutation = useProfileRefresh();
 
   useFocusEffect(
     useCallback(() => {
       const refreshProfileData = async () => {
-        setIsRefreshing(true);
         try {
-          await refetch();
-          await fetchCertificates();
+          await profileRefreshMutation.mutateAsync();
+          await refetchCertificates();
           if (user?.profile_image?.formats?.thumbnail?.url) {
             setProfileImage(user?.profile_image?.formats?.thumbnail?.url);
           }
         } catch (error) {
           console.error('Error refreshing profile data:', error);
-        } finally {
-          setIsRefreshing(false);
         }
       };
 
       refreshProfileData();
-    }, [refetch, user?.profile_image?.formats?.thumbnail?.url])
+    }, [profileRefreshMutation, refetchCertificates, user?.profile_image?.formats?.thumbnail?.url])
   );
 
-  const fetchCertificates = async () => {
-    setIsLoadingCertificates(true);
-    try {
-      if (!user?.token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${baseUrl}/certificates`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      });
-      if (response.ok) {
-        const responseData = await response.json();
-        setCertificates(responseData.data);
-      }
-    } catch (error) {
-    } finally {
-      setIsLoadingCertificates(false);
-    }
-  };
+  // fetchCertificates is now handled by useCertificates hook
 
   const handleLogout = async () => {
-    try {
-      showLoading('A terminar sessão...');
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      await AsyncStorage.removeItem('@user');
-      hideToast();
-      showSuccess('Sessão terminada com sucesso');
-      setTimeout(() => {
-        router.replace('/');
-      }, 1000);
-    } catch (error) {
-      console.error('Error during logout:', error);
-      hideToast();
-      Alert.alert('Erro', 'Falha ao terminar sessão');
-    }
+    await logoutMutation.mutateAsync();
   };
 
   const handleDeleteInterest = async (subject: Subject) => {
-    try {
-      Alert.alert('Confirmar', 'Tem certeza que deseja remover este interesse?', [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Remover',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setDeletingInterestId(subject.id);
-              if (!user?.token) throw new Error('No authentication token found');
-
-              const response = await fetch(`${baseUrl}/users-permissions/interests/${subject.documentId}`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${user?.token}` },
-              });
-
-              if (!response.ok) throw new Error('Failed to delete interest');
-
-              Alert.alert('Sucesso', 'Interesse removido com sucesso');
-              await refetch();
-            } catch (error) {
-              console.error('Error making DELETE request:', error);
-              Alert.alert('Erro', 'Falha ao remover interesse');
-            } finally {
-              setDeletingInterestId(null);
-            }
-          },
+    Alert.alert('Confirmar', 'Tem certeza que deseja remover este interesse?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Remover',
+        style: 'destructive',
+        onPress: async () => {
+          setDeletingInterestId(subject.id);
+          try {
+            await deleteInterestMutation.mutateAsync(subject);
+          } finally {
+            setDeletingInterestId(null);
+          }
         },
-      ]);
-    } catch (error) {
-      console.error('Error in handleDeleteInterest:', error);
-      Alert.alert('Erro', 'Falha ao remover interesse');
-      setDeletingInterestId(null);
-    }
+      },
+    ]);
   };
 
   const viewCertificateDetails = (certificate: Certificate) => {
@@ -148,7 +83,7 @@ export default function ProfileScreen() {
     });
   };
 
-  if (isLoading || isRefreshing) {
+  if (isLoading || profileRefreshMutation.isPending) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#1fa2df" />
@@ -158,21 +93,7 @@ export default function ProfileScreen() {
 
   if (error || !user) {
     return (
-      <View style={styles.errorContainer}>
-        <View style={styles.errorContent}>
-          <View style={styles.errorIconContainer}>
-            <Feather name="user-x" size={48} color="#1fa2df" />
-          </View>
-          <Text style={styles.errorTitle}>Sessão Expirada</Text>
-          <Text style={styles.errorText}>
-            A sua sessão expirou ou não está autenticado. Por favor, inicie sessão novamente para aceder ao seu perfil.
-          </Text>
-          <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/login')}>
-            <Feather name="log-in" size={20} color="#FFF" style={styles.loginButtonIcon} />
-            <Text style={styles.loginButtonText}>Iniciar Sessão</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <ProfileErrorState onButtonPress={() => router.push('/login')} />
     );
   }
 
@@ -197,216 +118,104 @@ export default function ProfileScreen() {
         showIcon={config.showIcon}
       />
       <ScrollView style={styles.scrollView}>
-        <View style={styles.header}>
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
-              <Feather name="chevron-left" size={24} color="#FFF" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/user/edit')}>
-              <Feather name="edit-2" size={24} color="#FFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <ProfileHeader />
 
-        <View style={styles.profileSection}>
-          <View style={styles.profileImageContainer}>
-            {isUploadingImage ? (
-              <View style={styles.profileImagePlaceholder}>
-                <ActivityIndicator size="large" color="#FFFFFF" />
-              </View>
-            ) : profileImage ? (
-              <View style={styles.profileImageWrapper}>
-                <Image source={{ uri: profileImage }} style={styles.profileImage} />
-              </View>
-            ) : (
-              <View style={styles.profileImagePlaceholder}>
-                <Text style={styles.profileImagePlaceholderText}>{`${user.name} ${user.surname}`.charAt(0)}</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Full Name Display */}
-          <Text style={styles.fullname}>{user.fullname}</Text>
-
-          {/* Username Display - Read Only */}
-          <Text style={styles.usernameText}>@{user.username || ' Utilizador não definido'}</Text>
-
-          <Text style={styles.documentId}>ID: {user.documentId}</Text>
-        </View>
+        <ProfileImageSection
+          profileImage={profileImage}
+          isUploadingImage={isUploadingImage}
+          fullname={user.fullname}
+          username={user.username}
+          documentId={user.documentId}
+        />
 
         <View style={styles.infoSection}>
-          <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="phone" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Número de Telemóvel</Text>
-            </View>
-            <Text style={styles.infoValue}>{user.phone}</Text>
-          </View>
+          <ProfileInfoItem 
+            icon="phone" 
+            label="Número de Telemóvel" 
+            value={user.phone} 
+          />
 
-          <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="mail" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Email</Text>
-            </View>
-            <Text style={styles.infoValue}>{user.email || 'Campo não preenchido'}</Text>
-          </View>
+          <ProfileInfoItem 
+            icon="mail" 
+            label="Email" 
+            value={user.email || 'Campo não preenchido'} 
+          />
 
-          <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="credit-card" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>BI Nacional</Text>
-            </View>
-            <Text style={styles.infoValue}>{user.nationalID || 'Campo não preenchido'}</Text>
-          </View>
+          <ProfileInfoItem 
+            icon="credit-card" 
+            label="BI Nacional" 
+            value={user.nationalID || 'Campo não preenchido'} 
+          />
 
-          <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="calendar" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Data de Nascimento</Text>
-            </View>
-            <Text style={styles.infoValue}>
-              {user.dateOfBirth
-                ? new Date(user.dateOfBirth).toLocaleDateString('pt-MZ', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric',
-                  })
-                : 'Campo não preenchido'}
-            </Text>
-          </View>
+          <ProfileInfoItem 
+            icon="calendar" 
+            label="Data de Nascimento" 
+            value={user.dateOfBirth
+              ? new Date(user.dateOfBirth).toLocaleDateString('pt-MZ', {
+                  day: '2-digit',
+                  month: 'long',
+                  year: 'numeric',
+                })
+              : 'Campo não preenchido'} 
+          />
 
-          <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="user" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Género</Text>
-            </View>
-            <Text style={styles.infoValue}>{user.gender || 'Campo não preenchido'}</Text>
-          </View>
+          <ProfileInfoItem 
+            icon="user" 
+            label="Género" 
+            value={user.gender || 'Campo não preenchido'} 
+          />
 
-          <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="map-pin" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Província</Text>
-            </View>
-            <Text style={styles.infoValue}>{user.province || 'Campo não preenchido'}</Text>
-          </View>
+          <ProfileInfoItem 
+            icon="map-pin" 
+            label="Província" 
+            value={user.province || 'Campo não preenchido'} 
+          />
 
-          <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="map" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Distrito</Text>
-            </View>
-            <Text style={styles.infoValue}>{user.district || 'Campo não preenchido'}</Text>
-          </View>
+          <ProfileInfoItem 
+            icon="map" 
+            label="Distrito" 
+            value={user.district || 'Campo não preenchido'} 
+          />
 
-          <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="briefcase" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Ocupação</Text>
-            </View>
-            <Text style={styles.infoValue}>{user.occupation || 'Campo não preenchido'}</Text>
-          </View>
+          <ProfileInfoItem 
+            icon="briefcase" 
+            label="Ocupação" 
+            value={user.occupation || 'Campo não preenchido'} 
+          />
 
-          <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="book" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Instituição Académica</Text>
-            </View>
-            <Text style={styles.infoValue}>{user.academicInstitution || 'Campo não preenchido'}</Text>
-          </View>
+          <ProfileInfoItem 
+            icon="book" 
+            label="Instituição Académica" 
+            value={user.academicInstitution || 'Campo não preenchido'} 
+          />
 
-          <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="award" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Nível Académico</Text>
-            </View>
-            <Text style={styles.infoValue}>{user.academicLevel || 'Campo não preenchido'}</Text>
-          </View>
+          <ProfileInfoItem 
+            icon="award" 
+            label="Nível Académico" 
+            value={user.academicLevel || 'Campo não preenchido'} 
+          />
 
-          <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="tag" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>ID Yoma</Text>
-            </View>
-            <Text style={styles.infoValue}>{user.yoma_id || 'Não conectado'}</Text>
-          </View>
+          <ProfileInfoItem 
+            icon="tag" 
+            label="ID Yoma" 
+            value={user.yoma_id || 'Não conectado'} 
+          />
 
-          <View style={styles.infoItem}>
-            <View style={styles.headerContainer}>
-              <View style={styles.infoHeader}>
-                <Feather name="star" size={20} color="#1fa2df" />
-                <Text style={styles.infoLabel}>Interesses</Text>
-              </View>
-              {user.interests && user.interests.length > 0 && (
-                <TouchableOpacity onPress={handleAddInterest} style={styles.editButton}>
-                  <Feather name={isEditing ? 'check' : 'edit-2'} size={16} color="#1fa2df" />
-                </TouchableOpacity>
-              )}
-            </View>
+          <InterestsSection
+            interests={user.interests || []}
+            isEditing={isEditing}
+            deletingInterestId={deletingInterestId}
+            onToggleEditing={() => setIsEditing(!isEditing)}
+            onDeleteInterest={handleDeleteInterest}
+            onAddInterest={handleAddInterest}
+          />
 
-            <View style={styles.interestsContainer}>
-              {user.interests && user.interests.length > 0 ? (
-                <View style={styles.interestsList}>
-                  {user.interests.map((subject: Subject) => (
-                    <View key={subject.id} style={styles.interestTag}>
-                      <View style={styles.interestIconContainer}>
-                        <Feather name="hash" size={14} color="#1fa2df" />
-                      </View>
-                      <Text style={styles.interestText}>{subject.name}</Text>
-                      {isEditing &&
-                        (deletingInterestId === subject.id ? (
-                          <ActivityIndicator size="small" color="#1fa2df" style={styles.deleteInterestLoading} />
-                        ) : (
-                          <TouchableOpacity
-                            onPress={() => handleDeleteInterest(subject)}
-                            style={styles.deleteInterestButton}
-                          >
-                            <Feather name="x" size={14} color="#1fa2df" />
-                          </TouchableOpacity>
-                        ))}
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateText}>Nenhum interesse adicionado</Text>
-                  <TouchableOpacity style={styles.addInterestButton} onPress={handleAddInterest}>
-                    <Feather name="plus" size={16} color="#FFF" />
-                    <Text style={styles.addInterestText}>Adicionar Interesses</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          </View>
-
-          {/* Certificates Section */}
-          <View style={styles.infoItem}>
-            <View style={styles.infoHeader}>
-              <Feather name="award" size={20} color="#1fa2df" />
-              <Text style={styles.infoLabel}>Certificados</Text>
-            </View>
-
-            <View style={styles.certificatesContainer}>
-              {isLoadingCertificates ? (
-                <ActivityIndicator size="small" color="#1fa2df" style={{ marginTop: 16 }} />
-              ) : certificates && certificates.length > 0 ? (
-                <View style={styles.certificatesList}>
-                  {certificates.map((certificate) => (
-                    <CertificateItem key={certificate.id} certificate={certificate} onPress={viewCertificateDetails} />
-                  ))}
-                </View>
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateText}>Nenhum certificado disponível</Text>
-                </View>
-              )}
-
-              <TouchableOpacity style={styles.viewAllButton} onPress={() => router.push('/user/certificates')}>
-                <Text style={styles.viewAllText}>Ver Todos os Certificados</Text>
-                <Feather name="arrow-right" size={16} color="#1fa2df" />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <CertificatesSection
+            certificates={certificates}
+            isLoadingCertificates={isLoadingCertificates}
+            onViewCertificate={viewCertificateDetails}
+            onViewAll={() => router.push('/user/certificates')}
+          />
 
           <Text style={styles.versionLabel}>Versão 1.0.0</Text>
         </View>
@@ -433,265 +242,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  errorContainer: {
-    flex: 1,
-    backgroundColor: '#121214',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  errorContent: {
-    width: '100%',
-    maxWidth: 320,
-    alignItems: 'center',
-    borderRadius: 16,
-    padding: 24,
-  },
-  errorIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(31, 162, 223, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  errorTitle: {
-    color: '#FFF',
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  errorText: {
-    color: '#A8A8B3',
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 24,
-  },
-  loginButton: {
-    backgroundColor: '#1fa2df',
-    padding: 16,
-    borderRadius: 50,
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  loginButtonIcon: {
-    marginRight: 8,
-  },
-  loginButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   scrollView: {
     flex: 1,
-  },
-  header: {
-    height: 100,
-    padding: 24,
-    backgroundColor: '#202024',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profileSection: {
-    alignItems: 'center',
-    padding: 24,
-    marginTop: -50,
-  },
-  profileImageContainer: {
-    marginBottom: 16,
-    position: 'relative',
-  },
-  profileImagePlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#3A3A3D',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 4,
-    borderColor: '#121214',
-  },
-  profileImagePlaceholderText: {
-    color: '#FFF',
-    fontSize: 36,
-    fontWeight: 'bold',
-  },
-  profileImageWrapper: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 4,
-    borderColor: '#121214',
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  profileImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 50,
-  },
-  fullname: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFF',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  usernameText: {
-    fontSize: 16,
-    color: '#A8A8B3',
-    fontWeight: '500',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  documentId: {
-    color: '#555',
-    fontSize: 12,
-    marginTop: 4,
   },
   infoSection: {
     padding: 24,
     gap: 24,
   },
-  infoItem: {
-    gap: 12,
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  infoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  infoLabel: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  editButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(31, 162, 223, 0.1)',
-  },
-  infoValue: {
-    color: '#A8A8B3',
-    fontSize: 14,
-    marginLeft: 28,
-  },
-  certificatesContainer: {
-    marginLeft: 28,
-    marginTop: 8,
-  },
-  certificatesList: {
-    gap: 12,
-  },
-  viewAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-    gap: 8,
-    padding: 8,
-  },
-  viewAllText: {
-    color: '#1fa2df',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  interestsContainer: {
-    marginLeft: 28,
-  },
-  interestsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  interestTag: {
-    backgroundColor: 'rgba(31, 162, 223, 0.08)',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(31, 162, 223, 0.2)',
-  },
-  interestIconContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(31, 162, 223, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  interestText: {
-    color: '#1fa2df',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  deleteInterestButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(31, 162, 223, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  deleteInterestLoading: {
-    width: 24,
-    height: 24,
-  },
-  emptyState: {
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
-    gap: 12,
-  },
-  emptyStateText: {
-    color: '#A8A8B3',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  addInterestButton: {
-    marginTop: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1fa2df',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    gap: 8,
-  },
-  addInterestText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '500',
-  },
   footer: {
-    paddingHorizontal: 24, // Keep padding on sides
+    paddingHorizontal: 24,
     paddingTop: 24,
     paddingBottom: 0,
     borderTopWidth: 1,

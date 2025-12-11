@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Button from '@/components/Button';
-import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
 import { validateMozambiquePhone } from '@/util/util';
-import api, { baseUrl } from '@/services/api';
+import { usePhoneLogin } from '@/app/hooks/useAuthMutations';
+import AuthContainer, { AuthTopSection, AuthContent, AuthForm } from '@/app/components/auth/AuthContainer';
+import AuthHeader from '@/app/components/auth/AuthHeader';
+import AuthTitle from '@/app/components/auth/AuthTitle';
+import FormInput from '@/app/components/auth/FormInput';
+import AuthFooter from '@/app/components/auth/AuthFooter';
 
 export default function Login() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState<string | undefined>(undefined);
   const [touched, setTouched] = useState(false);
-  const [loading, setLoading] = useState(false);
+  
+  const phoneLoginMutation = usePhoneLogin();
 
   // Validate phone number when it changes
   useEffect(() => {
@@ -28,7 +30,7 @@ export default function Login() {
     }
   }, [phoneNumber, touched]);
 
-  const handleRegister = async () => {
+  const handleLogin = () => {
     setTouched(true);
 
     if (!phoneNumber) {
@@ -42,75 +44,14 @@ export default function Login() {
       return;
     }
 
-    setLoading(true);
-    try {
-      const response = await fetch(`${baseUrl}/otps`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+    phoneLoginMutation.mutate(
+      { phone: validation.formattedNumber },
+      {
+        onError: (error) => {
+          setError(error.message);
         },
-        body: JSON.stringify({
-          data: {
-            phone: validation.formattedNumber,
-          },
-        }),
-      });
-
-      // Handle different response status codes
-      if (response.status === 400) {
-        const errorData = await response.json();
-        setError('Número de telefone inválido ou não registado');
-        setLoading(false);
-        return;
-      } else if (response.status === 401) {
-        setError('Não autorizado. Por favor, verifique suas credenciais.');
-        setLoading(false);
-        return;
-      } else if (response.status === 403) {
-        setError('Acesso proibido a este recurso.');
-        setLoading(false);
-        return;
-      } else if (response.status === 404) {
-        setError('Serviço não encontrado. Por favor, tente mais tarde.');
-        setLoading(false);
-        return;
-      } else if (response.status === 429) {
-        setError('Muitas tentativas. Por favor, aguarde alguns minutos e tente novamente.');
-        setLoading(false);
-        return;
-      } else if (response.status >= 500) {
-        setError('Erro no servidor. Por favor, tente novamente mais tarde.');
-        setLoading(false);
-        return;
-      } else if (!response.ok) {
-        // For any other unsuccessful status codes not explicitly handled
-        setError('Ocorreu um erro. Por favor, tente novamente.');
-        setLoading(false);
-        return;
       }
-
-      // If we reach here, the request was successful
-      const data = await response.json();
-      console.log(`Login`, JSON.stringify(data, null, 2));
-
-      // Navigate to OTP verification screen
-      router.push({
-        pathname: '/login/otp',
-        params: {
-          phone: validation.formattedNumber,
-          otpId: data.otpID,
-        },
-      });
-    } catch (error) {
-      // This catches network errors or other exceptions
-      console.error('Login error:', error);
-      Alert.alert(
-        'Erro de conexão',
-        'Não foi possível conectar ao servidor. Verifique sua conexão de internet e tente novamente.'
-      );
-    } finally {
-      setLoading(false);
-    }
+    );
   };
 
   const handlePhoneNumberChange = (text: string) => {
@@ -118,188 +59,46 @@ export default function Login() {
     setPhoneNumber(sanitizedText);
   };
 
-  const handleSkip = () => {
-    router.push('/');
-  };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <View style={styles.topSection}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Image
-            source={require('@/assets/images/maza-logo.png')}
-            style={{ width: 129, height: 78, marginStart: 20 }}
-            contentFit={'contain'}
+    <AuthContainer>
+      <AuthTopSection>
+        <AuthHeader />
+        <AuthTitle
+          title="Faça login com a sua conta"
+          subtitle="Não possui uma conta?"
+          linkText="Registar"
+          linkAction={() => router.push('/login/create-email')}
+        />
+      </AuthTopSection>
+
+      <AuthContent>
+        <AuthForm>
+          <FormInput
+            label="Número de Telemóvel"
+            placeholder="821231231"
+            keyboardType="phone-pad"
+            value={phoneNumber}
+            onChangeText={handlePhoneNumberChange}
+            onBlur={() => setTouched(true)}
+            maxLength={13}
+            error={error && touched ? error : undefined}
           />
-        </View>
-        <View style={styles.titleSection}>
-          <Text style={styles.headerText}>Faça login com a sua conta</Text>
+        </AuthForm>
 
-          <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Não possui uma conta? </Text>
-            <TouchableOpacity onPress={() => router.push('/login/create-email')}>
-              <Text style={styles.loginLink}>Registar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+        <Button
+          text={phoneLoginMutation.isPending ? 'A processar...' : 'Entrar'}
+          handle={handleLogin}
+          disabled={!!error || !phoneNumber || phoneLoginMutation.isPending}
+          loading={phoneLoginMutation.isPending}
+        />
 
-      <View style={styles.content}>
-        <View style={styles.formContainer}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Número de Telemóvel</Text>
-            <TextInput
-              style={[styles.input, error && touched ? styles.inputError : null]}
-              placeholder="821231231"
-              placeholderTextColor="#666"
-              keyboardType="phone-pad"
-              value={phoneNumber}
-              onChangeText={handlePhoneNumberChange}
-              onBlur={() => setTouched(true)}
-              maxLength={13}
-            />
-            {error && touched && <Text style={styles.errorText}>{error}</Text>}
-          </View>
-        </View>
-
-        <View>
-          <Button
-            text={loading ? 'A processar...' : 'Entrar'}
-            handle={handleRegister}
-            disabled={!!error || !phoneNumber || loading}
-            loading={loading}
-          />
-        </View>
-
-        <View style={styles.textButtonContainer}>
-          <TouchableOpacity onPress={() => router.push('/login/login-email')}>
-            <Text style={styles.bottomLinkText}>Prefere usar email e palavra-passe?</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </SafeAreaView>
+        <AuthFooter
+          linkText="Prefere usar email e palavra-passe?"
+          onLinkPress={() => router.push('/login/login-email')}
+        />
+      </AuthContent>
+    </AuthContainer>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1E1E1E',
-  },
-  topSection: {
-    backgroundColor: '#1E1E1E',
-    paddingBottom: 20,
-    marginBottom: 10,
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  titleSection: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-  },
-  skipButtonContainer: {
-    alignItems: 'center',
-  },
-  skipButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-    backgroundColor: '#252525',
-  },
-  skipButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  content: {
-    flex: 1,
-    padding: 24,
-    gap: 24,
-    backgroundColor: '#121212',
-  },
-  headerText: {
-    fontSize: 28,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    width: 200,
-  },
-  loginContainer: {
-    flexDirection: 'row',
-    marginTop: 12,
-  },
-  loginText: {
-    color: '#999999',
-    fontSize: 14,
-  },
-  loginLink: {
-    color: '#2196F3',
-    fontSize: 14,
-  },
-  formContainer: {
-    gap: 24,
-    marginBottom: 32,
-    marginTop: 16,
-  },
-  inputGroup: {
-    gap: 12,
-  },
-  inputLabel: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  input: {
-    height: 48,
-    backgroundColor: '#252525',
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  inputError: {
-    borderWidth: 1,
-    borderColor: '#FF6B6B',
-  },
-  errorText: {
-    color: '#FF6B6B',
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 8,
-  },
-  registerButton: {
-    height: 48,
-    backgroundColor: '#2196F3',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  registerButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  textButtonContainer: {
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  bottomLinkText: {
-    color: '#999999',
-    fontSize: 16,
-    textAlign: 'center',
-    paddingVertical: 8,
-  },
-  backButton: {
-    padding: 8,
-    borderStyle: 'solid',
-    borderColor: '#b3b3b3',
-    borderWidth: 0.5,
-    borderRadius: 50,
-  },
-});

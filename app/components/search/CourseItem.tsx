@@ -1,0 +1,86 @@
+import React from 'react';
+import { Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View } from '@/components/Themed';
+import { Ionicons } from '@expo/vector-icons';
+import { CourseItemProps } from '@/app/types/search';
+
+export default function CourseItem({ item, onPress }: CourseItemProps) {
+  return (
+    <TouchableOpacity style={styles.courseResult} onPress={onPress}>
+      <Image 
+        source={{ uri: item?.picture?.formats?.thumbnail?.url }} 
+        style={styles.courseImage} 
+      />
+      <View style={styles.courseInfo}>
+        <Text style={styles.courseCategory}>
+          {item.subjects?.[0]?.name || item.author}
+        </Text>
+        <Text style={styles.courseTitle} numberOfLines={1}>
+          {item.title}
+        </Text>
+        <View style={styles.courseDetails}>
+          <View style={styles.ratingContainer}>
+            <Ionicons name="star" size={12} color="#FFD700" />
+            <Text style={styles.ratingText}>
+              {item.rating_avg ? item.rating_avg.toFixed(1) : 'N/A'}
+            </Text>
+          </View>
+          <Text style={styles.subscriberText}>{item.subscribed} Inscritos</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  courseResult: {
+    flexDirection: 'row',
+    backgroundColor: '#29292E',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  courseImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 6,
+    marginRight: 16,
+    backgroundColor: '#202024',
+  },
+  courseInfo: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  courseCategory: {
+    color: '#1fa2df',
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  courseTitle: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  courseDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+    backgroundColor: 'transparent',
+  },
+  ratingText: {
+    color: '#FFD700',
+    fontSize: 12,
+    marginLeft: 4,
+  },
+  subscriberText: {
+    color: '#8F8F8F',
+    fontSize: 11,
+  },
+});

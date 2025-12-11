@@ -8,15 +8,6 @@ export interface UserCourse {
   updatedAt: string;
   createdAt: string;
 }
-
-export interface HomePageData {
-  subjects: Subject[];
-  popularCourses: Course[];
-  newCourses: Course[];
-  suggestedCourses: Course[];
-  userCourses: UserCourse[];
-}
-
 export interface Subject {
   id: number;
   documentId: string;
@@ -29,11 +20,4 @@ export interface CourseSection {
   loading: boolean;
   onViewAll: () => void;
   onCoursePress: (course: Course) => void;
-}
-
-export interface UserCoursesSection {
-  userCourses: UserCourse[];
-  loading: boolean;
-  onCoursePress: (course: Course) => void;
-  onViewAll: () => void;
 }

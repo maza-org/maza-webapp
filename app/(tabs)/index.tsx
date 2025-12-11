@@ -16,14 +16,11 @@ import { router } from 'expo-router';
 
 export default function Home() {
   const { data: user } = useUser();
-
-  // React Query hooks
   const { data: popularCourses = [], isLoading: loadingPopularCourses } = usePopularCourses();
   const { data: newCourses = [], isLoading: loadingNewCourses } = useNewCourses();
   const { data: suggestedCourses = [], isLoading: loadingSuggestedCourses } = useSuggestedCourses(user?.token);
   const { data: userCourses = [], isLoading: loadingUserCourses } = useUserCourses(user?.token || '');
 
-  // Navigation handlers
   const handleCoursePress = (course: any) => {
     navigateToCourse(course);
   };
