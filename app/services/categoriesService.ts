@@ -1,7 +1,13 @@
 import axios from 'axios';
 import { toLower } from 'ramda';
 import { baseUrl } from '@/services/api';
-import { CourseData, CoursesApiResponse, CategoryQueryParams, Category, CategoriesApiResponse } from '@/app/types/categories';
+import {
+  CourseData,
+  CoursesApiResponse,
+  CategoryQueryParams,
+  Category,
+  CategoriesApiResponse,
+} from '@/app/types/categories';
 
 // Create axios instance for categories
 const categoriesClient = axios.create({
@@ -46,7 +52,7 @@ export class CategoriesService {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
-        
+
         switch (status) {
           case 400:
             throw new Error('Requisição inválida. Verifique os parâmetros.');
@@ -64,11 +70,11 @@ export class CategoriesService {
             throw new Error(`Falha ao carregar cursos: ${status || 'unknown'}`);
         }
       }
-      
+
       if (error instanceof Error) {
         throw error;
       }
-      
+
       throw new Error('Não foi possível carregar os cursos. Verifique sua conexão e tente novamente.');
     }
   }
@@ -78,13 +84,13 @@ export class CategoriesService {
       const response = await categoriesClient.get<CoursesApiResponse>(
         `/courses?keyword=${encodeURIComponent(toLower(keyword))}`
       );
-      
+
       return response.data.data || [];
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new Error(`Erro na pesquisa: ${error.response?.status || 'unknown'}`);
       }
-      
+
       throw new Error('Erro ao pesquisar cursos');
     }
   }
@@ -104,31 +110,35 @@ export class CategoriesService {
   static async fetchCategories(): Promise<Category[]> {
     try {
       const response = await categoriesClient.get<CategoriesApiResponse>('/courses');
-      
-      const coursesBySubject = response.data.data.reduce((acc: Record<string, { id: number; count: number }>, course) => {
-        course.subjects.forEach((subject) => {
-          if (!acc[subject.name]) {
-            acc[subject.name] = {
-              id: subject.id,
-              count: 1,
-            };
-          } else {
-            acc[subject.name].count++;
-          }
-        });
-        return acc;
-      }, {});
 
+      const coursesBySubject = response.data.data.reduce(
+        (acc: Record<string, { id: number; count: number }>, course) => {
+          course.subjects.forEach((subject) => {
+            if (!acc[subject.name]) {
+              acc[subject.name] = {
+                id: subject.id,
+                count: 1,
+              };
+            } else {
+              acc[subject.name].count++;
+            }
+          });
+          return acc;
+        },
+        {}
+      );
+
+      // TODO: this can be fetched from remote
       const subjectToIcon: Record<string, string> = {
-        Design: 'brush-outline',
-        Tecnologia: 'desktop-outline',
-        Saúde: 'fitness-outline',
-        Saude: 'fitness-outline',
-        Idiomas: 'language-outline',
-        'Gestão Financeira': 'cash-outline',
-        Negócios: 'business-outline',
-        'Meio Ambiente': 'leaf-outline',
-        Marketing: 'megaphone-outline',
+        'Competências Vocacionais': 'construct-outline',
+        'Competências Verdes': 'leaf-outline',
+        'Mudanças Climáticas': 'cloud-outline',
+        'Informação sobre proteção': 'shield-checkmark-outline',
+        'Competências Fundamentais': 'school-outline',
+        'Competências Digitais': 'laptop-outline',
+        'Competências Técnicas Digitais': 'code-outline',
+        'Competências da Vida': 'people-outline',
+        'Educação Financeira': 'cash-outline',
       };
 
       const categories = Object.entries(coursesBySubject).map(([name, data]) => ({
@@ -138,12 +148,14 @@ export class CategoriesService {
         icon: subjectToIcon[name] || 'apps-outline',
       }));
 
+      console.log(categories);
+
       return categories;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new Error(`Erro ao buscar categorias: ${error.response?.status || 'unknown'}`);
       }
-      
+
       throw new Error('Erro ao carregar categorias');
     }
   }

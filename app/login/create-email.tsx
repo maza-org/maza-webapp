@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { ScrollView, Platform } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import Button from '@/components/Button';
 import { useCreateAccount } from '@/app/hooks/useAuthMutations';
@@ -28,7 +28,6 @@ import {
 
 const MOZAMBIQUE_DISTRICTS = MOZAMBIQUE_DISTRICTS_DATA as { [key: string]: string[] };
 
-
 export default function CreateEmail() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -47,7 +46,7 @@ export default function CreateEmail() {
   const [underageConsent, setUnderageConsent] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const createAccountMutation = useCreateAccount();
 
   // Calculate max date (today)
@@ -92,7 +91,7 @@ export default function CreateEmail() {
 
   const handleRegister = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!username.trim()) newErrors.username = 'Nome de utilizador é obrigatório';
     if (!validateEmail(email)) newErrors.email = 'Email inválido';
     if (password.length < 6) newErrors.password = 'A palavra-passe deve ter pelo menos 6 caracteres';
@@ -100,8 +99,9 @@ export default function CreateEmail() {
     if (!validateMozambicanID(nationalID)) newErrors.nationalID = 'BI inválido (12 números + 1 letra)';
     if (!gender) newErrors.gender = 'Selecione o género';
     if (!occupation) newErrors.occupation = 'Selecione a ocupação';
-    if (isUnderage && !underageConsent) newErrors.consent = 'Para menores de 16 anos, é necessário confirmar o consentimento';
-    
+    if (isUnderage && !underageConsent)
+      newErrors.consent = 'Para menores de 16 anos, é necessário confirmar o consentimento';
+
     let validatedPhone = phone;
     if (phone.trim()) {
       const phoneResult = validateMozambicanPhone(phone);
@@ -113,35 +113,38 @@ export default function CreateEmail() {
     }
 
     setErrors(newErrors);
-    
+
     if (Object.keys(newErrors).length > 0) return;
 
     const { name, middlename, surname } = splitFullName(fullName);
     const formattedDate = `${dateOfBirth.getFullYear()}-${String(dateOfBirth.getMonth() + 1).padStart(2, '0')}-${String(dateOfBirth.getDate()).padStart(2, '0')}`;
 
-    createAccountMutation.mutate({
-      name,
-      surname,
-      email,
-      phone: validatedPhone || '',
-      password,
-      birthDate: formattedDate,
-      gender,
-      identification: nationalID,
-      province: province || '',
-      district: district || '',
-      occupation,
-      academicLevel: academicLevel || '',
-      academicInstitution: academicInstitution || '',
-    }, {
-      onError: (error) => {
-        setErrors({ general: error.message });
+    createAccountMutation.mutate(
+      {
+        name,
+        surname,
+        email,
+        phone: validatedPhone || '',
+        password,
+        birthDate: formattedDate,
+        gender,
+        identification: nationalID,
+        province: province || '',
+        district: district || '',
+        occupation,
+        academicLevel: academicLevel || '',
+        academicInstitution: academicInstitution || '',
       },
-    });
+      {
+        onError: (error) => {
+          setErrors({ general: error.message });
+        },
+      }
+    );
   };
 
   const clearError = (field: string) => {
-    setErrors(prev => ({ ...prev, [field]: '' }));
+    setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
   return (
@@ -331,10 +334,7 @@ export default function CreateEmail() {
           loading={createAccountMutation.isPending}
         />
 
-        <AuthFooter
-          linkText="Prefere usar número de telefone?"
-          onLinkPress={() => router.push('/login')}
-        />
+        <AuthFooter linkText="Prefere usar número de telefone?" onLinkPress={() => router.push('/login')} />
       </AuthContent>
     </AuthContainer>
   );
