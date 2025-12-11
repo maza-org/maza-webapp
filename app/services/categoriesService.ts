@@ -8,6 +8,7 @@ import {
   Category,
   CategoriesApiResponse,
 } from '@/app/types/categories';
+import { data } from 'browserslist';
 
 // Create axios instance for categories
 const categoriesClient = axios.create({
@@ -148,6 +149,7 @@ export class CategoriesService {
         icon: subjectToIcon[name] || 'apps-outline',
       }));
 
+      console.log(coursesBySubject);
       console.log(categories);
 
       return categories;
