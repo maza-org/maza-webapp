@@ -193,8 +193,6 @@ export default function LoginEmail() {
             <Text style={styles.inputLabel}>Email ou Telefone</Text>
             <TextInput
               style={styles.input}
-              placeholder="email@exemplo.com ou +258821231231"
-              placeholderTextColor="#666"
               keyboardType="email-address"
               value={identifier}
               onChangeText={(text) => {
@@ -211,8 +209,6 @@ export default function LoginEmail() {
             <View style={styles.passwordContainer}>
               <TextInput
                 style={[styles.input, styles.passwordInput]}
-                placeholder="********"
-                placeholderTextColor="#666"
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);

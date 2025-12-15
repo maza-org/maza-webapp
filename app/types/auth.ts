@@ -14,26 +14,32 @@ export interface OtpVerificationRequest {
 }
 
 export interface CreateAccountRequest {
+  username: string;
+  password: string;
   name: string;
+  middlename: string;
   surname: string;
   email: string;
   phone: string;
-  password: string;
-  birthDate: string;
+  nationalID: string;
+  dateOfBirth: string;
   gender: string;
-  identification: string;
   province: string;
   district: string;
   occupation: string;
-  academicLevel: string;
   academicInstitution: string;
+  academicLevel: string;
 }
 
 export interface ResetPasswordRequest {
-  email: string;
   code: string;
   password: string;
   passwordConfirmation: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  password: string;
 }
 
 export interface ForgotPasswordRequest {

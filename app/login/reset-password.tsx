@@ -40,22 +40,24 @@ export default function ResetPassword() {
 
     if (Object.keys(newErrors).length > 0) return;
 
-    resetPasswordMutation.mutate({
-      email: email || '',
-      code: code.trim(),
-      password,
-      passwordConfirmation: confirmPassword,
-    }, {
-      onError: (error) => {
-        setErrors({ general: error.message });
+    resetPasswordMutation.mutate(
+      {
+        code: code.trim(),
+        password,
+        passwordConfirmation: confirmPassword,
       },
-    });
+      {
+        onError: (error) => {
+          setErrors({ general: error.message });
+        },
+      }
+    );
   };
 
   const isFormValid = code.trim().length > 0 && password.length >= 6 && confirmPassword.length >= 6;
 
   const clearError = (field: string) => {
-    setErrors(prev => ({ ...prev, [field]: '' }));
+    setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
   return (
@@ -69,10 +71,10 @@ export default function ResetPassword() {
       </AuthTopSection>
 
       <AuthContent>
+        {errors.general && <Text style={styles.errorText}>{errors.general}</Text>}
         <AuthForm>
           <FormInput
             label="Código de Verificação"
-            placeholder="Insira o código recebido"
             value={code}
             onChangeText={(text) => {
               setCode(text);
@@ -84,7 +86,6 @@ export default function ResetPassword() {
 
           <FormInput
             label="Nova Palavra-passe"
-            placeholder="Mínimo 6 caracteres"
             value={password}
             onChangeText={(text) => {
               setPassword(text);
@@ -98,7 +99,6 @@ export default function ResetPassword() {
 
           <FormInput
             label="Confirmar Palavra-passe"
-            placeholder="Repita a palavra-passe"
             value={confirmPassword}
             onChangeText={(text) => {
               setConfirmPassword(text);
@@ -118,10 +118,7 @@ export default function ResetPassword() {
           loading={resetPasswordMutation.isPending}
         />
 
-        <AuthFooter
-          linkText="Voltar ao Login"
-          onLinkPress={() => router.replace('/login/login-email')}
-        />
+        <AuthFooter linkText="Voltar ao Login" onLinkPress={() => router.replace('/login/login-email')} />
       </AuthContent>
     </AuthContainer>
   );
@@ -134,5 +131,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     lineHeight: 20,
     paddingHorizontal: 24,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#FF3B30',
+    textAlign: 'center',
+    marginBottom: 16,
   },
 });

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { ScrollView, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet, Text } from 'react-native';
 import { router } from 'expo-router';
 import Button from '@/components/Button';
 import { useCreateAccount } from '@/app/hooks/useAuthMutations';
@@ -36,7 +36,11 @@ export default function CreateEmail() {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [nationalID, setNationalID] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState<Date>(new Date());
+  const [dateOfBirth, setDateOfBirth] = useState<Date>(() => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - 16);
+    return date;
+  });
   const [gender, setGender] = useState('');
   const [province, setProvince] = useState('');
   const [district, setDistrict] = useState('');
@@ -121,19 +125,21 @@ export default function CreateEmail() {
 
     createAccountMutation.mutate(
       {
+        username,
+        password,
         name,
+        middlename: middlename || '',
         surname,
         email,
         phone: validatedPhone || '',
-        password,
-        birthDate: formattedDate,
+        nationalID,
+        dateOfBirth: formattedDate,
         gender,
-        identification: nationalID,
         province: province || '',
         district: district || '',
         occupation,
-        academicLevel: academicLevel || '',
         academicInstitution: academicInstitution || '',
+        academicLevel: academicLevel || '',
       },
       {
         onError: (error) => {
@@ -163,7 +169,6 @@ export default function CreateEmail() {
         <ScrollView contentContainerStyle={styles.formContainer} showsVerticalScrollIndicator={false}>
           <FormInput
             label="Nome de Utilizador"
-            placeholder="username"
             value={username}
             onChangeText={(text) => {
               setUsername(text);
@@ -187,7 +192,6 @@ export default function CreateEmail() {
 
           <FormInput
             label="Palavra-passe"
-            placeholder="********"
             value={password}
             onChangeText={(text) => {
               setPassword(text);
@@ -201,7 +205,6 @@ export default function CreateEmail() {
 
           <FormInput
             label="Nome Completo"
-            placeholder="João Manuel António"
             value={fullName}
             onChangeText={(text) => {
               setFullName(text);
@@ -213,7 +216,6 @@ export default function CreateEmail() {
 
           <FormInput
             label="Número de Telemóvel (opcional)"
-            placeholder="+258821231231"
             keyboardType="phone-pad"
             value={phone}
             onChangeText={(text) => {
@@ -225,7 +227,6 @@ export default function CreateEmail() {
 
           <FormInput
             label="Bilhete de Identidade"
-            placeholder="110100987331S"
             value={nationalID}
             onChangeText={(text) => {
               setNationalID(text);
@@ -256,7 +257,6 @@ export default function CreateEmail() {
               setGender(val);
               clearError('gender');
             }}
-            placeholder="Selecionar género"
             error={errors.gender}
           />
 
@@ -268,7 +268,6 @@ export default function CreateEmail() {
               setProvince(value);
               setDistrict('');
             }}
-            placeholder="Selecionar província"
           />
 
           {province && (
@@ -277,7 +276,6 @@ export default function CreateEmail() {
               value={district}
               options={availableDistricts}
               onSelect={setDistrict}
-              placeholder="Selecionar distrito"
             />
           )}
 
@@ -289,7 +287,6 @@ export default function CreateEmail() {
               setOccupation(val);
               clearError('occupation');
             }}
-            placeholder="Selecionar ocupação"
             error={errors.occupation}
           />
 
@@ -298,7 +295,6 @@ export default function CreateEmail() {
             value={academicInstitution}
             options={ACADEMIC_INSTITUTIONS}
             onSelect={setAcademicInstitution}
-            placeholder="Selecionar instituição"
           />
 
           <SearchablePicker
@@ -306,7 +302,6 @@ export default function CreateEmail() {
             value={academicLevel}
             options={ACADEMIC_LEVELS}
             onSelect={setAcademicLevel}
-            placeholder="Selecionar nível académico"
           />
 
           {isUnderage && (
@@ -343,7 +338,6 @@ export default function CreateEmail() {
 const styles = StyleSheet.create({
   formContainer: {
     gap: 24,
-    paddingHorizontal: 24,
     paddingBottom: 120,
   },
   errorContainer: {

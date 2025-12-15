@@ -3,15 +3,17 @@ import { router } from 'expo-router';
 import { Alert } from 'react-native';
 import { AuthService } from '@/app/services/authService';
 import { navigateAfterLogin } from '@/util/onboarding';
-import { 
-  PhoneLoginRequest, 
-  EmailLoginRequest, 
+import {
+  PhoneLoginRequest,
+  EmailLoginRequest,
   OtpVerificationRequest,
   CreateAccountRequest,
   ResetPasswordRequest,
   ForgotPasswordRequest,
-  AuthError 
+  ChangePasswordRequest,
+  AuthError
 } from '@/app/types/auth';
+import useUser from '@/hooks/useUser';
 import { LoginResponse, User } from '@/types/user';
 
 export function usePhoneLogin() {
@@ -73,15 +75,17 @@ export function useEmailLogin() {
 export function useCreateAccount() {
   return useMutation({
     mutationFn: (data: CreateAccountRequest) => AuthService.createAccount(data),
-    onSuccess: async (response: LoginResponse) => {
-      try {
-        const userData = await AuthService.getUserData(response.jwt);
-        await AuthService.saveUserSession(userData, response.jwt);
-        navigateAfterLogin();
-      } catch (error) {
-        console.error('Error fetching user data after account creation:', error);
-        Alert.alert('Erro', 'Erro ao carregar dados do usuário');
-      }
+    onSuccess: () => {
+      Alert.alert(
+        'Conta Criada',
+        'A sua conta foi criada com sucesso! Faça login para continuar.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/login/login-email'),
+          },
+        ]
+      );
     },
     onError: (error: AuthError) => {
       console.error('Create account error:', error);
@@ -109,17 +113,14 @@ export function useForgotPassword() {
 export function useResetPassword() {
   return useMutation({
     mutationFn: (data: ResetPasswordRequest) => AuthService.resetPassword(data),
-    onSuccess: () => {
-      Alert.alert(
-        'Sucesso',
-        'Senha redefinida com sucesso! Faça login com sua nova senha.',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.push('/login'),
-          },
-        ]
-      );
+    onSuccess: async (response: LoginResponse) => {
+      try {
+        await AuthService.saveUserSession(response.user, response.jwt);
+        navigateAfterLogin();
+      } catch (error) {
+        console.error('Error saving user session after password reset:', error);
+        Alert.alert('Erro', 'Erro ao iniciar sessão automaticamente');
+      }
     },
     onError: (error: AuthError) => {
       console.error('Reset password error:', error);
@@ -132,6 +133,22 @@ export function useGetUserData() {
     mutationFn: (token: string) => AuthService.getUserData(token),
     onError: (error: AuthError) => {
       console.error('Get user data error:', error);
+    },
+  });
+}
+
+export function useChangePassword() {
+  const { data: user } = useUser();
+
+  return useMutation({
+    mutationFn: (data: ChangePasswordRequest) => {
+      if (!user?.token) {
+        throw new Error('No authentication token found');
+      }
+      return AuthService.changePassword(data, user.token);
+    },
+    onError: (error: AuthError) => {
+      console.error('Change password error:', error);
     },
   });
 }

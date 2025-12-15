@@ -13,7 +13,7 @@ export default function Login() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState<string | undefined>(undefined);
   const [touched, setTouched] = useState(false);
-  
+
   const phoneLoginMutation = usePhoneLogin();
 
   // Validate phone number when it changes
@@ -47,8 +47,12 @@ export default function Login() {
     phoneLoginMutation.mutate(
       { phone: validation.formattedNumber },
       {
-        onError: (error) => {
-          setError(error.message);
+        onError: (error: any) => {
+          if (error?.status === 417) {
+            setError('Este número de telefone não tem conta associada');
+          } else {
+            setError(error.message);
+          }
         },
       }
     );
@@ -58,7 +62,6 @@ export default function Login() {
     const sanitizedText = text.replace(/[^\d+]/g, '');
     setPhoneNumber(sanitizedText);
   };
-
 
   return (
     <AuthContainer>
@@ -76,7 +79,6 @@ export default function Login() {
         <AuthForm>
           <FormInput
             label="Número de Telemóvel"
-            placeholder="821231231"
             keyboardType="phone-pad"
             value={phoneNumber}
             onChangeText={handlePhoneNumberChange}
@@ -101,4 +103,3 @@ export default function Login() {
     </AuthContainer>
   );
 }
-

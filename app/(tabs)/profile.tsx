@@ -7,12 +7,7 @@ import useUser from '@/hooks/useUser';
 import { useToast } from '@/hooks/useToast';
 import Toast from '@/components/Toast';
 import { Subject, Certificate } from '@/app/types/profile';
-import { 
-  useCertificates, 
-  useDeleteInterest, 
-  useLogout, 
-  useProfileRefresh 
-} from '@/app/hooks/useProfileQueries';
+import { useCertificates, useDeleteInterest, useLogout, useProfileRefresh } from '@/app/hooks/useProfileQueries';
 import ProfileHeader from '@/app/components/profile/ProfileHeader';
 import ProfileImageSection from '@/app/components/profile/ProfileImageSection';
 import ProfileInfoItem from '@/app/components/profile/ProfileInfoItem';
@@ -40,20 +35,29 @@ export default function ProfileScreen() {
         try {
           await profileRefreshMutation.mutateAsync();
           await refetchCertificates();
-          if (user?.profile_image?.formats?.thumbnail?.url) {
-            setProfileImage(user?.profile_image?.formats?.thumbnail?.url);
-          }
         } catch (error) {
           console.error('Error refreshing profile data:', error);
         }
       };
 
       refreshProfileData();
-    }, [profileRefreshMutation, refetchCertificates, user?.profile_image?.formats?.thumbnail?.url])
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
   );
+
+  // Update profile image when user data changes
+  React.useEffect(() => {
+    if (user?.profile_image?.formats?.thumbnail?.url) {
+      setProfileImage(user.profile_image.formats.thumbnail.url);
+    }
+  }, [user?.profile_image?.formats?.thumbnail?.url]);
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
+  };
+
+  const handleChangePassword = () => {
+    router.push('/user/change-password');
   };
 
   const handleDeleteInterest = async (subject: Subject) => {
@@ -90,9 +94,7 @@ export default function ProfileScreen() {
   }
 
   if (error || !user) {
-    return (
-      <ProfileErrorState onButtonPress={() => router.push('/login')} />
-    );
+    return <ProfileErrorState onButtonPress={() => router.push('/login')} />;
   }
 
   function handleAddInterest() {
@@ -122,78 +124,40 @@ export default function ProfileScreen() {
           profileImage={profileImage}
           isUploadingImage={isUploadingImage}
           fullname={user.fullname}
-          username={user.username}
+          username={user?.username}
           documentId={user.documentId}
         />
 
         <View style={styles.infoSection}>
-          <ProfileInfoItem 
-            icon="phone" 
-            label="Número de Telemóvel" 
-            value={user.phone} 
+          <ProfileInfoItem icon="phone" label="Número de Telemóvel" value={user.phone} />
+
+          <ProfileInfoItem icon="mail" label="Email" value={user.email || 'Campo não preenchido'} />
+
+          <ProfileInfoItem icon="credit-card" label="BI Nacional" value={user.nationalID || 'Campo não preenchido'} />
+
+          <ProfileInfoItem
+            icon="calendar"
+            label="Data de Nascimento"
+            value={user.dateOfBirth ? formatDate(user?.dateOfBirth) : 'Campo não preenchido'}
           />
 
-          <ProfileInfoItem 
-            icon="mail" 
-            label="Email" 
-            value={user.email || 'Campo não preenchido'} 
+          <ProfileInfoItem icon="user" label="Género" value={user.gender || 'Campo não preenchido'} />
+
+          <ProfileInfoItem icon="map-pin" label="Província" value={user.province || 'Campo não preenchido'} />
+
+          <ProfileInfoItem icon="map" label="Distrito" value={user.district || 'Campo não preenchido'} />
+
+          <ProfileInfoItem icon="briefcase" label="Ocupação" value={user.occupation || 'Campo não preenchido'} />
+
+          <ProfileInfoItem
+            icon="book"
+            label="Instituição Académica"
+            value={user.academicInstitution || 'Campo não preenchido'}
           />
 
-          <ProfileInfoItem 
-            icon="credit-card" 
-            label="BI Nacional" 
-            value={user.nationalID || 'Campo não preenchido'} 
-          />
+          <ProfileInfoItem icon="award" label="Nível Académico" value={user.academicLevel || 'Campo não preenchido'} />
 
-          <ProfileInfoItem 
-            icon="calendar" 
-            label="Data de Nascimento" 
-            value={user.dateOfBirth
-              ? formatDate(user?.dateOfBirth)
-              : 'Campo não preenchido'} 
-          />
-
-          <ProfileInfoItem 
-            icon="user" 
-            label="Género" 
-            value={user.gender || 'Campo não preenchido'} 
-          />
-
-          <ProfileInfoItem 
-            icon="map-pin" 
-            label="Província" 
-            value={user.province || 'Campo não preenchido'} 
-          />
-
-          <ProfileInfoItem 
-            icon="map" 
-            label="Distrito" 
-            value={user.district || 'Campo não preenchido'} 
-          />
-
-          <ProfileInfoItem 
-            icon="briefcase" 
-            label="Ocupação" 
-            value={user.occupation || 'Campo não preenchido'} 
-          />
-
-          <ProfileInfoItem 
-            icon="book" 
-            label="Instituição Académica" 
-            value={user.academicInstitution || 'Campo não preenchido'} 
-          />
-
-          <ProfileInfoItem 
-            icon="award" 
-            label="Nível Académico" 
-            value={user.academicLevel || 'Campo não preenchido'} 
-          />
-
-          <ProfileInfoItem 
-            icon="tag" 
-            label="ID Yoma" 
-            value={user.yoma_id || 'Não conectado'} 
-          />
+          <ProfileInfoItem icon="tag" label="ID Yoma" value={user.yoma_id || 'Não conectado'} />
 
           <InterestsSection
             interests={user.interests || []}
@@ -210,6 +174,11 @@ export default function ProfileScreen() {
             onViewCertificate={viewCertificateDetails}
             onViewAll={() => router.push('/user/certificates')}
           />
+
+          <TouchableOpacity style={styles.changePasswordButton} onPress={handleChangePassword}>
+            <Feather name="lock" size={20} color="#1fa2df" />
+            <Text style={styles.changePasswordButtonText}>Alterar Senha</Text>
+          </TouchableOpacity>
 
           <Text style={styles.versionLabel}>Versão 1.0.0</Text>
         </View>
@@ -270,6 +239,23 @@ const styles = StyleSheet.create({
   },
   logoutButtonText: {
     color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  changePasswordButton: {
+    backgroundColor: 'transparent',
+    padding: 16,
+    borderRadius: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#1fa2df',
+  },
+  changePasswordButtonText: {
+    color: '#1fa2df',
     fontSize: 16,
     fontWeight: '600',
   },

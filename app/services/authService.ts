@@ -1,15 +1,16 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { baseUrl } from '@/services/api';
-import { 
-  PhoneLoginRequest, 
-  EmailLoginRequest, 
+import {
+  PhoneLoginRequest,
+  EmailLoginRequest,
   OtpVerificationRequest,
   CreateAccountRequest,
   ResetPasswordRequest,
   ForgotPasswordRequest,
+  ChangePasswordRequest,
   OtpResponse,
-  AuthError 
+  AuthError
 } from '@/app/types/auth';
 import { LoginResponse, User } from '@/types/user';
 
@@ -42,6 +43,9 @@ authClient.interceptors.response.use(
           break;
         case 404:
           authError.message = 'Serviço não encontrado.';
+          break;
+        case 417:
+          authError.message = 'Senha atual incorreta.';
           break;
         case 429:
           authError.message = 'Muitas tentativas. Aguarde alguns minutos.';
@@ -104,11 +108,27 @@ export class AuthService {
     }
   }
 
-  static async createAccount(data: CreateAccountRequest): Promise<LoginResponse> {
+  static async createAccount(data: CreateAccountRequest): Promise<void> {
     try {
-      const response = await authClient.post<LoginResponse>('/auth/register', data);
-      
-      return response.data;
+      await authClient.post('/users', {
+        data: {
+          username: data.username,
+          password: data.password,
+          name: data.name,
+          middlename: data.middlename,
+          surname: data.surname,
+          email: data.email,
+          phone: data.phone,
+          nationalID: data.nationalID,
+          dateOfBirth: data.dateOfBirth,
+          gender: data.gender,
+          province: data.province,
+          district: data.district,
+          occupation: data.occupation,
+          academicInstitution: data.academicInstitution,
+          academicLevel: data.academicLevel,
+        },
+      });
     } catch (error) {
       throw error;
     }
@@ -117,20 +137,35 @@ export class AuthService {
   static async forgotPassword(data: ForgotPasswordRequest): Promise<void> {
     try {
       await authClient.post('/auth/forgot-password', {
-        email: data.email,
+        identifier: data.email,
       });
     } catch (error) {
       throw error;
     }
   }
 
-  static async resetPassword(data: ResetPasswordRequest): Promise<void> {
+  static async resetPassword(data: ResetPasswordRequest): Promise<LoginResponse> {
     try {
-      await authClient.post('/auth/reset-password', {
-        email: data.email,
+      const response = await authClient.post<LoginResponse>('/auth/reset-password', {
         code: data.code,
         password: data.password,
         passwordConfirmation: data.passwordConfirmation,
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async changePassword(data: ChangePasswordRequest, token: string): Promise<void> {
+    try {
+      await authClient.post('/auth/change-password', {
+        currentPassword: data.currentPassword,
+        password: data.password,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
     } catch (error) {
       throw error;
