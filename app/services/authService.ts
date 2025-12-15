@@ -10,7 +10,7 @@ import {
   ForgotPasswordRequest,
   ChangePasswordRequest,
   OtpResponse,
-  AuthError
+  AuthError,
 } from '@/app/types/auth';
 import { LoginResponse, User } from '@/types/user';
 
@@ -74,7 +74,7 @@ export class AuthService {
           phone: data.phone,
         },
       });
-      
+
       return response.data;
     } catch (error) {
       throw error;
@@ -88,7 +88,7 @@ export class AuthService {
         otp: data.otp,
         otpId: data.otpId,
       });
-      
+
       return response.data;
     } catch (error) {
       throw error;
@@ -101,7 +101,7 @@ export class AuthService {
         identifier: data.identifier,
         password: data.password,
       });
-      
+
       return response.data;
     } catch (error) {
       throw error;
@@ -159,14 +159,18 @@ export class AuthService {
 
   static async changePassword(data: ChangePasswordRequest, token: string): Promise<void> {
     try {
-      await authClient.post('/auth/change-password', {
-        currentPassword: data.currentPassword,
-        password: data.password,
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      await authClient.post(
+        '/auth/change-password',
+        {
+          currentPassword: data.currentPassword,
+          password: data.password,
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
     } catch (error) {
       throw error;
     }
@@ -179,7 +183,7 @@ export class AuthService {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       return response.data;
     } catch (error) {
       throw error;
@@ -188,8 +192,7 @@ export class AuthService {
 
   static async saveUserSession(user: User, token: string): Promise<void> {
     try {
-      await AsyncStorage.setItem('user', JSON.stringify(user));
-      await AsyncStorage.setItem('token', token);
+      await AsyncStorage.setItem('@user', JSON.stringify({ user, token }));
     } catch (error) {
       console.error('Error saving user session:', error);
       throw new Error('Erro ao salvar sessão do usuário');
@@ -198,8 +201,7 @@ export class AuthService {
 
   static async clearUserSession(): Promise<void> {
     try {
-      await AsyncStorage.removeItem('user');
-      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('@user');
     } catch (error) {
       console.error('Error clearing user session:', error);
     }

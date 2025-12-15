@@ -11,7 +11,7 @@ import {
   ResetPasswordRequest,
   ForgotPasswordRequest,
   ChangePasswordRequest,
-  AuthError
+  AuthError,
 } from '@/app/types/auth';
 import useUser from '@/hooks/useUser';
 import { LoginResponse, User } from '@/types/user';
@@ -76,16 +76,12 @@ export function useCreateAccount() {
   return useMutation({
     mutationFn: (data: CreateAccountRequest) => AuthService.createAccount(data),
     onSuccess: () => {
-      Alert.alert(
-        'Conta Criada',
-        'A sua conta foi criada com sucesso! Faça login para continuar.',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/login/login-email'),
-          },
-        ]
-      );
+      Alert.alert('Conta Criada', 'A sua conta foi criada com sucesso! Faça login para continuar.', [
+        {
+          text: 'OK',
+          onPress: () => router.replace('/login/login-email'),
+        },
+      ]);
     },
     onError: (error: AuthError) => {
       console.error('Create account error:', error);
@@ -116,7 +112,6 @@ export function useResetPassword() {
     onSuccess: async (response: LoginResponse) => {
       try {
         await AuthService.saveUserSession(response.user, response.jwt);
-        navigateAfterLogin();
       } catch (error) {
         console.error('Error saving user session after password reset:', error);
         Alert.alert('Erro', 'Erro ao iniciar sessão automaticamente');

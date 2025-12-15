@@ -8,6 +8,7 @@ import AuthHeader from '@/app/components/auth/AuthHeader';
 import AuthTitle from '@/app/components/auth/AuthTitle';
 import FormInput from '@/app/components/auth/FormInput';
 import AuthFooter from '@/app/components/auth/AuthFooter';
+import { navigateAfterLogin } from '@/util/onboarding';
 
 export default function ResetPassword() {
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -49,6 +50,9 @@ export default function ResetPassword() {
       {
         onError: (error) => {
           setErrors({ general: error.message });
+        },
+        onSuccess: async () => {
+          await navigateAfterLogin();
         },
       }
     );

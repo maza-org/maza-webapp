@@ -7,7 +7,7 @@ import Button from '@/components/Button';
 import Colors from '@/constants/Colors';
 import { useSurveyQuestions, useSubmitSurvey } from '@/services/survey';
 import { useAuthUser } from '@/hooks/useAuth';
-import { SurveyQuestion, SurveyAnswer } from '@/types/survey';
+import { SurveyAnswer } from '@/types/survey';
 import { setOnboardingComplete } from '@/util/onboarding';
 
 const theme = Colors['dark'];
@@ -17,7 +17,6 @@ export default function SurveyOnboardingScreen() {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Fetch questions
   const { data: questionsData, isLoading, error } = useSurveyQuestions();
   const { data: authUser } = useAuthUser();
   const submitSurveyMutation = useSubmitSurvey();
@@ -27,7 +26,6 @@ export default function SurveyOnboardingScreen() {
   const totalQuestions = questions.length;
   const progress = totalQuestions > 0 ? (currentQuestionIndex + 1) / totalQuestions : 0;
 
-  // Check if current question has been answered
   const hasAnswer = currentQuestion ? !!selectedAnswers[currentQuestion.documentId] : false;
 
   const handleSelectAnswer = (questionDocId: string, answerDocId: string) => {
@@ -83,7 +81,6 @@ export default function SurveyOnboardingScreen() {
     }
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -95,7 +92,6 @@ export default function SurveyOnboardingScreen() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -111,7 +107,6 @@ export default function SurveyOnboardingScreen() {
     );
   }
 
-  // No questions available
   if (!questions.length) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -123,7 +118,6 @@ export default function SurveyOnboardingScreen() {
     );
   }
 
-  // Success screen
   if (showSuccess) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>

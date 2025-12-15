@@ -53,7 +53,6 @@ export default function ChangePasswordScreen() {
         password: newPassword,
       });
 
-      // Keep the existing user data and token
       if (user) {
         const userWithToken = {
           ...user,
@@ -61,7 +60,7 @@ export default function ChangePasswordScreen() {
         };
 
         await AsyncStorage.setItem('@user', JSON.stringify(userWithToken));
-        
+
         Alert.alert('Sucesso', 'Senha alterada com sucesso!', [
           {
             text: 'OK',
