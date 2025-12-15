@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#29292E',
   },
   disabledButton: {
-    opacity: 0.7,
+    backgroundColor: '#202024',
   },
   contentContainer: {
     flexDirection: 'row',

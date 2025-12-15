@@ -61,7 +61,6 @@ export default function SurveyOnboardingScreen() {
       return;
     }
 
-    // Transform answers to API format
     const surveyData: SurveyAnswer[] = Object.entries(selectedAnswers).map(([questionDocId, answerDocId]) => ({
       question: questionDocId,
       answer: answerDocId,

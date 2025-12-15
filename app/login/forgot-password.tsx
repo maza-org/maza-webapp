@@ -38,16 +38,19 @@ export default function ForgotPassword() {
         onSuccess: () => {
           setSuccess(true);
         },
-        onError: (error) => {
-          setError(error.message);
+        onError: (error: any) => {
+          console.log(error);
+          if (error?.status === 417) {
+            console.log(error);
+            setError('Este email não está associado a nenhuma conta');
+          } else {
+            setError(error.message);
+          }
         },
       }
     );
   };
 
-  const handleBackToLogin = () => {
-    router.back();
-  };
 
   if (success) {
     return (

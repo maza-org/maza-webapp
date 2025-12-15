@@ -14,6 +14,8 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import useUser from '@/hooks/useUser';
 import { useChangePassword } from '@/app/hooks/useAuthMutations';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { navigateAfterLogin } from '@/util/onboarding';
 
 export default function ChangePasswordScreen() {
   const { data: user, isLoading, error } = useUser();
@@ -50,12 +52,25 @@ export default function ChangePasswordScreen() {
         currentPassword,
         password: newPassword,
       });
-      Alert.alert('Sucesso', 'Senha alterada com sucesso!', [
-        {
-          text: 'OK',
-          onPress: () => router.back(),
-        },
-      ]);
+
+      // Keep the existing user data and token
+      if (user) {
+        const userWithToken = {
+          ...user,
+          token: user.token,
+        };
+
+        await AsyncStorage.setItem('@user', JSON.stringify(userWithToken));
+        
+        Alert.alert('Sucesso', 'Senha alterada com sucesso!', [
+          {
+            text: 'OK',
+            onPress: async () => {
+              await navigateAfterLogin(user.interests);
+            },
+          },
+        ]);
+      }
     } catch (error: any) {
       if (error?.status === 417) {
         setErrors({ currentPassword: 'Senha actual incorrecta' });
