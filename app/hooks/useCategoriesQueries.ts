@@ -85,7 +85,6 @@ export function useSearchCourses(keyword: string, enabled: boolean = true) {
 // Dynamic hook that chooses the right query based on type
 export function useCategoryQuery(type: string, name?: string, id?: string | number, token?: string) {
   const params: CategoryQueryParams = { type, name, id, token };
-
   switch (type) {
     case 'popular':
       return usePopularCourses();
@@ -93,6 +92,8 @@ export function useCategoryQuery(type: string, name?: string, id?: string | numb
       return useNewCourses();
     case 'suggested':
       return useSuggestedCourses();
+    case 'category':
+      return useCoursesByCategory(params);
     default:
       return useCoursesByCategory(params);
   }

@@ -12,7 +12,7 @@ import ErrorComponent from '@/app/components/categories/ErrorComponent';
 import EmptyState from '@/app/components/categories/EmptyState';
 
 export default function Category() {
-  const { name, type, id } = useLocalSearchParams();
+  const { name, id } = useLocalSearchParams();
   const { data: user } = useUser();
 
   const {
@@ -21,7 +21,7 @@ export default function Category() {
     error,
     refetch
   } = useCategoryQuery(
-    type as string,
+    'category',
     name as string,
     id as string,
     user?.token

@@ -39,6 +39,12 @@ export class CategoriesService {
         case 'suggested':
           url = '/courses/suggested?pageSize=10&page=1';
           break;
+        case 'category':
+          if (!params.id) {
+            throw new Error('ID da categoria é obrigatório');
+          }
+          url = `/courses?subjects=${params.id}`;
+          break;
         default:
           if (!params.id) {
             throw new Error('ID da categoria é obrigatório');
