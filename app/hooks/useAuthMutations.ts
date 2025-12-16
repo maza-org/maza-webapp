@@ -1,6 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { Alert } from 'react-native';
 import { AuthService } from '@/app/services/authService';
 import { navigateAfterLogin } from '@/util/onboarding';
 import {
@@ -44,7 +43,6 @@ export function useOtpVerification() {
         navigateAfterLogin();
       } catch (error) {
         console.error('Error fetching user data after OTP verification:', error);
-        Alert.alert('Erro', 'Erro ao carregar dados do usuário');
       }
     },
     onError: (error: AuthError) => {
@@ -63,7 +61,6 @@ export function useEmailLogin() {
         navigateAfterLogin();
       } catch (error) {
         console.error('Error fetching user data after email login:', error);
-        Alert.alert('Erro', 'Erro ao carregar dados do usuário');
       }
     },
     onError: (error: AuthError) => {
@@ -75,13 +72,21 @@ export function useEmailLogin() {
 export function useCreateAccount() {
   return useMutation({
     mutationFn: (data: CreateAccountRequest) => AuthService.createAccount(data),
-    onSuccess: () => {
-      Alert.alert('Conta Criada', 'A sua conta foi criada com sucesso! Faça login para continuar.', [
-        {
-          text: 'OK',
-          onPress: () => router.replace('/login/login-email'),
-        },
-      ]);
+    onSuccess: async (_, variables) => {
+      try {
+        // Auto-login after successful registration
+        const loginResponse = await AuthService.loginWithEmail({
+          identifier: variables.username,
+          password: variables.password,
+        });
+        const userData = await AuthService.getUserData(loginResponse.jwt);
+        await AuthService.saveUserSession(userData, loginResponse.jwt);
+        navigateAfterLogin();
+      } catch (error) {
+        console.error('Error during auto-login after registration:', error);
+        // If auto-login fails, redirect to login page
+        router.replace('/login/login-email');
+      }
     },
     onError: (error: AuthError) => {
       console.error('Create account error:', error);
@@ -114,7 +119,6 @@ export function useResetPassword() {
         await AuthService.saveUserSession(response.user, response.jwt);
       } catch (error) {
         console.error('Error saving user session after password reset:', error);
-        Alert.alert('Erro', 'Erro ao iniciar sessão automaticamente');
       }
     },
     onError: (error: AuthError) => {

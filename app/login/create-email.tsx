@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { ScrollView, View, StyleSheet, Text } from 'react-native';
+import { ScrollView, View, StyleSheet, Text, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Button from '@/components/Button';
 import { useCreateAccount } from '@/app/hooks/useAuthMutations';
@@ -153,8 +154,12 @@ export default function CreateEmail() {
     setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
+
+
+  const insets = useSafeAreaInsets();
+
   return (
-    <AuthContainer>
+    <AuthContainer edges={['top']}>
       <AuthTopSection>
         <AuthHeader />
         <AuthTitle
@@ -165,7 +170,7 @@ export default function CreateEmail() {
         />
       </AuthTopSection>
 
-      <AuthContent>
+      <AuthContent style={{ paddingBottom: insets.bottom + 24 }}>
         <ScrollView contentContainerStyle={styles.formContainer} showsVerticalScrollIndicator={false}>
           <FormInput
             label="Nome de Utilizador"

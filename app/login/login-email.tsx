@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
@@ -65,8 +65,6 @@ export default function LoginEmail() {
           // await setUserData.mutateAsync(userWithToken);
           await AsyncStorage.setItem('@user', JSON.stringify(userWithToken));
 
-          Alert.alert('Sucesso', 'Login realizado com sucesso.');
-
           // Navigate based on onboarding status and interests
           await navigateAfterLogin(userData.interests);
         } else {
@@ -105,10 +103,6 @@ export default function LoginEmail() {
             break;
           case 500:
             setError('Erro interno do servidor. Por favor, tente novamente mais tarde.');
-            Alert.alert(
-              'Erro do Servidor',
-              'O servidor está temporariamente indisponível. Por favor, tente novamente em alguns instantes.'
-            );
             break;
           case 502:
           case 503:
@@ -121,10 +115,6 @@ export default function LoginEmail() {
       } else if (error.request) {
         // Network error
         setError('Erro de conexão. Verifique sua internet.');
-        Alert.alert(
-          'Erro de Conexão',
-          'Não foi possível conectar ao servidor. Verifique sua conexão de internet e tente novamente.'
-        );
       } else {
         setError('Não foi possível fazer login. Por favor, tente novamente.');
       }

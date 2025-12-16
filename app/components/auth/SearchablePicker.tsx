@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SearchablePickerProps } from '@/app/types/auth';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function SearchablePicker({
   label,
@@ -21,6 +22,7 @@ export default function SearchablePicker({
 }: SearchablePickerProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
+  const insets = useSafeAreaInsets();
 
   const filteredOptions = useMemo(() => {
     if (!searchText) return options;
@@ -56,7 +58,7 @@ export default function SearchablePicker({
         </Text>
         <Ionicons name="chevron-down" size={20} color="#666" />
       </TouchableOpacity>
-      
+
       {error && <Text style={styles.errorText}>{error}</Text>}
 
       <Modal
@@ -66,7 +68,7 @@ export default function SearchablePicker({
         onRequestClose={() => setIsVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { paddingBottom: insets.bottom }]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{label}</Text>
               <TouchableOpacity onPress={() => setIsVisible(false)}>
@@ -142,7 +144,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1E1E',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '70%',
+    maxHeight: '80%',
   },
   modalHeader: {
     flexDirection: 'row',

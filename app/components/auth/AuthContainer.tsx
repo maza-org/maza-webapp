@@ -1,14 +1,17 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Edges } from 'react-native-safe-area-context';
 
 interface AuthContainerProps {
   children: React.ReactNode;
+  edges?: Edges;
 }
 
-export default function AuthContainer({ children }: AuthContainerProps) {
+export default function AuthContainer({ children, edges = ['top', 'bottom'] }: AuthContainerProps) {
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={edges}>
       {children}
     </SafeAreaView>
   );
@@ -18,8 +21,9 @@ export function AuthTopSection({ children }: { children: React.ReactNode }) {
   return <View style={styles.topSection}>{children}</View>;
 }
 
-export function AuthContent({ children }: { children: React.ReactNode }) {
-  return <View style={styles.content}>{children}</View>;
+
+export function AuthContent({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+  return <View style={[styles.content, style]}>{children}</View>;
 }
 
 export function AuthForm({ children }: { children: React.ReactNode }) {
