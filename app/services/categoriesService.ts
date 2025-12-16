@@ -40,14 +40,12 @@ export class CategoriesService {
           url = '/courses/suggested?pageSize=10&page=1';
           break;
         default:
-          // Search by name/keyword
-          if (!name) {
-            throw new Error('Nome é obrigatório para pesquisa');
+          if (!params.id) {
+            throw new Error('ID da categoria é obrigatório');
           }
-          url = `/courses?keyword=${encodeURIComponent(toLower(name))}`;
+          url = `/courses?subjects=${params.id}`;
           break;
       }
-
       const response = await categoriesClient.get<CoursesApiResponse>(url, { headers });
       return response.data.data || [];
     } catch (error) {
@@ -148,9 +146,6 @@ export class CategoriesService {
         courses: data.count,
         icon: subjectToIcon[name] || 'apps-outline',
       }));
-
-      console.log(coursesBySubject);
-      console.log(categories);
 
       return categories;
     } catch (error) {

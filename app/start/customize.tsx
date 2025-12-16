@@ -113,7 +113,6 @@ export default function Customize() {
   };
 
   const handleSkip = (): void => {
-    console.log('Skipped topic selection');
     router.push('/');
   };
 

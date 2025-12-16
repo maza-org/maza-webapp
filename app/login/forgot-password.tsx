@@ -39,9 +39,7 @@ export default function ForgotPassword() {
           setSuccess(true);
         },
         onError: (error: any) => {
-          console.log(error);
           if (error?.status === 417) {
-            console.log(error);
             setError('Este email não está associado a nenhuma conta');
           } else {
             setError(error.message);

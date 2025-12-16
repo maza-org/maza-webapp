@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Header from '@/components/Header';
@@ -42,15 +42,17 @@ export default function CategorySelection() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Header title={'Escolha uma categoria'} />
 
-      <View style={styles.categoriesList}>
-        {categories?.map((category) => (
+      <FlatList
+        data={categories}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
           <CategoryItem
-            key={category.id}
-            category={category}
+            category={item}
             onPress={handleCategoryPress}
           />
-        ))}
-      </View>
+        )}
+        contentContainerStyle={styles.categoriesList}
+      />
     </SafeAreaView>
   );
 }

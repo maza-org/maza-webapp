@@ -72,7 +72,6 @@ export default function Challenge(): React.ReactElement {
   ]);
 
   const handleNodePress = (id: number): void => {
-    console.log(`Node ${id} pressed`);
   };
 
   const getNodeImage = (node: Node): string => {

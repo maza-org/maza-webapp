@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance App Prototype - Big & Bold</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        /* Custom scrollbar hide */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+<div class="w-full max-w-[420px] h-[900px] bg-white rounded-[40px] shadow-2xl overflow-hidden relative border-[8px] border-white ring-1 ring-gray-200">
+
+    <div id="screen-welcome" class="screen absolute inset-0 bg-white flex flex-col p-8 z-50">
+        <div class="flex-1 flex flex-col items-center justify-center space-y-10">
+            <div class="w-24 h-24 bg-blue-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-blue-200">
+                <i class="ph ph-chart-bar text-white text-5xl"></i>
+            </div>
+
+            <h1 class="text-4xl font-extrabold text-gray-900 text-center leading-tight tracking-tight">
+                Organize as suas finanças.
+            </h1>
+
+            <div class="w-full space-y-5">
+                <div class="flex items-center p-5 bg-gray-50 rounded-3xl">
+                    <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mr-5 flex-shrink-0">
+                        <i class="ph ph-chart-pie-slice text-2xl"></i>
+                    </div>
+                    <span class="text-lg font-bold text-gray-800">Controle de despesas</span>
+                </div>
+                <div class="flex items-center p-5 bg-gray-50 rounded-3xl">
+                    <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mr-5 flex-shrink-0">
+                        <i class="ph ph-trend-up text-2xl"></i>
+                    </div>
+                    <span class="text-lg font-bold text-gray-800">Alcance metas</span>
+                </div>
+                <div class="flex items-center p-5 bg-gray-50 rounded-3xl">
+                    <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mr-5 flex-shrink-0">
+                        <i class="ph ph-book-open text-2xl"></i>
+                    </div>
+                    <span class="text-lg font-bold text-gray-800">Aprenda finanças</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 space-y-4">
+            <button onclick="navigateTo('screen-dashboard')" class="w-full py-5 bg-blue-600 text-white rounded-2xl font-extrabold text-xl hover:bg-blue-700 transition shadow-xl shadow-blue-200">
+                Criar Conta
+            </button>
+            <button onclick="navigateTo('screen-dashboard')" class="w-full py-5 bg-white text-gray-500 rounded-2xl font-bold text-xl hover:text-gray-900 transition">
+                Entrar
+            </button>
+        </div>
+    </div>
+
+    <div id="screen-dashboard" class="screen absolute inset-0 bg-white flex flex-col hidden">
+        <div class="p-8 pb-4">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <p class="text-gray-500 text-base font-bold mb-1">Bem-vindo(a)</p>
+                    <h2 class="text-4xl font-extrabold text-gray-900 tracking-tight">35.000 <span class="text-2xl text-gray-500">MZN</span></h2>
+                </div>
+                <div class="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                    <i class="ph ph-user text-gray-500 text-2xl"></i>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3 mb-8 bg-gray-50 w-fit px-4 py-2 rounded-full">
+                <span class="text-gray-900 font-extrabold text-lg">Abril</span>
+                <i class="ph ph-caret-down text-gray-500 text-xl"></i>
+            </div>
+
+            <div class="flex justify-center mb-10 relative">
+                <div class="w-64 h-64 rounded-full relative shadow-xl" style="background: conic-gradient(#3b82f6 0% 65%, #fbbf24 65% 85%, #f3f4f6 85% 100%);">
+                    <div class="absolute inset-8 bg-white rounded-full flex items-center justify-center shadow-inner">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-center space-x-8 mb-8">
+                <div class="flex items-center">
+                    <div class="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
+                    <span class="text-base font-bold text-gray-600">Despesas</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-4 h-4 bg-yellow-400 rounded-full mr-3"></div>
+                    <span class="text-base font-bold text-gray-600">Poupança</span>
+                </div>
+            </div>
+
+            <div class="space-y-5 overflow-y-auto max-h-[220px] no-scrollbar pb-32">
+                <div class="flex items-center justify-between p-5 border border-gray-100 rounded-3xl shadow-sm hover:bg-gray-50 transition">
+                    <div class="flex items-center">
+                        <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mr-4">
+                            <i class="ph ph-receipt text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-extrabold text-gray-900 text-lg">Próx. despesa</p>
+                            <p class="text-sm text-gray-500 font-semibold">Qual de renda</p>
+                        </div>
+                    </div>
+                    <i class="ph ph-caret-right text-gray-400 text-xl"></i>
+                </div>
+
+                <div class="flex items-center justify-between p-5 border border-red-100 bg-red-50 rounded-3xl shadow-sm">
+                    <div class="flex items-center">
+                        <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center text-red-600 mr-4">
+                            <i class="ph ph-warning-circle text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-extrabold text-gray-900 text-lg">Em atraso</p>
+                            <p class="text-sm text-gray-500 font-semibold">Luz - 5 dias</p>
+                        </div>
+                    </div>
+                    <i class="ph ph-caret-right text-gray-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-budget" class="screen absolute inset-0 bg-white flex flex-col hidden">
+        <div class="p-8 pt-10 flex items-center mb-4">
+            <button onclick="navigateTo('screen-dashboard')" class="mr-6 text-gray-600 hover:text-gray-900 p-2 -ml-2">
+                <i class="ph ph-arrow-left text-3xl"></i>
+            </button>
+            <h2 class="text-3xl font-extrabold text-gray-900">Orçamento</h2>
+        </div>
+
+        <div class="flex-1 px-6 space-y-5 overflow-y-auto pb-40">
+
+            <div class="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-3xl shadow-sm">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-4 shadow-md shadow-blue-200">
+                        <i class="ph ph-check text-white text-base font-bold"></i>
+                    </div>
+                    <span class="text-xl font-bold text-gray-800">Alimentação</span>
+                </div>
+                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="ph ph-check text-green-600 text-base font-bold"></i>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-3xl shadow-sm">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4 text-green-600">
+                        <i class="ph ph-bus text-2xl"></i>
+                    </div>
+                    <span class="text-xl font-bold text-gray-900">Transporte</span>
+                </div>
+                <span class="text-lg font-bold text-gray-500">400</span>
+            </div>
+
+            <div class="flex items-center justify-between p-6 bg-white border-l-[8px] border-yellow-400 rounded-r-3xl shadow-sm pl-4">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4 text-yellow-600">
+                        <i class="ph ph-house text-2xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold text-gray-900 block">Habitação</span>
+                        <span class="text-sm text-red-500 font-extrabold">1500 MZN</span>
+                    </div>
+                </div>
+                <i class="ph ph-warning text-yellow-500 text-2xl"></i>
+            </div>
+
+            <div class="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-3xl shadow-sm">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mr-4 text-gray-600">
+                        <i class="ph ph-device-mobile text-2xl"></i>
+                    </div>
+                    <span class="text-xl font-bold text-gray-900">Comunicação</span>
+                </div>
+                <span class="text-lg font-bold text-gray-500">2.0</span>
+            </div>
+        </div>
+
+        <div class="absolute bottom-[110px] left-8 right-8">
+            <button class="w-full py-5 bg-blue-600 text-white rounded-3xl font-extrabold shadow-xl shadow-blue-200 hover:bg-blue-700 transition flex items-center justify-center text-lg tracking-wide">
+                + Adicionar despesa
+            </button>
+        </div>
+    </div>
+
+    <div id="screen-education" class="screen absolute inset-0 bg-white flex flex-col hidden">
+        <div class="p-8 pt-10 flex items-center mb-4">
+            <button onclick="navigateTo('screen-dashboard')" class="mr-6 text-gray-600 hover:text-gray-900 p-2 -ml-2">
+                <i class="ph ph-arrow-left text-3xl"></i>
+            </button>
+            <h2 class="text-3xl font-extrabold text-gray-900 leading-tight">Aulas de <br>Finanças</h2>
+        </div>
+
+        <div class="flex-1 px-8 space-y-6 overflow-y-auto pb-40">
+
+            <div class="p-7 bg-white border border-gray-100 rounded-[32px] shadow-sm hover:shadow-lg transition">
+                <h3 class="font-extrabold text-gray-900 text-2xl mb-4 leading-tight">Como organizar o seu orçamento</h3>
+                <span class="px-4 py-2 bg-blue-600 text-white text-xs font-extrabold uppercase tracking-widest rounded-xl">Gratuito</span>
+            </div>
+
+            <div class="p-7 bg-white border border-gray-100 rounded-[32px] shadow-sm hover:shadow-lg transition">
+                <h3 class="font-extrabold text-gray-900 text-2xl mb-4 leading-tight">Diferença entre poupar e investir</h3>
+                <span class="px-4 py-2 bg-gray-200 text-gray-600 text-xs font-extrabold uppercase tracking-widest rounded-xl">Nível Básico</span>
+            </div>
+
+            <div class="p-7 bg-white border border-gray-100 rounded-[32px] shadow-sm hover:shadow-lg transition">
+                <h3 class="font-extrabold text-gray-900 text-2xl mb-4 leading-tight">Sobre emergências financeiras</h3>
+                <span class="px-4 py-2 bg-gray-200 text-gray-600 text-xs font-extrabold uppercase tracking-widest rounded-xl">Nível Básico</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="bottom-nav" class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-6 pb-8 flex justify-between items-center hidden z-40 shadow-[0_-5px_30px_rgba(0,0,0,0.03)]">
+        <button onclick="navigateTo('screen-dashboard')" class="nav-btn flex flex-col items-center text-blue-600 group w-20" data-target="screen-dashboard">
+            <i class="ph ph-squares-four text-3xl mb-2 group-hover:scale-110 transition"></i>
+            <span class="text-xs font-bold tracking-wide">Início</span>
+        </button>
+        <button onclick="navigateTo('screen-budget')" class="nav-btn flex flex-col items-center text-gray-400 group hover:text-blue-600 w-20" data-target="screen-budget">
+            <i class="ph ph-wallet text-3xl mb-2 group-hover:scale-110 transition"></i>
+            <span class="text-xs font-bold tracking-wide">Contas</span>
+        </button>
+        <button onclick="navigateTo('screen-dashboard')" class="nav-btn flex flex-col items-center text-gray-400 group hover:text-blue-600 w-20">
+            <i class="ph ph-chart-bar text-3xl mb-2 group-hover:scale-110 transition"></i>
+            <span class="text-xs font-bold tracking-wide">Poupar</span>
+        </button>
+        <button onclick="navigateTo('screen-education')" class="nav-btn flex flex-col items-center text-gray-400 group hover:text-blue-600 w-20" data-target="screen-education">
+            <i class="ph ph-graduation-cap text-3xl mb-2 group-hover:scale-110 transition"></i>
+            <span class="text-xs font-bold tracking-wide">Aulas</span>
+        </button>
+    </div>
+
+</div>
+
+<script>
+    function navigateTo(screenId) {
+        // Hide all screens
+        const screens = document.querySelectorAll('.screen');
+        screens.forEach(screen => {
+            screen.classList.add('hidden');
+        });
+
+        // Show target screen
+        document.getElementById(screenId).classList.remove('hidden');
+
+        // Handle Bottom Nav visibility
+        const bottomNav = document.getElementById('bottom-nav');
+        if (screenId === 'screen-welcome') {
+            bottomNav.classList.add('hidden');
+        } else {
+            bottomNav.classList.remove('hidden');
+            updateActiveNav(screenId);
+        }
+    }
+
+    function updateActiveNav(activeScreenId) {
+        const navBtns = document.querySelectorAll('.nav-btn');
+        navBtns.forEach(btn => {
+            const icon = btn.querySelector('i');
+            const text = btn.querySelector('span');
+
+            // Reset style
+            btn.classList.remove('text-blue-600');
+            btn.classList.add('text-gray-400');
+
+            // Set active style if matches
+            if (btn.dataset.target === activeScreenId) {
+                btn.classList.remove('text-gray-400');
+                btn.classList.add('text-blue-600');
+            }
+        });
+    }
+</script>
+</body>
+</html>

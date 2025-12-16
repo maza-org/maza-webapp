@@ -11,7 +11,7 @@ export const categoriesQueryKeys = {
   popular: () => ['categories', 'courses', 'popular'] as const,
   new: () => ['categories', 'courses', 'new'] as const,
   suggested: () => ['categories', 'courses', 'suggested'] as const,
-  custom: (params: CategoryQueryParams) => ['categories', 'courses', params.type, params.name] as const,
+  custom: (params: CategoryQueryParams) => ['categories', 'courses', params.type, params.name, params.id] as const,
 };
 
 // Main hook for fetching courses by category
@@ -83,9 +83,9 @@ export function useSearchCourses(keyword: string, enabled: boolean = true) {
 }
 
 // Dynamic hook that chooses the right query based on type
-export function useCategoryQuery(type: string, name?: string, token?: string) {
-  const params: CategoryQueryParams = { type, name, token };
-  
+export function useCategoryQuery(type: string, name?: string, id?: string | number, token?: string) {
+  const params: CategoryQueryParams = { type, name, id, token };
+
   switch (type) {
     case 'popular':
       return usePopularCourses();

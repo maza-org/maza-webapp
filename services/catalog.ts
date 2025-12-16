@@ -7,16 +7,13 @@ export function useCourseDetails(documentId: string) {
   return useQuery({
     queryKey: ['course', documentId],
     queryFn: async (): Promise<CourseDetail> => {
-      console.log('Fetching course details for:', documentId);
       const response = await api.get(`/courses/${documentId}`);
-      console.log('Course details response:', response.data);
       return response.data;
     },
     enabled: !!documentId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: (failureCount, error) => {
-      console.log('Course details retry attempt:', failureCount, error.message);
       return failureCount < 3;
     },
   });
@@ -63,15 +60,12 @@ export function useCertificates() {
   return useQuery({
     queryKey: ['certificates'],
     queryFn: async (): Promise<CertificateSummary[]> => {
-      console.log('Fetching certificates...');
       const response = await api.get('/certificates');
-      console.log('Certificates response:', response.data);
       return response.data;
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     retry: (failureCount, error: any) => {
-      console.log('Certificates retry attempt:', failureCount, error.message);
       // Don't retry on 4xx errors (client errors)
       if (error.response?.status >= 400 && error.response?.status < 500) {
         return false;

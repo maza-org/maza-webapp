@@ -21,22 +21,18 @@ const jobsApi = axios.create({
 
 jobsApi.interceptors.request.use(
   (config) => {
-    console.log('Jobs API Request:', config.method?.toUpperCase(), config.url);
     return config;
   },
   (error) => {
-    console.error('Jobs API Request Error:', error);
     return Promise.reject(error);
   }
 );
 
 jobsApi.interceptors.response.use(
   (response) => {
-    console.log('Jobs API Response:', response.status, response.config.url);
     return response;
   },
   (error) => {
-    console.error('Jobs API Response Error:', error.response?.status, error.config?.url, error.message);
     return Promise.reject(error);
   }
 );

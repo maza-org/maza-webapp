@@ -47,6 +47,7 @@ export interface CoursesApiResponse {
 export interface CategoryQueryParams {
   type: string;
   name?: string;
+  id?: number | string;
   token?: string;
 }
 

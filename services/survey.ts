@@ -5,22 +5,18 @@ import surveyApi from './api';
 // Add interceptors for debugging
 surveyApi.interceptors.request.use(
   (config) => {
-    console.log('Survey API Request:', config.method?.toUpperCase(), config.url);
     return config;
   },
   (error) => {
-    console.error('Survey API Request Error:', error);
     return Promise.reject(error);
   }
 );
 
 surveyApi.interceptors.response.use(
   (response) => {
-    console.log('Survey API Response:', response.status, response.config.url);
     return response;
   },
   (error) => {
-    console.error('Survey API Response Error:', error.response?.status, error.config?.url, error.message);
     return Promise.reject(error);
   }
 );

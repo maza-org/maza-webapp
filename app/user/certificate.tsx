@@ -82,7 +82,6 @@ export default function Certificate() {
 
       if (data.success && data.url) {
         setCertificateUrl(data.url);
-        console.log(JSON.stringify(data, null, 2));
 
         // For web platform, we'll use the URL directly without downloading
         if (isWeb) {
@@ -116,18 +115,13 @@ export default function Certificate() {
       // Create a file path for the PDF in the cache directory
       const pdfFilePath = `${FileSystem.cacheDirectory}certificate_${id}.pdf`;
 
-      console.log('Downloading PDF to path:', pdfFilePath);
-
       // Download the PDF directly to the file system
       const downloadResult = await FileSystem.downloadAsync(url, pdfFilePath);
-
-      console.log('Download result:', downloadResult);
 
       if (downloadResult.status === 200) {
         // Be consistent with URI handling for Android
         // Store the URI without the 'file://' prefix
         setPdfUri(downloadResult.uri);
-        console.log('PDF URI set to:', downloadResult.uri);
       } else {
         console.error('Failed to download PDF, status:', downloadResult.status);
         Alert.alert('Erro', 'Falha ao baixar o certificado');
@@ -187,11 +181,9 @@ export default function Certificate() {
         if (cleanUri.startsWith('file://')) {
           cleanUri = cleanUri.substring(7);
         }
-        console.log('Clean URI for saving:', cleanUri);
 
         // Create destination file path
         const fileUri = `${FileSystem.documentDirectory}certificado_mazas_${certificateId}.pdf`;
-        console.log('Destination file path:', fileUri);
 
         // Copy the file to document directory
         await FileSystem.copyAsync({
@@ -201,7 +193,6 @@ export default function Certificate() {
 
         // Save to MediaLibrary
         const asset = await MediaLibrary.createAssetAsync(fileUri);
-        console.log('Asset created:', asset);
 
         // Try to find or create the album
         try {
@@ -265,12 +256,9 @@ export default function Certificate() {
       );
     }
 
-    console.log('Rendering WebView with URI:', pdfUri);
-
     if (Platform.OS === 'android') {
       // Ensure the URI has the file:// prefix for WebView
       const fileUrl = pdfUri.startsWith('file://') ? pdfUri : `file://${pdfUri}`;
-      console.log('Android WebView URL:', fileUrl);
 
       return (
         <WebView

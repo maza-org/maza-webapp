@@ -76,14 +76,11 @@ export default function CourseDetail() {
     const previousToken = previousTokenRef.current;
 
     if (currentToken !== previousToken) {
-      console.log('Token changed:', { previousToken: !!previousToken, currentToken: !!currentToken });
-
       // Update the ref
       previousTokenRef.current = currentToken;
 
       // If we now have a token (user logged in), refresh user-dependent data
       if (currentToken && !previousToken) {
-        console.log('User logged in, refreshing user data...');
         showSuccess('Bem-vindo de volta! Carregando seus dados...');
         // Invalidate and refetch user-dependent queries
         queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
@@ -99,7 +96,6 @@ export default function CourseDetail() {
       // Check if this is the first time we have user data loaded
       const hasJustLoaded = previousTokenRef.current === user.token && !userLoading;
       if (hasJustLoaded) {
-        console.log('User data loaded successfully');
         // Don't show another success message here to avoid spam
       }
     }
@@ -108,7 +104,6 @@ export default function CourseDetail() {
   // Refresh data when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      console.log('Screen focused, checking for token updates...');
       // Refetch auth user data to check for token updates
       queryClient.invalidateQueries({ queryKey: ['auth-user'] });
     }, [queryClient])
@@ -119,32 +114,9 @@ export default function CourseDetail() {
   const removeFromFavoritesMutation = useRemoveFromFavorites();
   const startCourseMutation = useStartCourse();
 
-  // Debug logging
-  console.log('Loading states:', {
-    courseLoading,
-    userLoading,
-    progressLoading,
-    favoriteLoading,
-    userToken: !!user?.token,
-    isLoading,
-    documentId,
-  });
-
   // Check if certificate exists for this course and no errors
   const hasCertificate =
     !certificatesError && certificates.length > 0 && certificates.some((cert) => cert.course.documentId === documentId);
-
-  // Debug certificate state
-  console.log('Certificate state:', {
-    certificatesError,
-    certificatesCount: certificates.length,
-    hasCertificate,
-    documentId,
-    certificates: certificates.map((cert) => ({
-      courseId: cert.course.documentId,
-      certificateId: cert.documentId,
-    })),
-  });
 
   // Toggle menu visibility
   const toggleMenu = () => {

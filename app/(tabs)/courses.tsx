@@ -35,7 +35,6 @@ export default function Courses() {
   }
 
   const handleFilterApply = (filters: FilterOptions) => {
-    console.log('Applied filters:', filters);
   };
 
   return (

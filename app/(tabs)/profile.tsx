@@ -15,6 +15,7 @@ import InterestsSection from '@/app/components/profile/InterestsSection';
 import CertificatesSection from '@/app/components/profile/CertificatesSection';
 import ProfileErrorState from '@/app/components/profile/ProfileErrorState';
 import { formatDate } from '@/util/util';
+import Button from '@/components/Button';
 
 export default function ProfileScreen() {
   const { data: user, isLoading, error } = useUser();
@@ -175,10 +176,12 @@ export default function ProfileScreen() {
             onViewAll={() => router.push('/user/certificates')}
           />
 
-          <TouchableOpacity style={styles.changePasswordButton} onPress={handleChangePassword}>
-            <Feather name="lock" size={20} color="#1fa2df" />
-            <Text style={styles.changePasswordButtonText}>Alterar Senha</Text>
-          </TouchableOpacity>
+          <Button
+            text="Alterar Senha"
+            handle={handleChangePassword}
+            variant="outline"
+            icon={<Feather name="lock" size={20} color="#1fa2df" />}
+          />
 
           <Text style={styles.versionLabel}>Versão 1.0.0</Text>
         </View>
@@ -242,21 +245,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  changePasswordButton: {
-    backgroundColor: 'transparent',
-    padding: 16,
-    borderRadius: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#1fa2df',
-  },
-  changePasswordButtonText: {
-    color: '#1fa2df',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+
 });

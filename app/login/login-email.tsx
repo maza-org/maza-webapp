@@ -58,13 +58,10 @@ export default function LoginEmail() {
           // Fetch additional user data
           const userData = await fetchUserDataMutation.mutateAsync(token);
 
-          // Create User object with token
           const userWithToken: User = {
             ...userData,
             token: token,
           };
-          console.log(`USER WITH TOKEN:`, JSON.stringify(userWithToken, null, 2));
-          // Save user data
           // await setUserData.mutateAsync(userWithToken);
           await AsyncStorage.setItem('@user', JSON.stringify(userWithToken));
 
@@ -190,7 +187,7 @@ export default function LoginEmail() {
       <View style={styles.content}>
         <View style={styles.formContainer}>
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Email ou Telefone</Text>
+            <Text style={styles.inputLabel}>Email ou Username</Text>
             <TextInput
               style={styles.input}
               keyboardType="email-address"
