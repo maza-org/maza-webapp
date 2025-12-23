@@ -84,8 +84,9 @@ export async function hasSeenInterests(): Promise<boolean> {
     const userResponse = await response.json();
 
     // Check if user has interests configured
-    const hasInterests = userResponse.interests && Array.isArray(userResponse.interests) && userResponse.interests.length > 0;
-    
+    const hasInterests =
+      userResponse.interests && Array.isArray(userResponse.interests) && userResponse.interests.length > 0;
+
     // If user has interests remotely, update local storage
     if (hasInterests) {
       await AsyncStorage.setItem('has_seen_interests', 'true');

@@ -7,23 +7,16 @@ import { CourseItemProps } from '@/app/types/search';
 export default function CourseItem({ item, onPress }: CourseItemProps) {
   return (
     <TouchableOpacity style={styles.courseResult} onPress={onPress}>
-      <Image 
-        source={{ uri: item?.picture?.formats?.thumbnail?.url }} 
-        style={styles.courseImage} 
-      />
+      <Image source={{ uri: item?.picture?.formats?.thumbnail?.url }} style={styles.courseImage} />
       <View style={styles.courseInfo}>
-        <Text style={styles.courseCategory}>
-          {item.subjects?.[0]?.name || item.author}
-        </Text>
+        <Text style={styles.courseCategory}>{item.subjects?.[0]?.name || item.author}</Text>
         <Text style={styles.courseTitle} numberOfLines={1}>
           {item.title}
         </Text>
         <View style={styles.courseDetails}>
           <View style={styles.ratingContainer}>
             <Ionicons name="star" size={12} color="#FFD700" />
-            <Text style={styles.ratingText}>
-              {item.rating_avg ? item.rating_avg.toFixed(1) : 'N/A'}
-            </Text>
+            <Text style={styles.ratingText}>{item.rating_avg ? item.rating_avg.toFixed(1) : 'N/A'}</Text>
           </View>
           <Text style={styles.subscriberText}>{item.subscribed} Inscritos</Text>
         </View>

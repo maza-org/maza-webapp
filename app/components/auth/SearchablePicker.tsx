@@ -1,13 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  TextInput,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Modal, FlatList, TextInput, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SearchablePickerProps } from '@/app/types/auth';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,9 +18,7 @@ export default function SearchablePicker({
 
   const filteredOptions = useMemo(() => {
     if (!searchText) return options;
-    return options.filter(option =>
-      option.toLowerCase().includes(searchText.toLowerCase())
-    );
+    return options.filter((option) => option.toLowerCase().includes(searchText.toLowerCase()));
   }, [options, searchText]);
 
   const handleSelect = (option: string) => {
@@ -38,10 +28,7 @@ export default function SearchablePicker({
   };
 
   const renderItem = ({ item }: { item: string }) => (
-    <TouchableOpacity
-      style={styles.optionItem}
-      onPress={() => handleSelect(item)}
-    >
+    <TouchableOpacity style={styles.optionItem} onPress={() => handleSelect(item)}>
       <Text style={styles.optionText}>{item}</Text>
     </TouchableOpacity>
   );
@@ -49,24 +36,14 @@ export default function SearchablePicker({
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <TouchableOpacity
-        style={[styles.picker, error && styles.pickerError]}
-        onPress={() => setIsVisible(true)}
-      >
-        <Text style={[styles.pickerText, !value && styles.placeholder]}>
-          {value || placeholder}
-        </Text>
+      <TouchableOpacity style={[styles.picker, error && styles.pickerError]} onPress={() => setIsVisible(true)}>
+        <Text style={[styles.pickerText, !value && styles.placeholder]}>{value || placeholder}</Text>
         <Ionicons name="chevron-down" size={20} color="#666" />
       </TouchableOpacity>
 
       {error && <Text style={styles.errorText}>{error}</Text>}
 
-      <Modal
-        visible={isVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setIsVisible(false)}
-      >
+      <Modal visible={isVisible} animationType="slide" transparent onRequestClose={() => setIsVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { paddingBottom: insets.bottom }]}>
             <View style={styles.modalHeader}>

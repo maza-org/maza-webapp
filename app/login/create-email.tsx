@@ -99,25 +99,25 @@ export default function CreateEmail() {
     const newErrors: Record<string, string> = {};
 
     if (!username.trim()) newErrors.username = 'Nome de utilizador é obrigatório';
-    
+
     // Validate that at least email or phone is provided
     const hasEmail = email.trim();
     const hasPhone = phone.trim();
-    
+
     if (!hasEmail && !hasPhone) {
       newErrors.contact = 'É necessário fornecer pelo menos um email ou número de telefone';
     }
-    
+
     // Validate email if provided
     if (hasEmail && !validateEmail(email)) {
       newErrors.email = 'Email inválido';
     }
-    
+
     // Validate password
     if (password.length < 6) {
       newErrors.password = 'A palavra-passe deve ter pelo menos 6 caracteres';
     }
-    
+
     if (!validateFullName(fullName)) newErrors.fullName = 'Insira pelo menos nome e apelido';
     if (!validateMozambicanID(nationalID)) newErrors.nationalID = 'BI inválido (12 números + 1 letra)';
     if (!gender) newErrors.gender = 'Selecione o género';
@@ -163,11 +163,14 @@ export default function CreateEmail() {
       {
         onError: (error) => {
           // Handle specific error types
-          if (error.message.includes('User already registered') || 
-              (error as any)?.status === 409 ||
-              error.message.includes('ConflictError')) {
-            setErrors({ 
-              general: 'Utilizador já registado. Um utilizador com este email, telefone, BI ou nome de utilizador já existe.' 
+          if (
+            error.message.includes('User already registered') ||
+            (error as any)?.status === 409 ||
+            error.message.includes('ConflictError')
+          ) {
+            setErrors({
+              general:
+                'Utilizador já registado. Um utilizador com este email, telefone, BI ou nome de utilizador já existe.',
             });
           } else {
             setErrors({ general: error.message });
@@ -184,8 +187,6 @@ export default function CreateEmail() {
   const clearWarning = (field: string) => {
     setWarnings((prev) => ({ ...prev, [field]: '' }));
   };
-
-
 
   const insets = useSafeAreaInsets();
 
@@ -254,7 +255,7 @@ export default function CreateEmail() {
               clearWarning('password');
               // Show warning for spaces without blocking
               if (text.includes(' ')) {
-                setWarnings(prev => ({ ...prev, password: 'Atenção: A palavra-passe contém espaços' }));
+                setWarnings((prev) => ({ ...prev, password: 'Atenção: A palavra-passe contém espaços' }));
               }
             }}
             showPasswordToggle
@@ -384,10 +385,8 @@ export default function CreateEmail() {
           loading={createAccountMutation.isPending}
         />
 
-        <Text style={styles.helpText}>
-          * Forneça pelo menos um email ou número de telefone
-        </Text>
-        
+        <Text style={styles.helpText}>* Forneça pelo menos um email ou número de telefone</Text>
+
         <AuthFooter linkText="Prefere usar número de telefone?" onLinkPress={() => router.push('/login')} />
       </AuthContent>
     </AuthContainer>

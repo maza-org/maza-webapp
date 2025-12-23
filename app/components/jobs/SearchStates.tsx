@@ -8,7 +8,7 @@ interface SearchLoadingProps {
 
 export function SearchLoading({ query, isLoading }: SearchLoadingProps) {
   if (!query || !isLoading) return null;
-  
+
   return (
     <View style={styles.loadingContainer}>
       <ActivityIndicator size="large" color="#2EA8FF" />

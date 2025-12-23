@@ -81,7 +81,6 @@ export class AuthService {
     }
   }
 
-
   static async loginWithEmail(data: EmailLoginRequest): Promise<LoginResponse> {
     try {
       const response = await authClient.post<LoginResponse>('/auth/login', {

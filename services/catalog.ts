@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from './api';
-import { CourseDetail, CertificateSummary } from '@/types/learning';
+import { CourseDetail, CertificateSummary, ForumComment } from '@/types/learning';
 
 // Get course details by documentId
 export function useCourseDetails(documentId: string) {
@@ -418,4 +418,87 @@ export function useCourseStateAndCertificates(courseId: string, token: string) {
     certificates: shouldFetchCertificates ? certificates : [],
     isLoading: !!token && (userCoursesLoading || (shouldFetchCertificates && certificatesLoading)),
   };
+}
+
+// Get forum comments
+export function useForumComments(courseId: string, token: string) {
+  return useQuery({
+    queryKey: ['forum-comments', courseId],
+    queryFn: async (): Promise<ForumComment[]> => {
+      const response = await api.get(`/courses/${courseId}/forum/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    },
+    enabled: !!courseId && !!token,
+    staleTime: 60 * 1000, // 1 minute
+  });
+}
+
+// Add forum comment
+export function useAddForumComment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ courseId, comment, token }: { courseId: string; comment: string; token: string }) => {
+      const response = await api.post(
+        `/courses/${courseId}/forum/comments`,
+        {
+          data: {
+            comment,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (_, { courseId }) => {
+      queryClient.invalidateQueries({ queryKey: ['forum-comments', courseId] });
+    },
+  });
+}
+
+// Reply to forum comment
+export function useReplyToComment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      courseId,
+      commentId,
+      comment,
+      token,
+    }: {
+      courseId: string;
+      commentId: number;
+      comment: string;
+      token: string;
+    }) => {
+      const response = await api.post(
+        `/courses/${courseId}/forum/comments/${commentId}/replies`,
+        {
+          data: {
+            comment,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (_, { courseId }) => {
+      queryClient.invalidateQueries({ queryKey: ['forum-comments', courseId] });
+    },
+  });
 }

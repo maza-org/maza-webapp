@@ -7,11 +7,7 @@ interface ErrorStateProps {
   title?: string;
 }
 
-export default function ErrorState({ 
-  error, 
-  onRetry, 
-  title = "Erro ao carregar" 
-}: ErrorStateProps) {
+export default function ErrorState({ error, onRetry, title = 'Erro ao carregar' }: ErrorStateProps) {
   return (
     <View style={styles.errorContainer}>
       <Text style={styles.errorTitle}>{title}</Text>

@@ -5,14 +5,11 @@ import { CertificatesResponse } from '@/app/types/certificates';
 export const certificatesService = {
   async fetchCertificates(token: string): Promise<CertificatesResponse> {
     try {
-      const response = await axios.get<CertificatesResponse>(
-        `${baseUrl}/certificates`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.get<CertificatesResponse>(`${baseUrl}/certificates`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -29,5 +26,5 @@ export const certificatesService = {
       }
       throw new Error('Network error. Please check your connection.');
     }
-  }
+  },
 };

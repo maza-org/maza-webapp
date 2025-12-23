@@ -20,11 +20,11 @@ export default function Customize() {
   const userTopics = interests ? JSON.parse(interests as string) : [];
 
   const showBackButton = !!interests;
-  
+
   const { data: topicsData, isLoading, isError } = useTopics();
   const updateInterestsMutation = useUpdateInterests();
   const removeInterestMutation = useRemoveInterest();
-  
+
   const topics = topicsData?.data || [];
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export default function Customize() {
               removedTopics.map((topic) =>
                 removeInterestMutation.mutateAsync({
                   token: user.token,
-                  documentId: topic.documentId
+                  documentId: topic.documentId,
                 })
               )
             );
@@ -94,7 +94,7 @@ export default function Customize() {
       // Update interests
       await updateInterestsMutation.mutateAsync({
         token: user.token,
-        interests: selectedTopics.map((topic) => topic.documentId)
+        interests: selectedTopics.map((topic) => topic.documentId),
       });
 
       // Update local storage
@@ -126,24 +126,13 @@ export default function Customize() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <CustomizeHeader 
-        showBackButton={showBackButton}
-        onBackPress={() => router.back()}
-      />
+      <CustomizeHeader showBackButton={showBackButton} onBackPress={() => router.back()} />
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <CustomizeContent 
-          topics={topics}
-          selectedTopics={selectedTopics}
-          onTopicToggle={toggleTopic}
-        />
+        <CustomizeContent topics={topics} selectedTopics={selectedTopics} onTopicToggle={toggleTopic} />
       </ScrollView>
 
-      <CustomizeFooter 
-        selectedCount={selectedTopics.length}
-        onConfirm={handleConfirm}
-        onSkip={handleSkip}
-      />
+      <CustomizeFooter selectedCount={selectedTopics.length} onConfirm={handleConfirm} onSkip={handleSkip} />
     </SafeAreaView>
   );
 }

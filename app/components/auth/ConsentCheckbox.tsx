@@ -12,16 +12,14 @@ export default function ConsentCheckbox({ isChecked, onToggle, error }: ConsentC
   return (
     <View style={[styles.consentContainer, error && styles.consentContainerError]}>
       <TouchableOpacity style={styles.consentRow} onPress={onToggle} activeOpacity={0.7}>
-        <View style={[
-          styles.checkbox,
-          isChecked && styles.checkboxChecked,
-          error && !isChecked && styles.checkboxError,
-        ]}>
+        <View
+          style={[styles.checkbox, isChecked && styles.checkboxChecked, error && !isChecked && styles.checkboxError]}
+        >
           {isChecked && <Ionicons name="checkmark" size={16} color="#fff" />}
         </View>
         <Text style={styles.consentText}>
-          Estou a criar uma conta para um utilizador menor de 16 anos e confirmo que tenho autorização do
-          responsável legal para o fazer.
+          Estou a criar uma conta para um utilizador menor de 16 anos e confirmo que tenho autorização do responsável
+          legal para o fazer.
         </Text>
       </TouchableOpacity>
       {error && <Text style={styles.consentErrorText}>{error}</Text>}

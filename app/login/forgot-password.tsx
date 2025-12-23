@@ -14,7 +14,7 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  
+
   const forgotPasswordMutation = useForgotPassword();
 
   const handleSubmit = () => {
@@ -31,7 +31,7 @@ export default function ForgotPassword() {
     }
 
     setError('');
-    
+
     forgotPasswordMutation.mutate(
       { email: trimmedEmail },
       {
@@ -48,7 +48,6 @@ export default function ForgotPassword() {
       }
     );
   };
-
 
   if (success) {
     return (
@@ -89,10 +88,7 @@ export default function ForgotPassword() {
             <Text style={styles.resendLink}>Reenviar</Text>
           </TouchableOpacity>
 
-          <AuthFooter
-            linkText="Voltar ao Login"
-            onLinkPress={() => router.back()}
-          />
+          <AuthFooter linkText="Voltar ao Login" onLinkPress={() => router.back()} />
         </AuthContent>
       </AuthContainer>
     );
@@ -102,12 +98,8 @@ export default function ForgotPassword() {
     <AuthContainer>
       <AuthTopSection>
         <AuthHeader />
-        <AuthTitle
-          title="Recuperar Palavra-passe"
-        />
-        <Text style={styles.subtitleText}>
-          Insira o seu email para receber um código de verificação.
-        </Text>
+        <AuthTitle title="Recuperar Palavra-passe" />
+        <Text style={styles.subtitleText}>Insira o seu email para receber um código de verificação.</Text>
       </AuthTopSection>
 
       <AuthContent>
@@ -132,15 +124,9 @@ export default function ForgotPassword() {
           loading={forgotPasswordMutation.isPending}
         />
 
-        <AuthFooter
-          linkText="Já tem um código?"
-          onLinkPress={() => router.push('/login/reset-password')}
-        />
+        <AuthFooter linkText="Já tem um código?" onLinkPress={() => router.push('/login/reset-password')} />
 
-        <AuthFooter
-          linkText="Voltar ao Login"
-          onLinkPress={() => router.back()}
-        />
+        <AuthFooter linkText="Voltar ao Login" onLinkPress={() => router.back()} />
       </AuthContent>
     </AuthContainer>
   );

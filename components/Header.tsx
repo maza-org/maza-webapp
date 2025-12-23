@@ -1,7 +1,7 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 interface HeaderProps {
   title: string;
@@ -20,21 +20,21 @@ export default function Header({ title }: HeaderProps) {
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
   },
   backButton: {
     padding: 8,
-    borderStyle: "solid",
-    borderColor: "#b3b3b3",
+    borderStyle: 'solid',
+    borderColor: '#b3b3b3',
     borderWidth: 0.5,
     borderRadius: 50,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
     marginStart: 20,
-    color: "#FFF",
+    color: '#FFF',
   },
 });

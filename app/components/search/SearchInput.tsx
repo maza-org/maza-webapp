@@ -9,11 +9,7 @@ interface SearchInputProps {
   onClearSearch: () => void;
 }
 
-export default function SearchInput({ 
-  searchTerm, 
-  onSearchChange, 
-  onClearSearch 
-}: SearchInputProps) {
+export default function SearchInput({ searchTerm, onSearchChange, onClearSearch }: SearchInputProps) {
   return (
     <View style={styles.searchContainer}>
       <TextInput

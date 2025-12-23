@@ -24,22 +24,13 @@ export default function FormInput({
       <Text style={styles.inputLabel}>{label}</Text>
       <View style={styles.inputContainer}>
         <TextInput
-          style={[
-            styles.input,
-            showPasswordToggle && styles.inputWithIcon,
-            error && styles.inputError,
-            style,
-          ]}
+          style={[styles.input, showPasswordToggle && styles.inputWithIcon, error && styles.inputError, style]}
           secureTextEntry={showPasswordToggle && !isPasswordVisible}
           {...props}
         />
         {showPasswordToggle && (
           <TouchableOpacity onPress={onPasswordToggle} style={styles.passwordToggle}>
-            <Ionicons
-              name={isPasswordVisible ? 'eye-off' : 'eye'}
-              size={20}
-              color="#666"
-            />
+            <Ionicons name={isPasswordVisible ? 'eye-off' : 'eye'} size={20} color="#666" />
           </TouchableOpacity>
         )}
       </View>

@@ -12,16 +12,14 @@ export const searchService = {
             page: 1,
             pageSize: 0,
             pageCount: 0,
-            total: 0
-          }
-        }
+            total: 0,
+          },
+        },
       };
     }
 
     try {
-      const response = await axios.get<SearchResponse>(
-        `${baseUrl}/courses?keyword=${encodeURIComponent(keyword)}`
-      );
+      const response = await axios.get<SearchResponse>(`${baseUrl}/courses?keyword=${encodeURIComponent(keyword)}`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -35,5 +33,5 @@ export const searchService = {
       }
       throw new Error('Network error. Please check your connection.');
     }
-  }
+  },
 };

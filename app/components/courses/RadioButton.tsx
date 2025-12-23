@@ -9,19 +9,10 @@ interface RadioButtonProps {
   animatedText?: string;
 }
 
-export default function RadioButton({
-  label,
-  selected,
-  onPress,
-  animatedBg,
-  animatedText,
-}: RadioButtonProps) {
+export default function RadioButton({ label, selected, onPress, animatedBg, animatedText }: RadioButtonProps) {
   return (
-    <Pressable 
-      style={[
-        styles.radioButton, 
-        selected && animatedBg && { backgroundColor: animatedBg }
-      ]} 
+    <Pressable
+      style={[styles.radioButton, selected && animatedBg && { backgroundColor: animatedBg }]}
       onPress={onPress}
     >
       <Animated.Text

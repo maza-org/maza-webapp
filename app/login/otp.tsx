@@ -11,10 +11,9 @@ import OtpInput from '@/app/components/auth/OtpInput';
 export default function Otp() {
   const { phone, otpId } = useLocalSearchParams();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  
+
   const otpVerificationMutation = useOtpVerification();
   const resendOtpMutation = usePhoneLogin();
-
 
   const handleConfirm = () => {
     const otpCode = otp.join('');
@@ -28,7 +27,6 @@ export default function Otp() {
       otpId: otpId as string,
     });
   };
-
 
   const handleResendOtp = () => {
     resendOtpMutation.mutate(
@@ -55,23 +53,25 @@ export default function Otp() {
       <AuthContent>
         <OtpInput value={otp} onChange={setOtp} />
 
-        <Button 
-          text={resendOtpMutation.isPending ? 'A reenviar código...' : 'Confirmar'} 
-          handle={handleConfirm} 
+        <Button
+          text={resendOtpMutation.isPending ? 'A reenviar código...' : 'Confirmar'}
+          handle={handleConfirm}
           loading={otpVerificationMutation.isPending}
           disabled={otp.join('').length !== 6 || otpVerificationMutation.isPending}
         />
 
         <View style={styles.resendContainer}>
           <Text style={styles.resendText}>Não recebeu o código? </Text>
-          <TouchableOpacity 
-            onPress={handleResendOtp} 
+          <TouchableOpacity
+            onPress={handleResendOtp}
             disabled={resendOtpMutation.isPending || otpVerificationMutation.isPending}
           >
-            <Text style={[
-              styles.resendLink, 
-              (resendOtpMutation.isPending || otpVerificationMutation.isPending) && styles.disabledLink
-            ]}>
+            <Text
+              style={[
+                styles.resendLink,
+                (resendOtpMutation.isPending || otpVerificationMutation.isPending) && styles.disabledLink,
+              ]}
+            >
               Reenviar Código
             </Text>
           </TouchableOpacity>

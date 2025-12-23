@@ -12,7 +12,6 @@ import JobLoadingState from '@/app/components/jobs/JobLoadingState';
 import JobErrorState from '@/app/components/jobs/JobErrorState';
 import { styles } from '../styles/jobDetails.styles';
 
-
 export default function JobDetails() {
   const { slug } = useLocalSearchParams();
   const {
@@ -44,7 +43,6 @@ export default function JobDetails() {
       console.error('Error sharing job:', error);
     }
   };
-
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>

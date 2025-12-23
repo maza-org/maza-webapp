@@ -82,3 +82,22 @@ export interface AuthUser {
   yoma_id: string;
   token: string;
 }
+
+export interface ForumUser {
+  id: number;
+  documentId: string;
+  name: string;
+  surname: string;
+  fullname: string;
+  email: string;
+  gender: string;
+  profile_image: string | null;
+}
+
+export interface ForumComment {
+  id: number;
+  comment: string;
+  date: string;
+  replies: ForumComment[];
+  user: ForumUser;
+}

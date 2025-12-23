@@ -12,11 +12,7 @@ export default function CertificatesList({ certificates, onCertificatePress }: C
   return (
     <View style={styles.certificatesContainer}>
       {certificates.map((certificate) => (
-        <CertificateItem 
-          key={certificate.id} 
-          certificate={certificate} 
-          onPress={onCertificatePress} 
-        />
+        <CertificateItem key={certificate.id} certificate={certificate} onPress={onCertificatePress} />
       ))}
     </View>
   );

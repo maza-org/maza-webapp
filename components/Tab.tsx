@@ -4,7 +4,7 @@ import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 interface TabProps {
   active: boolean;
   onPress: () => void;
-  children: string;
+  children: React.ReactNode;
 }
 
 export function Tab({ active, onPress, children }: TabProps) {

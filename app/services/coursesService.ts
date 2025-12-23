@@ -41,7 +41,7 @@ export class CoursesService {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
-        
+
         switch (status) {
           case 204:
             return []; // No content
@@ -61,7 +61,7 @@ export class CoursesService {
             throw new Error(`Erro inesperado (${status || 'unknown'}).`);
         }
       }
-      
+
       throw new Error('Erro desconhecido ao buscar cursos.');
     }
   }
@@ -80,7 +80,7 @@ export class CoursesService {
         const status = error.response?.status;
         throw new Error(`Erro ao buscar cursos em progresso (${status || 'unknown'}).`);
       }
-      
+
       throw new Error('Erro desconhecido ao buscar cursos em progresso.');
     }
   }
@@ -99,7 +99,7 @@ export class CoursesService {
         const status = error.response?.status;
         throw new Error(`Erro ao buscar cursos favoritos (${status || 'unknown'}).`);
       }
-      
+
       throw new Error('Erro desconhecido ao buscar cursos favoritos.');
     }
   }

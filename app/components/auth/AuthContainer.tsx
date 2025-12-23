@@ -21,7 +21,6 @@ export function AuthTopSection({ children }: { children: React.ReactNode }) {
   return <View style={styles.topSection}>{children}</View>;
 }
 
-
 export function AuthContent({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
   return <View style={[styles.content, style]}>{children}</View>;
 }

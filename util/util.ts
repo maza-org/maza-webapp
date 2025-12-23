@@ -26,11 +26,11 @@ export const validateMozambiquePhone = (phoneNumber: string) => {
 };
 
 export const formatDate = (date: string) => {
-  if(!date) return '';
+  if (!date) return '';
 
   return new Date(date).toLocaleDateString('pt-MZ', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
-  })
-}
+  });
+};

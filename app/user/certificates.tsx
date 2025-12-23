@@ -13,14 +13,8 @@ import CertificatesList from '@/app/components/certificates/CertificatesList';
 
 export default function CertificatesScreen() {
   const { data: user } = useUser();
-  
-  const { 
-    data: certificatesData, 
-    isLoading, 
-    error,
-    refetch,
-    isRefetching
-  } = useCertificates(user?.token);
+
+  const { data: certificatesData, isLoading, error, refetch, isRefetching } = useCertificates(user?.token);
 
   const certificates = certificatesData?.data || [];
 
@@ -52,26 +46,17 @@ export default function CertificatesScreen() {
 
       <ScrollView
         style={styles.scrollView}
-        refreshControl={
-          <RefreshControl 
-            refreshing={isRefetching} 
-            onRefresh={onRefresh} 
-            tintColor="#1fa2df" 
-          />
-        }
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={onRefresh} tintColor="#1fa2df" />}
       >
         {error ? (
-          <ErrorState 
+          <ErrorState
             error={error.message || 'Falha no carregamento de certificados. Tente novamente mais tarde.'}
             onRetry={() => refetch()}
           />
         ) : certificates.length === 0 ? (
           <EmptyState onExploreCourses={() => router.push('/')} />
         ) : (
-          <CertificatesList 
-            certificates={certificates}
-            onCertificatePress={viewCertificateDetails}
-          />
+          <CertificatesList certificates={certificates} onCertificatePress={viewCertificateDetails} />
         )}
       </ScrollView>
     </SafeAreaView>

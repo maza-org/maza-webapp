@@ -9,7 +9,6 @@ import CategoryItem from '@/app/components/categories/CategoryItem';
 import LoadingState from '@/app/components/categories/LoadingState';
 import ErrorState from '@/app/components/categories/ErrorState';
 
-
 export default function CategorySelection() {
   const { data: categories, isLoading, error, refetch } = useCategories();
 
@@ -45,12 +44,7 @@ export default function CategorySelection() {
       <FlatList
         data={categories}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <CategoryItem
-            category={item}
-            onPress={handleCategoryPress}
-          />
-        )}
+        renderItem={({ item }) => <CategoryItem category={item} onPress={handleCategoryPress} />}
         contentContainerStyle={styles.categoriesList}
       />
     </SafeAreaView>

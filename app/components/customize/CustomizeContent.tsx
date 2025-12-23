@@ -9,11 +9,7 @@ interface CustomizeContentProps {
   onTopicToggle: (topic: Topic) => void;
 }
 
-export default function CustomizeContent({ 
-  topics, 
-  selectedTopics, 
-  onTopicToggle 
-}: CustomizeContentProps) {
+export default function CustomizeContent({ topics, selectedTopics, onTopicToggle }: CustomizeContentProps) {
   return (
     <>
       <View style={styles.contentHeader}>

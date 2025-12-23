@@ -5,9 +5,7 @@ import { TopicsResponse, UpdateInterestsRequest } from '@/app/types/customize';
 export const customizeService = {
   async fetchTopics(): Promise<TopicsResponse> {
     try {
-      const response = await axios.get<TopicsResponse>(
-        `${baseUrl}/subjects?fields=name&sort=name`
-      );
+      const response = await axios.get<TopicsResponse>(`${baseUrl}/subjects?fields=name&sort=name`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -27,20 +25,16 @@ export const customizeService = {
     try {
       const requestData: UpdateInterestsRequest = {
         data: {
-          interests
-        }
+          interests,
+        },
       };
 
-      const response = await axios.post(
-        `${baseUrl}/users-permissions/interests`,
-        requestData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.post(`${baseUrl}/users-permissions/interests`, requestData, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.status !== 200 && response.status !== 201) {
         throw new Error('Failed to update interests');
@@ -64,15 +58,12 @@ export const customizeService = {
 
   async removeInterest(token: string, documentId: string): Promise<void> {
     try {
-      const response = await axios.delete(
-        `${baseUrl}/users-permissions/interests/${documentId}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.delete(`${baseUrl}/users-permissions/interests/${documentId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.status !== 200 && response.status !== 204) {
         throw new Error(`Failed to remove interest ${documentId}`);
@@ -92,5 +83,5 @@ export const customizeService = {
       }
       throw new Error('Network error. Please check your connection.');
     }
-  }
+  },
 };

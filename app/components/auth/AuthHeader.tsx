@@ -16,11 +16,7 @@ export default function AuthHeader({ showBackButton = true }: AuthHeaderProps) {
           <Ionicons name="chevron-back" size={24} color="#fff" />
         </TouchableOpacity>
       )}
-      <Image
-        source={require('@/assets/images/maza-logo.png')}
-        style={styles.logo}
-        contentFit="contain"
-      />
+      <Image source={require('@/assets/images/maza-logo.png')} style={styles.logo} contentFit="contain" />
     </View>
   );
 }

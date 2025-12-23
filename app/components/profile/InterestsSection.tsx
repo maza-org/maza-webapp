@@ -47,10 +47,7 @@ export default function InterestsSection({
                   (deletingInterestId === subject.id ? (
                     <ActivityIndicator size="small" color="#1fa2df" style={styles.deleteInterestLoading} />
                   ) : (
-                    <TouchableOpacity
-                      onPress={() => onDeleteInterest(subject)}
-                      style={styles.deleteInterestButton}
-                    >
+                    <TouchableOpacity onPress={() => onDeleteInterest(subject)} style={styles.deleteInterestButton}>
                       <Feather name="x" size={14} color="#1fa2df" />
                     </TouchableOpacity>
                   ))}

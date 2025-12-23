@@ -71,8 +71,7 @@ export default function Challenge(): React.ReactElement {
     },
   ]);
 
-  const handleNodePress = (id: number): void => {
-  };
+  const handleNodePress = (id: number): void => {};
 
   const getNodeImage = (node: Node): string => {
     const baseColor = node.isColorful ? 'colorful' : 'grayscale';

@@ -6,11 +6,9 @@ import { blurhash } from '@/util/util';
 
 export default function CourseCard({ course, onPress }: CourseCardProps) {
   const getImageSource = () => {
-    const imageUrl = 
-      course.picture?.formats?.thumbnail?.url || 
-      course.picture?.formats?.small?.url || 
-      course.picture?.url;
-    
+    const imageUrl =
+      course.picture?.formats?.thumbnail?.url || course.picture?.formats?.small?.url || course.picture?.url;
+
     return imageUrl ? { uri: imageUrl } : null;
   };
 
@@ -29,21 +27,19 @@ export default function CourseCard({ course, onPress }: CourseCardProps) {
           source={getImageSource()}
         />
       </View>
-      
+
       <View style={styles.courseInfo}>
         <Text style={styles.courseTitle} numberOfLines={2}>
           {course.title}
         </Text>
-        
+
         <View style={styles.courseDetails}>
           {course.author && (
             <Text style={styles.author} numberOfLines={1}>
               {course.author}
             </Text>
           )}
-          <Text style={styles.rating}>
-            ★ {course.rating_avg.toFixed(1)}
-          </Text>
+          <Text style={styles.rating}>★ {course.rating_avg.toFixed(1)}</Text>
         </View>
       </View>
     </TouchableOpacity>

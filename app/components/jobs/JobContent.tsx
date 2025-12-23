@@ -48,7 +48,7 @@ export default function JobContent({ job, children }: JobContentProps) {
   return (
     <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
       {children}
-      
+
       {job.excerpt && (
         <View style={styles.excerptContainer}>
           <Text style={styles.excerptText}>{job.excerpt}</Text>

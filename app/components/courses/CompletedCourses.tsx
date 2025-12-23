@@ -31,9 +31,7 @@ export default function CompletedCourses({ onRetry }: CompletedCoursesProps) {
       <View style={styles.centerContainer}>
         <Feather name="alert-circle" size={48} color="#FF4444" />
         <Text style={styles.errorText}>Erro ao obter cursos terminados</Text>
-        <Text style={styles.errorSubtext}>
-          {error instanceof Error ? error.message : 'Erro desconhecido'}
-        </Text>
+        <Text style={styles.errorSubtext}>{error instanceof Error ? error.message : 'Erro desconhecido'}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
           <Text style={styles.retryButtonText}>Tentar de novo</Text>
         </TouchableOpacity>

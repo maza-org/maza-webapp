@@ -13,14 +13,7 @@ interface DatePickerProps {
   minimumDate?: Date;
 }
 
-export default function DatePicker({
-  label,
-  value,
-  onChange,
-  error,
-  maximumDate,
-  minimumDate,
-}: DatePickerProps) {
+export default function DatePicker({ label, value, onChange, error, maximumDate, minimumDate }: DatePickerProps) {
   const [show, setShow] = React.useState(false);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
@@ -41,14 +34,11 @@ export default function DatePicker({
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <TouchableOpacity
-        style={[styles.dateButton, error && styles.dateButtonError]}
-        onPress={() => setShow(true)}
-      >
+      <TouchableOpacity style={[styles.dateButton, error && styles.dateButtonError]} onPress={() => setShow(true)}>
         <Text style={styles.dateText}>{formatDate(value)}</Text>
         <Ionicons name="calendar-outline" size={20} color="#666" />
       </TouchableOpacity>
-      
+
       {error && <Text style={styles.errorText}>{error}</Text>}
 
       {show && (

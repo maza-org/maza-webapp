@@ -19,10 +19,7 @@ export default function Photo() {
         </View>
 
         <View style={styles.footer}>
-          <TouchableOpacity
-            style={styles.continueButton}
-            onPress={handleContinue}
-          >
+          <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
             <Text style={styles.continueButtonText}>Continuar</Text>
           </TouchableOpacity>
         </View>

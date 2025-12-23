@@ -73,10 +73,10 @@ export function useLogout() {
     onSuccess: () => {
       hideToast();
       showSuccess('Sessão terminada com sucesso');
-      
+
       // Clear all cached data
       queryClient.clear();
-      
+
       setTimeout(() => {
         router.replace('/');
       }, 1000);

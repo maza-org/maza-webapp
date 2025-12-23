@@ -8,12 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import SearchHeader from '@/app/components/jobs/SearchHeader';
 import SearchInput from '@/app/components/jobs/SearchInput';
 import SearchResults from '@/app/components/jobs/SearchResults';
-import {
-  SearchLoading,
-  SearchError,
-  SearchEmpty,
-  SearchPlaceholder
-} from '@/app/components/jobs/SearchStates';
+import { SearchLoading, SearchError, SearchEmpty, SearchPlaceholder } from '@/app/components/jobs/SearchStates';
 
 export default function Search() {
   const [query, setQuery] = useState('');
@@ -47,31 +42,18 @@ export default function Search() {
 
       <SearchHeader />
 
-      <SearchInput
-        value={query}
-        onChangeText={setQuery}
-        onClear={handleClearSearch}
-      />
+      <SearchInput value={query} onChangeText={setQuery} onClear={handleClearSearch} />
 
       <SearchLoading query={query} isLoading={isLoading} />
-      
-      <SearchError 
-        error={error} 
-        onRetry={() => setQuery(query)} 
-      />
-      
-      {query && resultCount === 0 && !isLoading && !error && (
-        <SearchEmpty query={query} />
-      )}
-      
+
+      <SearchError error={error} onRetry={() => setQuery(query)} />
+
+      {query && resultCount === 0 && !isLoading && !error && <SearchEmpty query={query} />}
+
       {query && results.length > 0 && !isLoading && !error && (
-        <SearchResults
-          query={query}
-          results={results}
-          onJobPress={navigateToJobDetail}
-        />
+        <SearchResults query={query} results={results} onJobPress={navigateToJobDetail} />
       )}
-      
+
       <SearchPlaceholder query={query} />
     </SafeAreaView>
   );

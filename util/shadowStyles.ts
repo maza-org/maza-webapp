@@ -8,14 +8,7 @@ export const createShadow = (params: {
   radius?: number;
   elevation?: number;
 }) => {
-  const {
-    color = '#000',
-    offsetX = 0,
-    offsetY = 2,
-    opacity = 0.1,
-    radius = 4,
-    elevation = 3,
-  } = params;
+  const { color = '#000', offsetX = 0, offsetY = 2, opacity = 0.1, radius = 4, elevation = 3 } = params;
 
   if (Platform.OS === 'web') {
     return {
@@ -32,18 +25,8 @@ export const createShadow = (params: {
   };
 };
 
-export const createTextShadow = (params: {
-  color?: string;
-  offsetX?: number;
-  offsetY?: number;
-  radius?: number;
-}) => {
-  const {
-    color = '#000',
-    offsetX = 0,
-    offsetY = 1,
-    radius = 2,
-  } = params;
+export const createTextShadow = (params: { color?: string; offsetX?: number; offsetY?: number; radius?: number }) => {
+  const { color = '#000', offsetX = 0, offsetY = 1, radius = 2 } = params;
 
   if (Platform.OS === 'web') {
     return {

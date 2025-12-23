@@ -40,7 +40,7 @@ export default function LoadingShimmer({ itemCount = 5 }: LoadingShimmerProps) {
         <ActivityIndicator size="large" color="#2EA8FF" />
         <Text style={styles.loadingText}>Carregando os cursos...</Text>
       </View>
-      
+
       <FlatList
         data={Array.from({ length: itemCount }, (_, index) => ({ id: index }))}
         keyExtractor={(item) => `shimmer-${item.id}`}

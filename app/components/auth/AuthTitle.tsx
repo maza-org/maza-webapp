@@ -13,7 +13,7 @@ export default function AuthTitle({ title, subtitle, linkText, linkAction }: Aut
   return (
     <View style={styles.titleSection}>
       <Text style={styles.headerText}>{title}</Text>
-      
+
       {subtitle && linkText && (
         <View style={styles.linkContainer}>
           <Text style={styles.subtitleText}>{subtitle} </Text>

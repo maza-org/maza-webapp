@@ -20,7 +20,7 @@ export default function CoursesHeader({
   return (
     <View style={styles.header}>
       <Text style={styles.title}>{title}</Text>
-      
+
       {(showMenu || showMaximize) && (
         <View style={styles.headerButtons}>
           {showMaximize && (
@@ -28,7 +28,7 @@ export default function CoursesHeader({
               <Feather name="maximize-2" size={20} color="#fff" />
             </TouchableOpacity>
           )}
-          
+
           {showMenu && (
             <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
               <Feather name="menu" size={20} color="#fff" />

@@ -2,11 +2,7 @@ import React from 'react';
 import { View, Text, Image, ActivityIndicator, StyleSheet } from 'react-native';
 import { ProfileImageProps } from '../types/profile';
 
-export const ProfileImage: React.FC<ProfileImageProps> = ({
-  profileImage,
-  isUploadingImage,
-  userFullname,
-}) => {
+export const ProfileImage: React.FC<ProfileImageProps> = ({ profileImage, isUploadingImage, userFullname }) => {
   return (
     <View style={styles.profileImageContainer}>
       {isUploadingImage ? (

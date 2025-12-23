@@ -10,13 +10,17 @@ import {
   RefreshControl,
   Linking,
   Platform,
+  TextInput,
+  KeyboardAvoidingView,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import Reviews from '@/components/Reviews';
-import AntDesign from '@expo/vector-icons/AntDesign';
+import Forum from '@/components/Forum';
+import { ForumComment } from '@/types/learning';
+import LoginBottomSheet from '@/components/LoginBottomSheet';
 import Entypo from '@expo/vector-icons/Entypo';
 import { Module, Quiz } from '@/types/learning';
 import { LevelBadge } from '@/components/LevelBadge';
@@ -32,12 +36,14 @@ import {
   useStartCourse,
   useCourseProgress,
   useUserCourseDetails,
+  useAddForumComment,
+  useReplyToComment,
 } from '@/services/catalog';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthUser } from '@/hooks/useAuth';
 
 export default function CourseDetail() {
-  const [activeTab, setActiveTab] = useState<'lessons' | 'opinions'>('lessons');
+  const [activeTab, setActiveTab] = useState<'lessons' | 'opinions' | 'forum'>('lessons');
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const { toast, config, showSuccess, showError, showInfo, hideToast } = useToast();
@@ -47,6 +53,12 @@ export default function CourseDetail() {
   // Token change detection and query client
   const previousTokenRef = useRef<string | undefined>(undefined);
   const queryClient = useQueryClient();
+
+  const [newComment, setNewComment] = useState('');
+  const [loginSheetVisible, setLoginSheetVisible] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<ForumComment | null>(null);
+  const inputRef = useRef<TextInput>(null);
 
   // React Query hooks
   const {
@@ -113,6 +125,8 @@ export default function CourseDetail() {
   const addToFavoritesMutation = useAddToFavorites();
   const removeFromFavoritesMutation = useRemoveFromFavorites();
   const startCourseMutation = useStartCourse();
+  const addCommentMutation = useAddForumComment();
+  const replyMutation = useReplyToComment();
 
   // Check if certificate exists for this course and no errors
   const hasCertificate =
@@ -231,6 +245,63 @@ export default function CourseDetail() {
     refetchCourse();
   };
 
+  const checkAuth = () => {
+    if (!user?.token) {
+      setLoginSheetVisible(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleAddComment = async () => {
+    if (!checkAuth()) return;
+    if (!newComment.trim()) return;
+
+    try {
+      if (replyingTo) {
+        // Handle reply
+        await replyMutation.mutateAsync({
+          courseId: documentId,
+          commentId: replyingTo.id,
+          comment: newComment,
+          token: user?.token || '',
+        });
+        setReplyingTo(null);
+        showSuccess('Resposta enviada com sucesso!');
+      } else {
+        // Handle new comment
+        await addCommentMutation.mutateAsync({
+          courseId: documentId,
+          comment: newComment,
+          token: user?.token || '',
+        });
+        showSuccess('Comentário adicionado com sucesso!');
+      }
+      setNewComment('');
+    } catch (err: any) {
+      // Error handling based on status
+      const status = err?.response?.status;
+      if (status === 400) {
+        showError(replyingTo ? 'Resposta inválida.' : 'Comentário inválido.');
+      } else if (status === 500) {
+        showError('Erro no servidor. Tente novamente mais tarde.');
+      } else {
+        showError(replyingTo ? 'Erro ao enviar resposta.' : 'Erro ao adicionar comentário.');
+      }
+    }
+  };
+
+  const handleReplySelect = (comment: ForumComment) => {
+    setReplyingTo(comment);
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+  };
+
+  const cancelReply = () => {
+    setReplyingTo(null);
+  };
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -295,15 +366,6 @@ export default function CourseDetail() {
     router.push({
       pathname: '/room/quiz',
       params: params,
-    });
-  }
-
-  function handleOnPathPress() {
-    router.push({
-      pathname: '/missions',
-      params: {
-        course: JSON.stringify(courseData),
-      },
     });
   }
 
@@ -432,8 +494,11 @@ export default function CourseDetail() {
             <Tab active={activeTab === 'lessons'} onPress={() => setActiveTab('lessons')}>
               Aulas
             </Tab>
-            <Tab active={activeTab === 'opinions'} onPress={() => setActiveTab('opinions')}>
+            {/* <Tab active={activeTab === 'opinions'} onPress={() => setActiveTab('opinions')}>
               Opiniões
+            </Tab> */}
+            <Tab active={activeTab === 'forum'} onPress={() => setActiveTab('forum')}>
+              Fórum
             </Tab>
           </View>
         </View>
@@ -497,15 +562,74 @@ export default function CourseDetail() {
           </View>
         ) : (
           <View style={styles.opinionsContainer}>
-            <View style={styles.ratingOverview}>
-              <Reviews courseId={documentId} />
-            </View>
+            <Forum courseId={documentId} onReplySelect={handleReplySelect} />
           </View>
         )}
       </ScrollView>
 
       <View style={styles.footer}>
-        {isInProgress ? (
+        {activeTab === 'forum' ? (
+          user?.token ? (
+            <View style={styles.inputContainer}>
+              {replyingTo && (
+                <View style={styles.replyPreview}>
+                  <View style={styles.replyPreviewHeader}>
+                    <View style={styles.replyPreviewLeft}>
+                      <Ionicons name="arrow-undo" size={14} color="#1fa2df" />
+                      <Text style={styles.replyPreviewLabel}>
+                        Respondendo a <Text style={styles.replyPreviewName}>{replyingTo.user.fullname}</Text>
+                      </Text>
+                    </View>
+                    <TouchableOpacity onPress={cancelReply} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                      <Ionicons name="close" size={18} color="#A8A8B3" />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.replyPreviewQuote}>
+                    <View style={styles.replyPreviewLine} />
+                    <Text style={styles.replyPreviewText} numberOfLines={2}>
+                      {replyingTo.comment}
+                    </Text>
+                  </View>
+                </View>
+              )}
+              <View style={styles.inputRow}>
+                <TextInput
+                  ref={inputRef}
+                  style={[styles.input, isInputFocused && styles.inputExpanded]}
+                  placeholder={replyingTo ? 'Escreva sua resposta...' : 'Adicione um comentário...'}
+                  placeholderTextColor="#A8A8B3"
+                  value={newComment}
+                  onChangeText={setNewComment}
+                  onFocus={() => {
+                    checkAuth();
+                    setIsInputFocused(true);
+                  }}
+                  onBlur={() => setIsInputFocused(false)}
+                  multiline
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.sendButton,
+                    (!newComment.trim() || addCommentMutation.isPending || replyMutation.isPending) &&
+                      styles.disabledButton,
+                  ]}
+                  onPress={handleAddComment}
+                  disabled={!newComment.trim() || addCommentMutation.isPending || replyMutation.isPending}
+                >
+                  {addCommentMutation.isPending || replyMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Ionicons name="send" size={20} color="#FFF" />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.startButton} onPress={() => setLoginSheetVisible(true)}>
+              <Text style={styles.startButtonText}>Entrar para Comentar</Text>
+            </TouchableOpacity>
+          )
+        ) : isInProgress ? (
           <View style={styles.progressContainer}>
             <View style={styles.progressHeader}>
               <Text style={styles.progressTitle}>Progresso do Curso</Text>
@@ -532,6 +656,7 @@ export default function CourseDetail() {
           </TouchableOpacity>
         )}
       </View>
+      <LoginBottomSheet visible={loginSheetVisible} onClose={() => setLoginSheetVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -751,6 +876,80 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#323238',
   },
+  inputContainer: {
+    backgroundColor: '#121214',
+  },
+  replyPreview: {
+    backgroundColor: '#202024',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  replyPreviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  replyPreviewLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  replyPreviewLabel: {
+    color: '#A8A8B3',
+    fontSize: 12,
+  },
+  replyPreviewName: {
+    color: '#1fa2df',
+    fontWeight: '600',
+  },
+  replyPreviewQuote: {
+    flexDirection: 'row',
+  },
+  replyPreviewLine: {
+    width: 3,
+    backgroundColor: '#1fa2df',
+    borderRadius: 2,
+    marginRight: 10,
+  },
+  replyPreviewText: {
+    color: '#7C7C8A',
+    fontSize: 13,
+    flex: 1,
+    fontStyle: 'italic',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#202024',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    color: '#FFF',
+    maxHeight: 100,
+  },
+  inputExpanded: {
+    height: 120,
+    textAlignVertical: 'top',
+  },
+  sendButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1fa2df',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#323238',
+    opacity: 0.5,
+  },
   startButton: {
     backgroundColor: '#1fa2df',
     padding: 16,
@@ -766,7 +965,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'ManropeBold',
   },
-  opinionsContainer: {},
+  opinionsContainer: {
+    flex: 1,
+    minHeight: 400,
+  },
   ratingOverview: {
     marginBottom: 24,
   },

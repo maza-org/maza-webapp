@@ -1,14 +1,7 @@
-import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  StatusBar,
-} from "react-native";
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from "@expo/vector-icons";
+import { Feather } from '@expo/vector-icons';
 
 export default function Certificate() {
   return (
@@ -28,17 +21,11 @@ export default function Certificate() {
       <View style={styles.certificateWrapper}>
         <View style={styles.certificateContainer}>
           {/* Logo */}
-          <Image
-            source={{ uri: "https://placeholder.com/800x400" }}
-            style={styles.logo}
-            resizeMode="contain"
-          />
+          <Image source={{ uri: 'https://placeholder.com/800x400' }} style={styles.logo} resizeMode="contain" />
 
           <Text style={styles.certificateType}>CERTIFICADO DE CONCLUSÃO</Text>
 
-          <Text style={styles.courseName}>
-            Entrepreneurship and New{"\n"}Venture Creation
-          </Text>
+          <Text style={styles.courseName}>Entrepreneurship and New{'\n'}Venture Creation</Text>
 
           <Text style={styles.instructorLabel}>Instrutores</Text>
           <Text style={styles.instructorName}>Sarah Adams</Text>
@@ -66,17 +53,11 @@ export default function Certificate() {
               </View>
             </View>
 
-            <Image
-              source={{ uri: "https://placeholder.com/800x400" }}
-              style={styles.signature}
-              resizeMode="contain"
-            />
+            <Image source={{ uri: 'https://placeholder.com/800x400' }} style={styles.signature} resizeMode="contain" />
             <Text style={styles.signatureLabel}>MAZA</Text>
           </View>
 
-          <Text style={styles.verifyText}>
-            Verify at eduline.org/verify/123534331
-          </Text>
+          <Text style={styles.verifyText}>Verify at eduline.org/verify/123534331</Text>
         </View>
       </View>
 
@@ -96,11 +77,11 @@ export default function Certificate() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121214",
+    backgroundColor: '#121214',
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -108,9 +89,9 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   headerTitle: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
     marginLeft: 8,
   },
   headerSpace: {
@@ -121,11 +102,11 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   certificateContainer: {
-    backgroundColor: "#FFF",
+    backgroundColor: '#FFF',
     borderRadius: 16,
     padding: 24,
-    alignItems: "center",
-    shadowColor: "#000",
+    alignItems: 'center',
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -140,70 +121,70 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   certificateType: {
-    color: "#666",
+    color: '#666',
     fontSize: 14,
     marginBottom: 8,
   },
   courseName: {
     fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontWeight: 'bold',
+    textAlign: 'center',
     marginBottom: 24,
-    color: "#000",
+    color: '#000',
   },
   instructorLabel: {
-    color: "#666",
+    color: '#666',
     fontSize: 12,
     marginBottom: 4,
   },
   instructorName: {
-    color: "#000",
+    color: '#000',
     fontSize: 16,
     marginBottom: 24,
   },
   ratingContainer: {
-    alignItems: "center",
-    backgroundColor: "#F8F9FE",
+    alignItems: 'center',
+    backgroundColor: '#F8F9FE',
     padding: 16,
     borderRadius: 12,
-    width: "100%",
+    width: '100%',
     marginBottom: 24,
   },
   starsContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 8,
     marginBottom: 8,
   },
   ratingText: {
-    color: "#31A7D9",
+    color: '#31A7D9',
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   studentInfoContainer: {
-    width: "100%",
-    alignItems: "center",
+    width: '100%',
+    alignItems: 'center',
   },
   studentName: {
     fontSize: 20,
-    fontWeight: "600",
-    color: "#000",
+    fontWeight: '600',
+    color: '#000',
     marginBottom: 16,
   },
   certificateDetails: {
-    width: "100%",
+    width: '100%',
     marginBottom: 24,
   },
   detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 8,
   },
   detailLabel: {
-    color: "#666",
+    color: '#666',
     fontSize: 14,
   },
   detailValue: {
-    color: "#000",
+    color: '#000',
     fontSize: 14,
   },
   signature: {
@@ -212,44 +193,44 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   signatureLabel: {
-    color: "#000",
+    color: '#000',
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   verifyText: {
-    color: "#666",
+    color: '#666',
     fontSize: 12,
     marginTop: 24,
   },
   bottomButtons: {
-    flexDirection: "row",
+    flexDirection: 'row',
     padding: 16,
     gap: 12,
   },
   downloadButton: {
     flex: 1,
-    backgroundColor: "#31A7D9",
+    backgroundColor: '#31A7D9',
     padding: 16,
     borderRadius: 24,
-    alignItems: "center",
+    alignItems: 'center',
   },
   downloadButtonText: {
-    color: "#FFF",
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   shareButton: {
     flex: 1,
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
     padding: 16,
     borderRadius: 24,
-    alignItems: "center",
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: "#31A7D9",
+    borderColor: '#31A7D9',
   },
   shareButtonText: {
-    color: "#31A7D9",
+    color: '#31A7D9',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });

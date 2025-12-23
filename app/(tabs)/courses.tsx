@@ -16,14 +16,12 @@ import {
   CourseTabType,
 } from '@/app/components/courses';
 
-
 const FloatingFilterButton = ({ onPress }: { onPress: () => void }) => (
   <TouchableOpacity style={styles.floatingButton} onPress={onPress}>
     <Feather name="filter" size={16} color="#fff" style={styles.filterIcon} />
     <Text style={styles.filterText}>Filtrar</Text>
   </TouchableOpacity>
 );
-
 
 export default function Courses() {
   const { data: user } = useUser();
@@ -34,17 +32,13 @@ export default function Courses() {
     return <LoginPrompt />;
   }
 
-  const handleFilterApply = (filters: FilterOptions) => {
-  };
+  const handleFilterApply = (filters: FilterOptions) => {};
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <CoursesHeader />
 
-      <CoursesTabs
-        selectedFilter={selectedFilter}
-        onFilterChange={setSelectedFilter}
-      />
+      <CoursesTabs selectedFilter={selectedFilter} onFilterChange={setSelectedFilter} />
 
       {selectedFilter === 'favorites' && <FavoriteCoursesGrid />}
       {selectedFilter === 'completed' && <CompletedCourses />}

@@ -17,12 +17,7 @@ interface FilterModalProps {
 const LEVELS = ['Iniciante', 'Intermédio', 'Avançado', 'MAZA'];
 const RATINGS = ['0-1', '1-2', '2-3', '3-4', '4-5'];
 
-export default function FilterModal({ 
-  visible, 
-  onClose, 
-  onApply, 
-  initialFilters 
-}: FilterModalProps) {
+export default function FilterModal({ visible, onClose, onApply, initialFilters }: FilterModalProps) {
   const [selectedLevel, setSelectedLevel] = useState(initialFilters?.level || 'Intermédio');
   const [selectedRating, setSelectedRating] = useState(initialFilters?.rating || '4-5');
 
@@ -57,9 +52,7 @@ export default function FilterModal({
                     style={[styles.filterOption, selectedLevel === level && styles.filterOptionSelected]}
                     onPress={() => setSelectedLevel(level)}
                   >
-                    <Text
-                      style={[styles.filterOptionText, selectedLevel === level && styles.filterOptionTextSelected]}
-                    >
+                    <Text style={[styles.filterOptionText, selectedLevel === level && styles.filterOptionTextSelected]}>
                       {level}
                     </Text>
                   </TouchableOpacity>
@@ -94,7 +87,9 @@ export default function FilterModal({
                       color={selectedRating === rating ? '#8257E5' : '#8F8F8F'}
                       style={styles.ratingIcon}
                     />
-                    <Text style={[styles.filterOptionText, selectedRating === rating && styles.filterOptionTextSelected]}>
+                    <Text
+                      style={[styles.filterOptionText, selectedRating === rating && styles.filterOptionTextSelected]}
+                    >
                       {rating}
                     </Text>
                   </TouchableOpacity>
@@ -113,7 +108,9 @@ export default function FilterModal({
                       color={selectedRating === rating ? '#8257E5' : '#8F8F8F'}
                       style={styles.ratingIcon}
                     />
-                    <Text style={[styles.filterOptionText, selectedRating === rating && styles.filterOptionTextSelected]}>
+                    <Text
+                      style={[styles.filterOptionText, selectedRating === rating && styles.filterOptionTextSelected]}
+                    >
                       {rating}
                     </Text>
                   </TouchableOpacity>
@@ -126,7 +123,7 @@ export default function FilterModal({
             <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
               <Text style={styles.resetButtonText}>Limpar</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
               <Text style={styles.applyButtonText}>Aplicar Filtro</Text>
             </TouchableOpacity>

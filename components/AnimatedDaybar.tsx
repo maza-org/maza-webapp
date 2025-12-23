@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, TouchableWithoutFeedback, StyleSheet } from "react-native";
-import DailyScoreChart from "@/components/Daybar";
+import React, { useEffect, useRef } from 'react';
+import { Animated, TouchableWithoutFeedback, StyleSheet } from 'react-native';
+import DailyScoreChart from '@/components/Daybar';
 
 const AnimatedDaybar = () => {
   // Animation values
@@ -45,10 +45,7 @@ const AnimatedDaybar = () => {
   };
 
   return (
-    <TouchableWithoutFeedback
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-    >
+    <TouchableWithoutFeedback onPressIn={handlePressIn} onPressOut={handlePressOut}>
       <Animated.View
         style={[
           styles.container,
@@ -66,7 +63,7 @@ const AnimatedDaybar = () => {
 
 const styles = StyleSheet.create({
   container: {
-    width: "100%",
+    width: '100%',
   },
 });
 

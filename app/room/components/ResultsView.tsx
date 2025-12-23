@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  Image,
-  ActivityIndicator,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useCourseStateAndCertificates } from '@/services/catalog';
@@ -54,7 +46,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
 
   // Get user authentication data
   const { data: user } = useAuthUser();
-  
+
   // Check course state and certificate availability
   const {
     courseState,

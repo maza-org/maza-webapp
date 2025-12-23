@@ -13,12 +13,12 @@ interface SearchResultsProps {
   handleOpenCourse: (course: Course) => void;
 }
 
-export default function SearchResults({ 
-  searchTerm, 
-  resultCount, 
-  loading, 
-  results, 
-  handleOpenCourse 
+export default function SearchResults({
+  searchTerm,
+  resultCount,
+  loading,
+  results,
+  handleOpenCourse,
 }: SearchResultsProps) {
   const renderItem = ({ item }: { item: SearchResult }) => (
     <CourseItem item={item} onPress={() => handleOpenCourse(item)} />

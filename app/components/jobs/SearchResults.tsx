@@ -19,7 +19,7 @@ export default function SearchResults({ query, results, onJobPress }: SearchResu
           {resultCount} Resultados para "{query}"
         </Text>
       )}
-      
+
       <FlatList
         data={results}
         keyExtractor={(item) => item.id.toString()}

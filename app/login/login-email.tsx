@@ -140,7 +140,6 @@ export default function LoginEmail() {
       return;
     }
 
-
     // Clear previous error
     setError(undefined);
 

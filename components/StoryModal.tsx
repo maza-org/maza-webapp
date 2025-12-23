@@ -117,18 +117,9 @@ export default function StoryModal({ visible, onClose, slides }: StoryModalProps
   if (!currentSlide) return null;
 
   return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      transparent={false}
-      statusBarTranslucent
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="fade" transparent={false} statusBarTranslucent onRequestClose={onClose}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <View
-        style={[styles.container, { backgroundColor: currentSlide.backgroundColor }]}
-        {...panResponder.panHandlers}
-      >
+      <View style={[styles.container, { backgroundColor: currentSlide.backgroundColor }]} {...panResponder.panHandlers}>
         <SafeAreaView style={styles.safeArea} edges={['top']}>
           {/* Progress bars */}
           <View style={styles.progressContainer}>
@@ -142,11 +133,11 @@ export default function StoryModal({ visible, onClose, slides }: StoryModalProps
                         index < currentIndex
                           ? '100%'
                           : index === currentIndex
-                          ? progressAnim.interpolate({
-                              inputRange: [0, 1],
-                              outputRange: ['0%', '100%'],
-                            })
-                          : '0%',
+                            ? progressAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: ['0%', '100%'],
+                              })
+                            : '0%',
                     },
                   ]}
                 />
@@ -165,7 +156,9 @@ export default function StoryModal({ visible, onClose, slides }: StoryModalProps
           <View style={styles.iconContainer}>
             <Ionicons name={currentSlide.icon} size={80} color="#FFF" />
           </View>
-          <Text style={styles.slideNumber}>{currentIndex + 1}/{slides.length}</Text>
+          <Text style={styles.slideNumber}>
+            {currentIndex + 1}/{slides.length}
+          </Text>
           <Text style={styles.title}>{currentSlide.title}</Text>
           <Text style={styles.description}>{currentSlide.description}</Text>
         </View>

@@ -1,23 +1,6 @@
 {
-  "Maputo Cidade": [
-    "KaMpfumo",
-    "Nlhamankulu",
-    "KaMaxaquene",
-    "KaMubukwana",
-    "KaMavota",
-    "KaTembe",
-    "KaNyaka"
-  ],
-  "Maputo": [
-    "Boane",
-    "Magude",
-    "Manhiça",
-    "Marracuene",
-    "Matola",
-    "Matutuíne",
-    "Moamba",
-    "Namaacha"
-  ],
+  "Maputo Cidade": ["KaMpfumo", "Nlhamankulu", "KaMaxaquene", "KaMubukwana", "KaMavota", "KaTembe", "KaNyaka"],
+  "Maputo": ["Boane", "Magude", "Manhiça", "Marracuene", "Matola", "Matutuíne", "Moamba", "Namaacha"],
   "Gaza": [
     "Bilene",
     "Chibuto",

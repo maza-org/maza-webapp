@@ -7,9 +7,9 @@ interface EmptyStateProps {
   message?: string;
 }
 
-export default function EmptyState({ 
-  title = "Nenhum curso encontrado", 
-  message = "Não encontramos cursos para esta categoria. Tente procurar por outro termo ou categoria." 
+export default function EmptyState({
+  title = 'Nenhum curso encontrado',
+  message = 'Não encontramos cursos para esta categoria. Tente procurar por outro termo ou categoria.',
 }: EmptyStateProps) {
   return (
     <View style={styles.container}>

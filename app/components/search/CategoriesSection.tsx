@@ -9,10 +9,7 @@ interface CategoriesSectionProps {
   handleCategoryPress: (category: { id: number; label: string }) => void;
 }
 
-export default function CategoriesSection({ 
-  categories, 
-  handleCategoryPress 
-}: CategoriesSectionProps) {
+export default function CategoriesSection({ categories, handleCategoryPress }: CategoriesSectionProps) {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Pesquisar por categoria</Text>

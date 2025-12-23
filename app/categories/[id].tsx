@@ -19,13 +19,8 @@ export default function Category() {
     data: courses,
     isLoading,
     error,
-    refetch
-  } = useCategoryQuery(
-    'category',
-    name as string,
-    id as string,
-    user?.token
-  );
+    refetch,
+  } = useCategoryQuery('category', name as string, id as string, user?.token);
 
   const handlePressCourse = (course: CourseData) => {
     router.push({
@@ -39,7 +34,6 @@ export default function Category() {
   const renderCourseItem = ({ item: course }: { item: CourseData }) => (
     <CourseCard course={course} onPress={handlePressCourse} />
   );
-
 
   const ListHeaderComponent = () =>
     !isLoading && courses && courses.length > 0 ? (

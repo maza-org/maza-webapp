@@ -3,17 +3,9 @@ import { Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CategoryButtonProps } from '@/app/types/search';
 
-export default function CategoryButton({
-  icon,
-  label,
-  category,
-  handlePressCategory,
-}: CategoryButtonProps) {
+export default function CategoryButton({ icon, label, category, handlePressCategory }: CategoryButtonProps) {
   return (
-    <TouchableOpacity
-      style={styles.categoryButton}
-      onPress={() => handlePressCategory(category)}
-    >
+    <TouchableOpacity style={styles.categoryButton} onPress={() => handlePressCategory(category)}>
       <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={20} color="#1fa2df" />
       <Text style={styles.categoryButtonText}>{label}</Text>
     </TouchableOpacity>

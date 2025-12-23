@@ -53,9 +53,11 @@ export function useSuggestedCourses(token?: string) {
     queryKey: ['courses', 'suggested'],
     queryFn: async (): Promise<Course[]> => {
       const response = await api.get('/courses/suggested?pageSize=10&page=1', {
-        headers: token ? {
-          Authorization: `Bearer ${token}`,
-        } : {},
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {},
       });
       return response.data.data;
     },

@@ -13,12 +13,8 @@ import SearchResults from '@/app/components/search/SearchResults';
 
 export default function Search() {
   const [searchTerm, setSearchTerm] = useState('');
-  
-  const { 
-    data: searchData, 
-    isLoading, 
-    error 
-  } = useSearchCourses(searchTerm);
+
+  const { data: searchData, isLoading, error } = useSearchCourses(searchTerm);
 
   const handleBackPress = () => {
     router.back();
@@ -61,21 +57,12 @@ export default function Search() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <SearchHeader onBackPress={handleBackPress} />
-      
-      <SearchInput 
-        searchTerm={searchTerm}
-        onSearchChange={handleSearchChange}
-        onClearSearch={handleClearSearch}
-      />
 
-      {!searchTerm && (
-        <CategoriesSection 
-          categories={categories}
-          handleCategoryPress={handleCategoryPress}
-        />
-      )}
+      <SearchInput searchTerm={searchTerm} onSearchChange={handleSearchChange} onClearSearch={handleClearSearch} />
 
-      <SearchResults 
+      {!searchTerm && <CategoriesSection categories={categories} handleCategoryPress={handleCategoryPress} />}
+
+      <SearchResults
         searchTerm={searchTerm}
         resultCount={searchData?.meta.pagination.total || null}
         loading={isLoading}
