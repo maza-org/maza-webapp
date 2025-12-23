@@ -46,7 +46,6 @@ export default function ProfileScreen() {
     }, [])
   );
 
-  // Update profile image when user data changes
   React.useEffect(() => {
     if (user?.profile_image?.formats?.thumbnail?.url) {
       setProfileImage(user.profile_image.formats.thumbnail.url);

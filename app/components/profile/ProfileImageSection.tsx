@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Image, ActivityIndicator, StyleSheet } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
 interface ProfileImageSectionProps {
   profileImage: string | null;
@@ -17,7 +18,8 @@ export default function ProfileImageSection({
   documentId,
 }: ProfileImageSectionProps) {
   const getInitials = () => {
-    return fullname.charAt(0).toUpperCase();
+    const displayName = username || fullname;
+    return displayName.charAt(0).toUpperCase();
   };
 
   return (
@@ -39,7 +41,14 @@ export default function ProfileImageSection({
       </View>
 
       <Text style={styles.fullname}>{fullname}</Text>
-      <Text style={styles.usernameText}>@{username || 'Utilizador não definido'}</Text>
+      {username && (
+        <View style={styles.usernameBadge}>
+          <View style={styles.usernameIconContainer}>
+            <Feather name="at-sign" size={14} color="#1fa2df" />
+          </View>
+          <Text style={styles.usernameBadgeText}>{username}</Text>
+        </View>
+      )}
       <Text style={styles.documentId}>ID: {documentId}</Text>
     </View>
   );
@@ -93,12 +102,45 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     textAlign: 'center',
   },
-  usernameText: {
+  username: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1fa2df',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  fullnameSecondary: {
     fontSize: 16,
     color: '#A8A8B3',
     fontWeight: '500',
     marginBottom: 8,
     textAlign: 'center',
+  },
+  usernameBadge: {
+    backgroundColor: 'rgba(31, 162, 223, 0.08)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(31, 162, 223, 0.2)',
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  usernameIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(31, 162, 223, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  usernameBadgeText: {
+    color: '#1fa2df',
+    fontSize: 14,
+    fontWeight: '500',
   },
   documentId: {
     color: '#555',

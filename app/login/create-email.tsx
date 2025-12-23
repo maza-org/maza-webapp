@@ -51,6 +51,7 @@ export default function CreateEmail() {
   const [underageConsent, setUnderageConsent] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [warnings, setWarnings] = useState<Record<string, string>>({});
 
   const createAccountMutation = useCreateAccount();
 
@@ -98,8 +99,25 @@ export default function CreateEmail() {
     const newErrors: Record<string, string> = {};
 
     if (!username.trim()) newErrors.username = 'Nome de utilizador é obrigatório';
-    if (!validateEmail(email)) newErrors.email = 'Email inválido';
-    if (password.length < 6) newErrors.password = 'A palavra-passe deve ter pelo menos 6 caracteres';
+    
+    // Validate that at least email or phone is provided
+    const hasEmail = email.trim();
+    const hasPhone = phone.trim();
+    
+    if (!hasEmail && !hasPhone) {
+      newErrors.contact = 'É necessário fornecer pelo menos um email ou número de telefone';
+    }
+    
+    // Validate email if provided
+    if (hasEmail && !validateEmail(email)) {
+      newErrors.email = 'Email inválido';
+    }
+    
+    // Validate password
+    if (password.length < 6) {
+      newErrors.password = 'A palavra-passe deve ter pelo menos 6 caracteres';
+    }
+    
     if (!validateFullName(fullName)) newErrors.fullName = 'Insira pelo menos nome e apelido';
     if (!validateMozambicanID(nationalID)) newErrors.nationalID = 'BI inválido (12 números + 1 letra)';
     if (!gender) newErrors.gender = 'Selecione o género';
@@ -108,7 +126,7 @@ export default function CreateEmail() {
       newErrors.consent = 'Para menores de 16 anos, é necessário confirmar o consentimento';
 
     let validatedPhone = phone;
-    if (phone.trim()) {
+    if (hasPhone) {
       const phoneResult = validateMozambicanPhone(phone);
       if (!phoneResult) {
         newErrors.phone = 'Número inválido. Ex: 841231231';
@@ -131,7 +149,7 @@ export default function CreateEmail() {
         name,
         middlename: middlename || '',
         surname,
-        email,
+        email: email.trim() || '',
         phone: validatedPhone || '',
         nationalID,
         dateOfBirth: formattedDate,
@@ -144,7 +162,16 @@ export default function CreateEmail() {
       },
       {
         onError: (error) => {
-          setErrors({ general: error.message });
+          // Handle specific error types
+          if (error.message.includes('User already registered') || 
+              (error as any)?.status === 409 ||
+              error.message.includes('ConflictError')) {
+            setErrors({ 
+              general: 'Utilizador já registado. Um utilizador com este email, telefone, BI ou nome de utilizador já existe.' 
+            });
+          } else {
+            setErrors({ general: error.message });
+          }
         },
       }
     );
@@ -152,6 +179,10 @@ export default function CreateEmail() {
 
   const clearError = (field: string) => {
     setErrors((prev) => ({ ...prev, [field]: '' }));
+  };
+
+  const clearWarning = (field: string) => {
+    setWarnings((prev) => ({ ...prev, [field]: '' }));
   };
 
 
@@ -184,16 +215,35 @@ export default function CreateEmail() {
           />
 
           <FormInput
-            label="Email"
+            label="Email (opcional*)"
             keyboardType="email-address"
             value={email}
             onChangeText={(text) => {
               setEmail(text);
               clearError('email');
+              clearError('contact');
             }}
             autoCapitalize="none"
             error={errors.email}
           />
+
+          <FormInput
+            label="Número de Telemóvel (opcional*)"
+            keyboardType="phone-pad"
+            value={phone}
+            onChangeText={(text) => {
+              setPhone(text);
+              clearError('phone');
+              clearError('contact');
+            }}
+            error={errors.phone}
+          />
+
+          {errors.contact && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{errors.contact}</Text>
+            </View>
+          )}
 
           <FormInput
             label="Palavra-passe"
@@ -201,12 +251,23 @@ export default function CreateEmail() {
             onChangeText={(text) => {
               setPassword(text);
               clearError('password');
+              clearWarning('password');
+              // Show warning for spaces without blocking
+              if (text.includes(' ')) {
+                setWarnings(prev => ({ ...prev, password: 'Atenção: A palavra-passe contém espaços' }));
+              }
             }}
             showPasswordToggle
             isPasswordVisible={showPassword}
             onPasswordToggle={() => setShowPassword(!showPassword)}
             error={errors.password}
           />
+
+          {warnings.password && (
+            <View style={styles.warningContainer}>
+              <Text style={styles.warningText}>{warnings.password}</Text>
+            </View>
+          )}
 
           <FormInput
             label="Nome Completo"
@@ -217,17 +278,6 @@ export default function CreateEmail() {
             }}
             autoCapitalize="words"
             error={errors.fullName}
-          />
-
-          <FormInput
-            label="Número de Telemóvel (opcional)"
-            keyboardType="phone-pad"
-            value={phone}
-            onChangeText={(text) => {
-              setPhone(text);
-              clearError('phone');
-            }}
-            error={errors.phone}
           />
 
           <FormInput
@@ -334,6 +384,10 @@ export default function CreateEmail() {
           loading={createAccountMutation.isPending}
         />
 
+        <Text style={styles.helpText}>
+          * Forneça pelo menos um email ou número de telefone
+        </Text>
+        
         <AuthFooter linkText="Prefere usar número de telefone?" onLinkPress={() => router.push('/login')} />
       </AuthContent>
     </AuthContainer>
@@ -355,6 +409,26 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#FF6B6B',
+    fontSize: 12,
+  },
+  helpText: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  warningContainer: {
+    backgroundColor: '#3D2E1E',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFA726',
+    marginTop: -16,
+    marginBottom: 8,
+  },
+  warningText: {
+    color: '#FFA726',
     fontSize: 12,
   },
 });

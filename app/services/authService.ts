@@ -81,12 +81,12 @@ export class AuthService {
     }
   }
 
-  static async verifyOtp(data: OtpVerificationRequest): Promise<LoginResponse> {
+
+  static async loginWithEmail(data: EmailLoginRequest): Promise<LoginResponse> {
     try {
-      const response = await authClient.post<LoginResponse>('/auth/verify-otp', {
-        phone: data.phone,
-        otp: data.otp,
-        otpId: data.otpId,
+      const response = await authClient.post<LoginResponse>('/auth/login', {
+        identifier: data.identifier,
+        password: data.password,
       });
 
       return response.data;
@@ -95,11 +95,12 @@ export class AuthService {
     }
   }
 
-  static async loginWithEmail(data: EmailLoginRequest): Promise<LoginResponse> {
+  static async loginWithOtp(data: OtpVerificationRequest): Promise<LoginResponse> {
     try {
       const response = await authClient.post<LoginResponse>('/auth/login', {
-        identifier: data.identifier,
-        password: data.password,
+        identifier: data.phone,
+        otpID: data.otpId,
+        password: data.otp,
       });
 
       return response.data;
@@ -192,7 +193,8 @@ export class AuthService {
 
   static async saveUserSession(user: User, token: string): Promise<void> {
     try {
-      await AsyncStorage.setItem('@user', JSON.stringify({ user, token }));
+      const userWithToken = { ...user, token };
+      await AsyncStorage.setItem('@user', JSON.stringify(userWithToken));
     } catch (error) {
       console.error('Error saving user session:', error);
       throw new Error('Erro ao salvar sessão do usuário');

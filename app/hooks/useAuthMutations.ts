@@ -35,7 +35,7 @@ export function usePhoneLogin() {
 
 export function useOtpVerification() {
   return useMutation({
-    mutationFn: (data: OtpVerificationRequest) => AuthService.verifyOtp(data),
+    mutationFn: (data: OtpVerificationRequest) => AuthService.loginWithOtp(data),
     onSuccess: async (response: LoginResponse) => {
       try {
         const userData = await AuthService.getUserData(response.jwt);

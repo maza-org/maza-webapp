@@ -17,6 +17,7 @@ export default function LoginEmail() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
+  const [warning, setWarning] = useState<string | undefined>(undefined);
 
   // Mutation to fetch user data
   const fetchUserDataMutation = useMutation({
@@ -62,7 +63,6 @@ export default function LoginEmail() {
             ...userData,
             token: token,
           };
-          // await setUserData.mutateAsync(userWithToken);
           await AsyncStorage.setItem('@user', JSON.stringify(userWithToken));
 
           // Navigate based on onboarding status and interests
@@ -140,6 +140,7 @@ export default function LoginEmail() {
       return;
     }
 
+
     // Clear previous error
     setError(undefined);
 
@@ -200,6 +201,11 @@ export default function LoginEmail() {
                 onChangeText={(text) => {
                   setPassword(text);
                   if (error) setError(undefined);
+                  if (warning) setWarning(undefined);
+                  // Show warning for spaces without blocking
+                  if (text.includes(' ')) {
+                    setWarning('Atenção: A palavra-passe contém espaços');
+                  }
                 }}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
@@ -217,6 +223,12 @@ export default function LoginEmail() {
               <Text style={styles.forgotPasswordLink}>Esqueceu a palavra-passe?</Text>
             </TouchableOpacity>
           </View>
+
+          {warning && (
+            <View style={styles.warningContainer}>
+              <Text style={styles.warningText}>{warning}</Text>
+            </View>
+          )}
 
           {error && (
             <View style={styles.errorContainer}>
@@ -355,5 +367,18 @@ const styles = StyleSheet.create({
     borderColor: '#b3b3b3',
     borderWidth: 0.5,
     borderRadius: 50,
+  },
+  warningContainer: {
+    backgroundColor: '#3D2E1E',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFA726',
+    marginBottom: 16,
+  },
+  warningText: {
+    color: '#FFA726',
+    fontSize: 12,
+    marginLeft: 8,
   },
 });

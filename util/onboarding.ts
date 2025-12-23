@@ -45,6 +45,60 @@ export async function hasSeenOnboarding(): Promise<boolean> {
 }
 
 /**
+ * Check if user has set their interests
+ * @returns Promise<boolean> - true if user has interests configured, false otherwise
+ */
+export async function hasSeenInterests(): Promise<boolean> {
+  try {
+    // First check local storage for interests flag
+    const localInterests = await AsyncStorage.getItem('has_seen_interests');
+    if (localInterests === 'true') {
+      return true;
+    }
+
+    // Get the user token from AsyncStorage
+    const userDataString = await AsyncStorage.getItem('@user');
+    if (!userDataString) {
+      return false;
+    }
+
+    const userData = JSON.parse(userDataString);
+    if (!userData.token) {
+      return false;
+    }
+
+    // Fetch user data from API to check if interests are configured
+    const response = await fetch(`${baseUrl}/users/me`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userData.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Failed to fetch user data:', response.status);
+      return false;
+    }
+
+    const userResponse = await response.json();
+
+    // Check if user has interests configured
+    const hasInterests = userResponse.interests && Array.isArray(userResponse.interests) && userResponse.interests.length > 0;
+    
+    // If user has interests remotely, update local storage
+    if (hasInterests) {
+      await AsyncStorage.setItem('has_seen_interests', 'true');
+    }
+
+    return hasInterests;
+  } catch (error) {
+    console.error('Error checking interests status:', error);
+    return false;
+  }
+}
+
+/**
  * Set the onboarding completion flag
  */
 export async function setOnboardingComplete(): Promise<void> {
@@ -69,8 +123,10 @@ export async function navigateAfterLogin(userInterests?: any[]): Promise<void> {
       return;
     }
 
-    // If user has interests, go to main app
-    if (userInterests && userInterests.length > 0) {
+    const hasConfiguredInterests = await hasSeenInterests();
+
+    // If user has interests configured, go to main app
+    if (hasConfiguredInterests || (userInterests && userInterests.length > 0)) {
       router.replace('/(tabs)');
     } else {
       // Otherwise, redirect to customize interests
