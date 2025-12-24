@@ -155,33 +155,6 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
         });
     }, [comments, sortOrder]);
 
-    if (!token) {
-        return (
-            <View style={styles.container}>
-                <View style={[styles.emptyContainer, { flex: 1, justifyContent: 'center' }]}>
-                    <Ionicons name="lock-closed" size={48} color="#323238" style={{ marginBottom: 16 }} />
-                    <Text style={styles.emptyTitle}>Acesso Restrito</Text>
-                    <Text style={styles.emptyText}>
-                        Faça login para visualizar e participar do fórum deste curso.
-                    </Text>
-                    <TouchableOpacity
-                        style={{
-                            backgroundColor: '#1fa2df',
-                            paddingHorizontal: 24,
-                            paddingVertical: 12,
-                            borderRadius: 25,
-                            marginTop: 24,
-                        }}
-                        onPress={() => setLoginSheetVisible(true)}
-                    >
-                        <Text style={{ color: '#FFF', fontWeight: '600', fontSize: 16 }}>Fazer Login</Text>
-                    </TouchableOpacity>
-                </View>
-                <LoginBottomSheet visible={loginSheetVisible} onClose={() => setLoginSheetVisible(false)} />
-            </View>
-        );
-    }
-
     if (isLoading) {
         return (
             <View style={styles.loadingContainer}>

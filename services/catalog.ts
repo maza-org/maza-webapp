@@ -421,18 +421,14 @@ export function useCourseStateAndCertificates(courseId: string, token: string) {
 }
 
 // Get forum comments
-export function useForumComments(courseId: string, token: string) {
+export function useForumComments(courseId: string, token?: string) {
   return useQuery({
     queryKey: ['forum-comments', courseId],
     queryFn: async (): Promise<ForumComment[]> => {
-      const response = await api.get(`/courses/${courseId}/forum/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get(`/courses/${courseId}/forum/`);
       return response.data;
     },
-    enabled: !!courseId && !!token,
+    enabled: !!courseId,
     staleTime: 60 * 1000, // 1 minute
   });
 }

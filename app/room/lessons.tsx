@@ -569,66 +569,60 @@ export default function CourseDetail() {
 
       <View style={styles.footer}>
         {activeTab === 'forum' ? (
-          user?.token ? (
-            <View style={styles.inputContainer}>
-              {replyingTo && (
-                <View style={styles.replyPreview}>
-                  <View style={styles.replyPreviewHeader}>
-                    <View style={styles.replyPreviewLeft}>
-                      <Ionicons name="arrow-undo" size={14} color="#1fa2df" />
-                      <Text style={styles.replyPreviewLabel}>
-                        Respondendo a <Text style={styles.replyPreviewName}>{replyingTo.user.fullname}</Text>
-                      </Text>
-                    </View>
-                    <TouchableOpacity onPress={cancelReply} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                      <Ionicons name="close" size={18} color="#A8A8B3" />
-                    </TouchableOpacity>
-                  </View>
-                  <View style={styles.replyPreviewQuote}>
-                    <View style={styles.replyPreviewLine} />
-                    <Text style={styles.replyPreviewText} numberOfLines={2}>
-                      {replyingTo.comment}
+          <View style={styles.inputContainer}>
+            {replyingTo && (
+              <View style={styles.replyPreview}>
+                <View style={styles.replyPreviewHeader}>
+                  <View style={styles.replyPreviewLeft}>
+                    <Ionicons name="arrow-undo" size={14} color="#1fa2df" />
+                    <Text style={styles.replyPreviewLabel}>
+                      Respondendo a <Text style={styles.replyPreviewName}>{replyingTo.user.fullname}</Text>
                     </Text>
                   </View>
+                  <TouchableOpacity onPress={cancelReply} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                    <Ionicons name="close" size={18} color="#A8A8B3" />
+                  </TouchableOpacity>
                 </View>
-              )}
-              <View style={styles.inputRow}>
-                <TextInput
-                  ref={inputRef}
-                  style={[styles.input, isInputFocused && styles.inputExpanded]}
-                  placeholder={replyingTo ? 'Escreva sua resposta...' : 'Adicione um comentário...'}
-                  placeholderTextColor="#A8A8B3"
-                  value={newComment}
-                  onChangeText={setNewComment}
-                  onFocus={() => {
-                    checkAuth();
-                    setIsInputFocused(true);
-                  }}
-                  onBlur={() => setIsInputFocused(false)}
-                  multiline
-                />
-                <TouchableOpacity
-                  style={[
-                    styles.sendButton,
-                    (!newComment.trim() || addCommentMutation.isPending || replyMutation.isPending) &&
-                      styles.disabledButton,
-                  ]}
-                  onPress={handleAddComment}
-                  disabled={!newComment.trim() || addCommentMutation.isPending || replyMutation.isPending}
-                >
-                  {addCommentMutation.isPending || replyMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#FFF" />
-                  ) : (
-                    <Ionicons name="send" size={20} color="#FFF" />
-                  )}
-                </TouchableOpacity>
+                <View style={styles.replyPreviewQuote}>
+                  <View style={styles.replyPreviewLine} />
+                  <Text style={styles.replyPreviewText} numberOfLines={2}>
+                    {replyingTo.comment}
+                  </Text>
+                </View>
               </View>
+            )}
+            <View style={styles.inputRow}>
+              <TextInput
+                ref={inputRef}
+                style={[styles.input, isInputFocused && styles.inputExpanded]}
+                placeholder={replyingTo ? 'Escreva sua resposta...' : 'Adicione um comentário...'}
+                placeholderTextColor="#A8A8B3"
+                value={newComment}
+                onChangeText={setNewComment}
+                onFocus={() => {
+                  checkAuth();
+                  setIsInputFocused(true);
+                }}
+                onBlur={() => setIsInputFocused(false)}
+                multiline
+              />
+              <TouchableOpacity
+                style={[
+                  styles.sendButton,
+                  (!newComment.trim() || addCommentMutation.isPending || replyMutation.isPending) &&
+                    styles.disabledButton,
+                ]}
+                onPress={handleAddComment}
+                disabled={!newComment.trim() || addCommentMutation.isPending || replyMutation.isPending}
+              >
+                {addCommentMutation.isPending || replyMutation.isPending ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <Ionicons name="send" size={20} color="#FFF" />
+                )}
+              </TouchableOpacity>
             </View>
-          ) : (
-            <TouchableOpacity style={styles.startButton} onPress={() => setLoginSheetVisible(true)}>
-              <Text style={styles.startButtonText}>Entrar para Comentar</Text>
-            </TouchableOpacity>
-          )
+          </View>
         ) : isInProgress ? (
           <View style={styles.progressContainer}>
             <View style={styles.progressHeader}>
