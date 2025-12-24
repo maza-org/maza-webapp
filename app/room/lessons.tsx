@@ -262,7 +262,7 @@ export default function CourseDetail() {
         // Handle reply
         await replyMutation.mutateAsync({
           courseId: documentId,
-          commentId: replyingTo.id,
+          commentId: replyingTo.uuid,
           comment: newComment,
           token: user?.token || '',
         });
@@ -929,7 +929,7 @@ const styles = StyleSheet.create({
     maxHeight: 100,
   },
   inputExpanded: {
-    height: 120,
+    height: 250,
     textAlignVertical: 'top',
   },
   sendButton: {

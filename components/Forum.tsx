@@ -7,9 +7,10 @@ import {
     FlatList,
     TouchableOpacity,
     Image,
+    Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useForumComments } from '@/services/catalog';
+import { useForumComments, useDeleteForumComment } from '@/services/catalog';
 import { useAuthUser } from '@/hooks/useAuth';
 import { ForumComment } from '@/types/learning';
 import LoginBottomSheet from './LoginBottomSheet';
@@ -46,18 +47,25 @@ const CommentItem = ({
     comment,
     courseId,
     token,
+    currentUserId,
     onReply,
+    onDelete,
+    isDeleting,
 }: {
     comment: ForumComment;
     courseId: string;
     token: string;
+    currentUserId?: number;
     onReply: (comment: ForumComment) => void;
+    onDelete: (comment: ForumComment) => void;
+    isDeleting: boolean;
 }) => {
     const [showReplies, setShowReplies] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
 
     const hasReplies = comment.replies && comment.replies.length > 0;
     const isLongComment = comment.comment.length > 200;
+    const isOwner = currentUserId && comment.user.id === currentUserId;
 
     const displayedComment = isExpanded || !isLongComment
         ? comment.comment
@@ -87,15 +95,34 @@ const CommentItem = ({
             )}
 
             <View style={styles.actionsRow}>
-                <TouchableOpacity style={styles.replyButton} onPress={() => onReply(comment)}>
-                    <Ionicons name="chatbubble-outline" size={16} color="#A8A8B3" />
-                    <Text style={styles.replyButtonText}>Responder</Text>
-                </TouchableOpacity>
+                <View style={styles.leftActions}>
+                    <TouchableOpacity style={styles.replyButton} onPress={() => onReply(comment)}>
+                        <Ionicons name="chatbubble-outline" size={16} color="#A8A8B3" />
+                        <Text style={styles.replyButtonText}>Responder</Text>
+                    </TouchableOpacity>
+
+                    {isOwner && (
+                        <TouchableOpacity
+                            style={styles.deleteButton}
+                            onPress={() => onDelete(comment)}
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? (
+                                <ActivityIndicator size="small" color="#FF4B4B" />
+                            ) : (
+                                <>
+                                    <Ionicons name="trash-outline" size={16} color="#FF4B4B" />
+                                    <Text style={styles.deleteButtonText}>Apagar</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    )}
+                </View>
 
                 {hasReplies && (
                     <TouchableOpacity style={styles.showRepliesButton} onPress={() => setShowReplies(!showReplies)}>
                         <Text style={styles.showRepliesText}>
-                            {showReplies ? 'Ocultar respostas' : `Ver ${comment.replies.length} respostas`}
+                            {showReplies ? 'Ocultar respostas' : `Ver ${comment.replies.length} ${comment.replies.length === 1 ? 'resposta' : 'respostas'}`}
                         </Text>
                     </TouchableOpacity>
                 )}
@@ -134,9 +161,11 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
     const token = user?.token || '';
 
     const { data: comments, isLoading, error } = useForumComments(courseId, token);
+    const deleteCommentMutation = useDeleteForumComment();
 
     const [loginSheetVisible, setLoginSheetVisible] = useState(false);
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+    const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
     const checkAuth = () => {
         if (!token) {
@@ -144,6 +173,34 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
             return false;
         }
         return true;
+    };
+
+    const handleDeleteComment = (comment: ForumComment) => {
+        Alert.alert(
+            'Apagar comentário',
+            'Tem certeza que deseja apagar este comentário?',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Apagar',
+                    style: 'destructive',
+                    onPress: async () => {
+                        setDeletingCommentId(comment.uuid);
+                        try {
+                            await deleteCommentMutation.mutateAsync({
+                                courseId,
+                                commentUuid: comment.uuid,
+                                token,
+                            });
+                        } catch (err) {
+                            Alert.alert('Erro', 'Não foi possível apagar o comentário.');
+                        } finally {
+                            setDeletingCommentId(null);
+                        }
+                    },
+                },
+            ]
+        );
     };
 
     const sortedComments = useMemo(() => {
@@ -195,11 +252,14 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
                         comment={item}
                         courseId={courseId}
                         token={token}
+                        currentUserId={user?.id}
                         onReply={(comment) => {
                             if (checkAuth() && onReplySelect) {
                                 onReplySelect(comment);
                             }
                         }}
+                        onDelete={handleDeleteComment}
+                        isDeleting={deletingCommentId === item.uuid}
                     />
                 )}
                 ListEmptyComponent={
@@ -308,6 +368,11 @@ const styles = StyleSheet.create({
         borderTopColor: '#323238',
         paddingTop: 12,
     },
+    leftActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 16,
+    },
     replyButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -315,6 +380,15 @@ const styles = StyleSheet.create({
     },
     replyButtonText: {
         color: '#A8A8B3',
+        fontSize: 14,
+    },
+    deleteButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    deleteButtonText: {
+        color: '#FF4B4B',
         fontSize: 14,
     },
     showRepliesButton: {

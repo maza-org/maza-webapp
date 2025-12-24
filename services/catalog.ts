@@ -473,7 +473,7 @@ export function useReplyToComment() {
       token,
     }: {
       courseId: string;
-      commentId: number;
+      commentId: string;
       comment: string;
       token: string;
     }) => {
@@ -491,6 +491,33 @@ export function useReplyToComment() {
           },
         }
       );
+      return response.data;
+    },
+    onSuccess: (_, { courseId }) => {
+      queryClient.invalidateQueries({ queryKey: ['forum-comments', courseId] });
+    },
+  });
+}
+
+// Delete forum comment
+export function useDeleteForumComment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      courseId,
+      commentUuid,
+      token,
+    }: {
+      courseId: string;
+      commentUuid: string;
+      token: string;
+    }) => {
+      const response = await api.delete(`/courses/${courseId}/forum/comments/${commentUuid}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     },
     onSuccess: (_, { courseId }) => {

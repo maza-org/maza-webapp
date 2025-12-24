@@ -96,6 +96,7 @@ export interface ForumUser {
 
 export interface ForumComment {
   id: number;
+  uuid: string;
   comment: string;
   date: string;
   replies: ForumComment[];

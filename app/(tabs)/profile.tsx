@@ -163,7 +163,7 @@ export default function ProfileScreen() {
             interests={user.interests || []}
             isEditing={isEditing}
             deletingInterestId={deletingInterestId}
-            onToggleEditing={() => setIsEditing(!isEditing)}
+            onToggleEditing={handleAddInterest}
             onDeleteInterest={handleDeleteInterest}
             onAddInterest={handleAddInterest}
           />
