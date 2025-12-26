@@ -1,8 +1,28 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Image, Platform } from 'react-native';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Image, Platform, Dimensions, Animated } from 'react-native';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCompletedCourses } from '@/app/hooks/useCoursesQueries';
 import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+
+interface Course {
+  documentId: string;
+  title: string;
+  author: string;
+  rating_avg: number;
+  picture: {
+    formats: {
+      thumbnail: { url: string };
+    };
+  };
+}
+
+interface CompletedCourseData {
+  id: number;
+  updatedAt: string;
+  course: Course;
+}
 
 interface CompletedCoursesProps {
   onRetry?: () => void;
@@ -14,69 +34,24 @@ const formatDate = (dateString: string) => {
   return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-const CourseCard = ({ courseData }: { courseData: any }) => {
-  const { course } = courseData;
-  const imageUrl = course?.picture?.formats?.thumbnail?.url;
-  const completionDate = courseData.updatedAt ? formatDate(courseData.updatedAt) : 'Recentemente';
-
-  return (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      onPress={() => {
-        router.push({ pathname: '/room/lessons', params: { documentId: course.documentId } });
-      }}
-      style={styles.cardContainer}
-    >
-      <View style={styles.cardMain}>
-        <View style={styles.imageWrapper}>
-          <Image source={{ uri: imageUrl }} style={styles.courseImage} />
-          <View style={styles.checkBadge}>
-            <MaterialCommunityIcons name="check-decagram" size={20} color="#2EA8FF" />
-          </View>
-        </View>
-
-        <View style={styles.contentContainer}>
-          <View>
-            <Text style={styles.authorText}>{course.author}</Text>
-            <Text style={styles.titleText} numberOfLines={2}>
-              {course.title}
-            </Text>
-          </View>
-
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Ionicons name="time-outline" size={14} color="#8F8F8F" />
-              <Text style={styles.statText}>{course.duration || '2h 15m'}</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.statItem}>
-              <Ionicons name="star" size={14} color="#FBA94C" />
-              <Text style={[styles.statText, { color: '#FBA94C' }]}>
-                {course.rating_avg?.toFixed(1) || '5.0'}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
-
-      {/* Footer Section */}
-      <View style={styles.cardFooter}>
-        <View style={styles.dateContainer}>
-          <Text style={styles.completedLabel}>Concluído em</Text>
-          <Text style={styles.dateText}>{completionDate}</Text>
-        </View>
-
-        <TouchableOpacity style={styles.certificateBtn}>
-          <Text style={styles.certificateText}>Ver Certificado</Text>
-          <MaterialCommunityIcons name="certificate-outline" size={16} color="#0B1727" />
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
-};
+const { width: screenWidth } = Dimensions.get('window');
+const gap = 12;
+const padding = 16;
+const cardWidth = (screenWidth - (padding * 2) - gap) / 2;
 
 export default function CompletedCourses({ onRetry }: CompletedCoursesProps) {
   const { data: courses = [], isLoading, error, refetch } = useCompletedCourses();
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const animatedValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(animatedValue, {
+      toValue: viewMode === 'grid' ? 0 : 1,
+      useNativeDriver: false,
+      tension: 100,
+      friction: 8,
+    }).start();
+  }, [viewMode, animatedValue]);
 
   const handleRetry = () => {
     onRetry?.();
@@ -94,7 +69,7 @@ export default function CompletedCourses({ onRetry }: CompletedCoursesProps) {
   if (error) {
     return (
       <View style={styles.centerContainer}>
-        <Feather name="alert-circle" size={48} color="#FF4444" />
+        <Feather name="alert-circle" size={48} color="#FF4B4B" />
         <Text style={styles.errorText}>Erro ao obter cursos terminados</Text>
         <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
           <Text style={styles.retryButtonText}>Tentar de novo</Text>
@@ -116,12 +91,100 @@ export default function CompletedCourses({ onRetry }: CompletedCoursesProps) {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {courses.map((courseData) => (
-        <CourseCard key={courseData?.id} courseData={courseData} />
-      ))}
+      <View style={styles.toolbar}>
+        <View style={styles.viewToggle}>
+          <Animated.View
+            style={[
+              styles.animatedBackground,
+              {
+                transform: [{
+                  translateX: animatedValue.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 46],
+                  }),
+                }],
+              },
+            ]}
+          />
+          <TouchableOpacity style={styles.toggleButton} onPress={() => setViewMode('grid')}>
+            <Ionicons name="grid" size={16} color={viewMode === 'grid' ? '#0B1727' : '#B0B0B0'} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toggleButton} onPress={() => setViewMode('list')}>
+            <Ionicons name="list" size={18} color={viewMode === 'list' ? '#0B1727' : '#B0B0B0'} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={[styles.contentWrapper, viewMode === 'grid' ? styles.gridWrapper : styles.listWrapper]}>
+        {courses.map((item) => {
+          const courseData = item as unknown as CompletedCourseData;
+          const { course } = courseData;
+          const imageUrl = course?.picture?.formats?.thumbnail?.url;
+          const completionDate = courseData.updatedAt ? formatDate(courseData.updatedAt) : 'Recentemente';
+          const isGrid = viewMode === 'grid';
+
+          return (
+            <TouchableOpacity
+              key={courseData.id}
+              activeOpacity={0.9}
+              onPress={() => {
+                router.push({ pathname: '/room/lessons', params: { documentId: course.documentId } });
+              }}
+              style={[styles.card, isGrid ? styles.cardGrid : styles.cardList]}
+            >
+              <View style={[styles.cardMain, isGrid ? styles.cardMainGrid : styles.cardMainList]}>
+                <View style={[styles.imageWrapper, isGrid ? styles.imageWrapperGrid : styles.imageWrapperList]}>
+                  <Image source={{ uri: imageUrl }} style={styles.courseImage} />
+                  <View style={styles.checkBadge}>
+                    <MaterialCommunityIcons name="check-decagram" size={16} color="#2EA8FF" />
+                  </View>
+                </View>
+
+                <View style={[styles.contentContainer, isGrid ? null : styles.contentContainerList]}>
+                  <View>
+                    <Text style={styles.authorText} numberOfLines={1}>{course.author}</Text>
+                    <Text style={[styles.titleText, isGrid ? styles.titleGrid : styles.titleList]} numberOfLines={2}>
+                      {course.title}
+                    </Text>
+                  </View>
+
+                  <View style={styles.statsRow}>
+                    <View style={styles.statItem}>
+                      <Ionicons name="star" size={12} color="#FBA94C" />
+                      <Text style={[styles.statText, { color: '#FBA94C' }]}>
+                        {course.rating_avg?.toFixed(1) || '5.0'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.cardFooter}>
+                {isGrid ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <Text style={styles.certificateText}>Certificado</Text>
+                    <MaterialCommunityIcons name="certificate-outline" size={14} color="#0B1727" />
+                  </View>
+                ) : (
+                  <>
+                    <View style={styles.dateContainer}>
+                      <Text style={styles.completedLabel}>Concluído em</Text>
+                      <Text style={styles.dateText}>{completionDate}</Text>
+                    </View>
+
+                    <View style={styles.certificateBtn}>
+                      <Text style={styles.certificateText}>Ver Certificado</Text>
+                      <MaterialCommunityIcons name="certificate-outline" size={16} color="#0B1727" />
+                    </View>
+                  </>
+                )}
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </ScrollView>
   );
 }
@@ -130,8 +193,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollContent: {
-    padding: 16,
+  contentWrapper: {
+    padding: padding,
+  },
+  gridWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: gap,
+  },
+  listWrapper: {
     gap: 16,
   },
   centerContainer: {
@@ -141,10 +211,48 @@ const styles = StyleSheet.create({
     padding: 24,
     minHeight: 200,
   },
-  cardContainer: {
+
+  // Toolbar
+  toolbar: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
+    alignItems: 'flex-end',
+  },
+  viewToggle: {
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    padding: 6,
+    borderRadius: 20,
+    position: 'relative',
+  },
+  animatedBackground: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    width: 36,
+    height: 32,
+    backgroundColor: '#2EA8FF',
+    borderRadius: 16,
+    zIndex: 1,
+  },
+  toggleButton: {
+    width: 36,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+
+  // Card Styles
+  card: {
     backgroundColor: '#202024',
     borderRadius: 16,
-    padding: 4,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#29292E',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -157,50 +265,89 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  cardGrid: {
+    width: cardWidth,
+  },
+  cardList: {
+    width: '100%',
+  },
+
+  // Card Main Content
   cardMain: {
+    padding: 10,
+    gap: 10,
+  },
+  cardMainGrid: {
+    flexDirection: 'column',
+  },
+  cardMainList: {
     flexDirection: 'row',
-    padding: 12,
     gap: 14,
   },
+
+  // Image
   imageWrapper: {
     position: 'relative',
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#29292E',
   },
-  courseImage: {
+  imageWrapperGrid: {
+    width: '100%',
+    aspectRatio: 1.1,
+  },
+  imageWrapperList: {
     width: 72,
     height: 72,
-    borderRadius: 12,
-    backgroundColor: '#29292E',
+  },
+  courseImage: {
+    width: '100%',
+    height: '100%',
   },
   checkBadge: {
     position: 'absolute',
-    bottom: -6,
-    right: -6,
+    bottom: 4,
+    right: 4,
     backgroundColor: '#202024',
     borderRadius: 12,
     padding: 2,
   },
+
+  // Content
   contentContainer: {
-    flex: 1,
     justifyContent: 'space-between',
+    gap: 4,
+    flex: 1,
+  },
+  contentContainerList: {
     paddingVertical: 2,
   },
   authorText: {
     color: '#2EA8FF',
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 4,
+    fontSize: 10,
+    fontWeight: '700',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
   },
   titleText: {
     color: '#E1E1E6',
-    fontSize: 15,
     fontWeight: '700',
+  },
+  titleGrid: {
+    fontSize: 14,
     lineHeight: 20,
+    marginBottom: 4,
+  },
+  titleList: {
+    fontSize: 15,
+    lineHeight: 20,
+    marginBottom: 0,
   },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: 4,
   },
   statItem: {
     flexDirection: 'row',
@@ -219,18 +366,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#323238',
     marginHorizontal: 8,
   },
+
+  // Footer
   cardFooter: {
     backgroundColor: '#1c1c1f',
-    borderBottomLeftRadius: 14,
-    borderBottomRightRadius: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#29292E',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginTop: 0,
-    borderTopWidth: 1,
-    borderTopColor: '#29292E',
   },
   dateContainer: {
     gap: 2,
@@ -257,9 +403,12 @@ const styles = StyleSheet.create({
   },
   certificateText: {
     color: '#0B1727',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
+    textTransform: 'uppercase',
   },
+
+  // Error/Empty
   errorText: {
     color: '#E1E1E6',
     fontSize: 16,
