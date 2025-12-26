@@ -76,7 +76,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         image: sadImage,
         title: 'Tempo Esgotado!',
         subtitle: 'O tempo para realização do teste acabou. Suas respostas foram enviadas automaticamente.',
-        buttonText: score >= passGrade ? 'Reclamar Pontos' : 'Tentar Novamente',
+        buttonText: score >= passGrade ? 'Continuar' : 'Tentar Novamente',
         cardStyle: {
           titleColor: '#FF9500',
           buttonColor: score >= passGrade ? '#1fa2df' : '#FF3B30',
@@ -90,7 +90,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         title: 'MAZAAA!',
         subtitle:
           'Você absolutamente arrasou neste desafio! Sua excelência é extraordinária. Pronto para conquistar ainda mais?',
-        buttonText: 'Reclamar Pontos',
+        buttonText: 'Continuar',
         cardStyle: {
           titleColor: '#04D361',
           buttonColor: '#04D361',
@@ -101,7 +101,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
         image: happyImage,
         title: 'Desafio Concluído!',
         subtitle: 'Muito bem! Você conquistou este desafio com confiança. Continue com o excelente trabalho!',
-        buttonText: 'Reclamar Pontos',
+        buttonText: 'Continuar',
         cardStyle: {
           titleColor: '#1fa2df',
           buttonColor: '#1fa2df',
@@ -179,20 +179,9 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           ) : (
             <>
               <Text style={styles.claimPointsText}>{resultContent.buttonText}</Text>
-              {passed && (
-                <View style={styles.pointsBadge}>
-                  <Text style={styles.pointsBadgeText}>{grade}</Text>
-                </View>
-              )}
             </>
           )}
         </TouchableOpacity>
-
-        {!passed && (
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text>Continuar</Text>
-          </TouchableOpacity>
-        )}
 
         {quizCompleted && (
           <View style={styles.completedBadge}>
@@ -221,16 +210,15 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             )}
           </TouchableOpacity>
         )}
-
-        {/* Debug information - remove in production */}
-        {user?.token && courseId && (
-          <View style={styles.debugContainer}>
-            <Text style={styles.debugText}>
-              Estado do curso: {courseState || 'N/A'} | Certificados: {shouldFetchCertificates ? 'Sim' : 'Não'}
-            </Text>
-          </View>
-        )}
       </ScrollView>
+
+      {!passed && (
+        <View style={styles.continueButtonContainer}>
+          <TouchableOpacity style={styles.continueButton} onPress={() => router.back()}>
+            <Text style={styles.continueButtonText}>Continuar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
@@ -324,7 +312,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1fa2df',
     flexDirection: 'row',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
@@ -428,5 +416,26 @@ const styles = StyleSheet.create({
     color: '#A8A8B3',
     fontSize: 12,
     textAlign: 'center',
+  },
+  continueButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    backgroundColor: '#121214',
+  },
+  continueButton: {
+    backgroundColor: '#1fa2df',
+    padding: 16,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  continueButtonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });

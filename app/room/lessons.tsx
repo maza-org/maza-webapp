@@ -199,9 +199,13 @@ export default function CourseDetail() {
         courseId: documentId,
         token: user.token,
       });
-    } catch (error) {
-      console.error('Erro ao iniciar curso:', error);
-      showError('Falha ao iniciar o curso');
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.error?.message;
+      if (errorMessage === 'user already concluded that course') {
+        showInfo('Este curso já foi concluído!');
+      } else {
+        showError('Falha ao iniciar o curso');
+      }
     }
   };
 
