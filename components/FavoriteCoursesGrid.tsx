@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   View,
-  Pressable,
   ScrollView,
   Image,
   ActivityIndicator,
@@ -10,9 +9,10 @@ import {
   TouchableOpacity,
   Dimensions,
   Animated,
+  Platform,
 } from 'react-native';
 import { Text } from '@/components/Themed';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Picture } from '@/types/course';
 import { useUserFavorites, useRemoveFromFavorites, useStartCourse } from '@/services/catalog';
@@ -40,20 +40,10 @@ interface FavoriteCourse {
   course: Course;
 }
 
-interface FavoriteResponse {
-  data: FavoriteCourse[];
-  meta: {
-    pagination: {
-      page: number;
-      pageSize: number;
-      pageCount: number;
-      total: number;
-    };
-  };
-}
-
 const { width: screenWidth } = Dimensions.get('window');
-const cardWidth = (screenWidth - 48) / 2; // 16px padding on each side + 16px gap
+const gap = 12;
+const padding = 16;
+const cardWidth = (screenWidth - (padding * 2) - gap) / 2;
 
 const FavoriteCoursesGrid = () => {
   const { data: user } = useAuthUser();
@@ -76,10 +66,7 @@ const FavoriteCoursesGrid = () => {
 
   const handleRemoveFromFavorites = (courseId: string, courseTitle: string) => {
     Alert.alert('Remover dos Favoritos', `Tem certeza que deseja remover "${courseTitle}" dos seus favoritos?`, [
-      {
-        text: 'Cancelar',
-        style: 'cancel',
-      },
+      { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Remover',
         style: 'destructive',
@@ -87,12 +74,8 @@ const FavoriteCoursesGrid = () => {
           removeFromFavorites.mutate(
             { courseId, token: user?.token || '' },
             {
-              onSuccess: () => {
-                showSuccess('Curso removido dos favoritos!');
-              },
-              onError: (error) => {
-                showError('Falha ao remover dos favoritos');
-              },
+              onSuccess: () => showSuccess('Curso removido dos favoritos!'),
+              onError: () => showError('Falha ao remover dos favoritos'),
             }
           );
         },
@@ -100,19 +83,16 @@ const FavoriteCoursesGrid = () => {
     ]);
   };
 
-  const handleStartCourse = (courseId: string, courseTitle: string) => {
+  const handleStartCourse = (courseId: string) => {
     setSelectedCourseId(courseId);
     startCourse.mutate(
       { courseId, token: user?.token || '' },
       {
         onSuccess: () => {
           setSelectedCourseId(null);
-          router.push({
-            pathname: '/room/lessons',
-            params: { documentId: courseId },
-          });
+          router.push({ pathname: '/room/lessons', params: { documentId: courseId } });
         },
-        onError: (error) => {
+        onError: () => {
           setSelectedCourseId(null);
           showError('Falha ao iniciar o curso');
         },
@@ -121,10 +101,7 @@ const FavoriteCoursesGrid = () => {
   };
 
   const handleCoursePress = (courseId: string) => {
-    router.push({
-      pathname: '/room/lessons',
-      params: { documentId: courseId },
-    });
+    router.push({ pathname: '/room/lessons', params: { documentId: courseId } });
   };
 
   if (isLoading) {
@@ -139,11 +116,8 @@ const FavoriteCoursesGrid = () => {
   if (error) {
     return (
       <View style={styles.centerContainer}>
-        <View style={styles.emptyIconContainer}>
-          <Ionicons name="alert-circle-outline" size={80} color="#FF4B4B" />
-        </View>
+        <Ionicons name="alert-circle-outline" size={64} color="#FF4B4B" />
         <Text style={styles.errorTitle}>Ops! Algo deu errado</Text>
-        <Text style={styles.errorSubtitle}>Não foi possível carregar os seus favoritos</Text>
         <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
           <Text style={styles.retryButtonText}>Tentar Novamente</Text>
         </TouchableOpacity>
@@ -156,11 +130,9 @@ const FavoriteCoursesGrid = () => {
   if (favorites.length === 0) {
     return (
       <View style={styles.centerContainer}>
-        <View style={styles.emptyIconContainer}>
-          <Ionicons name="heart-outline" size={80} color="#8F8F8F" />
-        </View>
+        <Ionicons name="heart-outline" size={64} color="#8F8F8F" />
         <Text style={styles.emptyTitle}>Nenhum curso favorito</Text>
-        <Text style={styles.emptySubtitle}>Adicione cursos aos favoritos para acessá-los rapidamente aqui</Text>
+        <Text style={styles.emptySubtitle}>Seus cursos favoritos aparecerão aqui</Text>
         <TouchableOpacity style={styles.exploreButton} onPress={() => router.push('/categories')}>
           <Text style={styles.exploreButtonText}>Explorar Cursos</Text>
         </TouchableOpacity>
@@ -176,135 +148,108 @@ const FavoriteCoursesGrid = () => {
             style={[
               styles.animatedBackground,
               {
-                transform: [
-                  {
-                    translateX: animatedValue.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 46],
-                    }),
-                  },
-                ],
+                transform: [{
+                  translateX: animatedValue.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 46],
+                  }),
+                }],
               },
             ]}
           />
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Ver em grade"
-            style={styles.toggleButton}
-            onPress={() => setViewMode('grid')}
-          >
+          <TouchableOpacity style={styles.toggleButton} onPress={() => setViewMode('grid')}>
             <Ionicons name="grid" size={16} color={viewMode === 'grid' ? '#0B1727' : '#B0B0B0'} />
           </TouchableOpacity>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Ver em lista"
-            style={styles.toggleButton}
-            onPress={() => setViewMode('list')}
-          >
+          <TouchableOpacity style={styles.toggleButton} onPress={() => setViewMode('list')}>
             <Ionicons name="list" size={18} color={viewMode === 'list' ? '#0B1727' : '#B0B0B0'} />
           </TouchableOpacity>
         </View>
       </View>
-      <View style={[styles.gridContainer, viewMode === 'list' && styles.listContainer]}>
-        {favorites.map((favorite: FavoriteCourse) => (
-          <TouchableOpacity
-            key={favorite.id}
-            style={[styles.courseCard, viewMode === 'list' && styles.listCard]}
-            onPress={() => handleCoursePress(favorite.course.documentId)}
-            activeOpacity={0.8}
-          >
-            {/* Course Image with Overlay */}
-            <View style={[styles.imageContainer, viewMode === 'list' && styles.listImageContainer]}>
-              <Image
-                source={{
-                  uri:
-                    favorite.course.picture?.formats?.thumbnail?.url ||
-                    favorite.course.picture?.formats?.small?.url ||
-                    favorite.course.picture?.url,
-                }}
-                style={[styles.courseImage, viewMode === 'list' && styles.listCourseImage]}
-              />
-              <LinearGradient colors={['transparent', 'rgba(0,0,0,0.7)']} style={styles.imageOverlay} />
 
-              {/* Action Buttons */}
-              <View style={styles.actionButtonsContainer}>
+      <View style={[styles.contentWrapper, viewMode === 'grid' ? styles.gridWrapper : styles.listWrapper]}>
+        {favorites.map((favorite: FavoriteCourse) => {
+          const imageUrl = favorite.course.picture?.formats?.thumbnail?.url || favorite.course.picture?.url;
+          const isGrid = viewMode === 'grid';
+
+          return (
+            <TouchableOpacity
+              key={favorite.id}
+              style={[styles.card, isGrid ? styles.cardGrid : styles.cardList]}
+              onPress={() => handleCoursePress(favorite.course.documentId)}
+              activeOpacity={0.9}
+            >
+              <View style={[styles.cardMain, isGrid ? styles.cardMainGrid : styles.cardMainList]}>
+                {/* Image Section */}
+                <View style={[styles.imageWrapper, isGrid ? styles.imageWrapperGrid : styles.imageWrapperList]}>
+                  <Image source={{ uri: imageUrl }} style={styles.image} />
+
+                  {/* Progress Overlay */}
+                  <View style={styles.progressOverlay}>
+                    <View style={styles.progressBar}>
+                      <View style={[styles.progressFill, { width: `${favorite.progress}%` }]} />
+                    </View>
+                  </View>
+
+                  {/* Top Right Heart Button */}
+                  <TouchableOpacity
+                    style={styles.heartButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleRemoveFromFavorites(favorite.course.documentId, favorite.course.title);
+                    }}
+                  >
+                    <Ionicons name="heart" size={14} color="#FF4B4B" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Content Section */}
+                <View style={[styles.infoContainer, isGrid ? null : styles.infoContainerList]}>
+                  <View>
+                    <Text style={styles.authorText} numberOfLines={1}>{favorite.course.author}</Text>
+                    <Text style={[styles.titleText, isGrid ? styles.titleGrid : styles.titleList]} numberOfLines={2}>
+                      {favorite.course.title}
+                    </Text>
+                  </View>
+
+                  {/* Rating/Stats */}
+                  <View style={styles.statsRow}>
+                    <View style={styles.ratingBadge}>
+                      <Ionicons name="star" size={10} color="#FBA94C" />
+                      <Text style={styles.ratingText}>{favorite.course.rating_avg?.toFixed(1) || '5.0'}</Text>
+                    </View>
+                    <View style={styles.divider} />
+                    <Text style={styles.statusText}>
+                      {favorite.progress > 0 ? `${Math.round(favorite.progress)}% Concluído` : 'Não iniciado'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Footer Section (Action) */}
+              <View style={styles.cardFooter}>
                 <TouchableOpacity
                   style={styles.actionButton}
                   onPress={(e) => {
                     e.stopPropagation();
-                    handleRemoveFromFavorites(favorite.course.documentId, favorite.course.title);
-                  }}
-                  disabled={removeFromFavorites.isPending}
-                >
-                  {removeFromFavorites.isPending ? (
-                    <ActivityIndicator size="small" color="#FF4B4B" />
-                  ) : (
-                    <Ionicons name="heart" size={16} color="#FF4B4B" />
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              {/* Progress Bar */}
-              <View style={styles.progressContainer}>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { width: `${favorite.progress}%` }]} />
-                </View>
-                <Text style={styles.progressText}>{favorite.progress}%</Text>
-              </View>
-            </View>
-
-            {/* Course Content */}
-            <View style={[styles.contentContainer, viewMode === 'list' && styles.listContentContainer]}>
-              {/* Status Badge */}
-              <View style={styles.statusContainer}>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    favorite.progress === 0 ? styles.notStartedBadge : styles.inProgressBadge,
-                  ]}
-                >
-                  <Text style={[styles.statusText, { color: favorite.progress === 0 ? '#2EA8FF' : '#FFC107' }]}>
-                    {favorite.progress === 0 ? 'Não iniciado' : 'Em progresso'}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Title */}
-              <Text style={styles.title} numberOfLines={2}>
-                {favorite.course.title}
-              </Text>
-
-              {/* Author */}
-              <View style={styles.instructorContainer}>
-                <Image
-                  source={{ uri: favorite.course.cover?.formats?.thumbnail?.url }}
-                  style={styles.instructorAvatar}
-                />
-                <Text style={styles.instructorName} numberOfLines={1}>
-                  {favorite.course.author}
-                </Text>
-              </View>
-
-              {/* Footer */}
-              <View style={[styles.footer, viewMode === 'list' && styles.listFooter]}>
-                <TouchableOpacity
-                  style={styles.startButton}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    handleStartCourse(favorite.course.documentId, favorite.course.title);
+                    handleStartCourse(favorite.course.documentId);
                   }}
                   disabled={startCourse.isPending && selectedCourseId === favorite.course.documentId}
                 >
                   {startCourse.isPending && selectedCourseId === favorite.course.documentId ? (
-                    <ActivityIndicator size="small" color="#FFF" />
+                    <ActivityIndicator size="small" color="#2EA8FF" />
                   ) : (
-                    <Text style={styles.startButtonText}>{favorite.progress > 0 ? 'Continuar' : 'Iniciar'}</Text>
+                    <>
+                      <Text style={styles.actionButtonText}>
+                        {favorite.progress > 0 ? 'Continuar' : 'Começar Agora'}
+                      </Text>
+                      <Feather name="arrow-right" size={14} color="#2EA8FF" />
+                    </>
                   )}
                 </TouchableOpacity>
               </View>
-            </View>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          );
+        })}
       </View>
       <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} position="top" />
     </ScrollView>
@@ -318,227 +263,237 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#121214',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
+    minHeight: 400,
   },
-  loadingText: {
-    color: '#8F8F8F',
-    fontSize: 16,
-    marginTop: 16,
-    textAlign: 'center',
+  contentWrapper: {
+    padding: padding,
   },
-  emptyIconContainer: {
-    marginBottom: 24,
-    opacity: 0.6,
-  },
-  emptyTitle: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    color: '#8F8F8F',
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  exploreButton: {
-    backgroundColor: '#2EA8FF',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 50,
-  },
-  exploreButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  errorTitle: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  errorSubtitle: {
-    color: '#8F8F8F',
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  retryButton: {
-    backgroundColor: '#2EA8FF',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 50,
-  },
-  retryButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  gridContainer: {
+  gridWrapper: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: 16,
+    gap: gap,
+  },
+  listWrapper: {
     gap: 16,
   },
-  listContainer: {
+
+  // Card Styles
+  card: {
+    backgroundColor: '#202024',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#29292E',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  cardGrid: {
+    width: cardWidth,
+  },
+  cardList: {
+    width: '100%',
+  },
+
+  // Main Content Area
+  cardMain: {
+    padding: 10,
+    gap: 10,
+  },
+  cardMainGrid: {
     flexDirection: 'column',
   },
-  courseCard: {
-    width: cardWidth,
-    backgroundColor: '#202024',
+  cardMainList: {
+    flexDirection: 'row',
+  },
+
+  // Image & Overlays
+  imageWrapper: {
+    position: 'relative',
     borderRadius: 12,
     overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    backgroundColor: '#29292E',
   },
-  listCard: {
+  imageWrapperGrid: {
     width: '100%',
-    flexDirection: 'row',
+    aspectRatio: 1.1,
   },
-  imageContainer: {
-    height: 120,
-    position: 'relative',
+  imageWrapperList: {
+    width: 80,
+    height: 80,
   },
-  listImageContainer: {
-    width: 120,
-    height: '100%',
-  },
-  courseImage: {
+  image: {
     width: '100%',
     height: '100%',
   },
-  listCourseImage: {
-    width: 120,
-    height: 120,
-  },
-  imageOverlay: {
+  heartButton: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 40,
-  },
-  actionButtonsContainer: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButton: {
-    width: 32,
-    height: 32,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    borderRadius: 16,
+    top: 6,
+    right: 6,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(32, 32, 36, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
-
-  progressContainer: {
+  progressOverlay: {
     position: 'absolute',
-    bottom: 8,
-    left: 8,
-    right: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 4,
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   progressBar: {
-    flex: 1,
-    height: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 3,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 2,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
     backgroundColor: '#2EA8FF',
-    borderRadius: 3,
   },
-  progressText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  contentContainer: {
-    padding: 12,
-  },
-  listContentContainer: {
+
+  // Text Info
+  infoContainer: {
+    justifyContent: 'space-between',
+    gap: 4,
     flex: 1,
-    padding: 12,
   },
-  statusContainer: {
-    marginBottom: 8,
+  infoContainerList: {
+    paddingVertical: 2,
   },
-  statusBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
+  authorText: {
+    color: '#2EA8FF',
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
   },
-  notStartedBadge: {
-    backgroundColor: 'rgba(46, 168, 255, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(46, 168, 255, 0.3)',
+  titleText: {
+    color: '#E1E1E6',
+    fontWeight: '700',
   },
-  inProgressBadge: {
-    backgroundColor: 'rgba(255, 193, 7, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 193, 7, 0.3)',
+  titleGrid: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  titleList: {
+    fontSize: 16,
+    lineHeight: 22,
+    marginBottom: 0,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(251, 169, 76, 0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  ratingText: {
+    color: '#FBA94C',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  divider: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: '#323238',
   },
   statusText: {
+    color: '#8F8F8F',
     fontSize: 11,
-    fontWeight: '700',
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 8,
-    lineHeight: 18,
-  },
-  instructorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 6,
-  },
-  instructorAvatar: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-  },
-  instructorName: {
-    fontSize: 11,
-    color: '#B0B0B0',
-    flex: 1,
     fontWeight: '500',
   },
-  footer: {
+
+  // Footer Action
+  cardFooter: {
+    backgroundColor: '#1c1c1f',
+    borderTopWidth: 1,
+    borderTopColor: '#29292E',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  actionButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
-  listFooter: {
-    justifyContent: 'flex-end',
+  actionButtonText: {
+    color: '#2EA8FF',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
+
+  // Errors & Empty States
+  loadingText: {
+    color: '#8F8F8F',
+    marginTop: 16,
+  },
+  errorTitle: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 16,
+  },
+  retryButton: {
+    marginTop: 16,
+    backgroundColor: '#29292E',
+    padding: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: { color: '#E1E1E6' },
+  emptyTitle: {
+    color: '#E1E1E6',
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: 16,
+  },
+  emptySubtitle: {
+    color: '#8F8F8F',
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  exploreButton: {
+    backgroundColor: '#2EA8FF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  exploreButtonText: {
+    color: '#FFF',
+    fontWeight: '700',
+  },
+
+  // Toolbar
   toolbar: {
     paddingHorizontal: 16,
     paddingTop: 12,
@@ -570,25 +525,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
-  },
-
-  startButton: {
-    backgroundColor: '#2EA8FF',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
-    minWidth: 70,
-    alignItems: 'center',
-    shadowColor: '#2EA8FF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  startButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
   },
 });
 

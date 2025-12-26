@@ -39,7 +39,7 @@ const CommentItem = ({
   currentUserEmail,
   onReply,
   onDelete,
-  isDeleting,
+  deletingCommentId,
 }: {
   comment: ForumComment;
   courseId: string;
@@ -47,7 +47,7 @@ const CommentItem = ({
   currentUserEmail?: string;
   onReply: (comment: ForumComment) => void;
   onDelete: (comment: ForumComment) => void;
-  isDeleting: boolean;
+  deletingCommentId: string | null;
 }) => {
   const [showReplies, setShowReplies] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -55,6 +55,7 @@ const CommentItem = ({
   const hasReplies = comment.replies && comment.replies.length > 0;
   const isLongComment = comment.comment.length > 200;
   const isOwner = currentUserEmail && comment.user.email === currentUserEmail;
+  const isDeleting = deletingCommentId === comment.uuid;
 
   const displayedComment = isExpanded || !isLongComment ? comment.comment : `${comment.comment.substring(0, 200)}...`;
 
@@ -109,26 +110,39 @@ const CommentItem = ({
 
       {showReplies && hasReplies && (
         <View style={styles.repliesContainer}>
-          {comment.replies.map((reply) => (
-            <View key={reply.id} style={styles.replyCard}>
-              <View style={styles.commentHeader}>
-                <View style={[styles.avatarContainer, styles.smallAvatar]}>
-                  {reply.user.profile_image ? (
-                    <Image source={{ uri: reply.user.profile_image }} style={styles.avatarImage} resizeMode="cover" />
-                  ) : (
-                    <Text style={[styles.avatarText, styles.smallAvatarText]}>
-                      {reply.user.name.charAt(0).toUpperCase()}
-                    </Text>
+          {comment.replies.map((reply) => {
+            const isReplyOwner = currentUserEmail && reply.user.email === currentUserEmail;
+            const isReplyDeleting = deletingCommentId === reply.uuid;
+            return (
+              <View key={reply.id} style={styles.replyCard}>
+                <View style={styles.commentHeader}>
+                  <View style={[styles.avatarContainer, styles.smallAvatar]}>
+                    {reply.user.profile_image ? (
+                      <Image source={{ uri: reply.user.profile_image }} style={styles.avatarImage} resizeMode="cover" />
+                    ) : (
+                      <Text style={[styles.avatarText, styles.smallAvatarText]}>
+                        {reply.user.name.charAt(0).toUpperCase()}
+                      </Text>
+                    )}
+                  </View>
+                  <View style={styles.commentUserInfo}>
+                    <Text style={[styles.userName, styles.smallUserName]}>{reply.user.fullname}</Text>
+                    <Text style={styles.commentDate}>{formatForumDate(reply.date)}</Text>
+                  </View>
+                  {isReplyOwner && (
+                    <TouchableOpacity style={styles.deleteButton} onPress={() => onDelete(reply)} disabled={isReplyDeleting}>
+                      {isReplyDeleting ? (
+                        <ActivityIndicator size="small" color="#A8A8B3" />
+                      ) : (
+                        <Ionicons name="trash-outline" size={16} color="#A8A8B3" />
+                      )}
+                    </TouchableOpacity>
                   )}
                 </View>
-                <View style={styles.commentUserInfo}>
-                  <Text style={[styles.userName, styles.smallUserName]}>{reply.user.fullname}</Text>
-                  <Text style={styles.commentDate}>{formatForumDate(reply.date)}</Text>
-                </View>
+                <Text style={styles.commentText}>{reply.comment}</Text>
               </View>
-              <Text style={styles.commentText}>{reply.comment}</Text>
-            </View>
-          ))}
+            );
+          })}
         </View>
       )}
     </View>
@@ -251,7 +265,7 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
                 }
               }}
               onDelete={handleDeleteComment}
-              isDeleting={deletingCommentId === item.uuid}
+              deletingCommentId={deletingCommentId}
             />
           ))
         )}

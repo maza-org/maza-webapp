@@ -10,12 +10,14 @@ import {
   Text,
   Animated,
   Dimensions,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { baseUrl } from '@/services/api'; // Make sure you have expo/vector-icons installed
+import { Ionicons, Feather } from '@expo/vector-icons';
+import { baseUrl } from '@/services/api';
 
+// Interfaces
 interface Course {
   id: number;
   documentId: string;
@@ -24,12 +26,8 @@ interface Course {
   rating_avg: number;
   picture: {
     formats: {
-      thumbnail: {
-        url: string;
-      };
-      small?: {
-        url: string;
-      };
+      thumbnail: { url: string };
+      small?: { url: string };
     };
   };
 }
@@ -55,108 +53,11 @@ interface User {
   token: string;
 }
 
-interface CourseItemProps {
-  title: string;
-  instructor: string;
-  progress: number;
-  rating: number;
-  duration: string;
-  lessons: number;
-  imageUrl: string;
-  courseData: UserCourse;
-  viewMode: 'grid' | 'list';
-}
-
+// Layout Constants
 const { width: screenWidth } = Dimensions.get('window');
-const cardWidth = (screenWidth - 48) / 2; // 16px padding on each side + 16px gap
-
-const CourseItem: React.FC<CourseItemProps> = ({
-  title,
-  instructor,
-  progress,
-  rating,
-  duration,
-  lessons,
-  imageUrl,
-  courseData,
-  viewMode,
-}) => {
-  if (viewMode === 'grid') {
-    return (
-      <View style={styles.courseCard}>
-        <TouchableOpacity
-          style={styles.cardTouchable}
-          onPress={() => {
-            router.push({ pathname: '/room/lessons', params: { documentId: courseData.course.documentId } });
-          }}
-          activeOpacity={0.8}
-        >
-          {/* Course Image */}
-          <View style={styles.imageContainer}>
-            <Image source={{ uri: imageUrl }} style={styles.courseImageGrid} />
-            <View style={styles.progressContainer}>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: `${progress}%` }]} />
-              </View>
-              <Text style={styles.progressText}>{Math.round(progress)}%</Text>
-            </View>
-          </View>
-
-          {/* Course Content */}
-          <View style={styles.contentContainerGrid}>
-            <Text style={styles.courseItemTitle} numberOfLines={2}>
-              {title}
-            </Text>
-            <Text style={styles.courseCategory}>{instructor}</Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Continue Button */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.continueButton}
-            onPress={() => {
-              router.push({ pathname: '/room/lessons', params: { documentId: courseData.course.documentId } });
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.continueButtonText}>Continuar</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
-  // List view (original layout)
-  return (
-    <View style={styles.courseItem}>
-      <TouchableOpacity
-        style={styles.listItemTouchable}
-        onPress={() => {
-          router.push({ pathname: '/room/lessons', params: { documentId: courseData.course.documentId } });
-        }}
-      >
-        <Image source={{ uri: imageUrl }} style={styles.courseImage} />
-        <View style={styles.courseInfo}>
-          <Text style={styles.courseCategory}>{instructor}</Text>
-          <Text style={styles.courseItemTitle}>{title.length > 20 ? `${title.substring(0, 20)}...` : title}</Text>
-        </View>
-        <Text style={styles.percentageText}>{`${Math.round(progress)}%`}</Text>
-      </TouchableOpacity>
-
-      {/* Continue Button for List View */}
-      <TouchableOpacity
-        style={styles.listContinueButton}
-        onPress={() => {
-          router.push({ pathname: '/room/lessons', params: { documentId: courseData.course.documentId } });
-        }}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.listContinueButtonText}>Continuar {Math.round(progress)}%</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
+const gap = 12;
+const padding = 16;
+const cardWidth = (screenWidth - (padding * 2) - gap) / 2;
 
 const CoursesInProgress = () => {
   const [courses, setCourses] = useState<UserCourse[]>([]);
@@ -197,10 +98,10 @@ const CoursesInProgress = () => {
       });
 
       const json = await response.json();
-      setCourses(json.data);
+      setCourses(json.data || []);
     } catch (error) {
       console.error('Error fetching courses:', error);
-      Alert.alert('Erro', 'Falha ao carregar cursos');
+      // Alert.alert('Erro', 'Falha ao carregar cursos');
     } finally {
       setLoading(false);
     }
@@ -216,9 +117,13 @@ const CoursesInProgress = () => {
     }
   }, [user]);
 
+  const handleCoursePress = (documentId: string) => {
+    router.push({ pathname: '/room/lessons', params: { documentId } });
+  };
+
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#2EA8FF" />
       </View>
     );
@@ -226,10 +131,8 @@ const CoursesInProgress = () => {
 
   if (courses.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <View style={styles.emptyIconContainer}>
-          <Ionicons name="school-outline" size={80} color="#8F8F8F" />
-        </View>
+      <View style={styles.centerContainer}>
+        <Ionicons name="school-outline" size={64} color="#8F8F8F" />
         <Text style={styles.emptyTitle}>Nenhum curso em progresso</Text>
         <Text style={styles.emptySubtitle}>Comece um novo curso para acompanhar seu progresso aqui</Text>
         <TouchableOpacity style={styles.exploreButton} onPress={() => router.push('/categories')}>
@@ -240,67 +143,291 @@ const CoursesInProgress = () => {
   }
 
   return (
-    <ScrollView style={styles.courseList}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* View Toggle Toolbar */}
       <View style={styles.toolbar}>
         <View style={styles.viewToggle}>
           <Animated.View
             style={[
               styles.animatedBackground,
               {
-                transform: [
-                  {
-                    translateX: animatedValue.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 46],
-                    }),
-                  },
-                ],
+                transform: [{
+                  translateX: animatedValue.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 46],
+                  }),
+                }],
               },
             ]}
           />
           <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Ver em grade"
             style={styles.toggleButton}
             onPress={() => setViewMode('grid')}
+            accessibilityLabel="Grid View"
           >
             <Ionicons name="grid" size={16} color={viewMode === 'grid' ? '#0B1727' : '#B0B0B0'} />
           </TouchableOpacity>
           <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Ver em lista"
             style={styles.toggleButton}
             onPress={() => setViewMode('list')}
+            accessibilityLabel="List View"
           >
             <Ionicons name="list" size={18} color={viewMode === 'list' ? '#0B1727' : '#B0B0B0'} />
           </TouchableOpacity>
         </View>
       </View>
-      <View style={[styles.gridContainer, viewMode === 'list' && styles.listContainer]}>
-        {courses.map((courseData) => (
-          <CourseItem
-            key={courseData.id}
-            title={courseData.course.title}
-            instructor={courseData.course.author}
-            progress={courseData.progress}
-            rating={courseData.course.rating_avg}
-            duration="--"
-            lessons={0}
-            imageUrl={courseData?.course?.picture?.formats?.thumbnail?.url}
-            courseData={courseData}
-            viewMode={viewMode}
-          />
-        ))}
+
+      {/* Grid/List Content */}
+      <View style={[styles.contentWrapper, viewMode === 'grid' ? styles.gridWrapper : styles.listWrapper]}>
+        {courses.map((courseData) => {
+          const course = courseData.course;
+          const imageUrl = course?.picture?.formats?.thumbnail?.url;
+          const isGrid = viewMode === 'grid';
+
+          return (
+            <TouchableOpacity
+              key={courseData.id}
+              style={[styles.card, isGrid ? styles.cardGrid : styles.cardList]}
+              onPress={() => handleCoursePress(course.documentId)}
+              activeOpacity={0.9}
+            >
+              <View style={[styles.cardMain, isGrid ? styles.cardMainGrid : styles.cardMainList]}>
+                {/* Image & Progress */}
+                <View style={[styles.imageWrapper, isGrid ? styles.imageWrapperGrid : styles.imageWrapperList]}>
+                  <Image source={{ uri: imageUrl }} style={styles.image} />
+                  <View style={styles.progressOverlay}>
+                    <View style={styles.progressBar}>
+                      <View style={[styles.progressFill, { width: `${courseData.progress}%` }]} />
+                    </View>
+                  </View>
+                </View>
+
+                {/* Info */}
+                <View style={[styles.infoContainer, isGrid ? null : styles.infoContainerList]}>
+                  <View>
+                    <Text style={styles.authorText} numberOfLines={1}>{course.author}</Text>
+                    <Text style={[styles.titleText, isGrid ? styles.titleGrid : styles.titleList]} numberOfLines={2}>
+                      {course.title}
+                    </Text>
+                  </View>
+
+                  <View style={styles.statsRow}>
+                    <Ionicons name="pie-chart-outline" size={12} color="#8F8F8F" />
+                    <Text style={styles.statsText}>{Math.round(courseData.progress)}% Concluído</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Footer Action */}
+              <View style={styles.cardFooter}>
+                <View style={styles.actionButton}>
+                  <Text style={styles.actionButtonText}>Continuar</Text>
+                  <Feather name="play-circle" size={14} color="#2EA8FF" />
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  courseList: {
+  container: {
     flex: 1,
     backgroundColor: '#121214',
   },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    minHeight: 300,
+    backgroundColor: '#121214',
+  },
+
+  // Layout Wrappers
+  contentWrapper: {
+    padding: padding,
+  },
+  gridWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: gap,
+  },
+  listWrapper: {
+    gap: 16,
+  },
+
+  // Card Styles
+  card: {
+    backgroundColor: '#202024',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#29292E',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  cardGrid: {
+    width: cardWidth,
+  },
+  cardList: {
+    width: '100%',
+  },
+
+  // Main Body
+  cardMain: {
+    padding: 10,
+    gap: 10,
+  },
+  cardMainGrid: {
+    flexDirection: 'column',
+  },
+  cardMainList: {
+    flexDirection: 'row',
+  },
+
+  // Image Section
+  imageWrapper: {
+    position: 'relative',
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#29292E',
+  },
+  imageWrapperGrid: {
+    width: '100%',
+    aspectRatio: 1.1,
+  },
+  imageWrapperList: {
+    width: 80,
+    height: 80,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  progressOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 6,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#2EA8FF',
+  },
+
+  // Text Info
+  infoContainer: {
+    justifyContent: 'space-between',
+    gap: 4,
+    flex: 1,
+  },
+  infoContainerList: {
+    paddingVertical: 2,
+  },
+  authorText: {
+    color: '#2EA8FF',
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  titleText: {
+    color: '#E1E1E6',
+    fontWeight: '700',
+  },
+  titleGrid: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  titleList: {
+    fontSize: 16,
+    lineHeight: 22,
+    marginBottom: 0,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statsText: {
+    color: '#8F8F8F',
+    fontSize: 11,
+    fontWeight: '500',
+  },
+
+  // Footer
+  cardFooter: {
+    backgroundColor: '#1c1c1f',
+    borderTopWidth: 1,
+    borderTopColor: '#29292E',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  actionButtonText: {
+    color: '#2EA8FF',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+
+  // Empty State
+  emptyTitle: {
+    color: '#E1E1E6',
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    color: '#8F8F8F',
+    fontSize: 15,
+    marginTop: 8,
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  exploreButton: {
+    backgroundColor: '#2EA8FF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  exploreButtonText: {
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
+  // Toolbar
   toolbar: {
     paddingHorizontal: 16,
     paddingTop: 12,
@@ -332,206 +459,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
-  },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 16,
-    gap: 16,
-  },
-  listContainer: {
-    flexDirection: 'column',
-    paddingHorizontal: 16,
-    marginTop: 16,
-  },
-  courseCard: {
-    width: cardWidth,
-    backgroundColor: '#202024',
-    borderRadius: 12,
-    overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-  cardTouchable: {
-    flex: 1,
-  },
-  buttonContainer: {
-    paddingHorizontal: 12,
-    paddingBottom: 12,
-    paddingTop: 8,
-  },
-  continueButton: {
-    backgroundColor: '#2EA8FF',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
-    alignItems: 'center',
-    shadowColor: '#2EA8FF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  continueButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  listItemTouchable: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  listContinueButton: {
-    backgroundColor: '#2EA8FF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginLeft: 8,
-    shadowColor: '#2EA8FF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  listContinueButtonText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  imageContainer: {
-    height: 120,
-    position: 'relative',
-  },
-  courseImageGrid: {
-    width: '100%',
-    height: '100%',
-  },
-  progressContainer: {
-    position: 'absolute',
-    bottom: 8,
-    left: 8,
-    right: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  progressBar: {
-    flex: 1,
-    height: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#2EA8FF',
-    borderRadius: 3,
-  },
-  progressText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  contentContainerGrid: {
-    padding: 12,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#121214',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#121214',
-    paddingHorizontal: 32,
-    marginTop: 16,
-  },
-  emptyIconContainer: {
-    marginBottom: 24,
-    opacity: 0.6,
-  },
-  emptyTitle: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    color: '#8F8F8F',
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  exploreButton: {
-    backgroundColor: '#2EA8FF',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 50,
-  },
-  exploreButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-    borderRadius: 50,
-  },
-  emptyText: {
-    color: '#8F8F8F',
-    fontSize: 16,
-  },
-  coursesInProgress: {
-    marginVertical: 24,
-  },
-  courseItem: {
-    flexDirection: 'row',
-    backgroundColor: '#29292E',
-    borderRadius: 8,
-    padding: 8,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  courseImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 6,
-    marginRight: 16,
-  },
-  courseInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  courseItemTitle: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  courseCategory: {
-    color: '#2EA8FF',
-    fontSize: 12,
-    fontWeight: '500',
-    marginBottom: 2,
-  },
-  moduleCount: {
-    color: '#FFF',
-    opacity: 0.7,
-    fontSize: 11,
-  },
-  percentageText: {
-    color: '#2EA8FF',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });
 
