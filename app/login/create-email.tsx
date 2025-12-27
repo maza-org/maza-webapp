@@ -216,7 +216,7 @@ export default function CreateEmail() {
           />
 
           <FormInput
-            label="Email (opcional*)"
+            label="Email"
             keyboardType="email-address"
             value={email}
             onChangeText={(text) => {
@@ -229,7 +229,7 @@ export default function CreateEmail() {
           />
 
           <FormInput
-            label="Número de Telemóvel (opcional*)"
+            label="Número de Telemóvel"
             keyboardType="phone-pad"
             value={phone}
             onChangeText={(text) => {

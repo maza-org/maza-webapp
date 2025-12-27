@@ -329,8 +329,8 @@ const styles = StyleSheet.create({
   eyeButton: {
     position: 'absolute',
     right: 16,
-    top: 14,
-    padding: 4,
+    top: '50%',
+    transform: [{ translateY: -10 }],
   },
   forgotPasswordLink: {
     color: '#2196F3',

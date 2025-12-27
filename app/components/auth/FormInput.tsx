@@ -30,7 +30,7 @@ export default function FormInput({
         />
         {showPasswordToggle && (
           <TouchableOpacity onPress={onPasswordToggle} style={styles.passwordToggle}>
-            <Ionicons name={isPasswordVisible ? 'eye-off' : 'eye'} size={20} color="#666" />
+            <Ionicons name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'} size={20} color="#999" />
           </TouchableOpacity>
         )}
       </View>
@@ -69,8 +69,8 @@ const styles = StyleSheet.create({
   passwordToggle: {
     position: 'absolute',
     right: 16,
-    top: 14,
-    padding: 4,
+    top: '50%',
+    transform: [{ translateY: -10 }],
   },
   errorText: {
     color: '#FF6B6B',
