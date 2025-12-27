@@ -56,13 +56,18 @@ export function useUserCourses(token: string) {
 }
 
 // Get certificates
-export function useCertificates() {
+export function useCertificates(token?: string) {
   return useQuery({
-    queryKey: ['certificates'],
+    queryKey: ['certificates', token],
     queryFn: async (): Promise<CertificateSummary[]> => {
-      const response = await api.get('/certificates');
+      const response = await api.get('/certificates', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     },
+    enabled: !!token,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     retry: (failureCount, error: any) => {
@@ -400,7 +405,7 @@ export function useUserCourseDetails(courseId: string, token: string) {
 // Check if course is finished and certificates should be available
 export function useCourseStateAndCertificates(courseId: string, token: string) {
   const { data: userCourses, isLoading: userCoursesLoading } = useUserCourses(token);
-  const { data: certificates = [], isLoading: certificatesLoading } = useCertificates();
+  const { data: certificates = [], isLoading: certificatesLoading } = useCertificates(token);
 
   const userCourse = userCourses?.data?.find((course: any) => course.course.documentId === courseId);
   const courseState = userCourse?.state; // Expected states: 'Started', 'InProgress', 'NotStarted', 'Finished'

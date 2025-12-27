@@ -61,14 +61,14 @@ export default function CourseDetail() {
   const inputRef = useRef<TextInput>(null);
 
   // React Query hooks
+  const { data: user, isLoading: userLoading } = useAuthUser();
   const {
     data: courseData,
     isLoading: courseLoading,
     error: courseError,
     refetch: refetchCourse,
   } = useCourseDetails(documentId);
-  const { data: certificates = [], isLoading: certificatesLoading, error: certificatesError } = useCertificates();
-  const { data: user, isLoading: userLoading } = useAuthUser();
+  const { data: certificates = [], isLoading: certificatesLoading, error: certificatesError } = useCertificates(user?.token);
   const { isInProgress, progress, isLoading: progressLoading } = useCourseProgress(documentId, user?.token || '');
   const { isFavorite, isLoading: favoriteLoading } = useIsFavorite(documentId, user?.token || '');
   const { data: userCourseDetails, isLoading: userCourseDetailsLoading } = useUserCourseDetails(
@@ -627,6 +627,14 @@ export default function CourseDetail() {
               </TouchableOpacity>
             </View>
           </View>
+        ) : hasCertificate ? (
+          <TouchableOpacity
+            style={styles.certificateButton}
+            onPress={() => handleMenuOption('certificate')}
+          >
+            <Ionicons name="document-text-outline" size={20} color="#FFF" style={styles.certificateButtonIcon} />
+            <Text style={styles.startButtonText}>Ver Certificado</Text>
+          </TouchableOpacity>
         ) : isInProgress ? (
           <View style={styles.progressContainer}>
             <View style={styles.progressHeader}>
@@ -1042,5 +1050,16 @@ const styles = StyleSheet.create({
     color: '#A8A8B3',
     fontSize: 12,
     textAlign: 'center',
+  },
+  certificateButton: {
+    backgroundColor: '#22C55E',
+    padding: 16,
+    borderRadius: 50,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  certificateButtonIcon: {
+    marginRight: 8,
   },
 });

@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import { WebView } from 'react-native-webview';
+import { baseUrl } from '@/services/api';
 
 interface User {
   token: string;
