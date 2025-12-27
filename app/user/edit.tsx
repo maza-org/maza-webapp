@@ -663,11 +663,11 @@ export default function EditProfileScreen() {
           placeholder="Selecionar nível académico"
         />
 
-        {formError && (
-          <View style={styles.errorContainer}>
+        {formError ? (
+          <View style={styles.formErrorContainer}>
             <Text style={styles.errorText}>{formError}</Text>
           </View>
-        )}
+        ) : null}
       </ScrollView>
 
       <View style={styles.footer}>
@@ -935,5 +935,10 @@ const styles = StyleSheet.create({
   },
   datePickerStyle: {
     backgroundColor: '#1E1E1E',
+  },
+  formErrorContainer: {
+    padding: 12,
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    borderRadius: 8,
   },
 });

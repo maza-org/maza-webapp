@@ -193,6 +193,9 @@ export default function CourseScreen() {
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Feather name="chevron-left" size={24} color="#FFF" />
             </TouchableOpacity>
+            <Text style={styles.headerTitle} numberOfLines={1}>
+              {moduleData?.title}
+            </Text>
             <TouchableOpacity style={styles.shareButton}>
               <Feather name="share" size={24} color="#FFF" />
             </TouchableOpacity>
@@ -200,11 +203,13 @@ export default function CourseScreen() {
 
           {/* Course Info */}
           <View style={styles.courseInfo}>
-            <Text style={styles.courseTitle}>{moduleData.title}</Text>
+
             <View style={styles.instructorInfo}>
               <Image source={{ uri: imageUrl as string }} style={styles.instructorAvatar} />
-              <Text style={styles.instructorName}>{author}</Text>
-              <Text style={styles.courseCategory}>• {title}</Text>
+              <View style={styles.instructorTextContainer}>
+                <Text style={styles.instructorName}>{author}</Text>
+                <Text style={styles.courseCategory}>{title}</Text>
+              </View>
             </View>
 
             {/* Description Section */}
@@ -268,7 +273,16 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
+    flex: 1,
+    textAlign: 'center',
+    marginHorizontal: 8,
   },
   backButton: {
     padding: 8,
@@ -279,32 +293,34 @@ const styles = StyleSheet.create({
   courseInfo: {
     padding: 16,
   },
-  courseTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 8,
-  },
+
   instructorInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
   },
   instructorAvatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    marginRight: 8,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  instructorTextContainer: {
+    marginLeft: 12,
+    justifyContent: 'center',
+    flex: 1,
   },
   instructorName: {
-    fontSize: 14,
-    color: '#A8A8B3',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#E1E1E6',
+    marginBottom: 2,
   },
   courseCategory: {
     fontSize: 14,
-    color: '#1fa2df',
-    marginLeft: 10,
-    width: 250,
+    color: '#4db5ff',
+    fontWeight: '500',
   },
   descriptionContainer: {
     marginTop: 10,
