@@ -106,6 +106,13 @@ export default function ProfileScreen() {
     });
   }
 
+  function handleCustomizeSurvey() {
+    router.push({
+      pathname: '/onboarding/survey',
+      params: { fromProfile: 'true' },
+    });
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Toast
@@ -166,6 +173,13 @@ export default function ProfileScreen() {
             onToggleEditing={handleAddInterest}
             onDeleteInterest={handleDeleteInterest}
             onAddInterest={handleAddInterest}
+          />
+
+          <Button
+            text="Personalizar Experiência"
+            handle={handleCustomizeSurvey}
+            variant="outline"
+            icon={<Feather name="sliders" size={20} color="#1fa2df" />}
           />
 
           <CertificatesSection

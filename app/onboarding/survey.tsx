@@ -2,17 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import Button from '@/components/Button';
 import Colors from '@/constants/Colors';
 import { useSurveyQuestions, useSubmitSurvey } from '@/services/survey';
 import { useAuthUser } from '@/hooks/useAuth';
 import { SurveyAnswer } from '@/types/survey';
-import { setOnboardingComplete } from '@/util/onboarding';
+import { setOnboardingComplete, hasSeenOnboarding } from '@/util/onboarding';
 
 const theme = Colors['dark'];
 
 export default function SurveyOnboardingScreen() {
+  const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
+  const isFromProfile = fromProfile === 'true';
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
@@ -70,8 +72,10 @@ export default function SurveyOnboardingScreen() {
         answers: { data: surveyData },
       });
 
-      // Save the onboarding completion flag
-      await setOnboardingComplete();
+      // Save the onboarding completion flag only if this is the initial onboarding
+      if (!isFromProfile) {
+        await setOnboardingComplete();
+      }
 
       // Show success screen
       setShowSuccess(true);
@@ -126,14 +130,27 @@ export default function SurveyOnboardingScreen() {
             <Ionicons name="checkmark-circle" size={120} color="#22ACE3" />
           </View>
 
-          <Text style={[styles.successTitle, { color: theme.text }]}>Questionário Concluído!</Text>
+          <Text style={[styles.successTitle, { color: theme.text }]}>
+            {isFromProfile ? 'Preferências Atualizadas!' : 'Questionário Concluído!'}
+          </Text>
 
           <Text style={[styles.successMessage, { color: theme.text }]}>
-            Obrigado por partilhar suas preferências. Vamos personalizar sua experiência de aprendizagem.
+            {isFromProfile
+              ? 'Suas preferências foram atualizadas com sucesso. A sua experiência será personalizada de acordo.'
+              : 'Obrigado por partilhar suas preferências. Vamos personalizar sua experiência de aprendizagem.'}
           </Text>
 
           <View style={styles.successButtonContainer}>
-            <Button handle={() => router.replace('/(tabs)')} text="Começar a aprender" />
+            <Button
+              handle={() => {
+                if (isFromProfile) {
+                  router.back();
+                } else {
+                  router.replace('/(tabs)');
+                }
+              }}
+              text={isFromProfile ? 'Voltar ao Perfil' : 'Começar a aprender'}
+            />
           </View>
         </View>
       </SafeAreaView>
