@@ -23,21 +23,19 @@ export class CategoriesService {
       let url: string;
       const headers: Record<string, string> = {};
 
-      // Set authorization header if token is provided
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
       // Build URL based on category type
       switch (type) {
         case 'popular':
           url = '/courses?sort=subscribed%3Adesc&pageSize=15&page=1';
           break;
         case 'new':
-          url = '/courses?sort=publishedAt:desc&pageSize=10&page=1';
+          url = '/courses?sort=publishedAt%3Adesc&pageSize=10&page=1';
           break;
         case 'suggested':
           url = '/courses/suggested?pageSize=10&page=1';
+          if (token) {
+            headers.Authorization = `Bearer ${token}`;
+          }
           break;
         case 'category':
           if (!params.id) {

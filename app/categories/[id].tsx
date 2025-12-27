@@ -12,7 +12,7 @@ import ErrorComponent from '@/app/components/categories/ErrorComponent';
 import EmptyState from '@/app/components/categories/EmptyState';
 
 export default function Category() {
-  const { name, id } = useLocalSearchParams();
+  const { type, name, id } = useLocalSearchParams();
   const { data: user } = useUser();
 
   const {
@@ -20,7 +20,7 @@ export default function Category() {
     isLoading,
     error,
     refetch,
-  } = useCategoryQuery('category', name as string, id as string, user?.token);
+  } = useCategoryQuery((type as string) || 'category', name as string, id as string, user?.token);
 
   const handlePressCourse = (course: CourseData) => {
     router.push({

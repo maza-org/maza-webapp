@@ -73,7 +73,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#2EA8FF',
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 50,
   },
   retryButtonText: {
     color: '#fff',
