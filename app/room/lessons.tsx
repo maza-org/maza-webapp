@@ -59,6 +59,7 @@ export default function CourseDetail() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ForumComment | null>(null);
   const inputRef = useRef<TextInput>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // React Query hooks
   const { data: user, isLoading: userLoading } = useAuthUser();
@@ -280,6 +281,10 @@ export default function CourseDetail() {
           token: user?.token || '',
         });
         showSuccess('Comentário adicionado com sucesso!');
+        // Scroll to top to show the new comment
+        setTimeout(() => {
+          scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+        }, 100);
       }
       setNewComment('');
     } catch (err: any) {
@@ -400,6 +405,7 @@ export default function CourseDetail() {
         showIcon={config.showIcon}
       />
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         stickyHeaderIndices={[1]}
         refreshControl={

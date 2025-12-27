@@ -18,10 +18,18 @@ interface Course {
   };
 }
 
+interface Certificate {
+  id: number;
+  documentId: string;
+  createdAt: string;
+}
+
 interface CompletedCourseData {
   id: number;
+  documentId: string;
   updatedAt: string;
   course: Course;
+  certificate: Certificate;
 }
 
 interface CompletedCoursesProps {
@@ -163,10 +171,16 @@ export default function CompletedCourses({ onRetry }: CompletedCoursesProps) {
 
               <View style={styles.cardFooter}>
                 {isGrid ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <TouchableOpacity
+                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      router.push({ pathname: '/user/certificate', params: { certificateId: courseData.certificate.documentId } });
+                    }}
+                  >
                     <Text style={styles.certificateText}>Certificado</Text>
                     <MaterialCommunityIcons name="certificate-outline" size={14} color="#0B1727" />
-                  </View>
+                  </TouchableOpacity>
                 ) : (
                   <>
                     <View style={styles.dateContainer}>
@@ -174,10 +188,16 @@ export default function CompletedCourses({ onRetry }: CompletedCoursesProps) {
                       <Text style={styles.dateText}>{completionDate}</Text>
                     </View>
 
-                    <View style={styles.certificateBtn}>
+                    <TouchableOpacity
+                      style={styles.certificateBtn}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        router.push({ pathname: '/user/certificate', params: { certificateId: courseData.certificate.documentId } });
+                      }}
+                    >
                       <Text style={styles.certificateText}>Ver Certificado</Text>
                       <MaterialCommunityIcons name="certificate-outline" size={16} color="#0B1727" />
-                    </View>
+                    </TouchableOpacity>
                   </>
                 )}
               </View>
