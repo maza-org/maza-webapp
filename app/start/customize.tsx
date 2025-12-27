@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScrollView, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,7 +17,10 @@ export default function Customize() {
   const [user, setUser] = useState<User | null>(null);
   const [initialSelectedTopics, setInitialSelectedTopics] = useState<Topic[]>([]);
   const { interests } = useLocalSearchParams();
-  const userTopics = interests ? JSON.parse(interests as string) : [];
+  const userTopics = useMemo(
+    () => (interests ? JSON.parse(interests as string) : []),
+    [interests]
+  );
 
   const showBackButton = !!interests;
 
