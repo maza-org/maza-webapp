@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from './api';
-import { CourseDetail, CertificateSummary, ForumComment } from '@/types/learning';
+import { CourseDetail, CertificateSummary, ForumComment, Review } from '@/types/learning';
 
 // Get course details by documentId
 export function useCourseDetails(documentId: string) {
@@ -527,6 +527,61 @@ export function useDeleteForumComment() {
     },
     onSuccess: (_, { courseId }) => {
       queryClient.invalidateQueries({ queryKey: ['forum-comments', courseId] });
+    },
+  });
+}
+
+// Get course reviews
+export function useCourseReviews(courseId: string) {
+  return useQuery({
+    queryKey: ['course-reviews', courseId],
+    queryFn: async (): Promise<Review[]> => {
+      const response = await api.get(`/reviews?course=${courseId}`);
+      return response.data.data || [];
+    },
+    enabled: !!courseId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+// Submit a course review
+export function useSubmitReview() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      courseId,
+      rating,
+      comment,
+      token,
+    }: {
+      courseId: string;
+      rating: number;
+      comment: string;
+      token: string;
+    }) => {
+      const response = await api.post(
+        '/reviews',
+        {
+          data: {
+            course: courseId,
+            rating,
+            comment,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (_, { courseId }) => {
+      queryClient.invalidateQueries({ queryKey: ['course-reviews', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] });
     },
   });
 }

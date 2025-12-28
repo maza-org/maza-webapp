@@ -1,102 +1,220 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { baseUrl } from '@/services/api';
-
-interface ReviewUser {
-  id: number;
-  documentId: string;
-  fullname: string;
-  profile_image: string | null;
-}
-
-interface Review {
-  id: number;
-  documentId: string;
-  rating: number;
-  comment: string;
-  createdAt: string;
-  updatedAt: string;
-  user: ReviewUser;
-}
-
-interface ReviewsResponse {
-  data: Review[];
-  meta: {
-    pagination: {
-      page: number;
-      pageSize: number;
-      pageCount: number;
-      total: number;
-    };
-  };
-}
+import { useCourseReviews, useSubmitReview } from '@/services/catalog';
+import { useAuthUser } from '@/hooks/useAuth';
+import { Review } from '@/types/learning';
+import LoginBottomSheet from './LoginBottomSheet';
 
 interface ReviewsProps {
   courseId: string;
+  onReviewSubmitted?: () => void;
 }
 
-const NoReviews = () => (
-  <View style={styles.noReviewsContainer}>
-    <Text style={styles.noReviewsTitle}>Seja o primeiro a avaliar!</Text>
-    <Text style={styles.noReviewsSubtitle}>Sua opinião é muito importante para melhorarmos nosso conteúdo.</Text>
-    <TouchableOpacity style={styles.rateButton}>
-      <Text style={styles.rateButtonText}>Avaliar Curso</Text>
-    </TouchableOpacity>
-  </View>
-);
+const formatReviewDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-const StarRating = ({ rating }: { rating: number }) => (
-  <View style={styles.starsContainer}>
-    {[1, 2, 3, 4, 5].map((star) => (
-      <Ionicons
-        key={star}
-        name="star"
-        size={20}
-        color={star <= rating ? '#FFB800' : '#A8A8B3'}
-        style={styles.starIcon}
-      />
-    ))}
-  </View>
-);
+  const isToday =
+    date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
 
-const ReviewCard = ({ review }: { review: Review }) => (
-  <View style={styles.reviewCard}>
-    <View style={styles.reviewHeader}>
-      <View style={styles.avatarContainer}>
-        <Text style={styles.avatarText}>{review?.user?.fullname?.charAt(0)?.toUpperCase()}</Text>
+  if (isToday) {
+    if (diffInSeconds < 60) return 'Agora';
+    const minutes = Math.floor(diffInSeconds / 60);
+    if (minutes < 60) return `Há ${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    return `Há ${hours} h`;
+  }
+
+  return date.toLocaleDateString();
+};
+
+const StarRating = ({
+  rating,
+  size = 16,
+  onRatingChange,
+  interactive = false,
+}: {
+  rating: number;
+  size?: number;
+  onRatingChange?: (rating: number) => void;
+  interactive?: boolean;
+}) => {
+  return (
+    <View style={styles.starsContainer}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <TouchableOpacity
+          key={star}
+          onPress={() => interactive && onRatingChange?.(star)}
+          disabled={!interactive}
+          style={styles.starButton}
+        >
+          <Ionicons
+            name={star <= rating ? 'star' : 'star-outline'}
+            size={size}
+            color={star <= rating ? '#FFD700' : '#A8A8B3'}
+          />
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
+
+const ReviewItem = ({ review }: { review: Review }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isLongComment = review.comment.length > 200;
+  const displayedComment = isExpanded || !isLongComment ? review.comment : `${review.comment.substring(0, 200)}...`;
+
+  const userName = review.user?.fullname || 'Utilizador anónimo';
+  const userInitial = userName.charAt(0).toUpperCase();
+
+  return (
+    <View style={styles.reviewCard}>
+      <View style={styles.reviewHeader}>
+        <View style={styles.avatarContainer}>
+          {review.user?.profile_image ? (
+            <Image source={{ uri: review.user.profile_image }} style={styles.avatarImage} resizeMode="cover" />
+          ) : (
+            <Text style={styles.avatarText}>{userInitial}</Text>
+          )}
+        </View>
+        <View style={styles.reviewUserInfo}>
+          <Text style={styles.userName}>{userName}</Text>
+          <View style={styles.ratingDateRow}>
+            <StarRating rating={review.rating} size={14} />
+            <Text style={styles.reviewDate}>{formatReviewDate(review.createdAt)}</Text>
+          </View>
+        </View>
       </View>
-      <View style={styles.reviewUserInfo}>
-        <Text style={styles.userName}>{review?.user?.fullname}</Text>
-        <StarRating rating={review.rating} />
+
+      <Text style={styles.reviewText}>{displayedComment}</Text>
+      {isLongComment && (
+        <TouchableOpacity onPress={() => setIsExpanded(!isExpanded)} style={styles.viewMoreButton}>
+          <Text style={styles.viewMoreText}>{isExpanded ? 'Ver menos' : 'Ver mais'}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
+
+const RatingSummary = ({ reviews }: { reviews: Review[] }) => {
+  const averageRating = useMemo(() => {
+    if (reviews.length === 0) return 0;
+    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    return sum / reviews.length;
+  }, [reviews]);
+
+  const ratingCounts = useMemo(() => {
+    const counts = [0, 0, 0, 0, 0];
+    reviews.forEach((review) => {
+      if (review.rating >= 1 && review.rating <= 5) {
+        counts[review.rating - 1]++;
+      }
+    });
+    return counts;
+  }, [reviews]);
+
+  if (reviews.length === 0) return null;
+
+  return (
+    <View style={styles.summaryContainer}>
+      <View style={styles.summaryLeft}>
+        <Text style={styles.averageRating}>{averageRating.toFixed(1)}</Text>
+        <StarRating rating={Math.round(averageRating)} size={20} />
+        <Text style={styles.totalReviews}>{reviews.length} {reviews.length === 1 ? 'opinião' : 'opiniões'}</Text>
+      </View>
+      <View style={styles.summaryRight}>
+        {[5, 4, 3, 2, 1].map((star) => {
+          const count = ratingCounts[star - 1];
+          const percentage = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+          return (
+            <View key={star} style={styles.ratingBar}>
+              <Text style={styles.ratingBarLabel}>{star}</Text>
+              <Ionicons name="star" size={12} color="#FFD700" />
+              <View style={styles.ratingBarTrack}>
+                <View style={[styles.ratingBarFill, { width: `${percentage}%` }]} />
+              </View>
+              <Text style={styles.ratingBarCount}>{count}</Text>
+            </View>
+          );
+        })}
       </View>
     </View>
-    <Text style={styles.reviewComment}>{review.comment}</Text>
-    <Text style={styles.reviewDate}>{new Date(review.createdAt).toLocaleDateString()}</Text>
-  </View>
-);
+  );
+};
 
-export default function Reviews({ courseId }: ReviewsProps) {
-  const [reviews, setReviews] = useState<ReviewsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
+  const { data: user } = useAuthUser();
+  const token = user?.token || '';
 
-  useEffect(() => {
-    fetchReviews();
-  }, []);
+  const { data: reviews = [], isLoading, error, refetch } = useCourseReviews(courseId);
+  const submitReviewMutation = useSubmitReview();
 
-  const fetchReviews = async () => {
+  const [loginSheetVisible, setLoginSheetVisible] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'highest' | 'lowest'>('newest');
+
+  const handleSubmitReview = async () => {
+    if (rating === 0) return;
+
     try {
-      const response = await fetch(`${baseUrl}/reviews?course=${courseId}`);
-      const data = await response.json();
-      setReviews(data);
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
-    } finally {
-      setLoading(false);
+      await submitReviewMutation.mutateAsync({
+        courseId,
+        rating,
+        comment,
+        token,
+      });
+      setRating(0);
+      setComment('');
+      setShowReviewForm(false);
+      onReviewSubmitted?.();
+    } catch (err) {
+      console.error('Error submitting review:', err);
     }
   };
 
-  if (loading) {
+  const sortedReviews = useMemo(() => {
+    if (!reviews) return [];
+    return [...reviews].sort((a, b) => {
+      switch (sortOrder) {
+        case 'newest':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'oldest':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'highest':
+          return b.rating - a.rating;
+        case 'lowest':
+          return a.rating - b.rating;
+        default:
+          return 0;
+      }
+    });
+  }, [reviews, sortOrder]);
+
+  const getSortLabel = () => {
+    switch (sortOrder) {
+      case 'newest':
+        return 'Mais recentes';
+      case 'oldest':
+        return 'Mais antigos';
+      case 'highest':
+        return 'Maior nota';
+      case 'lowest':
+        return 'Menor nota';
+    }
+  };
+
+  const cycleSortOrder = () => {
+    const orders: Array<'newest' | 'oldest' | 'highest' | 'lowest'> = ['newest', 'oldest', 'highest', 'lowest'];
+    const currentIndex = orders.indexOf(sortOrder);
+    const nextIndex = (currentIndex + 1) % orders.length;
+    setSortOrder(orders[nextIndex]);
+  };
+
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#1fa2df" />
@@ -104,34 +222,122 @@ export default function Reviews({ courseId }: ReviewsProps) {
     );
   }
 
-  if (!reviews?.data || reviews.data.length === 0) {
-    return <NoReviews />;
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Erro ao carregar opiniões.</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+          <Text style={styles.retryButtonText}>Tentar novamente</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
-  const averageRating = reviews.data.reduce((acc, review) => acc + review.rating, 0) / reviews.data.length;
-
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.ratingOverview}>
-        <View style={styles.overallRating}>
-          <Text style={styles.ratingNumber}>{averageRating.toFixed(1)}</Text>
-          <StarRating rating={Math.round(averageRating)} />
-          <Text style={styles.totalReviews}>{reviews.meta.pagination.total} avaliações</Text>
-        </View>
+    <View style={styles.container}>
+      <RatingSummary reviews={reviews} />
+
+      {token ? (
+        !showReviewForm ? (
+          <TouchableOpacity style={styles.addReviewButton} onPress={() => setShowReviewForm(true)}>
+            <Ionicons name="create-outline" size={20} color="#1fa2df" />
+            <Text style={styles.addReviewButtonText}>Escrever uma opinião</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.reviewForm}>
+            <Text style={styles.reviewFormTitle}>Sua opinião</Text>
+            <View style={styles.ratingSelector}>
+              <Text style={styles.ratingSelectorLabel}>Sua nota:</Text>
+              <StarRating rating={rating} size={32} onRatingChange={setRating} interactive />
+            </View>
+            {rating > 0 && (
+              <Text style={styles.ratingText}>
+                {rating === 1 && 'Muito fraco'}
+                {rating === 2 && 'Fraco'}
+                {rating === 3 && 'Razoável'}
+                {rating === 4 && 'Bom'}
+                {rating === 5 && 'Excelente'}
+              </Text>
+            )}
+            <TextInput
+              style={styles.reviewInput}
+              placeholder="Compartilhe sua experiência com este curso..."
+              placeholderTextColor="#7C7C8A"
+              value={comment}
+              onChangeText={setComment}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+            <View style={styles.reviewFormButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => {
+                  setShowReviewForm(false);
+                  setRating(0);
+                  setComment('');
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  (rating === 0 || submitReviewMutation.isPending) && styles.submitButtonDisabled,
+                ]}
+                onPress={handleSubmitReview}
+                disabled={rating === 0 || submitReviewMutation.isPending}
+              >
+                {submitReviewMutation.isPending ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Enviar</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+            {submitReviewMutation.isError && (
+              <Text style={styles.formErrorText}>Erro ao enviar opinião. Tente novamente.</Text>
+            )}
+          </View>
+        )
+      ) : (
+        <TouchableOpacity style={styles.loginPromptButton} onPress={() => setLoginSheetVisible(true)}>
+          <Ionicons name="lock-closed-outline" size={18} color="#A8A8B3" />
+          <Text style={styles.loginPromptButtonText}>Faça login para avaliar este curso</Text>
+        </TouchableOpacity>
+      )}
+
+      <View style={styles.sortContainer}>
+        <Text style={styles.reviewsCountText}>{reviews.length} {reviews.length === 1 ? 'Opinião' : 'Opiniões'}</Text>
+        {reviews.length > 1 && (
+          <TouchableOpacity style={styles.sortButton} onPress={cycleSortOrder}>
+            <Ionicons name="swap-vertical" size={16} color="#A8A8B3" />
+            <Text style={styles.sortText}>{getSortLabel()}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      <View style={styles.reviewsList}>
-        {reviews.data.map((review) => (
-          <ReviewCard key={review.id} review={review} />
-        ))}
+      <View style={styles.listContent}>
+        {sortedReviews.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="chatbubbles-outline" size={48} color="#A8A8B3" />
+            <Text style={styles.emptyTitle}>Sem opiniões ainda</Text>
+            <Text style={styles.emptyText}>Seja o primeiro a avaliar este curso!</Text>
+          </View>
+        ) : (
+          sortedReviews.map((review) => <ReviewItem key={review.id} review={review} />)
+        )}
       </View>
-    </ScrollView>
+
+      <LoginBottomSheet visible={loginSheetVisible} onClose={() => setLoginSheetVisible(false)} />
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#121214',
   },
   loadingContainer: {
     flex: 1,
@@ -139,67 +345,241 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
   },
-  noReviewsContainer: {
-    padding: 24,
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
+    padding: 24,
   },
-  noReviewsTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#FFF',
-    marginBottom: 8,
-  },
-  noReviewsSubtitle: {
-    fontSize: 14,
+  errorText: {
     color: '#A8A8B3',
-    textAlign: 'center',
-    marginBottom: 24,
+    fontSize: 16,
+    marginBottom: 16,
   },
-  rateButton: {
+  retryButton: {
     backgroundColor: '#1fa2df',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
   },
-  rateButtonText: {
+  retryButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
   },
-  ratingOverview: {
-    padding: 24,
-    alignItems: 'center',
+  summaryContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#202024',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 24,
+    marginTop: 16,
+    marginBottom: 16,
   },
-  overallRating: {
+  summaryLeft: {
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingRight: 16,
+    borderRightWidth: 1,
+    borderRightColor: '#323238',
   },
-  ratingNumber: {
-    fontSize: 48,
-    fontWeight: '700',
+  averageRating: {
     color: '#FFF',
-    marginBottom: 8,
+    fontSize: 36,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  totalReviews: {
+    color: '#A8A8B3',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  summaryRight: {
+    flex: 1,
+    paddingLeft: 16,
+    justifyContent: 'center',
+  },
+  ratingBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 2,
+  },
+  ratingBarLabel: {
+    color: '#A8A8B3',
+    fontSize: 12,
+    width: 12,
+    marginRight: 4,
+  },
+  ratingBarTrack: {
+    flex: 1,
+    height: 6,
+    backgroundColor: '#323238',
+    borderRadius: 3,
+    marginHorizontal: 8,
+    overflow: 'hidden',
+  },
+  ratingBarFill: {
+    height: '100%',
+    backgroundColor: '#FFD700',
+    borderRadius: 3,
+  },
+  ratingBarCount: {
+    color: '#A8A8B3',
+    fontSize: 12,
+    width: 24,
+    textAlign: 'right',
   },
   starsContainer: {
     flexDirection: 'row',
+  },
+  starButton: {
+    padding: 2,
+  },
+  addReviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#202024',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 24,
+    marginBottom: 16,
+    gap: 8,
+  },
+  addReviewButtonText: {
+    color: '#1fa2df',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  loginPromptButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#202024',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 24,
+    marginBottom: 16,
+    gap: 8,
+  },
+  loginPromptButtonText: {
+    color: '#A8A8B3',
+    fontSize: 14,
+  },
+  reviewForm: {
+    backgroundColor: '#202024',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 24,
+    marginBottom: 16,
+  },
+  reviewFormTitle: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  ratingSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  starIcon: {
-    marginHorizontal: 2,
-  },
-  totalReviews: {
-    fontSize: 14,
+  ratingSelectorLabel: {
     color: '#A8A8B3',
+    fontSize: 14,
+    marginRight: 12,
   },
-  reviewsList: {
+  ratingText: {
+    color: '#1fa2df',
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  reviewInput: {
+    backgroundColor: '#29292e',
+    borderRadius: 8,
+    padding: 12,
+    color: '#FFF',
+    fontSize: 14,
+    minHeight: 100,
+    marginBottom: 16,
+  },
+  reviewFormButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#323238',
+    paddingVertical: 12,
+    borderRadius: 50,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  submitButton: {
+    flex: 1,
+    backgroundColor: '#1fa2df',
+    paddingVertical: 12,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#323238',
+    opacity: 0.5,
+  },
+  submitButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  formErrorText: {
+    color: '#FF4B4B',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  sortContainer: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reviewsCountText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  sortButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  sortText: {
+    color: '#A8A8B3',
+    fontSize: 14,
+  },
+  listContent: {
     padding: 24,
+    paddingTop: 0,
+    paddingBottom: 100,
   },
   reviewCard: {
-    borderRadius: 15,
+    backgroundColor: '#202024',
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 16,
   },
   reviewHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 12,
   },
   avatarContainer: {
@@ -210,10 +590,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   avatarText: {
     color: '#FFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
   reviewUserInfo: {
@@ -223,16 +608,47 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '500',
-    marginBottom: 4,
   },
-  reviewComment: {
-    color: '#A8A8B3',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 8,
+  ratingDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 8,
   },
   reviewDate: {
     color: '#7C7C8A',
     fontSize: 12,
   },
+  reviewText: {
+    color: '#E1E1E6',
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  viewMoreButton: {
+    marginTop: 8,
+    alignSelf: 'flex-end',
+  },
+  viewMoreText: {
+    color: '#1fa2df',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    padding: 32,
+  },
+  emptyTitle: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyText: {
+    color: '#A8A8B3',
+    fontSize: 14,
+    textAlign: 'center',
+  },
 });
+
+export default Reviews;

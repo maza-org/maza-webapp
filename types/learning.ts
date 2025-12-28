@@ -102,3 +102,20 @@ export interface ForumComment {
   replies: ForumComment[];
   user: ForumUser;
 }
+
+export interface ReviewUser {
+  id: number;
+  documentId: string;
+  fullname: string;
+  profile_image: string | null;
+}
+
+export interface Review {
+  id: number;
+  documentId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt: string;
+  user: ReviewUser | null;
+}

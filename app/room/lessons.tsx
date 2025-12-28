@@ -19,6 +19,7 @@ import { Feather } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import Forum from '@/components/Forum';
+import Reviews from '@/components/Reviews';
 import { ForumComment } from '@/types/learning';
 import LoginBottomSheet from '@/components/LoginBottomSheet';
 import Entypo from '@expo/vector-icons/Entypo';
@@ -504,9 +505,9 @@ export default function CourseDetail() {
             <Tab active={activeTab === 'lessons'} onPress={() => setActiveTab('lessons')}>
               Aulas
             </Tab>
-            {/* <Tab active={activeTab === 'opinions'} onPress={() => setActiveTab('opinions')}>
+            <Tab active={activeTab === 'opinions'} onPress={() => setActiveTab('opinions')}>
               Opiniões
-            </Tab> */}
+            </Tab>
             <Tab active={activeTab === 'forum'} onPress={() => setActiveTab('forum')}>
               Fórum
             </Tab>
@@ -569,6 +570,10 @@ export default function CourseDetail() {
                 )}
               </>
             )}
+          </View>
+        ) : activeTab === 'opinions' ? (
+          <View style={styles.opinionsContainer}>
+            <Reviews courseId={documentId} onReviewSubmitted={() => showSuccess('Opinião enviada com sucesso!')} />
           </View>
         ) : (
           <View style={styles.opinionsContainer}>
