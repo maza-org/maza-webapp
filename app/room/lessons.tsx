@@ -591,7 +591,7 @@ export default function CourseDetail() {
                     style={[
                       styles.iconButton,
                       (addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending || favoriteLoading) &&
-                        styles.iconButtonDisabled,
+                      styles.iconButtonDisabled,
                     ]}
                     onPress={handleFavorite}
                     disabled={
@@ -687,19 +687,33 @@ export default function CourseDetail() {
                 ))}
                 {courseData.final_test && (
                   <TouchableOpacity
-                    style={styles.moduleItem}
+                    style={[
+                      styles.moduleItem,
+                      userCourseDetails?.quiz?.state === 'Passed' && styles.moduleItemCompleted,
+                    ]}
                     onPress={() => handleStartQuiz(courseData.final_test, true)}
                   >
                     <View style={styles.moduleContent}>
                       <View style={styles.moduleTopRow}>
                         <View style={styles.moduleInfo}>
                           <Text style={styles.moduleNumber}>Q.</Text>
-                          <Text style={styles.moduleTitle}>Teste Final</Text>
+                          <Text
+                            style={[
+                              styles.moduleTitle,
+                              userCourseDetails?.quiz?.state === 'Passed' && styles.moduleTitleCompleted,
+                            ]}
+                          >
+                            Teste Final
+                          </Text>
                         </View>
                         <View style={styles.moduleDetails}>
-                          <View style={styles.iconContainer}>
-                            <Ionicons name="help-circle" size={20} color="#4db5ff" />
-                          </View>
+                          {userCourseDetails?.quiz?.state === 'Passed' ? (
+                            <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
+                          ) : (
+                            <View style={styles.iconContainer}>
+                              <Ionicons name="help-circle" size={20} color="#4db5ff" />
+                            </View>
+                          )}
                         </View>
                       </View>
                       <View style={styles.moduleMetaRow}>
@@ -707,6 +721,12 @@ export default function CourseDetail() {
                           <Feather name="check-circle" size={14} color="#A8A8B3" />
                           <Text style={styles.videoCountText}>{courseData.final_test.questions.length} perguntas</Text>
                         </View>
+                        {userCourseDetails?.quiz?.state === 'Passed' && userCourseDetails?.quiz?.grade != null && (
+                          <View style={styles.quizGradeContainer}>
+                            <Ionicons name="trophy-outline" size={12} color="#22C55E" />
+                            <Text style={styles.quizGradeText}>Nota: {userCourseDetails.quiz.grade}%</Text>
+                          </View>
+                        )}
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -768,7 +788,7 @@ export default function CourseDetail() {
                 style={[
                   styles.sendButton,
                   (!newComment.trim() || addCommentMutation.isPending || replyMutation.isPending) &&
-                    styles.disabledButton,
+                  styles.disabledButton,
                 ]}
                 onPress={handleAddComment}
                 disabled={!newComment.trim() || addCommentMutation.isPending || replyMutation.isPending}
@@ -1020,6 +1040,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     flex: 1,
   },
+  moduleTitleCompleted: {
+    color: '#1fa2df',
+  },
+
   moduleDetails: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1277,7 +1301,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginTop: 8,
+  },
+  moduleItemCompleted: {
+    borderColor: '#1fa2df',
+    borderWidth: 1,
+  },
+  quizGradeContainer: {
+    backgroundColor: 'rgba(34, 197, 94, 0.1)', // Light green bg
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.2)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  quizGradeText: {
+    color: '#22C55E',
+    fontSize: 12,
+    fontWeight: '700',
   },
   progressSubtitle: {
     color: '#A8A8B3',

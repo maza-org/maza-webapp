@@ -157,11 +157,13 @@ export interface UserCourseQuizQuestion {
   options: QuestionOption[];
 }
 
+export type QuizState = 'NotStarted' | 'InProgress' | 'Passed' | 'Failed';
+
 export interface UserCourseQuiz {
   id: number;
   quizId: number;
   pass_grade: number;
-  state: ContentState;
+  state: QuizState;
   date: string | null;
   grade: number | null;
   questions: UserCourseQuizQuestion[];
