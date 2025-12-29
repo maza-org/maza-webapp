@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import YoutubeIframe from 'react-native-youtube-iframe';
-import { Content, ContentState, Quiz } from '@/types/learning';
+import { Content, ContentState, Quiz, QuizState } from '@/types/learning';
 import ModuleItem from '@/components/ModuleItem';
 import { useMarkContentAsCompleted } from '@/services/catalog';
 import { useAuthUser } from '@/hooks/useAuth';
@@ -139,11 +139,20 @@ interface ExtendedContent extends Content {
   date?: string | null;
 }
 
+// Extended quiz type that handles both Quiz and UserCourseQuiz
+interface ExtendedQuiz extends Quiz {
+  quizId?: number;
+  state?: QuizState;
+  date?: string | null;
+  grade?: number | null;
+}
+
 // Extended module type that handles both regular Module and UserCourseModule
 interface ExtendedModuleData {
   id: number;
+  moduleId?: number;
   title: string;
-  quiz: any;
+  quiz: ExtendedQuiz;
   description?: string;
   contents: ExtendedContent[];
 }
@@ -279,19 +288,42 @@ export default function CourseScreen() {
 
             {/* Quiz Item */}
             {moduleData.quiz && (
-              <TouchableOpacity style={styles.moduleItem} onPress={() => handleQuizPress(moduleData.quiz)}>
+              <TouchableOpacity
+                style={[
+                  styles.moduleItem,
+                  moduleData.quiz.state === 'Passed' && styles.moduleItemCompleted,
+                ]}
+                onPress={() => handleQuizPress(moduleData.quiz)}
+              >
                 <View style={styles.moduleHeader}>
                   <Text style={styles.moduleNumber}>Q.</Text>
-                  <Text style={styles.moduleTitle}>Avaliação</Text>
-                  <View style={styles.quizIcon}>
-                    <Ionicons name="help-circle" size={20} color="#4db5ff" />
-                  </View>
+                  <Text
+                    style={[
+                      styles.moduleTitle,
+                      moduleData.quiz.state === 'Passed' && styles.moduleTitleCompleted,
+                    ]}
+                  >
+                    Avaliação
+                  </Text>
+                  {moduleData.quiz.state === 'Passed' ? (
+                    <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
+                  ) : (
+                    <View style={styles.quizIcon}>
+                      <Ionicons name="help-circle" size={20} color="#4db5ff" />
+                    </View>
+                  )}
                 </View>
                 <View style={styles.moduleFooter}>
                   <View style={styles.moduleDuration}>
                     <Feather name="check-circle" size={14} color="#A8A8B3" />
                     <Text style={styles.moduleDurationText}>{moduleData.quiz.questions?.length || 0} perguntas</Text>
                   </View>
+                  {moduleData.quiz.state === 'Passed' && moduleData.quiz.grade != null && (
+                    <View style={styles.quizGradeContainer}>
+                      <Ionicons name="trophy-outline" size={12} color="#22C55E" />
+                      <Text style={styles.quizGradeText}>Nota: {moduleData.quiz.grade}%</Text>
+                    </View>
+                  )}
                 </View>
               </TouchableOpacity>
             )}
@@ -403,6 +435,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFF',
     flex: 1,
+  },
+  moduleTitleCompleted: {
+    color: '#1fa2df',
+  },
+  moduleItemCompleted: {
+    borderColor: '#1fa2df',
+    borderWidth: 1,
+  },
+  quizGradeContainer: {
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.2)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  quizGradeText: {
+    color: '#22C55E',
+    fontSize: 12,
+    fontWeight: '700',
   },
   quizIcon: {
     backgroundColor: '#2a2d3e',
