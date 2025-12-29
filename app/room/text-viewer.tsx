@@ -13,12 +13,35 @@ import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
 import { Content } from '@/types/learning';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useMarkContentAsCompleted } from '@/services/catalog';
+import { useAuthUser } from '@/hooks/useAuth';
 
 export default function TextViewer() {
-  const { content } = useLocalSearchParams();
+  const { content, userCourseId, moduleId, contentId } = useLocalSearchParams<{
+    content: string;
+    userCourseId?: string;
+    moduleId?: string;
+    contentId?: string;
+  }>();
   const _content = JSON.parse(content as string) as Content;
   const [hasReachedBottom, setHasReachedBottom] = useState(false);
+
+  // Auth and progress tracking
+  const { data: user } = useAuthUser();
+  const markContentAsCompletedMutation = useMarkContentAsCompleted();
+
+  // Mark content as completed when page opens (if user is authenticated)
+  useEffect(() => {
+    if (!user?.token || !userCourseId || !moduleId || !contentId) return;
+
+    markContentAsCompletedMutation.mutate({
+      userCourseId,
+      moduleId: parseInt(moduleId, 10),
+      contentId: parseInt(contentId, 10),
+      token: user.token,
+    });
+  }, [user?.token, userCourseId, moduleId, contentId]);
 
   const handleScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;

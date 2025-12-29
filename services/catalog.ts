@@ -594,3 +594,38 @@ export function useSubmitReview() {
     },
   });
 }
+
+// Mark content as completed
+export function useMarkContentAsCompleted() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      userCourseId,
+      moduleId,
+      contentId,
+      token,
+    }: {
+      userCourseId: string;
+      moduleId: number;
+      contentId: number;
+      token: string;
+    }) => {
+      const response = await api.put(
+        `/user-courses/${userCourseId}/module/${moduleId}/content/${contentId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-courses'] });
+      queryClient.invalidateQueries({ queryKey: ['user-courses', 'in-progress'] });
+      queryClient.invalidateQueries({ queryKey: ['user-course-details'] });
+    },
+  });
+}

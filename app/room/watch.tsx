@@ -4,20 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import YoutubeIframe from 'react-native-youtube-iframe';
-import { Module, Quiz } from '@/types/learning';
+import { Content, ContentState, Quiz } from '@/types/learning';
 import ModuleItem from '@/components/ModuleItem';
+import { useMarkContentAsCompleted } from '@/services/catalog';
+import { useAuthUser } from '@/hooks/useAuth';
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
-
-interface Content {
-  id: number;
-  title: string;
-  format: string;
-  youtubeID: string;
-  url: string;
-  description: string | null;
-}
 
 const NativeYoutubeIframe = ({ videoId, onVideoEnd }: { videoId: string; onVideoEnd: () => void }) => {
   React.useEffect(() => {
@@ -139,25 +132,72 @@ const YoutubePlayerModal = ({ videoId, onVideoEnd }: { videoId: string; onVideoE
   );
 };
 
+// Extended content type that handles both Content and UserCourseContent
+interface ExtendedContent extends Content {
+  contentId?: number;
+  state?: ContentState;
+  date?: string | null;
+}
+
+// Extended module type that handles both regular Module and UserCourseModule
+interface ExtendedModuleData {
+  id: number;
+  title: string;
+  quiz: any;
+  description?: string;
+  contents: ExtendedContent[];
+}
+
 export default function CourseScreen() {
   const { module, author, title, imageUrl, userCourseId, moduleId } = useLocalSearchParams();
-  const moduleData = JSON.parse(module as string) as Module;
+  const moduleData = JSON.parse(module as string) as ExtendedModuleData;
   const [playing, setPlaying] = React.useState(false);
-  const [selectedContent, setSelectedContent] = React.useState<Content | undefined>(undefined);
+  const [selectedContent, setSelectedContent] = React.useState<ExtendedContent | undefined>(undefined);
   const [showFullDescription, setShowFullDescription] = React.useState(false);
 
-  const handleContentPress = (content: Content) => {
+  // Auth and progress tracking
+  const { data: user } = useAuthUser();
+  const markContentAsCompletedMutation = useMarkContentAsCompleted();
+
+  // Helper to get contentId from content (handles both Module and UserCourseModule structures)
+  const getContentId = (content: ExtendedContent): number => {
+    return content.contentId ?? content.id;
+  };
+
+  // Mark content as completed
+  const markContentAsCompleted = React.useCallback(
+    (content: ExtendedContent) => {
+      if (!user?.token || !userCourseId || !moduleId) return;
+
+      const contentId = getContentId(content);
+
+      markContentAsCompletedMutation.mutate({
+        userCourseId: userCourseId as string,
+        moduleId: parseInt(moduleId as string, 10),
+        contentId,
+        token: user.token,
+      });
+    },
+    [user?.token, userCourseId, moduleId, markContentAsCompletedMutation]
+  );
+
+  const handleContentPress = (content: ExtendedContent) => {
     if (content.format === 'Text' && content.description && !content.youtubeID) {
       router.push({
         pathname: '/room/text-viewer',
         params: {
           content: JSON.stringify(content),
+          userCourseId: userCourseId as string,
+          moduleId: moduleId as string,
+          contentId: getContentId(content).toString(),
         },
       });
       return;
     } else {
       setSelectedContent(content);
       setPlaying(true);
+      // Mark video content as completed when user starts playing
+      markContentAsCompleted(content);
     }
   };
 
