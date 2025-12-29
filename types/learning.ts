@@ -119,3 +119,63 @@ export interface Review {
   updatedAt: string;
   user: ReviewUser | null;
 }
+
+export type ContentState = 'NotStarted' | 'InProgress' | 'Finished';
+
+export interface UserCourseContent {
+  id: number;
+  contentId: number;
+  format: string;
+  date: string | null;
+  state: ContentState;
+  title: string;
+  url: string;
+  youtubeID: string | null;
+  description: string;
+}
+
+export interface UserCourseModule {
+  id: number;
+  moduleId: number;
+  progress: number;
+  title: string;
+  quiz: any;
+  contents: UserCourseContent[];
+  picture: string | null;
+}
+
+export interface UserCourseQuizDuration {
+  id: number;
+  type: string;
+  value: number;
+}
+
+export interface UserCourseQuizQuestion {
+  id: number;
+  description: string;
+  format: 'SingleOption' | 'AllThatApply';
+  options: QuestionOption[];
+}
+
+export interface UserCourseQuiz {
+  id: number;
+  quizId: number;
+  pass_grade: number;
+  state: ContentState;
+  date: string | null;
+  grade: number | null;
+  questions: UserCourseQuizQuestion[];
+  duration: UserCourseQuizDuration;
+}
+
+export interface UserCourseDetails {
+  id: number;
+  documentId: string;
+  is_favorite: boolean;
+  progress: number;
+  state: 'NotStarted' | 'InProgress' | 'Completed';
+  certificate: any;
+  quiz: UserCourseQuiz | null;
+  modules: UserCourseModule[];
+  userCourseId: string;
+}

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from './api';
-import { CourseDetail, CertificateSummary, ForumComment, Review } from '@/types/learning';
+import { CourseDetail, CertificateSummary, ForumComment, Review, UserCourseDetails } from '@/types/learning';
 
 // Get course details by documentId
 export function useCourseDetails(documentId: string) {
@@ -369,16 +369,22 @@ export function useConcludeModuleQuiz() {
 
 // Get user course details by course ID
 export function useUserCourseDetails(courseId: string, token: string) {
-  return useQuery({
+  return useQuery<UserCourseDetails>({
     queryKey: ['user-course-details', courseId],
-    queryFn: async () => {
+    queryFn: async (): Promise<UserCourseDetails> => {
+      console.log('useUserCourseDetails: fetching for courseId:', courseId);
+
       // First, get the user courses to find the specific user-course document ID
       const listResponse = await api.get('/user-courses', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      console.log('useUserCourseDetails: listResponse:', listResponse?.data);
+
       const userCourses: any[] = listResponse?.data?.data || [];
       const matchingUserCourse = userCourses.find((uc: any) => uc?.course?.documentId === courseId);
+
+      console.log('useUserCourseDetails: matchingUserCourse:', matchingUserCourse);
 
       if (!matchingUserCourse?.documentId) {
         throw new Error('User course not found for course ID: ' + courseId);
@@ -386,10 +392,13 @@ export function useUserCourseDetails(courseId: string, token: string) {
 
       const userCourseDocumentId = matchingUserCourse.documentId;
 
-      // Get the user course details
+      // Get the user course details with modules and content progress
       const response = await api.get(`/user-courses/${userCourseDocumentId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log('useUserCourseDetails: response.data:', response.data);
+      console.log('useUserCourseDetails: response.data.modules:', response.data?.modules);
 
       return {
         ...response.data,

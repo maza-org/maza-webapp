@@ -11,7 +11,7 @@ import {
   Linking,
   Platform,
   TextInput,
-  KeyboardAvoidingView,
+  Image, // Added Image import
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,11 +23,13 @@ import Reviews from '@/components/Reviews';
 import { ForumComment } from '@/types/learning';
 import LoginBottomSheet from '@/components/LoginBottomSheet';
 import Entypo from '@expo/vector-icons/Entypo';
-import { Module, Quiz } from '@/types/learning';
+import { Module, Quiz, UserCourseDetails, UserCourseModule } from '@/types/learning';
 import { LevelBadge } from '@/components/LevelBadge';
 import { Tab } from '@/components/Tab';
 import Toast from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
+import Shimmer from '@/components/Shimmer';
+import CourseModuleCard, { CourseModuleData } from '@/components/CourseModuleCard';
 import {
   useCourseDetails,
   useCertificates,
@@ -42,6 +44,9 @@ import {
 } from '@/services/catalog';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthUser } from '@/hooks/useAuth';
+
+// Import the celebration image
+const celebrateImage = require('@/assets/images/celebrate.webp');
 
 export default function CourseDetail() {
   const [activeTab, setActiveTab] = useState<'lessons' | 'opinions' | 'forum'>('lessons');
@@ -70,13 +75,52 @@ export default function CourseDetail() {
     error: courseError,
     refetch: refetchCourse,
   } = useCourseDetails(documentId);
-  const { data: certificates = [], isLoading: certificatesLoading, error: certificatesError } = useCertificates(user?.token);
+  const {
+    data: certificates = [],
+    isLoading: certificatesLoading,
+    error: certificatesError,
+  } = useCertificates(user?.token);
   const { isInProgress, progress, isLoading: progressLoading } = useCourseProgress(documentId, user?.token || '');
   const { isFavorite, isLoading: favoriteLoading } = useIsFavorite(documentId, user?.token || '');
-  const { data: userCourseDetails, isLoading: userCourseDetailsLoading } = useUserCourseDetails(
-    documentId,
-    user?.token || ''
-  );
+  const {
+    data: userCourseDetails,
+    isLoading: userCourseDetailsLoading,
+    refetch: refetchUserCourseDetails,
+  } = useUserCourseDetails(documentId, user?.token || '') as {
+    data: UserCourseDetails | undefined;
+    isLoading: boolean;
+    refetch: () => void;
+  };
+
+  // Get modules to display - use userCourseDetails.modules when logged in for progress data
+  const getDisplayModules = (): CourseModuleData[] => {
+    if (userCourseDetails?.modules) {
+      // User is logged in - use userCourseDetails.modules which has progress states
+      return userCourseDetails.modules.map((userModule) => ({
+        id: userModule.id,
+        moduleId: userModule.moduleId,
+        title: userModule.title,
+        progress: userModule.progress,
+        completedContents: userModule.contents.filter((c) => c.state === 'Finished').length,
+        totalContents: userModule.contents.length,
+        isCompleted: userModule.progress === 100,
+        originalModule: userModule,
+      }));
+    }
+
+    // User not logged in - use courseData.modules
+    if (!courseData?.modules) return [];
+    return courseData.modules.map((module) => ({
+      id: module.id,
+      moduleId: module.id,
+      title: module.title,
+      progress: 0,
+      completedContents: 0,
+      totalContents: module.contents.length,
+      isCompleted: false,
+      originalModule: module,
+    }));
+  };
 
   // Loading states
   const isLoading = courseLoading || userLoading || (!!user?.token && progressLoading);
@@ -99,6 +143,7 @@ export default function CourseDetail() {
         // Invalidate and refetch user-dependent queries
         queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
         queryClient.invalidateQueries({ queryKey: ['user-courses'] });
+        queryClient.invalidateQueries({ queryKey: ['user-course-details'] });
         queryClient.invalidateQueries({ queryKey: ['certificates'] });
       }
     }
@@ -134,6 +179,9 @@ export default function CourseDetail() {
   const hasCertificate =
     !certificatesError && certificates.length > 0 && certificates.some((cert) => cert.course.documentId === documentId);
 
+  // Unified check for course completion (either 100% progress OR has certificate)
+  const isCourseCompleted = userCourseDetails?.progress === 100 || hasCertificate;
+
   // Toggle menu visibility
   const toggleMenu = () => {
     setMenuVisible(!menuVisible);
@@ -143,11 +191,17 @@ export default function CourseDetail() {
     switch (option) {
       case 'certificate':
         // Since we only show this option when certificate exists, we can safely find it
+        // If user is at 100% but api hasn't generated certificate yet, this might need a fallback check
         const certificate = certificates.find((cert) => cert.course.documentId === documentId);
-        router.push({
-          pathname: '/user/certificate',
-          params: { certificateId: certificate!.documentId },
-        });
+        if (certificate) {
+          router.push({
+            pathname: '/user/certificate',
+            params: { certificateId: certificate.documentId },
+          });
+        } else {
+          showInfo('Certificado sendo gerado. Tente novamente em instantes.');
+          refetchCourse();
+        }
         break;
       case 'report':
         showInfo('Funcionalidade de reportar problema em desenvolvimento');
@@ -249,6 +303,9 @@ export default function CourseDetail() {
   // Handle refresh
   const handleRefresh = () => {
     refetchCourse();
+    if (user?.token) {
+      refetchUserCourseDetails();
+    }
   };
 
   const checkAuth = () => {
@@ -312,13 +369,107 @@ export default function CourseDetail() {
     setReplyingTo(null);
   };
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2EA8FF" />
-        <Text style={styles.loadingText}>Carregando...</Text>
+  // Shimmer loading component for course detail
+  const CourseDetailShimmer = () => (
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <ScrollView style={styles.scrollView}>
+        {/* Header shimmer */}
+        <Shimmer style={styles.headerShimmer}>
+          <View style={styles.headerShimmerContent}>
+            <View style={styles.headerActionsShimmer}>
+              <View style={styles.iconButtonShimmer} />
+              <View style={styles.rightActionsShimmer}>
+                <View style={styles.iconButtonShimmer} />
+                <View style={styles.iconButtonShimmer} />
+              </View>
+            </View>
+            <View style={styles.levelBadgeShimmer} />
+          </View>
+        </Shimmer>
+
+        {/* Course info shimmer */}
+        <View style={styles.courseInfoShimmer}>
+          <Shimmer style={styles.titleShimmer}>
+            <View style={styles.shimmerBox} />
+          </Shimmer>
+          <Shimmer style={styles.titleShimmerShort}>
+            <View style={styles.shimmerBox} />
+          </Shimmer>
+
+          <View style={styles.instructorShimmer}>
+            <Shimmer style={styles.instructorNameShimmer}>
+              <View style={styles.shimmerBox} />
+            </Shimmer>
+            <Shimmer style={styles.categoryShimmer}>
+              <View style={styles.shimmerBox} />
+            </Shimmer>
+          </View>
+
+          {/* Description shimmer */}
+          <View style={styles.descriptionShimmerContainer}>
+            <Shimmer style={styles.descriptionLineShimmer}>
+              <View style={styles.shimmerBox} />
+            </Shimmer>
+            <Shimmer style={styles.descriptionLineShimmer}>
+              <View style={styles.shimmerBox} />
+            </Shimmer>
+            <Shimmer style={styles.descriptionLineShimmerShort}>
+              <View style={styles.shimmerBox} />
+            </Shimmer>
+          </View>
+
+          {/* Tabs shimmer */}
+          <View style={styles.tabContainerShimmer}>
+            <Shimmer style={styles.tabShimmer}>
+              <View style={styles.shimmerBox} />
+            </Shimmer>
+            <Shimmer style={styles.tabShimmer}>
+              <View style={styles.shimmerBox} />
+            </Shimmer>
+            <Shimmer style={styles.tabShimmer}>
+              <View style={styles.shimmerBox} />
+            </Shimmer>
+          </View>
+        </View>
+
+        {/* Modules list shimmer */}
+        <View style={styles.modulesListShimmer}>
+          {[1, 2, 3, 4].map((key) => (
+            <View key={key} style={styles.moduleItemShimmer}>
+              <View style={styles.moduleTopRowShimmer}>
+                <View style={styles.moduleInfoShimmer}>
+                  <Shimmer style={styles.moduleNumberShimmer}>
+                    <View style={styles.shimmerBox} />
+                  </Shimmer>
+                  <Shimmer style={styles.moduleTitleShimmer}>
+                    <View style={styles.shimmerBox} />
+                  </Shimmer>
+                </View>
+                <Shimmer style={styles.playIconShimmer}>
+                  <View style={styles.shimmerBox} />
+                </Shimmer>
+              </View>
+              <View style={styles.moduleMetaShimmer}>
+                <Shimmer style={styles.videoCountShimmer}>
+                  <View style={styles.shimmerBox} />
+                </Shimmer>
+              </View>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* Footer shimmer */}
+      <View style={styles.footer}>
+        <Shimmer style={styles.startButtonShimmer}>
+          <View style={styles.shimmerBox} />
+        </Shimmer>
       </View>
-    );
+    </SafeAreaView>
+  );
+
+  if (isLoading) {
+    return <CourseDetailShimmer />;
   }
 
   if (courseError) {
@@ -344,16 +495,18 @@ export default function CourseDetail() {
     );
   }
 
-  function handlePlayModule(module: Module) {
+  function handlePlayModule(module: CourseModuleData) {
+    // Use the original module data for navigation
+    // When user is logged in, originalModule is UserCourseModule with content progress states
     router.push({
       pathname: '/room/watch',
       params: {
-        module: JSON.stringify(module),
+        module: JSON.stringify(module.originalModule),
         author: courseData?.author,
         title: courseData?.title,
         imageUrl: courseData?.cover?.formats?.thumbnail?.url,
         userCourseId: userCourseDetails?.userCourseId,
-        moduleId: module.id?.toString(),
+        moduleId: module.moduleId?.toString(),
       },
     });
   }
@@ -485,7 +638,7 @@ export default function CourseDetail() {
             <Text style={styles.instructorName}>{courseData.author}</Text>
             <Text style={styles.categoryTag}>• {courseData.subjects[0]?.name || ''}</Text>
             {/*<TouchableOpacity style={styles.pathButton} onPress={handleOnPathPress}>*/}
-            {/*  <AntDesign name="fork" size={20} color="#fff" />*/}
+            {/* <AntDesign name="fork" size={20} color="#fff" />*/}
             {/*</TouchableOpacity>*/}
           </View>
 
@@ -523,26 +676,14 @@ export default function CourseDetail() {
               </View>
             ) : (
               <>
-                {courseData.modules.map((module, index) => (
-                  <TouchableOpacity key={module.id} style={styles.moduleItem} onPress={() => handlePlayModule(module)}>
-                    <View style={styles.moduleContent}>
-                      <View style={styles.moduleTopRow}>
-                        <View style={styles.moduleInfo}>
-                          <Text style={styles.moduleNumber}>{index + 1}.</Text>
-                          <Text style={styles.moduleTitle}>{module.title}</Text>
-                        </View>
-                        <View style={styles.moduleDetails}>
-                          <View style={styles.iconContainer}>
-                            <Ionicons name="play" size={20} color="#4db5ff" />
-                          </View>
-                        </View>
-                      </View>
-                      <View style={styles.videoCount}>
-                        <Feather name="film" size={14} color="#A8A8B3" />
-                        <Text style={styles.videoCountText}>{module.contents.length} videos</Text>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
+                {getDisplayModules().map((module, index) => (
+                  <CourseModuleCard
+                    key={module.id}
+                    module={module}
+                    index={index}
+                    showProgress={!!userCourseDetails}
+                    onPress={handlePlayModule}
+                  />
                 ))}
                 {courseData.final_test && (
                   <TouchableOpacity
@@ -561,9 +702,11 @@ export default function CourseDetail() {
                           </View>
                         </View>
                       </View>
-                      <View style={styles.videoCount}>
-                        <Feather name="check-circle" size={14} color="#A8A8B3" />
-                        <Text style={styles.videoCountText}>{courseData.final_test.questions.length} perguntas</Text>
+                      <View style={styles.moduleMetaRow}>
+                        <View style={styles.videoCount}>
+                          <Feather name="check-circle" size={14} color="#A8A8B3" />
+                          <Text style={styles.videoCountText}>{courseData.final_test.questions.length} perguntas</Text>
+                        </View>
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -638,26 +781,34 @@ export default function CourseDetail() {
               </TouchableOpacity>
             </View>
           </View>
-        ) : hasCertificate ? (
-          <TouchableOpacity
-            style={styles.certificateButton}
-            onPress={() => handleMenuOption('certificate')}
-          >
-            <Ionicons name="document-text-outline" size={20} color="#FFF" style={styles.certificateButtonIcon} />
-            <Text style={styles.startButtonText}>Ver Certificado</Text>
-          </TouchableOpacity>
-        ) : isInProgress ? (
+        ) : isCourseCompleted ? (
+          <View style={styles.completionCard}>
+            <View style={styles.completionContent}>
+              <View style={styles.completionTextContainer}>
+                <Text style={styles.completionTitle}>Parabéns!</Text>
+                <Text style={styles.completionSubtitle}>Concluiu este curso.</Text>
+              </View>
+              <Image source={celebrateImage} style={styles.celebrateImage} resizeMode="contain" />
+            </View>
+
+            <TouchableOpacity style={styles.certificateButtonFull} onPress={() => router.push('/user/certificates')}>
+              <Text style={styles.certificateButtonText}>Visualizar Certificado</Text>
+            </TouchableOpacity>
+          </View>
+        ) : isInProgress || !!userCourseDetails ? (
           <View style={styles.progressContainer}>
             <View style={styles.progressHeader}>
-              <Text style={styles.progressTitle}>Progresso do Curso</Text>
-              <Text style={styles.progressPercentage}>{Math.round(progress)}%</Text>
+              <View>
+                <Text style={styles.progressTitle}>Seu progresso</Text>
+                <Text style={styles.progressSubtitle}>Continue de onde parou</Text>
+              </View>
+              <Text style={styles.progressPercentage}>{Math.round(userCourseDetails?.progress || progress)}%</Text>
             </View>
             <View style={styles.progressBarContainer}>
               <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: `${progress}%` }]} />
+                <View style={[styles.progressFill, { width: `${userCourseDetails?.progress || progress}%` }]} />
               </View>
             </View>
-            <Text style={styles.progressText}>{Math.round(progress)}% concluído</Text>
           </View>
         ) : (
           <TouchableOpacity
@@ -1072,5 +1223,205 @@ const styles = StyleSheet.create({
   },
   certificateButtonIcon: {
     marginRight: 8,
+  },
+  completionCard: {
+    backgroundColor: '#202024',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#1fa2df',
+  },
+  completionContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  completionTextContainer: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  completionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#1fa2df',
+    marginBottom: 4,
+  },
+  completionSubtitle: {
+    fontSize: 14,
+    color: '#E1E1E6',
+  },
+  celebrateImage: {
+    width: 80,
+    height: 80,
+  },
+  certificateButtonFull: {
+    backgroundColor: '#1fa2df',
+    paddingVertical: 14,
+    borderRadius: 50,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  certificateButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  certificateIcon: {
+    marginLeft: 4,
+  },
+  // END: Styles for the new Completion Card
+  moduleMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  progressSubtitle: {
+    color: '#A8A8B3',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  // Shimmer loading styles
+  shimmerBox: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#29292E',
+    borderRadius: 4,
+  },
+  headerShimmer: {
+    height: 200,
+    backgroundColor: '#202024',
+  },
+  headerShimmerContent: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'space-between',
+  },
+  headerActionsShimmer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  rightActionsShimmer: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  iconButtonShimmer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#29292E',
+  },
+  levelBadgeShimmer: {
+    width: 80,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#29292E',
+  },
+  courseInfoShimmer: {
+    padding: 24,
+    backgroundColor: '#121214',
+  },
+  titleShimmer: {
+    height: 28,
+    marginBottom: 8,
+    borderRadius: 4,
+  },
+  titleShimmerShort: {
+    height: 28,
+    width: '60%',
+    marginBottom: 16,
+    borderRadius: 4,
+  },
+  instructorShimmer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 8,
+  },
+  instructorNameShimmer: {
+    width: 100,
+    height: 16,
+    borderRadius: 4,
+  },
+  categoryShimmer: {
+    width: 80,
+    height: 16,
+    borderRadius: 4,
+  },
+  descriptionShimmerContainer: {
+    marginBottom: 16,
+    gap: 8,
+  },
+  descriptionLineShimmer: {
+    height: 14,
+    borderRadius: 4,
+  },
+  descriptionLineShimmerShort: {
+    height: 14,
+    width: '70%',
+    borderRadius: 4,
+  },
+  tabContainerShimmer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#323238',
+    paddingBottom: 12,
+    gap: 24,
+  },
+  tabShimmer: {
+    width: 60,
+    height: 20,
+    borderRadius: 4,
+  },
+  modulesListShimmer: {
+    padding: 24,
+  },
+  moduleItemShimmer: {
+    padding: 16,
+    backgroundColor: '#202024',
+    borderRadius: 15,
+    marginBottom: 12,
+  },
+  moduleTopRowShimmer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  moduleInfoShimmer: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
+  },
+  moduleNumberShimmer: {
+    width: 24,
+    height: 20,
+    borderRadius: 4,
+  },
+  moduleTitleShimmer: {
+    flex: 1,
+    height: 20,
+    borderRadius: 4,
+  },
+  playIconShimmer: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+  },
+  moduleMetaShimmer: {
+    marginStart: 36,
+  },
+  videoCountShimmer: {
+    width: 80,
+    height: 14,
+    borderRadius: 4,
+  },
+  startButtonShimmer: {
+    height: 50,
+    borderRadius: 25,
   },
 });

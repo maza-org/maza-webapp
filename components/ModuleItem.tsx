@@ -1,17 +1,53 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { Content } from '@/app/room/lessons';
+import { Content, UserCourseContent, ContentState } from '@/types/learning';
+
+// Extended content type that can include state from UserCourseContent
+interface ContentWithState extends Content {
+  contentId?: number;
+  state?: ContentState;
+  date?: string | null;
+}
 
 interface ModuleItemProps {
-  content: Content;
+  content: ContentWithState;
   index: number;
-  selectedContent?: Content;
-  onPress: (content: Content) => void;
+  selectedContent?: ContentWithState;
+  onPress: (content: ContentWithState) => void;
 }
 
 const ModuleItem = ({ content, index, selectedContent, onPress }: ModuleItemProps) => {
   const isVideo = content.format !== 'Text';
   const isSelected = selectedContent?.id === content.id;
+  const isCompleted = content.state === 'Finished';
+
+  const renderIcon = () => {
+    if (isCompleted) {
+      return (
+        <View style={styles.completedIconContainer}>
+          <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
+        </View>
+      );
+    }
+
+    if (isVideo) {
+      return (
+        <View style={styles.iconContainer}>
+          <Ionicons name="play" size={20} color="#4db5ff" />
+        </View>
+      );
+    }
+
+    if (content.format === 'Text') {
+      return (
+        <View style={styles.iconContainer}>
+          <Ionicons name="reader" size={20} color="#4db5ff" />
+        </View>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <TouchableOpacity
@@ -23,23 +59,13 @@ const ModuleItem = ({ content, index, selectedContent, onPress }: ModuleItemProp
         <View style={styles.moduleTopRow}>
           <View style={styles.moduleInfo}>
             <Text style={styles.moduleNumber}>{index + 1}.</Text>
-            <Text style={styles.moduleTitle}>{content.title}</Text>
+            <Text style={[styles.moduleTitle, isCompleted && styles.moduleTitleCompleted]}>
+              {content.title}
+            </Text>
           </View>
-          {isVideo ? (
-            <View style={styles.moduleDetails}>
-              <View style={styles.iconContainer}>
-                <Ionicons name="play" size={20} color="#4db5ff" />
-              </View>
-            </View>
-          ) : (
-            content.format === 'Text' && (
-              <View style={styles.moduleDetails}>
-                <View style={styles.iconContainer}>
-                  <Ionicons name="reader" size={20} color="#4db5ff" />
-                </View>
-              </View>
-            )
-          )}
+          <View style={styles.moduleDetails}>
+            {renderIcon()}
+          </View>
         </View>
         <View style={styles.moduleType}>
           <Feather name={isVideo ? 'video' : 'file-text'} size={14} color="#A8A8B3" />
@@ -94,6 +120,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#2a2d3e',
     borderRadius: 50,
     padding: 5,
+  },
+  completedIconContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  moduleTitleCompleted: {
+    color: '#A8A8B3',
   },
   moduleType: {
     flexDirection: 'row',
