@@ -1,6 +1,11 @@
 import { Duration } from '@/types/quiz';
 
-export const calculateDurationInSeconds = (duration: Duration): number => {
+export const calculateDurationInSeconds = (duration: Duration | null | undefined): number => {
+  // Handle null or undefined duration
+  if (!duration) {
+    return 10 * 60; // Default to 10 minutes if no duration provided
+  }
+
   if (!duration.type && duration.value) {
     return duration.value * 60;
   }
