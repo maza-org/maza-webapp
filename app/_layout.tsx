@@ -63,22 +63,16 @@ function RootLayout() {
     if (error) throw error;
   }, [error]);
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
   if (!loaded) {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return <RootLayoutNav onReady={() => SplashScreen.hideAsync()} />;
 }
 
 export default RootLayout;
 
-function RootLayoutNav() {
+function RootLayoutNav({ onReady }: { onReady: () => void }) {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
@@ -101,6 +95,12 @@ function RootLayoutNav() {
 
     checkOnboardingStatus();
   }, []);
+
+  useEffect(() => {
+    if (!isChecking) {
+      onReady();
+    }
+  }, [isChecking, onReady]);
 
   // Don't render anything until we've checked the onboarding status
   if (isChecking) {

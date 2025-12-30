@@ -13,8 +13,8 @@ export default function HomepageCategories() {
             pathname: '/categories/[id]',
             params: {
               id: 43,
-              documentId: 'fwubsstwm950034zmd6dnt8r',
-              name: 'Design',
+              documentId: 'miclj6ukx3k7u1eqeyxo3pf2',
+              name: 'Carreira',
             },
           });
         }}
@@ -22,7 +22,7 @@ export default function HomepageCategories() {
         <View style={styles.iconContainer}>
           <Feather name="pen-tool" size={20} color="#FFF" />
         </View>
-        <Text style={styles.categoryText}>Design</Text>
+        <Text style={styles.categoryText}>Carreira</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -52,7 +52,7 @@ export default function HomepageCategories() {
             params: {
               id: 69,
               documentId: 'f2tnfg0q70l17lob34ll8w87',
-              name: 'Saúde',
+              name: 'Clima',
             },
           });
         }}
@@ -60,7 +60,7 @@ export default function HomepageCategories() {
         <View style={styles.iconContainer}>
           <Feather name="heart" size={20} color="#FFF" />
         </View>
-        <Text style={styles.categoryText}>Saúde</Text>
+        <Text style={styles.categoryText}>Clima</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.categoryItem} onPress={() => router.push('/categories')}>
