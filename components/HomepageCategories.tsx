@@ -14,15 +14,17 @@ export default function HomepageCategories() {
             params: {
               id: 43,
               documentId: 'miclj6ukx3k7u1eqeyxo3pf2',
-              name: 'Carreira',
+              name: 'Competências Digitais',
             },
           });
         }}
       >
         <View style={styles.iconContainer}>
-          <Feather name="pen-tool" size={20} color="#FFF" />
+          <Feather name="monitor" size={20} color="#FFF" />
         </View>
-        <Text style={styles.categoryText}>Carreira</Text>
+        <Text style={styles.categoryText} numberOfLines={2}>
+          Competências Digitais
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -33,15 +35,17 @@ export default function HomepageCategories() {
             params: {
               id: 71,
               documentId: 'unz4bv8reqwncrv34zed36zb',
-              name: 'Tecnologia',
+              name: 'Competências Verdes',
             },
           });
         }}
       >
         <View style={styles.iconContainer}>
-          <Feather name="monitor" size={20} color="#FFF" />
+          <Feather name="sun" size={20} color="#FFF" />
         </View>
-        <Text style={styles.categoryText}>Tecnologia</Text>
+        <Text style={styles.categoryText} numberOfLines={2}>
+          Competências Verdes
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -52,22 +56,26 @@ export default function HomepageCategories() {
             params: {
               id: 69,
               documentId: 'f2tnfg0q70l17lob34ll8w87',
-              name: 'Clima',
+              name: 'Mudanças Climáticas',
             },
           });
         }}
       >
         <View style={styles.iconContainer}>
-          <Feather name="heart" size={20} color="#FFF" />
+          <Feather name="cloud" size={20} color="#FFF" />
         </View>
-        <Text style={styles.categoryText}>Clima</Text>
+        <Text style={styles.categoryText} numberOfLines={2}>
+          Mudanças Climáticas
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.categoryItem} onPress={() => router.push('/categories')}>
         <View style={styles.iconContainer}>
           <Feather name="grid" size={20} color="#FFF" />
         </View>
-        <Text style={styles.categoryText}>Ver Mais</Text>
+        <Text style={styles.categoryText} numberOfLines={2}>
+          Ver Mais
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -78,8 +86,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#121214',
     padding: 25,
-    paddingEnd: 25,
-    paddingStart: 25,
   },
   header: {
     flexDirection: 'row',
@@ -97,10 +103,12 @@ const styles = StyleSheet.create({
   categoryContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 24,
   },
   categoryItem: {
     alignItems: 'center',
+    width: '23%',
   },
   iconContainer: {
     backgroundColor: '#29292E',
@@ -110,10 +118,9 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     color: '#FFF',
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'ManropeRegular',
-  },
-  courseSection: {
-    flex: 1,
+    textAlign: 'center',
+    lineHeight: 14,
   },
 });
