@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, StyleSheet, TouchableOpacityProps } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface TopicButtonProps extends TouchableOpacityProps {
   topic: string;
@@ -7,35 +9,38 @@ interface TopicButtonProps extends TouchableOpacityProps {
 }
 
 export default function TopicButton({ topic, isSelected, onPress, ...props }: TopicButtonProps) {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const themedStyles = useMemo(() => StyleSheet.create({
+    topicButton: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: colors.cardBackground,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    topicButtonSelected: {
+      backgroundColor: isDark ? '#323238' : '#E3F2FD',
+      borderColor: colors.primary,
+    },
+    topicText: {
+      color: colors.textMuted,
+      fontSize: 14,
+    },
+    topicTextSelected: {
+      color: colors.text,
+    },
+  }), [colors, isDark]);
+
   return (
     <TouchableOpacity
-      style={[styles.topicButton, isSelected && styles.topicButtonSelected]}
+      style={[themedStyles.topicButton, isSelected && themedStyles.topicButtonSelected]}
       onPress={onPress}
       {...props}
     >
-      <Text style={[styles.topicText, isSelected && styles.topicTextSelected]}>{topic}</Text>
+      <Text style={[themedStyles.topicText, isSelected && themedStyles.topicTextSelected]}>{topic}</Text>
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  topicButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#202024',
-    borderWidth: 1,
-    borderColor: '#323238',
-  },
-  topicButtonSelected: {
-    backgroundColor: '#323238',
-    borderColor: '#22ACE3',
-  },
-  topicText: {
-    color: '#A8A8B3',
-    fontSize: 14,
-  },
-  topicTextSelected: {
-    color: '#FFFFFF',
-  },
-});

@@ -11,16 +11,32 @@ import CustomizeContent from '@/app/components/customize/CustomizeContent';
 import CustomizeFooter from '@/app/components/customize/CustomizeFooter';
 import LoadingState from '@/app/components/customize/LoadingState';
 import ErrorState from '@/app/components/customize/ErrorState';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export default function Customize() {
   const [selectedTopics, setSelectedTopics] = useState<Topic[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [initialSelectedTopics, setInitialSelectedTopics] = useState<Topic[]>([]);
   const { interests } = useLocalSearchParams();
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
   const userTopics = useMemo(
     () => (interests ? JSON.parse(interests as string) : []),
     [interests]
   );
+
+  const themedStyles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollView: {
+      flex: 1,
+      padding: 24,
+    },
+  }), [colors]);
 
   const showBackButton = !!interests;
 
@@ -128,10 +144,10 @@ export default function Customize() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
       <CustomizeHeader showBackButton={showBackButton} onBackPress={() => router.back()} />
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView style={themedStyles.scrollView} showsVerticalScrollIndicator={false}>
         <CustomizeContent topics={topics} selectedTopics={selectedTopics} onTopicToggle={toggleTopic} />
       </ScrollView>
 
@@ -139,14 +155,3 @@ export default function Customize() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121214',
-  },
-  scrollView: {
-    flex: 1,
-    padding: 24,
-  },
-});
