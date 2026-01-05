@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,9 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Alert,
   Modal,
   FlatList,
   Platform,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
@@ -22,6 +20,8 @@ import useUser from '@/hooks/useUser';
 import { baseUrl } from '@/services/api';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import Toast from '@/components/Toast';
+import { useToast } from '@/hooks/useToast';
 import {
   validateEmail,
   validateFullName,
@@ -29,6 +29,7 @@ import {
   validateMozambicanID,
   splitFullName,
 } from '@/utils/validation';
+import CustomDatePicker, { MONTHS } from '@/app/components/CustomDatePicker';
 
 // Import data from JSON files
 import MOZAMBIQUE_PROVINCES from '@/data/mozambique/provinces.json';
@@ -87,86 +88,92 @@ function SearchablePicker({ label, value, options, onSelect, placeholder }: Sear
     return options.filter((option) => option.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [options, searchQuery]);
 
-  const themedPickerStyles = useMemo(() => StyleSheet.create({
-    inputGroup: {
-      gap: 12,
-    },
-    inputLabel: {
-      color: colors.text,
-      fontSize: 14,
-      fontWeight: '500',
-    },
-    pickerButton: {
-      height: 48,
-      backgroundColor: colors.inputBackground,
-      borderRadius: 24,
-      paddingHorizontal: 16,
-      fontSize: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    pickerButtonText: {
-      fontSize: 16,
-      color: colors.text,
-    },
-    placeholderText: {
-      color: colors.textMuted,
-    },
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      justifyContent: 'flex-end',
-    },
-    modalContent: {
-      backgroundColor: colors.cardBackground,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      maxHeight: '80%',
-      paddingBottom: 20,
-    },
-    modalHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    modalTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: colors.text,
-    },
-    searchInput: {
-      height: 48,
-      backgroundColor: colors.inputBackground,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      fontSize: 16,
-      color: colors.text,
-      margin: 16,
-    },
-    optionItem: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: 16,
-      paddingHorizontal: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    optionText: {
-      fontSize: 16,
-      color: colors.text,
-    },
-  }), [colors]);
+  const themedPickerStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        inputGroup: {
+          gap: 12,
+        },
+        inputLabel: {
+          color: colors.text,
+          fontSize: 14,
+          fontWeight: '500',
+        },
+        pickerButton: {
+          height: 48,
+          backgroundColor: colors.inputBackground,
+          borderRadius: 24,
+          paddingHorizontal: 16,
+          fontSize: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        },
+        pickerButtonText: {
+          fontSize: 16,
+          color: colors.text,
+        },
+        placeholderText: {
+          color: colors.textMuted,
+        },
+        modalOverlay: {
+          flex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          justifyContent: 'flex-end',
+        },
+        modalContent: {
+          backgroundColor: colors.cardBackground,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          maxHeight: '80%',
+          paddingBottom: 20,
+        },
+        modalHeader: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: 20,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        modalTitle: {
+          fontSize: 18,
+          fontWeight: '600',
+          color: colors.text,
+        },
+        searchInput: {
+          height: 48,
+          backgroundColor: colors.inputBackground,
+          borderRadius: 12,
+          paddingHorizontal: 16,
+          fontSize: 16,
+          color: colors.text,
+          margin: 16,
+        },
+        optionItem: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingVertical: 16,
+          paddingHorizontal: 20,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        optionText: {
+          fontSize: 16,
+          color: colors.text,
+        },
+      }),
+    [colors]
+  );
 
   return (
     <View style={themedPickerStyles.inputGroup}>
       <Text style={themedPickerStyles.inputLabel}>{label}</Text>
       <TouchableOpacity style={themedPickerStyles.pickerButton} onPress={() => setModalVisible(true)}>
-        <Text style={[themedPickerStyles.pickerButtonText, !value && themedPickerStyles.placeholderText]}>{value || placeholder}</Text>
+        <Text style={[themedPickerStyles.pickerButtonText, !value && themedPickerStyles.placeholderText]}>
+          {value || placeholder}
+        </Text>
         <Ionicons name="chevron-down" size={20} color={colors.textMuted} />
       </TouchableOpacity>
 
@@ -218,294 +225,11 @@ function SearchablePicker({ label, value, options, onSelect, placeholder }: Sear
   );
 }
 
-// Custom Date Picker Component
-const MONTHS = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-];
-
-const ITEM_HEIGHT = 44;
-const VISIBLE_ITEMS = 5;
-
-interface CustomDatePickerProps {
-  value: Date | undefined;
-  onChange: (date: Date) => void;
-  minDate: Date;
-  maxDate: Date;
-  visible: boolean;
-  onClose: () => void;
-}
-
-function CustomDatePicker({ value, onChange, minDate, maxDate, visible, onClose }: CustomDatePickerProps) {
-  const { isDark } = useTheme();
-  const colors = isDark ? Colors.dark : Colors.light;
-
-  const currentDate = value || maxDate;
-  const [selectedDay, setSelectedDay] = useState(currentDate.getDate());
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
-  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
-
-  const dayScrollRef = useRef<FlatList>(null);
-  const monthScrollRef = useRef<FlatList>(null);
-  const yearScrollRef = useRef<FlatList>(null);
-
-  // Generate arrays for days, months, years
-  const years = useMemo(() => {
-    const result = [];
-    for (let y = maxDate.getFullYear(); y >= minDate.getFullYear(); y--) {
-      result.push(y);
-    }
-    return result;
-  }, [minDate, maxDate]);
-
-  const months = useMemo(() => {
-    return MONTHS.map((name, index) => ({ name, index }));
-  }, []);
-
-  const days = useMemo(() => {
-    const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
-    const result = [];
-    for (let d = 1; d <= daysInMonth; d++) {
-      result.push(d);
-    }
-    return result;
-  }, [selectedYear, selectedMonth]);
-
-  // Reset day if it exceeds days in selected month
-  useEffect(() => {
-    const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
-    if (selectedDay > daysInMonth) {
-      setSelectedDay(daysInMonth);
-    }
-  }, [selectedYear, selectedMonth, selectedDay]);
-
-  // Scroll to initial position when picker opens
-  useEffect(() => {
-    if (visible) {
-      const date = value || maxDate;
-      setSelectedDay(date.getDate());
-      setSelectedMonth(date.getMonth());
-      setSelectedYear(date.getFullYear());
-
-      setTimeout(() => {
-        const dayIndex = date.getDate() - 1;
-        const monthIndex = date.getMonth();
-        const yearIndex = years.findIndex(y => y === date.getFullYear());
-
-        dayScrollRef.current?.scrollToIndex({ index: dayIndex, animated: false });
-        monthScrollRef.current?.scrollToIndex({ index: monthIndex, animated: false });
-        if (yearIndex >= 0) {
-          yearScrollRef.current?.scrollToIndex({ index: yearIndex, animated: false });
-        }
-      }, 100);
-    }
-  }, [visible, value, maxDate, years]);
-
-  const handleConfirm = () => {
-    const newDate = new Date(selectedYear, selectedMonth, selectedDay);
-    onChange(newDate);
-    onClose();
-  };
-
-  const handleScrollEnd = (
-    event: any,
-    items: any[],
-    setter: (value: any) => void,
-    getValue: (item: any) => any
-  ) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    const index = Math.round(offsetY / ITEM_HEIGHT);
-    const clampedIndex = Math.max(0, Math.min(index, items.length - 1));
-    setter(getValue(items[clampedIndex]));
-  };
-
-  const themedStyles = useMemo(() => StyleSheet.create({
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      justifyContent: 'flex-end',
-    },
-    modalContent: {
-      backgroundColor: colors.cardBackground,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      paddingBottom: 34,
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    headerTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: colors.text,
-    },
-    cancelText: {
-      fontSize: 16,
-      color: colors.textMuted,
-    },
-    confirmText: {
-      fontSize: 16,
-      color: colors.primary,
-      fontWeight: '600',
-    },
-    pickerContainer: {
-      flexDirection: 'row',
-      height: ITEM_HEIGHT * VISIBLE_ITEMS,
-      paddingHorizontal: 16,
-    },
-    column: {
-      flex: 1,
-      position: 'relative',
-    },
-    columnWide: {
-      flex: 1.5,
-    },
-    columnList: {
-      paddingVertical: ITEM_HEIGHT * 2,
-    },
-    itemContainer: {
-      height: ITEM_HEIGHT,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    itemText: {
-      fontSize: 18,
-      color: colors.textMuted,
-    },
-    itemTextSelected: {
-      fontSize: 20,
-      fontWeight: '600',
-      color: colors.text,
-    },
-    selectionIndicator: {
-      position: 'absolute',
-      top: ITEM_HEIGHT * 2,
-      left: 8,
-      right: 8,
-      height: ITEM_HEIGHT,
-      backgroundColor: colors.inputBackground,
-      borderRadius: 10,
-      zIndex: -1,
-    },
-    columnLabel: {
-      textAlign: 'center',
-      fontSize: 12,
-      color: colors.textMuted,
-      marginTop: 8,
-      fontWeight: '500',
-    },
-  }), [colors]);
-
-  const renderItem = (item: any, selectedValue: any, displayValue: string) => {
-    const isSelected = item === selectedValue;
-    return (
-      <View style={themedStyles.itemContainer}>
-        <Text style={isSelected ? themedStyles.itemTextSelected : themedStyles.itemText}>
-          {displayValue}
-        </Text>
-      </View>
-    );
-  };
-
-  const getItemLayout = (_: any, index: number) => ({
-    length: ITEM_HEIGHT,
-    offset: ITEM_HEIGHT * index,
-    index,
-  });
-
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
-    >
-      <View style={themedStyles.modalOverlay}>
-        <View style={themedStyles.modalContent}>
-          <View style={themedStyles.header}>
-            <TouchableOpacity onPress={onClose}>
-              <Text style={themedStyles.cancelText}>Cancelar</Text>
-            </TouchableOpacity>
-            <Text style={themedStyles.headerTitle}>Data de Nascimento</Text>
-            <TouchableOpacity onPress={handleConfirm}>
-              <Text style={themedStyles.confirmText}>Confirmar</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={themedStyles.pickerContainer}>
-            {/* Day Column */}
-            <View style={themedStyles.column}>
-              <View style={themedStyles.selectionIndicator} />
-              <FlatList
-                ref={dayScrollRef}
-                data={days}
-                keyExtractor={(item) => `day-${item}`}
-                renderItem={({ item }) => renderItem(item, selectedDay, item.toString().padStart(2, '0'))}
-                showsVerticalScrollIndicator={false}
-                snapToInterval={ITEM_HEIGHT}
-                decelerationRate="fast"
-                contentContainerStyle={themedStyles.columnList}
-                getItemLayout={getItemLayout}
-                onMomentumScrollEnd={(e) => handleScrollEnd(e, days, setSelectedDay, (d) => d)}
-                initialScrollIndex={Math.max(0, selectedDay - 1)}
-              />
-              <Text style={themedStyles.columnLabel}>Dia</Text>
-            </View>
-
-            {/* Month Column */}
-            <View style={[themedStyles.column, themedStyles.columnWide]}>
-              <View style={themedStyles.selectionIndicator} />
-              <FlatList
-                ref={monthScrollRef}
-                data={months}
-                keyExtractor={(item) => `month-${item.index}`}
-                renderItem={({ item }) => renderItem(item.index, selectedMonth, item.name)}
-                showsVerticalScrollIndicator={false}
-                snapToInterval={ITEM_HEIGHT}
-                decelerationRate="fast"
-                contentContainerStyle={themedStyles.columnList}
-                getItemLayout={getItemLayout}
-                onMomentumScrollEnd={(e) => handleScrollEnd(e, months, setSelectedMonth, (m) => m.index)}
-                initialScrollIndex={selectedMonth}
-              />
-              <Text style={themedStyles.columnLabel}>Mês</Text>
-            </View>
-
-            {/* Year Column */}
-            <View style={themedStyles.column}>
-              <View style={themedStyles.selectionIndicator} />
-              <FlatList
-                ref={yearScrollRef}
-                data={years}
-                keyExtractor={(item) => `year-${item}`}
-                renderItem={({ item }) => renderItem(item, selectedYear, item.toString())}
-                showsVerticalScrollIndicator={false}
-                snapToInterval={ITEM_HEIGHT}
-                decelerationRate="fast"
-                contentContainerStyle={themedStyles.columnList}
-                getItemLayout={getItemLayout}
-                onMomentumScrollEnd={(e) => handleScrollEnd(e, years, setSelectedYear, (y) => y)}
-                initialScrollIndex={Math.max(0, years.findIndex(y => y === selectedYear))}
-              />
-              <Text style={themedStyles.columnLabel}>Ano</Text>
-            </View>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 export default function EditProfileScreen() {
   const { data: user, isLoading, error, refetch } = useUser();
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
+  const { toast, config, showSuccess, showError, hideToast } = useToast();
 
   // Form states
   const [fullName, setFullName] = useState('');
@@ -553,17 +277,17 @@ export default function EditProfileScreen() {
     }
   }, [user]);
 
-  // Calculate max date (16 years ago from today)
+  // Calculate max date (6 years ago from today)
   const maxDate = useMemo(() => {
     const date = new Date();
-    date.setFullYear(date.getFullYear() - 16);
+    date.setFullYear(date.getFullYear() - 6);
     return date;
   }, []);
 
-  // Calculate min date (100 years ago)
+  // Calculate min date (150 years ago)
   const minDate = useMemo(() => {
     const date = new Date();
-    date.setFullYear(date.getFullYear() - 100);
+    date.setFullYear(date.getFullYear() - 150);
     return date;
   }, []);
 
@@ -597,22 +321,17 @@ export default function EditProfileScreen() {
       );
       return response.data;
     },
-    onSuccess: async (data) => {
+    onSuccess: async () => {
       // Refresh user data
       await refetch();
 
-      // Show success message and navigate back
-      Alert.alert('Sucesso', 'Perfil actualizado com sucesso', [
-        {
-          text: 'OK',
-          onPress: () => router.back(),
-        },
-      ]);
+      // Show success toast and navigate back
+      showSuccess('Perfil actualizado com sucesso');
 
-      // Automatically navigate back after showing the alert
+      // Navigate back after a short delay to let the toast show
       setTimeout(() => {
         router.back();
-      }, 100);
+      }, 1500);
     },
     onError: (error: AxiosError<ErrorResponse>) => {
       console.error('Update profile error:', error);
@@ -625,58 +344,51 @@ export default function EditProfileScreen() {
         switch (status) {
           case 400:
             setFormError(errorData?.error?.message || 'Pedido inválido. Verifique os dados inseridos.');
-            Alert.alert('Erro', 'Dados inválidos. Verifique os campos e tente novamente.');
+            showError('Dados inválidos. Verifique os campos e tente novamente.');
             break;
           case 401:
             setFormError('Sessão expirada. Por favor, faça login novamente.');
-            Alert.alert('Sessão Expirada', 'Por favor, faça login novamente.', [
-              { text: 'OK', onPress: () => router.replace('/login') },
-            ]);
+            showError('Sessão expirada. Por favor, faça login novamente.');
+            setTimeout(() => router.replace('/login'), 2000);
             break;
           case 403:
             setFormError('Acesso negado.');
-            Alert.alert('Erro', 'Você não tem permissão para actualizar este perfil.');
+            showError('Você não tem permissão para actualizar este perfil.');
             break;
           case 404:
             setFormError('Utilizador não encontrado.');
-            Alert.alert('Erro', 'Utilizador não encontrado.');
+            showError('Utilizador não encontrado.');
             break;
           case 409:
             // Check if it's specifically a username conflict based on message, otherwise generic
             setFormError(errorData?.error?.message || 'Email, telefone ou nome de utilizador já em uso.');
-            Alert.alert('Erro', 'Email, telefone ou nome de utilizador já está em uso.');
+            showError('Email, telefone ou nome de utilizador já está em uso.');
             break;
           case 429:
             setFormError('Demasiadas tentativas. Por favor, aguarde alguns minutos.');
-            Alert.alert('Erro', 'Demasiadas tentativas. Por favor, aguarde alguns minutos.');
+            showError('Demasiadas tentativas. Por favor, aguarde alguns minutos.');
             break;
           case 500:
             setFormError('Erro interno do servidor. Por favor, tente novamente mais tarde.');
-            Alert.alert(
-              'Erro do Servidor',
-              'O servidor está temporariamente indisponível. Por favor, tente novamente em alguns instantes.'
-            );
+            showError('Servidor temporariamente indisponível. Tente novamente.');
             break;
           case 502:
           case 503:
           case 504:
             setFormError('Servidor temporariamente indisponível. Tente novamente em alguns instantes.');
-            Alert.alert('Erro', 'Servidor temporariamente indisponível. Tente novamente em alguns instantes.');
+            showError('Servidor temporariamente indisponível. Tente novamente.');
             break;
           default:
             setFormError('Ocorreu um erro ao actualizar o perfil. Por favor, tente novamente.');
-            Alert.alert('Erro', 'Falha ao actualizar perfil. Tente novamente.');
+            showError('Falha ao actualizar perfil. Tente novamente.');
         }
       } else if (error.request) {
         // Network error
         setFormError('Erro de conexão. Verifique sua internet.');
-        Alert.alert(
-          'Erro de Conexão',
-          'Não foi possível conectar ao servidor. Verifique sua conexão de internet e tente novamente.'
-        );
+        showError('Erro de conexão. Verifique sua internet.');
       } else {
         setFormError('Não foi possível actualizar o perfil. Por favor, tente novamente.');
-        Alert.alert('Erro', 'Falha ao actualizar perfil.');
+        showError('Falha ao actualizar perfil.');
       }
     },
   });
@@ -727,7 +439,7 @@ export default function EditProfileScreen() {
 
     // Basic validations for mandatory fields
     if (!fullName || !gender || !occupation || !username) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios');
+      showError('Por favor, preencha todos os campos obrigatórios');
       return;
     }
 
@@ -759,175 +471,182 @@ export default function EditProfileScreen() {
 
   const isSubmitting = updateProfileMutation.isPending;
 
-  const themedStyles = useMemo(() => StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    loadingContainer: {
-      flex: 1,
-      backgroundColor: colors.background,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    errorContainer: {
-      flex: 1,
-      backgroundColor: colors.background,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 24,
-    },
-    errorContent: {
-      width: '100%',
-      maxWidth: 320,
-      alignItems: 'center',
-      backgroundColor: colors.cardBackground,
-      borderRadius: 16,
-      padding: 24,
-    },
-    errorIconContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: 'rgba(31, 162, 223, 0.1)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 24,
-    },
-    errorTitle: {
-      color: colors.text,
-      fontSize: 24,
-      fontWeight: '700',
-      marginBottom: 12,
-      textAlign: 'center',
-    },
-    errorText: {
-      color: '#FF6B6B',
-      fontSize: 12,
-      marginTop: 4,
-      marginLeft: 8,
-    },
-    errorDescriptionText: {
-      color: colors.textSecondary,
-      fontSize: 16,
-      textAlign: 'center',
-      marginBottom: 24,
-      lineHeight: 24,
-    },
-    loginButton: {
-      backgroundColor: colors.primary,
-      padding: 16,
-      borderRadius: 50,
-      width: '100%',
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-    },
-    loginButtonIcon: {
-      marginRight: 8,
-    },
-    loginButtonText: {
-      color: '#FFF',
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    scrollView: {
-      flex: 1,
-    },
-    header: {
-      height: 100,
-      padding: 24,
-      backgroundColor: colors.cardBackground,
-    },
-    headerActions: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    headerTitle: {
-      color: colors.text,
-      fontSize: 20,
-      fontWeight: '600',
-    },
-    iconButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    formContainer: {
-      padding: 24,
-      gap: 24,
-      paddingBottom: 32,
-    },
-    inputGroup: {
-      gap: 12,
-    },
-    inputLabel: {
-      color: colors.text,
-      fontSize: 14,
-      fontWeight: '500',
-    },
-    input: {
-      height: 48,
-      backgroundColor: colors.inputBackground,
-      borderRadius: 24,
-      paddingHorizontal: 16,
-      fontSize: 16,
-      color: colors.text,
-    },
-    inputError: {
-      borderWidth: 1,
-      borderColor: '#FF6B6B',
-    },
-    pickerButton: {
-      height: 48,
-      backgroundColor: colors.inputBackground,
-      borderRadius: 24,
-      paddingHorizontal: 16,
-      fontSize: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    pickerButtonText: {
-      fontSize: 16,
-      color: colors.text,
-    },
-    placeholderText: {
-      color: colors.textMuted,
-    },
-    footer: {
-      padding: 24,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    saveButton: {
-      backgroundColor: colors.primary,
-      padding: 16,
-      borderRadius: 50,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-    },
-    saveButtonDisabled: {
-      backgroundColor: colors.cardBackground,
-    },
-    saveButtonText: {
-      color: '#FFF',
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    formErrorContainer: {
-      padding: 12,
-      backgroundColor: 'rgba(255, 107, 107, 0.1)',
-      borderRadius: 8,
-    },
-  }), [colors, isDark]);
+  const themedStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
+        loadingContainer: {
+          flex: 1,
+          backgroundColor: colors.background,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        errorContainer: {
+          flex: 1,
+          backgroundColor: colors.background,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 24,
+        },
+        errorContent: {
+          width: '100%',
+          maxWidth: 320,
+          alignItems: 'center',
+          backgroundColor: colors.cardBackground,
+          borderRadius: 16,
+          padding: 24,
+        },
+        errorIconContainer: {
+          width: 80,
+          height: 80,
+          borderRadius: 40,
+          backgroundColor: 'rgba(31, 162, 223, 0.1)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: 24,
+        },
+        errorTitle: {
+          color: colors.text,
+          fontSize: 24,
+          fontWeight: '700',
+          marginBottom: 12,
+          textAlign: 'center',
+        },
+        errorText: {
+          color: '#FF6B6B',
+          fontSize: 12,
+          marginTop: 4,
+          marginLeft: 8,
+        },
+        errorDescriptionText: {
+          color: colors.textSecondary,
+          fontSize: 16,
+          textAlign: 'center',
+          marginBottom: 24,
+          lineHeight: 24,
+        },
+        loginButton: {
+          backgroundColor: colors.primary,
+          padding: 16,
+          borderRadius: 50,
+          width: '100%',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+        },
+        loginButtonIcon: {
+          marginRight: 8,
+        },
+        loginButtonText: {
+          color: '#FFF',
+          fontSize: 16,
+          fontWeight: '600',
+        },
+        scrollView: {
+          flex: 1,
+        },
+        header: {
+          height: 100,
+          padding: 24,
+          backgroundColor: colors.cardBackground,
+        },
+        headerActions: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        },
+        headerTitle: {
+          color: colors.text,
+          fontSize: 20,
+          fontWeight: '600',
+        },
+        iconButton: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)',
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        formContainer: {
+          padding: 24,
+          gap: 24,
+          paddingBottom: 32,
+        },
+        inputGroup: {
+          gap: 12,
+        },
+        inputLabel: {
+          color: colors.text,
+          fontSize: 14,
+          fontWeight: '500',
+        },
+        input: {
+          height: 48,
+          backgroundColor: colors.inputBackground,
+          borderRadius: 24,
+          paddingHorizontal: 16,
+          fontSize: 16,
+          color: colors.text,
+        },
+        inputError: {
+          borderWidth: 1,
+          borderColor: '#FF6B6B',
+        },
+        pickerButton: {
+          height: 48,
+          backgroundColor: colors.inputBackground,
+          borderRadius: 24,
+          paddingHorizontal: 16,
+          fontSize: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        },
+        pickerButtonText: {
+          fontSize: 16,
+          color: colors.text,
+        },
+        placeholderText: {
+          color: colors.textMuted,
+        },
+        footer: {
+          padding: 24,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+        },
+        saveButton: {
+          backgroundColor: colors.primary,
+          padding: 16,
+          borderRadius: 50,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+        },
+        saveButtonDisabled: {
+          backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)',
+        },
+        saveButtonText: {
+          color: '#FFF',
+          fontSize: 16,
+          fontWeight: '600',
+        },
+        saveButtonTextDisabled: {
+          color: isDark ? '#FFF' : colors.text,
+        },
+        formErrorContainer: {
+          padding: 12,
+          backgroundColor: 'rgba(255, 107, 107, 0.1)',
+          borderRadius: 8,
+        },
+      }),
+    [colors, isDark]
+  );
 
   if (isLoading) {
     return (
@@ -959,6 +678,15 @@ export default function EditProfileScreen() {
 
   return (
     <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+        duration={config.duration}
+        position={config.position}
+        showIcon={config.showIcon}
+      />
       <View style={themedStyles.header}>
         <View style={themedStyles.headerActions}>
           <TouchableOpacity style={themedStyles.iconButton} onPress={() => router.back()}>
@@ -1185,8 +913,8 @@ export default function EditProfileScreen() {
         >
           {isSubmitting ? (
             <>
-              <ActivityIndicator color="#FFF" size="small" />
-              <Text style={themedStyles.saveButtonText}>A actualizar...</Text>
+              <ActivityIndicator color={isDark ? '#FFF' : colors.text} size="small" />
+              <Text style={[themedStyles.saveButtonText, themedStyles.saveButtonTextDisabled]}>A actualizar...</Text>
             </>
           ) : (
             <Text style={themedStyles.saveButtonText}>Actualizar Perfil</Text>
@@ -1196,4 +924,3 @@ export default function EditProfileScreen() {
     </SafeAreaView>
   );
 }
-

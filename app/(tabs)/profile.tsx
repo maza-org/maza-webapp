@@ -84,17 +84,14 @@ export default function ProfileScreen() {
       fontWeight: '600',
     },
     themeSection: {
-      backgroundColor: colors.cardBackground,
-      padding: 16,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
       gap: 16,
+      marginBottom: 12,
     },
     themeSectionHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
+      paddingHorizontal: 0,
     },
     themeSectionLabel: {
       color: colors.text,
@@ -103,32 +100,35 @@ export default function ProfileScreen() {
     },
     themeOptions: {
       flexDirection: 'row',
-      gap: 8,
+      backgroundColor: colors.buttonBackground,
+      padding: 4,
+      borderRadius: 100,
     },
     themeOption: {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
+      gap: 8,
       paddingVertical: 12,
-      paddingHorizontal: 8,
-      borderRadius: 8,
-      backgroundColor: colors.buttonBackground,
-      borderWidth: 1,
-      borderColor: colors.border,
+      borderRadius: 100,
     },
     themeOptionActive: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
+      backgroundColor: colors.cardBackground,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      elevation: 2,
     },
     themeOptionText: {
-      color: colors.text,
+      color: colors.textSecondary,
       fontSize: 14,
       fontWeight: '500',
     },
     themeOptionTextActive: {
-      color: '#FFFFFF',
+      color: colors.text,
+      fontWeight: '600',
     },
   }), [colors]);
 
@@ -293,34 +293,51 @@ export default function ProfileScreen() {
 
           <View style={themedStyles.themeSection}>
             <View style={themedStyles.themeSectionHeader}>
-              <Feather name={isDark ? 'moon' : 'sun'} size={24} color={colors.primary} />
+              <Feather name={isDark ? 'moon' : 'sun'} size={20} color={colors.primary} />
               <Text style={themedStyles.themeSectionLabel}>Aparência</Text>
             </View>
             <View style={themedStyles.themeOptions}>
               <TouchableOpacity
                 style={[themedStyles.themeOption, themeMode === 'light' && themedStyles.themeOptionActive]}
                 onPress={() => setThemeMode('light')}
+                activeOpacity={0.7}
               >
-                <Feather name="sun" size={20} color={themeMode === 'light' ? '#FFFFFF' : colors.text} />
-                <Text style={[themedStyles.themeOptionText, themeMode === 'light' && themedStyles.themeOptionTextActive]}>
+                <Feather
+                  name="sun"
+                  size={18}
+                  color={themeMode === 'light' ? colors.text : colors.textSecondary}
+                />
+                <Text style={themeMode === 'light' ? themedStyles.themeOptionTextActive : themedStyles.themeOptionText}>
                   Claro
                 </Text>
               </TouchableOpacity>
+
               <TouchableOpacity
                 style={[themedStyles.themeOption, themeMode === 'dark' && themedStyles.themeOptionActive]}
                 onPress={() => setThemeMode('dark')}
+                activeOpacity={0.7}
               >
-                <Feather name="moon" size={20} color={themeMode === 'dark' ? '#FFFFFF' : colors.text} />
-                <Text style={[themedStyles.themeOptionText, themeMode === 'dark' && themedStyles.themeOptionTextActive]}>
+                <Feather
+                  name="moon"
+                  size={18}
+                  color={themeMode === 'dark' ? colors.text : colors.textSecondary}
+                />
+                <Text style={themeMode === 'dark' ? themedStyles.themeOptionTextActive : themedStyles.themeOptionText}>
                   Escuro
                 </Text>
               </TouchableOpacity>
+
               <TouchableOpacity
                 style={[themedStyles.themeOption, themeMode === 'system' && themedStyles.themeOptionActive]}
                 onPress={() => setThemeMode('system')}
+                activeOpacity={0.7}
               >
-                <Feather name="smartphone" size={20} color={themeMode === 'system' ? '#FFFFFF' : colors.text} />
-                <Text style={[themedStyles.themeOptionText, themeMode === 'system' && themedStyles.themeOptionTextActive]}>
+                <Feather
+                  name="smartphone"
+                  size={18}
+                  color={themeMode === 'system' ? colors.text : colors.textSecondary}
+                />
+                <Text style={themeMode === 'system' ? themedStyles.themeOptionTextActive : themedStyles.themeOptionText}>
                   Sistema
                 </Text>
               </TouchableOpacity>

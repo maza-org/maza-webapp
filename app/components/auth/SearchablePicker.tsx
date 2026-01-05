@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, Modal, FlatList, TextInput, StyleSheet } 
 import { Ionicons } from '@expo/vector-icons';
 import { SearchablePickerProps } from '@/app/types/auth';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export default function SearchablePicker({
   label,
@@ -15,6 +17,90 @@ export default function SearchablePicker({
   const [isVisible, setIsVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
   const insets = useSafeAreaInsets();
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      marginBottom: 16,
+    },
+    label: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '500',
+      marginBottom: 8,
+    },
+    picker: {
+      height: 48,
+      backgroundColor: colors.inputBackground,
+      borderRadius: 24,
+      paddingHorizontal: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderWidth: 1,
+      borderColor: error ? '#FF6B6B' : 'transparent',
+    },
+    pickerText: {
+      fontSize: 16,
+      color: colors.text,
+      flex: 1,
+    },
+    placeholder: {
+      color: colors.textMuted,
+    },
+    errorText: {
+      color: '#FF6B6B',
+      fontSize: 12,
+      marginTop: 4,
+      marginLeft: 8,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: colors.background,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      maxHeight: '80%',
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    searchInput: {
+      backgroundColor: colors.inputBackground,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      margin: 20,
+      fontSize: 16,
+      color: colors.text,
+    },
+    optionsList: {
+      paddingHorizontal: 20,
+    },
+    optionItem: {
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    optionText: {
+      fontSize: 16,
+      color: colors.text,
+    },
+  }), [colors, error]);
 
   const filteredOptions = useMemo(() => {
     if (!searchText) return options;
@@ -36,9 +122,9 @@ export default function SearchablePicker({
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <TouchableOpacity style={[styles.picker, error && styles.pickerError]} onPress={() => setIsVisible(true)}>
+      <TouchableOpacity style={styles.picker} onPress={() => setIsVisible(true)}>
         <Text style={[styles.pickerText, !value && styles.placeholder]}>{value || placeholder}</Text>
-        <Ionicons name="chevron-down" size={20} color="#666" />
+        <Ionicons name="chevron-down" size={20} color={colors.textMuted} />
       </TouchableOpacity>
 
       {error && <Text style={styles.errorText}>{error}</Text>}
@@ -49,14 +135,14 @@ export default function SearchablePicker({
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{label}</Text>
               <TouchableOpacity onPress={() => setIsVisible(false)}>
-                <Ionicons name="close" size={24} color="#fff" />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             <TextInput
               style={styles.searchInput}
               placeholder="Buscar..."
-              placeholderTextColor="#666"
+              placeholderTextColor={colors.textMuted}
               value={searchText}
               onChangeText={setSearchText}
             />
@@ -74,87 +160,3 @@ export default function SearchablePicker({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
-  label: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 8,
-  },
-  picker: {
-    height: 48,
-    backgroundColor: '#252525',
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  pickerError: {
-    borderWidth: 1,
-    borderColor: '#FF6B6B',
-  },
-  pickerText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    flex: 1,
-  },
-  placeholder: {
-    color: '#666',
-  },
-  errorText: {
-    color: '#FF6B6B',
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#1E1E1E',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  searchInput: {
-    backgroundColor: '#252525',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    margin: 20,
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  optionsList: {
-    paddingHorizontal: 20,
-  },
-  optionItem: {
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  optionText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-});

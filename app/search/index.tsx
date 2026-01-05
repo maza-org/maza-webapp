@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View } from '@/components/Themed';
 import { router } from 'expo-router';
@@ -10,9 +10,13 @@ import SearchHeader from '@/app/components/search/SearchHeader';
 import SearchInput from '@/app/components/search/SearchInput';
 import CategoriesSection from '@/app/components/search/CategoriesSection';
 import SearchResults from '@/app/components/search/SearchResults';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export default function Search() {
   const [searchTerm, setSearchTerm] = useState('');
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   const { data: searchData, isLoading, error } = useSearchCourses(searchTerm);
 
@@ -54,8 +58,19 @@ export default function Search() {
     });
   }
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      padding: 25,
+      paddingStart: 25,
+      paddingEnd: 25,
+    },
+  });
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <SearchHeader onBackPress={handleBackPress} />
 
       <SearchInput searchTerm={searchTerm} onSearchChange={handleSearchChange} onClearSearch={handleClearSearch} />
@@ -72,13 +87,3 @@ export default function Search() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121214',
-    padding: 25,
-    paddingStart: 25,
-    paddingEnd: 25,
-  },
-});

@@ -4,6 +4,8 @@ import { View } from '@/components/Themed';
 import CourseItem from './CourseItem';
 import { SearchResult } from '@/app/types/search';
 import { Course } from '@/types/course';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface SearchResultsProps {
   searchTerm: string;
@@ -20,8 +22,28 @@ export default function SearchResults({
   results,
   handleOpenCourse,
 }: SearchResultsProps) {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const styles = StyleSheet.create({
+    resultCount: {
+      fontSize: 16,
+      color: colors.textMuted,
+      marginBottom: 16,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+    },
+    flatListContent: {
+      paddingTop: 8,
+    },
+  });
+
   const renderItem = ({ item }: { item: SearchResult }) => (
-    <CourseItem item={item} onPress={() => handleOpenCourse(item)} />
+    <CourseItem item={item} onPress={() => handleOpenCourse(item as unknown as Course)} />
   );
 
   if (!searchTerm || resultCount === null) {
@@ -35,7 +57,7 @@ export default function SearchResults({
       </Text>
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#8257E5" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
         <FlatList
@@ -49,20 +71,3 @@ export default function SearchResults({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  resultCount: {
-    fontSize: 16,
-    color: '#8F8F8F',
-    marginBottom: 16,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#121214',
-  },
-  flatListContent: {
-    paddingTop: 8,
-  },
-});

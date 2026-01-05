@@ -3,8 +3,66 @@ import { Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { CourseItemProps } from '@/app/types/search';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export default function CourseItem({ item, onPress }: CourseItemProps) {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const styles = StyleSheet.create({
+    courseResult: {
+      flexDirection: 'row',
+      backgroundColor: colors.cardBackground,
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 8,
+    },
+    courseImage: {
+      width: 64,
+      height: 64,
+      borderRadius: 6,
+      marginRight: 16,
+      backgroundColor: colors.inputBackground,
+    },
+    courseInfo: {
+      flex: 1,
+      backgroundColor: 'transparent',
+    },
+    courseCategory: {
+      color: colors.primary,
+      fontSize: 12,
+      fontWeight: '500',
+      marginBottom: 4,
+    },
+    courseTitle: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '500',
+      marginBottom: 4,
+    },
+    courseDetails: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'transparent',
+    },
+    ratingContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginRight: 12,
+      backgroundColor: 'transparent',
+    },
+    ratingText: {
+      color: '#FFD700',
+      fontSize: 12,
+      marginLeft: 4,
+    },
+    subscriberText: {
+      color: colors.textMuted,
+      fontSize: 11,
+    },
+  });
+
   return (
     <TouchableOpacity style={styles.courseResult} onPress={onPress}>
       <Image source={{ uri: item?.picture?.formats?.thumbnail?.url }} style={styles.courseImage} />
@@ -24,56 +82,3 @@ export default function CourseItem({ item, onPress }: CourseItemProps) {
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  courseResult: {
-    flexDirection: 'row',
-    backgroundColor: '#29292E',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  courseImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 6,
-    marginRight: 16,
-    backgroundColor: '#202024',
-  },
-  courseInfo: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  courseCategory: {
-    color: '#1fa2df',
-    fontSize: 12,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  courseTitle: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  courseDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 12,
-    backgroundColor: 'transparent',
-  },
-  ratingText: {
-    color: '#FFD700',
-    fontSize: 12,
-    marginLeft: 4,
-  },
-  subscriberText: {
-    color: '#8F8F8F',
-    fontSize: 11,
-  },
-});

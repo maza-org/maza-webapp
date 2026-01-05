@@ -25,6 +25,18 @@ const videoStyles = StyleSheet.create({
     backgroundColor: '#000',
     zIndex: 999,
   },
+  closeButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 20,
+    right: 20,
+    zIndex: 1000,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 const NativeYoutubeIframe = ({ videoId, onVideoEnd }: { videoId: string; onVideoEnd: () => void }) => {
@@ -89,6 +101,9 @@ const NativeYoutubeIframe = ({ videoId, onVideoEnd }: { videoId: string; onVideo
 
   return (
     <View style={videoStyles.videoContainer}>
+      <TouchableOpacity style={videoStyles.closeButton} onPress={onVideoEnd}>
+        <Ionicons name="close" size={24} color="#FFF" />
+      </TouchableOpacity>
       {Platform.OS === 'web' && (
         <iframe
           src={`data:text/html;charset=utf-8,${encodeURIComponent(iframeHtml)}`}
@@ -119,6 +134,9 @@ const YoutubePlayerModal = ({ videoId, onVideoEnd }: { videoId: string; onVideoE
 
   return (
     <View style={videoStyles.videoContainer}>
+      <TouchableOpacity style={videoStyles.closeButton} onPress={onVideoEnd}>
+        <Ionicons name="close" size={24} color="#FFF" />
+      </TouchableOpacity>
       <YoutubeIframe
         play={true}
         initialPlayerParams={{
