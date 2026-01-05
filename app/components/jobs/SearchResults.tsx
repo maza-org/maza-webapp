@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { Job } from '@/types/job';
 import { JobCard } from '@/components/opportunities/JobCard';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface SearchResultsProps {
   query: string;
@@ -10,7 +12,22 @@ interface SearchResultsProps {
 }
 
 export default function SearchResults({ query, results, onJobPress }: SearchResultsProps) {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
   const resultCount = query.trim() ? results.length : null;
+
+  const styles = useMemo(() => StyleSheet.create({
+    resultCount: {
+      fontSize: 16,
+      color: colors.textMuted,
+      marginBottom: 16,
+    },
+    listContent: {
+      paddingTop: 8,
+      paddingBottom: 24,
+    },
+  }), [colors]);
 
   return (
     <>
@@ -30,15 +47,3 @@ export default function SearchResults({ query, results, onJobPress }: SearchResu
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  resultCount: {
-    fontSize: 16,
-    color: '#8F8F8F',
-    marginBottom: 16,
-  },
-  listContent: {
-    paddingTop: 8,
-    paddingBottom: 24,
-  },
-});
