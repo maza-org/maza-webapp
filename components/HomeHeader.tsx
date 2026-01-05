@@ -1,14 +1,19 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface HomeHeaderProps {
   onPress: () => void;
 }
 
 export default function HomeHeader({ onPress }: HomeHeaderProps) {
+  const { theme } = useTheme();
+  const colors = Colors[theme];
+
   return (
     <TouchableOpacity style={styles.header} onPress={onPress}>
-      <Text style={styles.headerText}>O que pretende aprender hoje?</Text>
+      <Text style={[styles.headerText, { color: colors.text }]}>O que pretende aprender hoje?</Text>
     </TouchableOpacity>
   );
 }
@@ -24,7 +29,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     fontFamily: 'ManropeBold',
-    color: '#FFF',
     width: 200,
   },
 });

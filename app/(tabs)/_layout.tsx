@@ -1,15 +1,17 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { tabStyles } from '@/app/types/tabs';
+import { tabStyles, tabColors } from '@/app/types/tabs';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { isDark } = useTheme();
   const baseTabContentHeight = 65;
 
-  const screenOptions = tabStyles.screenOptions(insets, baseTabContentHeight);
+  const colors = isDark ? tabColors.dark : tabColors.light;
+  const screenOptions = tabStyles.screenOptions(insets, baseTabContentHeight, colors);
 
   return (
     <Tabs screenOptions={screenOptions}>

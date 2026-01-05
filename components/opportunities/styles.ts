@@ -1,6 +1,9 @@
 import { StyleSheet } from 'react-native';
+import Colors from '@/constants/Colors';
 
-export const styles = StyleSheet.create({
+type ThemeColors = typeof Colors.dark;
+
+export const createThemedStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -9,18 +12,18 @@ export const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#8F8F8F',
+    color: colors.textMuted,
     marginTop: 16,
   },
   errorText: {
     fontSize: 16,
-    color: '#8F8F8F',
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 24,
   },
   retryButton: {
-    backgroundColor: '#2EA8FF',
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -31,17 +34,17 @@ export const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 18,
-    color: '#8F8F8F',
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 16,
   },
   jobCard: {
-    backgroundColor: '#1C1C1E',
+    backgroundColor: colors.cardBackground,
     borderRadius: 12,
     marginBottom: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
     position: 'relative',
   },
   jobHeader: {
@@ -53,7 +56,7 @@ export const styles = StyleSheet.create({
     marginRight: 12,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#29292E',
+    backgroundColor: colors.inputBackground,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -64,14 +67,14 @@ export const styles = StyleSheet.create({
   placeholderLogo: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#29292E',
+    backgroundColor: colors.inputBackground,
     justifyContent: 'center',
     alignItems: 'center',
   },
   placeholderText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: colors.text,
   },
   jobInfo: {
     flex: 1,
@@ -79,12 +82,12 @@ export const styles = StyleSheet.create({
   jobTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
+    color: colors.text,
     marginBottom: 4,
   },
   companyName: {
     fontSize: 14,
-    color: '#2EA8FF',
+    color: colors.primary,
     marginBottom: 8,
   },
   jobMeta: {
@@ -99,7 +102,7 @@ export const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: '#8F8F8F',
+    color: colors.textMuted,
     marginLeft: 4,
   },
   badge: {
@@ -111,17 +114,17 @@ export const styles = StyleSheet.create({
   languageBadge: {
     top: 12,
     right: 12,
-    backgroundColor: '#3A3A3C',
+    backgroundColor: isDark ? '#3A3A3C' : '#E5E5EA',
   },
   languageBadgeText: {
     fontSize: 10,
-    color: '#fff',
+    color: colors.text,
     textTransform: 'uppercase',
   },
   newBadge: {
     bottom: 12,
     right: 12,
-    backgroundColor: '#2EA8FF',
+    backgroundColor: colors.primary,
   },
   newBadgeText: {
     fontSize: 10,
@@ -129,3 +132,6 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
+// Legacy export for backward compatibility
+export const styles = createThemedStyles(Colors.dark, true);

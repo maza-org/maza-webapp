@@ -3,6 +3,8 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { UserCourse } from '@/types/home';
 import { Course } from '@/types/course';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface ContinueCourseCardProps {
   userCourse: UserCourse;
@@ -10,35 +12,41 @@ interface ContinueCourseCardProps {
 }
 
 export default function ContinueCourseCard({ userCourse, onPress }: ContinueCourseCardProps) {
+  const { theme } = useTheme();
+  const colors = Colors[theme];
+
   return (
-    <TouchableOpacity style={styles.courseCard} onPress={() => onPress(userCourse.course)}>
+    <TouchableOpacity
+      style={[styles.courseCard, { backgroundColor: colors.cardBackground }]}
+      onPress={() => onPress(userCourse.course)}
+    >
       <View style={styles.courseHeader}>
         {userCourse.course.picture ? (
           <Image source={{ uri: userCourse.course.picture.formats.thumbnail.url }} style={styles.profileImage} />
         ) : (
-          <View style={[styles.profileImage, styles.placeholderImage]}>
-            <Feather name="user" size={20} color="#666" />
+          <View style={[styles.profileImage, styles.placeholderImage, { backgroundColor: colors.buttonBackground }]}>
+            <Feather name="user" size={20} color={colors.iconColor} />
           </View>
         )}
         <View style={styles.courseHeaderInfo}>
-          <Text style={styles.instructorName}>{userCourse.course.author}</Text>
+          <Text style={[styles.instructorName, { color: colors.textSecondary }]}>{userCourse.course.author}</Text>
           <View style={styles.ratingContainer}>
             <Text style={styles.starIcon}>★</Text>
-            <Text style={styles.ratingText}>{userCourse.course.rating_avg}</Text>
+            <Text style={[styles.ratingText, { color: colors.text }]}>{userCourse.course.rating_avg}</Text>
           </View>
         </View>
       </View>
 
       <Image source={{ uri: userCourse.course.cover?.formats?.thumbnail?.url }} style={styles.coverImage} />
 
-      <Text style={styles.courseTitle}>{userCourse.course.title}</Text>
+      <Text style={[styles.courseTitle, { color: colors.text }]}>{userCourse.course.title}</Text>
 
       <View style={styles.progressContainer}>
         <View style={styles.progressInfo}>
-          <Text style={styles.progressText}>Progresso</Text>
-          <Text style={styles.progressText}>{userCourse.progress}%</Text>
+          <Text style={[styles.progressText, { color: colors.text }]}>Progresso</Text>
+          <Text style={[styles.progressText, { color: colors.text }]}>{userCourse.progress}%</Text>
         </View>
-        <View style={styles.progressBar}>
+        <View style={[styles.progressBar, { backgroundColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)' }]}>
           <View style={[styles.progressFill, { width: `${userCourse.progress}%` }]} />
         </View>
       </View>
@@ -48,7 +56,6 @@ export default function ContinueCourseCard({ userCourse, onPress }: ContinueCour
 
 const styles = StyleSheet.create({
   courseCard: {
-    backgroundColor: '#29292E',
     borderRadius: 12,
     padding: 16,
     marginTop: 20,
@@ -65,7 +72,6 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   placeholderImage: {
-    backgroundColor: '#29292E',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -76,9 +82,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   instructorName: {
-    color: '#FFF',
     fontSize: 14,
-    opacity: 0.7,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -89,7 +93,6 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   ratingText: {
-    color: '#FFF',
     fontSize: 12,
     fontWeight: '500',
   },
@@ -100,7 +103,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   courseTitle: {
-    color: '#FFF',
     fontSize: 18,
     fontWeight: '500',
     marginBottom: 16,
@@ -113,12 +115,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   progressText: {
-    color: '#FFF',
     fontSize: 12,
   },
   progressBar: {
     height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 4,
   },
   progressFill: {

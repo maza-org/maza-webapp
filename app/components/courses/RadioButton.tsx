@@ -1,15 +1,21 @@
 import React from 'react';
 import { Pressable, Animated, StyleSheet } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface RadioButtonProps {
   label: string;
   selected: boolean;
   onPress: () => void;
   animatedBg?: string;
-  animatedText?: string;
+  animatedText?: Animated.AnimatedInterpolation<string | number> | string;
 }
 
 export default function RadioButton({ label, selected, onPress, animatedBg, animatedText }: RadioButtonProps) {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+  const selectedTextColor = isDark ? colors.text : '#FFFFFF';
+
   return (
     <Pressable
       style={[styles.radioButton, selected && animatedBg && { backgroundColor: animatedBg }]}
@@ -19,7 +25,7 @@ export default function RadioButton({ label, selected, onPress, animatedBg, anim
         style={[
           styles.radioButtonText,
           {
-            color: animatedText || (selected ? '#fff' : '#666'),
+            color: animatedText as any || (selected ? selectedTextColor : colors.textMuted),
           },
         ]}
       >

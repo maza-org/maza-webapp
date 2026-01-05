@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface CoursesHeaderProps {
   title?: string;
@@ -17,21 +19,63 @@ export default function CoursesHeader({
   onMenuPress,
   onMaximizePress,
 }: CoursesHeaderProps) {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const themedStyles = useMemo(() => StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingTop: 24,
+      paddingBottom: 32,
+      backgroundColor: colors.background,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: colors.text,
+    },
+    headerButtons: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    maximizeButton: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.inputBackground,
+      borderRadius: 6,
+    },
+    menuButton: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.inputBackground,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+  }), [colors]);
+
   return (
-    <View style={styles.header}>
-      <Text style={styles.title}>{title}</Text>
+    <View style={themedStyles.header}>
+      <Text style={themedStyles.title}>{title}</Text>
 
       {(showMenu || showMaximize) && (
-        <View style={styles.headerButtons}>
+        <View style={themedStyles.headerButtons}>
           {showMaximize && (
-            <TouchableOpacity style={styles.maximizeButton} onPress={onMaximizePress}>
-              <Feather name="maximize-2" size={20} color="#fff" />
+            <TouchableOpacity style={themedStyles.maximizeButton} onPress={onMaximizePress}>
+              <Feather name="maximize-2" size={20} color={colors.text} />
             </TouchableOpacity>
           )}
 
           {showMenu && (
-            <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
-              <Feather name="menu" size={20} color="#fff" />
+            <TouchableOpacity style={themedStyles.menuButton} onPress={onMenuPress}>
+              <Feather name="menu" size={20} color={colors.text} />
             </TouchableOpacity>
           )}
         </View>
@@ -39,42 +83,3 @@ export default function CoursesHeader({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 24,
-    paddingBottom: 32,
-    backgroundColor: '#121214',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  maximizeButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#29292E',
-    borderRadius: 6,
-  },
-  menuButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#29292E',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-});

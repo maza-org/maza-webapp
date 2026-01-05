@@ -2,6 +2,8 @@ import React from 'react';
 import { View, StyleSheet, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useUser from '@/hooks/useUser';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 import HomepageCategories from '@/components/HomepageCategories';
 import HomeHeader from '@/components/HomeHeader';
 import SearchBar from '@/components/SearchBar';
@@ -15,6 +17,8 @@ import { navigateToCourse, navigateToCategories, navigateToSearch, navigateToCou
 import { router } from 'expo-router';
 
 export default function Home() {
+  const { theme } = useTheme();
+  const colors = Colors[theme];
   const { data: user } = useUser();
   const { data: popularCourses = [], isLoading: loadingPopularCourses } = usePopularCourses();
   const { data: newCourses = [], isLoading: loadingNewCourses } = useNewCourses();
@@ -50,7 +54,7 @@ export default function Home() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <HomeHeader onPress={handleHeaderPress} />
@@ -122,7 +126,6 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121214',
     padding: Platform.OS === 'web' ? 0 : 25,
     paddingEnd: 25,
     paddingStart: 25,

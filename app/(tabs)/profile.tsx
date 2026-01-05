@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -16,10 +16,13 @@ import CertificatesSection from '@/app/components/profile/CertificatesSection';
 import ProfileErrorState from '@/app/components/profile/ProfileErrorState';
 import { formatDate } from '@/util/util';
 import Button from '@/components/Button';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export default function ProfileScreen() {
   const { data: user, isLoading, error } = useUser();
   const { toast, config, hideToast } = useToast();
+  const { isDark, themeMode, setThemeMode } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [deletingInterestId, setDeletingInterestId] = useState<number | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -29,6 +32,105 @@ export default function ProfileScreen() {
   const deleteInterestMutation = useDeleteInterest();
   const logoutMutation = useLogout();
   const profileRefreshMutation = useProfileRefresh();
+
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const themedStyles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      backgroundColor: colors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    scrollView: {
+      flex: 1,
+    },
+    infoSection: {
+      padding: 24,
+      gap: 24,
+    },
+    footer: {
+      paddingHorizontal: 24,
+      paddingTop: 24,
+      paddingBottom: 0,
+      borderTopWidth: 1,
+      paddingVertical: 0,
+      borderTopColor: colors.border,
+      gap: 12,
+      alignItems: 'center',
+    },
+    versionLabel: {
+      color: colors.textMuted,
+      fontSize: 12,
+      textAlign: 'center',
+    },
+    logoutButton: {
+      backgroundColor: colors.logoutButton,
+      padding: 16,
+      borderRadius: 50,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      width: '100%',
+    },
+    logoutButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    themeSection: {
+      backgroundColor: colors.cardBackground,
+      padding: 16,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      gap: 16,
+    },
+    themeSectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    themeSectionLabel: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    themeOptions: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    themeOption: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 12,
+      paddingHorizontal: 8,
+      borderRadius: 8,
+      backgroundColor: colors.buttonBackground,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    themeOptionActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    themeOptionText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    themeOptionTextActive: {
+      color: '#FFFFFF',
+    },
+  }), [colors]);
 
   useFocusEffect(
     useCallback(() => {
@@ -87,8 +189,8 @@ export default function ProfileScreen() {
 
   if (isLoading || profileRefreshMutation.isPending) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1fa2df" />
+      <View style={themedStyles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -114,7 +216,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
       <Toast
         visible={toast.visible}
         message={toast.message}
@@ -124,7 +226,7 @@ export default function ProfileScreen() {
         position={config.position}
         showIcon={config.showIcon}
       />
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={themedStyles.scrollView}>
         <ProfileHeader />
 
         <ProfileImageSection
@@ -135,7 +237,7 @@ export default function ProfileScreen() {
           documentId={user.documentId}
         />
 
-        <View style={styles.infoSection}>
+        <View style={themedStyles.infoSection}>
           <ProfileInfoItem icon="phone" label="Número de Telemóvel" value={user.phone} />
 
           <ProfileInfoItem icon="mail" label="Email" value={user.email || 'Campo não preenchido'} />
@@ -179,7 +281,7 @@ export default function ProfileScreen() {
             text="Personalizar Experiência"
             handle={handleCustomizeSurvey}
             variant="outline"
-            icon={<Feather name="sliders" size={20} color="#1fa2df" />}
+            icon={<Feather name="sliders" size={20} color={colors.primary} />}
           />
 
           <CertificatesSection
@@ -189,73 +291,60 @@ export default function ProfileScreen() {
             onViewAll={() => router.push('/user/certificates')}
           />
 
+          <View style={themedStyles.themeSection}>
+            <View style={themedStyles.themeSectionHeader}>
+              <Feather name={isDark ? 'moon' : 'sun'} size={24} color={colors.primary} />
+              <Text style={themedStyles.themeSectionLabel}>Aparência</Text>
+            </View>
+            <View style={themedStyles.themeOptions}>
+              <TouchableOpacity
+                style={[themedStyles.themeOption, themeMode === 'light' && themedStyles.themeOptionActive]}
+                onPress={() => setThemeMode('light')}
+              >
+                <Feather name="sun" size={20} color={themeMode === 'light' ? '#FFFFFF' : colors.text} />
+                <Text style={[themedStyles.themeOptionText, themeMode === 'light' && themedStyles.themeOptionTextActive]}>
+                  Claro
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[themedStyles.themeOption, themeMode === 'dark' && themedStyles.themeOptionActive]}
+                onPress={() => setThemeMode('dark')}
+              >
+                <Feather name="moon" size={20} color={themeMode === 'dark' ? '#FFFFFF' : colors.text} />
+                <Text style={[themedStyles.themeOptionText, themeMode === 'dark' && themedStyles.themeOptionTextActive]}>
+                  Escuro
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[themedStyles.themeOption, themeMode === 'system' && themedStyles.themeOptionActive]}
+                onPress={() => setThemeMode('system')}
+              >
+                <Feather name="smartphone" size={20} color={themeMode === 'system' ? '#FFFFFF' : colors.text} />
+                <Text style={[themedStyles.themeOptionText, themeMode === 'system' && themedStyles.themeOptionTextActive]}>
+                  Sistema
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           <Button
             text="Alterar Senha"
             handle={handleChangePassword}
             variant="outline"
-            icon={<Feather name="lock" size={20} color="#1fa2df" />}
+            icon={<Feather name="lock" size={20} color={colors.primary} />}
           />
 
-          <Text style={styles.versionLabel}>Versão 1.0.0</Text>
+          <Text style={themedStyles.versionLabel}>Versão 1.0.0</Text>
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Feather name="log-out" size={20} color="#FFF" />
-          <Text style={styles.logoutButtonText}>Terminar Sessão</Text>
+      <View style={themedStyles.footer}>
+        <TouchableOpacity style={themedStyles.logoutButton} onPress={handleLogout}>
+          <Feather name="log-out" size={20} color={colors.text} />
+          <Text style={themedStyles.logoutButtonText}>Terminar Sessão</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121214',
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: '#121214',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  infoSection: {
-    padding: 24,
-    gap: 24,
-  },
-  footer: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 0,
-    borderTopWidth: 1,
-    paddingVertical: 0,
-    borderTopColor: '#323238',
-    gap: 12,
-    alignItems: 'center',
-  },
-  versionLabel: {
-    color: '#A8A8B3',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  logoutButton: {
-    backgroundColor: '#202024',
-    padding: 16,
-    borderRadius: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    width: '100%',
-  },
-  logoutButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

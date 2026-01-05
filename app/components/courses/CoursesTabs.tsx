@@ -1,6 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Animated, StyleSheet } from 'react-native';
 import RadioButton from './RadioButton';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export type CourseTabType = 'inProgress' | 'favorites' | 'completed';
 
@@ -11,16 +13,46 @@ interface CoursesTabsProps {
 
 export default function CoursesTabs({ selectedFilter, onFilterChange }: CoursesTabsProps) {
   const animationValue = useRef(new Animated.Value(0)).current;
-  const buttonWidth = 100;
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  // Position values for each tab
+  const positions = {
+    inProgress: 0,
+    favorites: 130,
+    completed: 260,
+  };
+
+  const themedStyles = useMemo(() => StyleSheet.create({
+    radioGroup: {
+      flexDirection: 'row',
+      marginHorizontal: 16,
+      backgroundColor: colors.cardBackground,
+      borderRadius: 999,
+      padding: 4,
+      position: 'relative',
+    },
+    animatedSelection: {
+      position: 'absolute',
+      top: 4,
+      left: 4,
+      right: 4,
+      bottom: 4,
+      width: '33%',
+      backgroundColor: isDark ? colors.inputBackground : colors.primary,
+      borderRadius: 999,
+      zIndex: 0,
+    },
+  }), [colors, isDark]);
 
   const getAnimatedPosition = () => {
     switch (selectedFilter) {
       case 'inProgress':
-        return 0;
+        return positions.inProgress;
       case 'favorites':
-        return buttonWidth + 30;
+        return positions.favorites;
       case 'completed':
-        return buttonWidth * 2.6;
+        return positions.completed;
       default:
         return 0;
     }
@@ -35,19 +67,29 @@ export default function CoursesTabs({ selectedFilter, onFilterChange }: CoursesT
     }).start();
   }, [selectedFilter]);
 
+  const selectedTextColor = isDark ? colors.text : '#FFFFFF';
+
   const animatedText = (buttonIndex: number) => {
+    const positionValues = [positions.inProgress, positions.favorites, positions.completed];
+    const currentPos = positionValues[buttonIndex];
+    const prevPos = buttonIndex > 0 ? positionValues[buttonIndex - 1] : -65;
+    const nextPos = buttonIndex < 2 ? positionValues[buttonIndex + 1] : 325;
+
+    const midBefore = (prevPos + currentPos) / 2;
+    const midAfter = (currentPos + nextPos) / 2;
+
     return animationValue.interpolate({
-      inputRange: [buttonWidth * (buttonIndex - 0.5), buttonWidth * buttonIndex, buttonWidth * (buttonIndex + 0.5)],
-      outputRange: ['#666', '#fff', '#666'],
+      inputRange: [midBefore, currentPos, midAfter],
+      outputRange: [colors.textMuted, selectedTextColor, colors.textMuted],
       extrapolate: 'clamp',
     });
   };
 
   return (
-    <View style={styles.radioGroup}>
+    <View style={themedStyles.radioGroup}>
       <Animated.View
         style={[
-          styles.animatedSelection,
+          themedStyles.animatedSelection,
           {
             transform: [
               {
@@ -78,25 +120,3 @@ export default function CoursesTabs({ selectedFilter, onFilterChange }: CoursesT
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  radioGroup: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    backgroundColor: '#202024',
-    borderRadius: 999,
-    padding: 4,
-    position: 'relative',
-  },
-  animatedSelection: {
-    position: 'absolute',
-    top: 4,
-    left: 4,
-    right: 4,
-    bottom: 4,
-    width: '33%',
-    backgroundColor: '#29292E',
-    borderRadius: 999,
-    zIndex: 0,
-  },
-});

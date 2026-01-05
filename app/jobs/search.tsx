@@ -9,10 +9,24 @@ import SearchHeader from '@/app/components/jobs/SearchHeader';
 import SearchInput from '@/app/components/jobs/SearchInput';
 import SearchResults from '@/app/components/jobs/SearchResults';
 import { SearchLoading, SearchError, SearchEmpty, SearchPlaceholder } from '@/app/components/jobs/SearchStates';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export default function Search() {
   const [query, setQuery] = useState('');
   const { data: searchResults = [], isLoading, error } = useJobSearch(query);
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const themedStyles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      padding: 25,
+      paddingStart: 25,
+      paddingEnd: 25,
+    },
+  }), [colors]);
 
   const results = useMemo(() => {
     return searchResults.map((job: any) => ({
@@ -37,8 +51,8 @@ export default function Search() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar style="light" />
+    <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       <SearchHeader />
 
@@ -58,13 +72,3 @@ export default function Search() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121214',
-    padding: 25,
-    paddingStart: 25,
-    paddingEnd: 25,
-  },
-});

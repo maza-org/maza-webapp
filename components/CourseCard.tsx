@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Course } from '@/types/course';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface CourseCardProps {
   course: Course;
@@ -15,6 +17,9 @@ interface CourseCardProps {
 }
 
 export default function CourseCard({ course, onPress, badge, showRating = true }: CourseCardProps) {
+  const { theme } = useTheme();
+  const colors = Colors[theme];
+
   const renderBadge = () => {
     if (!badge) return null;
 
@@ -43,37 +48,37 @@ export default function CourseCard({ course, onPress, badge, showRating = true }
   };
 
   return (
-    <TouchableOpacity style={styles.courseCard} onPress={() => onPress(course)}>
+    <TouchableOpacity style={[styles.courseCard, { backgroundColor: colors.cardBackground }]} onPress={() => onPress(course)}>
       {course.picture ? (
         <Image source={{ uri: course.picture.formats.small?.url }} style={styles.courseImage} />
       ) : (
-        <View style={[styles.courseImage, styles.placeholderImage]}>
-          <Feather name="image" size={24} color="#666" />
+        <View style={[styles.courseImage, styles.placeholderImage, { backgroundColor: colors.buttonBackground }]}>
+          <Feather name="image" size={24} color={colors.iconColor} />
         </View>
       )}
 
       {renderBadge()}
 
       {showRating && (
-        <View style={styles.courseRatingBadge}>
+        <View style={[styles.courseRatingBadge, { backgroundColor: theme === 'dark' ? 'rgba(41, 41, 46, 0.9)' : 'rgba(255, 255, 255, 0.9)' }]}>
           <Text style={styles.starIcon}>★</Text>
-          <Text style={styles.ratingText}>{course.rating_avg}</Text>
+          <Text style={[styles.ratingText, { color: colors.text }]}>{course.rating_avg}</Text>
         </View>
       )}
 
       <View style={styles.courseInfo}>
         {course.subjects && course.subjects[0] && <Text style={styles.courseCategory}>{course.subjects[0].name}</Text>}
 
-        <Text style={styles.courseTitle} numberOfLines={2}>
+        <Text style={[styles.courseTitle, { color: colors.text }]} numberOfLines={2}>
           {course.title}
         </Text>
 
         <View style={styles.instructorInfo}>
           <Image source={{ uri: course.picture?.formats.thumbnail?.url }} style={styles.instructorAvatar} />
-          <Text style={styles.instructorName}>{course.author ? course.author.slice(0, 5) + '...' : 'Instrutor'}</Text>
+          <Text style={[styles.instructorName, { color: colors.textSecondary }]}>{course.author ? course.author.slice(0, 5) + '...' : 'Instrutor'}</Text>
           <View style={styles.courseStats}>
-            <Feather name="users" size={12} color="#FFF" />
-            <Text style={styles.statsText}>{formatSubscribers(course.subscribed)} inscritos</Text>
+            <Feather name="users" size={12} color={colors.textSecondary} />
+            <Text style={[styles.statsText, { color: colors.textSecondary }]}>{formatSubscribers(course.subscribed)} inscritos</Text>
           </View>
         </View>
       </View>
@@ -84,7 +89,6 @@ export default function CourseCard({ course, onPress, badge, showRating = true }
 const styles = StyleSheet.create({
   courseCard: {
     width: 280,
-    backgroundColor: '#29292E',
     borderRadius: 12,
     marginRight: 16,
     overflow: 'hidden',
@@ -94,7 +98,6 @@ const styles = StyleSheet.create({
     height: 140,
   },
   placeholderImage: {
-    backgroundColor: '#29292E',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -117,7 +120,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     right: 12,
-    backgroundColor: 'rgba(41, 41, 46, 0.9)',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
@@ -133,7 +135,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   courseTitle: {
-    color: '#FFF',
     fontSize: 16,
     fontWeight: '500',
     marginVertical: 8,
@@ -150,9 +151,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   instructorName: {
-    color: '#FFF',
     fontSize: 14,
-    opacity: 0.7,
   },
   courseStats: {
     flexDirection: 'row',
@@ -160,9 +159,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   statsText: {
-    color: '#FFF',
     fontSize: 12,
-    opacity: 0.7,
     marginRight: 8,
   },
   starIcon: {
@@ -170,7 +167,6 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   ratingText: {
-    color: '#FFF',
     fontSize: 12,
     fontWeight: '500',
   },

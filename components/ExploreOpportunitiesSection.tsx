@@ -1,14 +1,19 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { router } from 'expo-router';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export default function ExploreOpportunitiesSection() {
+  const { theme } = useTheme();
+  const colors = Colors[theme];
+
   const handleExplore = () => {
     router.push('/(tabs)/opportunities');
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
       {/* Header Image */}
       <View style={styles.imageContainer}>
         <Image
@@ -20,8 +25,8 @@ export default function ExploreOpportunitiesSection() {
       </View>
 
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>Explorar oportunidades</Text>
-        <Text style={styles.description}>
+        <Text style={[styles.title, { color: colors.text }]}>Explorar oportunidades</Text>
+        <Text style={[styles.description, { color: colors.textMuted }]}>
           Encontre vagas de emprego, estágios e oportunidades de crescimento profissional na sua área.
         </Text>
 
@@ -35,12 +40,10 @@ export default function ExploreOpportunitiesSection() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#202024',
     borderRadius: 12,
     marginTop: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   imageContainer: {
     position: 'relative',
@@ -58,14 +61,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   title: {
-    color: '#FFF',
     fontSize: 20,
     fontWeight: '700',
     fontFamily: 'ManropeBold',
     marginBottom: 8,
   },
   description: {
-    color: '#A8A8B3',
     fontSize: 14,
     lineHeight: 20,
     fontFamily: 'ManropeRegular',

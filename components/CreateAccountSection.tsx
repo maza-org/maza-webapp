@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, LayoutAnimation, Platform, UI
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import StoryModal from './StoryModal';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -53,6 +55,8 @@ const ONBOARDING_SLIDES = [
 ];
 
 export default function CreateAccountSection() {
+  const { theme } = useTheme();
+  const colors = Colors[theme];
   const [showStory, setShowStory] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
 
@@ -69,7 +73,7 @@ export default function CreateAccountSection() {
 
   return (
     <>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
         {/* Header Image */}
         <View style={styles.imageContainer}>
           <Image
@@ -90,8 +94,8 @@ export default function CreateAccountSection() {
         </TouchableOpacity>
 
         <View style={styles.contentContainer}>
-          <Text style={styles.title}>Comece a sua jornada.</Text>
-          <Text style={styles.description}>
+          <Text style={[styles.title, { color: colors.text }]}>Comece a sua jornada.</Text>
+          <Text style={[styles.description, { color: colors.textMuted }]}>
             Crie a sua conta Maza para desbloquear cursos gratuitos, obter certificados e acompanhar o seu progresso.
           </Text>
 
@@ -114,13 +118,11 @@ export default function CreateAccountSection() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#202024',
     borderRadius: 12,
     marginVertical: 16,
     position: 'relative',
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   imageContainer: {
     position: 'relative',
@@ -150,14 +152,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   title: {
-    color: '#FFF',
     fontSize: 20,
     fontWeight: '700',
     fontFamily: 'ManropeBold',
     marginBottom: 8,
   },
   description: {
-    color: '#A8A8B3',
     fontSize: 14,
     lineHeight: 20,
     fontFamily: 'ManropeRegular',

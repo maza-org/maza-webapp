@@ -1,9 +1,12 @@
 import { StyleSheet } from 'react-native';
+import Colors from '@/constants/Colors';
 
-export const styles = StyleSheet.create({
+type ThemeColors = typeof Colors.dark;
+
+export const createJobDetailsStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121214',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -12,12 +15,12 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 30,
     paddingBottom: 20,
-    backgroundColor: '#121214',
+    backgroundColor: colors.background,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: colors.text,
     flex: 1,
     textAlign: 'center',
   },
@@ -30,7 +33,7 @@ export const styles = StyleSheet.create({
     borderWidth: 0.5,
     padding: 8,
     borderStyle: 'solid',
-    borderColor: '#b3b3b3',
+    borderColor: colors.border,
   },
   shareButton: {
     width: 50,
@@ -41,7 +44,7 @@ export const styles = StyleSheet.create({
     borderWidth: 0.5,
     padding: 8,
     borderStyle: 'solid',
-    borderColor: '#b3b3b3',
+    borderColor: colors.border,
   },
   scrollView: {
     flex: 1,
@@ -53,7 +56,7 @@ export const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#8F8F8F',
+    color: colors.textMuted,
     marginTop: 16,
   },
   errorContainer: {
@@ -64,13 +67,13 @@ export const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: '#8F8F8F',
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 24,
   },
   retryButton: {
-    backgroundColor: '#2EA8FF',
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 50,
@@ -83,7 +86,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
   },
   companyLogoContainer: {
     width: 64,
@@ -91,7 +94,7 @@ export const styles = StyleSheet.create({
     marginRight: 16,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#29292E',
+    backgroundColor: colors.inputBackground,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -102,14 +105,14 @@ export const styles = StyleSheet.create({
   placeholderLogo: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#29292E',
+    backgroundColor: colors.inputBackground,
     justifyContent: 'center',
     alignItems: 'center',
   },
   placeholderText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: colors.text,
   },
   jobTitleContainer: {
     flex: 1,
@@ -118,16 +121,16 @@ export const styles = StyleSheet.create({
   jobTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: colors.text,
     marginBottom: 4,
   },
   companyName: {
     fontSize: 16,
-    color: '#2EA8FF',
+    color: colors.primary,
   },
   metadataContainer: {
     padding: 16,
-    backgroundColor: '#1C1C1E',
+    backgroundColor: colors.cardBackground,
     borderRadius: 12,
     margin: 16,
     flexDirection: 'row',
@@ -142,21 +145,21 @@ export const styles = StyleSheet.create({
   },
   metadataText: {
     fontSize: 14,
-    color: '#fff',
+    color: colors.text,
     marginLeft: 8,
   },
   languageBadge: {
     position: 'absolute',
     top: 12,
     right: 12,
-    backgroundColor: '#3A3A3C',
+    backgroundColor: isDark ? '#3A3A3C' : '#E5E5EA',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
   },
   languageBadgeText: {
     fontSize: 12,
-    color: '#fff',
+    color: colors.text,
     textTransform: 'uppercase',
   },
   excerptContainer: {
@@ -165,7 +168,7 @@ export const styles = StyleSheet.create({
   },
   excerptText: {
     fontSize: 16,
-    color: '#fff',
+    color: colors.text,
     lineHeight: 24,
     fontStyle: 'italic',
   },
@@ -175,19 +178,19 @@ export const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: colors.text,
     marginBottom: 16,
   },
   footer: {
     padding: 16,
-    backgroundColor: '#121214',
+    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    borderTopColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
   },
   applyButton: {
     paddingVertical: 16,
     justifyContent: 'center',
-    backgroundColor: '#1fa2df',
+    backgroundColor: colors.primary,
     padding: 16,
     borderRadius: 50,
     alignItems: 'center',
@@ -198,3 +201,6 @@ export const styles = StyleSheet.create({
     color: '#fff',
   },
 });
+
+// Legacy export for backward compatibility
+export const styles = createJobDetailsStyles(Colors.dark, true);

@@ -1,19 +1,41 @@
-const tintColorLight = '#2f95dc';
-const tintColorDark = '#fff';
+const tintColorLight = '#1fa2df';
+const tintColorDark = '#1fa2df';
 
 export default {
   light: {
-    text: '#000',
-    background: '#fff',
+    text: '#1A1A1A',
+    textSecondary: '#666666',
+    textMuted: '#A8A8B3',
+    background: '#F5F5F5',
+    cardBackground: '#FFFFFF',
+    inputBackground: '#FFFFFF',
+    border: '#E1E1E6',
     tint: tintColorLight,
-    tabIconDefault: '#ccc',
+    tabIconDefault: '#A8A8B3',
     tabIconSelected: tintColorLight,
+    primary: '#1fa2df',
+    buttonBackground: '#F0F0F5',
+    footerBackground: '#FFFFFF',
+    footerBorder: '#E1E1E6',
+    iconColor: '#666666',
+    logoutButton: '#F0F0F5',
   },
   dark: {
-    text: '#fff',
-    background: '#000',
+    text: '#FFFFFF',
+    textSecondary: '#C4C4CC',
+    textMuted: '#A8A8B3',
+    background: '#121214',
+    cardBackground: '#202024',
+    inputBackground: '#29292E',
+    border: '#323238',
     tint: tintColorDark,
-    tabIconDefault: '#ccc',
+    tabIconDefault: '#A8A8B3',
     tabIconSelected: tintColorDark,
+    primary: '#1fa2df',
+    buttonBackground: '#29292E',
+    footerBackground: '#121214',
+    footerBorder: '#323238',
+    iconColor: '#A8A8B3',
+    logoutButton: '#202024',
   },
 };

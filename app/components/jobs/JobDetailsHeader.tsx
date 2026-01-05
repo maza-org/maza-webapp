@@ -1,14 +1,20 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Image } from 'react-native';
 import { Job } from '@/types/job';
 import { JobMetadata } from '@/app/components/JobMetadata';
-import { styles } from '@/app/styles/jobDetails.styles';
+import { createJobDetailsStyles } from '@/app/styles/jobDetails.styles';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface JobDetailsHeaderProps {
   job: Job;
 }
 
 export default function JobDetailsHeader({ job }: JobDetailsHeaderProps) {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+  const styles = useMemo(() => createJobDetailsStyles(colors, isDark), [colors, isDark]);
+
   return (
     <>
       <View style={styles.jobHeader}>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -9,11 +9,15 @@ import { useMarkQuizAsCompleted, useConcludeModuleQuiz } from '@/services/catalo
 import { User } from '@/types/user';
 import { Timer, ResultsView, CommentContainer } from './components';
 import { calculateDurationInSeconds } from './utils';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export default function Quiz() {
   const { content, isFinalTest, courseId, userCourseId, moduleId } = useLocalSearchParams();
   const quizData: QuizModule = JSON.parse(content as string);
   const isFinalTestQuiz = isFinalTest === 'true';
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   // Calculate quiz duration in seconds based on the duration object
   const QUIZ_DURATION = calculateDurationInSeconds(quizData.duration);
@@ -28,6 +32,170 @@ export default function Quiz() {
   const [timeSpent, setTimeSpent] = useState(0);
   const [timeExpired, setTimeExpired] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const themedStyles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 24,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    backButton: {
+      padding: 8,
+    },
+    headerTitle: {
+      flex: 1,
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    progressContainer: {
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    progressBar: {
+      height: 6,
+      backgroundColor: colors.border,
+      borderRadius: 3,
+      marginTop: 8,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      height: '100%',
+      backgroundColor: colors.primary,
+      borderRadius: 3,
+    },
+    questionCounter: {
+      color: colors.textMuted,
+      fontSize: 16,
+    },
+    content: {
+      flex: 1,
+    },
+    questionContainer: {
+      padding: 24,
+    },
+    questionText: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '500',
+      marginBottom: 24,
+    },
+    optionsContainer: {
+      gap: 16,
+    },
+    optionButton: {
+      padding: 16,
+      backgroundColor: colors.cardBackground,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: colors.border,
+    },
+    selectedOption: {
+      borderColor: colors.primary,
+    },
+    correctOption: {
+      borderColor: '#04D361',
+      backgroundColor: 'rgba(4, 211, 97, 0.1)',
+    },
+    incorrectOption: {
+      borderColor: '#FF3B30',
+      backgroundColor: 'rgba(255, 59, 48, 0.1)',
+    },
+    optionContent: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+    },
+    optionTextContainer: {
+      flex: 1,
+      marginRight: 16,
+    },
+    optionText: {
+      color: colors.text,
+      fontSize: 16,
+    },
+    selectedOptionText: {
+      color: colors.primary,
+    },
+    iconContainer: {
+      paddingTop: 4,
+    },
+    footer: {
+      flexDirection: 'row',
+      padding: 24,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      justifyContent: 'space-between',
+    },
+    navigationButton: {
+      flex: 1,
+      backgroundColor: colors.cardBackground,
+      padding: 16,
+      borderRadius: 50,
+      alignItems: 'center',
+      marginHorizontal: 8,
+    },
+    nextButton: {
+      backgroundColor: colors.primary,
+    },
+    finishButton: {
+      backgroundColor: '#04D361',
+    },
+    navigationButtonText: {
+      color: '#FFF',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    AllThatApplySelectHint: {
+      color: colors.textMuted,
+      fontSize: 14,
+      marginBottom: 16,
+      fontStyle: 'italic',
+    },
+    checkboxContainer: {
+      marginRight: 12,
+    },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    squareCheckbox: {
+      borderRadius: 4,
+    },
+    checkedCheckbox: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    verifyButton: {
+      backgroundColor: colors.primary,
+      padding: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+      marginTop: 24,
+    },
+    verifyButtonDisabled: {
+      opacity: 0.5,
+    },
+    verifyButtonText: {
+      color: '#FFF',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  }), [colors, isDark]);
 
   // React Query mutation for marking quiz as completed
   const markQuizAsCompletedMutation = useMarkQuizAsCompleted();
@@ -259,42 +427,42 @@ export default function Quiz() {
   const isTimeWarning = timeLeft <= 120;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
       {!showResults ? (
         <>
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <Feather name="chevron-left" size={24} color="#FFF" />
+          <View style={themedStyles.header}>
+            <TouchableOpacity style={themedStyles.backButton} onPress={() => router.back()}>
+              <Feather name="chevron-left" size={24} color={colors.text} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Teste Final</Text>
+            <Text style={themedStyles.headerTitle}>Teste Final</Text>
             <Timer timeLeft={timeLeft} isWarning={isTimeWarning} />
           </View>
 
-          <View style={styles.progressContainer}>
-            <Text style={styles.questionCounter}>
+          <View style={themedStyles.progressContainer}>
+            <Text style={themedStyles.questionCounter}>
               {currentQuestion + 1}/{quizData.questions.length}
             </Text>
-            <View style={styles.progressBar}>
+            <View style={themedStyles.progressBar}>
               <View
                 style={[
-                  styles.progressFill,
+                  themedStyles.progressFill,
                   { width: `${((currentQuestion + 1) / quizData.questions.length) * 100}%` },
                 ]}
               />
             </View>
           </View>
 
-          <ScrollView style={styles.content}>
-            <View style={styles.questionContainer}>
-              <Text style={styles.questionText}>
+          <ScrollView style={themedStyles.content}>
+            <View style={themedStyles.questionContainer}>
+              <Text style={themedStyles.questionText}>
                 {currentQuestion + 1}. {getCurrentQuestion().description}
               </Text>
 
               {getCurrentQuestion().format === 'AllThatApply' && (
-                <Text style={styles.AllThatApplySelectHint}>Selecione todas as opções corretas</Text>
+                <Text style={themedStyles.AllThatApplySelectHint}>Selecione todas as opções corretas</Text>
               )}
 
-              <View style={styles.optionsContainer}>
+              <View style={themedStyles.optionsContainer}>
                 {getCurrentQuestion().options.map((option) => {
                   const isSelected = isOptionSelected(option.id);
                   const showComment = isSelected && option.comment && showCurrentFeedback;
@@ -303,21 +471,21 @@ export default function Quiz() {
                     <TouchableOpacity
                       key={option.id}
                       style={[
-                        styles.optionButton,
-                        isSelected && styles.selectedOption,
-                        showCurrentFeedback && option.is_correct && styles.correctOption,
-                        showCurrentFeedback && isSelected && !option.is_correct && styles.incorrectOption,
+                        themedStyles.optionButton,
+                        isSelected && themedStyles.selectedOption,
+                        showCurrentFeedback && option.is_correct && themedStyles.correctOption,
+                        showCurrentFeedback && isSelected && !option.is_correct && themedStyles.incorrectOption,
                       ]}
                       onPress={() => handleAnswer(getCurrentQuestion().id, option.id)}
                       disabled={getCurrentQuestion().format === 'SingleOption' && showCurrentFeedback}
                     >
-                      <View style={styles.optionContent}>
-                        <View style={styles.checkboxContainer}>
+                      <View style={themedStyles.optionContent}>
+                        <View style={themedStyles.checkboxContainer}>
                           <View
                             style={[
-                              styles.checkbox,
-                              getCurrentQuestion().format === 'AllThatApply' && styles.squareCheckbox,
-                              isSelected && styles.checkedCheckbox,
+                              themedStyles.checkbox,
+                              getCurrentQuestion().format === 'AllThatApply' && themedStyles.squareCheckbox,
+                              isSelected && themedStyles.checkedCheckbox,
                             ]}
                           >
                             {isSelected && (
@@ -329,14 +497,14 @@ export default function Quiz() {
                             )}
                           </View>
                         </View>
-                        <View style={styles.optionTextContainer}>
-                          <Text style={[styles.optionText, isSelected && styles.selectedOptionText]}>
+                        <View style={themedStyles.optionTextContainer}>
+                          <Text style={[themedStyles.optionText, isSelected && themedStyles.selectedOptionText]}>
                             {option.description}
                           </Text>
                         </View>
 
                         {showCurrentFeedback && (
-                          <View style={styles.iconContainer}>
+                          <View style={themedStyles.iconContainer}>
                             {option.is_correct ? (
                               <Feather name="check-circle" size={24} color="#04D361" />
                             ) : (
@@ -355,28 +523,28 @@ export default function Quiz() {
               {getCurrentQuestion().format === 'AllThatApply' && !showCurrentFeedback && (
                 <TouchableOpacity
                   style={[
-                    styles.verifyButton,
-                    (getCurrentSelectedAnswers() as number[]).length === 0 && styles.verifyButtonDisabled,
+                    themedStyles.verifyButton,
+                    (getCurrentSelectedAnswers() as number[]).length === 0 && themedStyles.verifyButtonDisabled,
                   ]}
                   onPress={handleVerify}
                   disabled={(getCurrentSelectedAnswers() as number[]).length === 0}
                 >
-                  <Text style={styles.verifyButtonText}>Verificar Resposta</Text>
+                  <Text style={themedStyles.verifyButtonText}>Verificar Resposta</Text>
                 </TouchableOpacity>
               )}
             </View>
           </ScrollView>
 
-          <View style={styles.footer}>
+          <View style={themedStyles.footer}>
             {currentQuestion > 0 && (
-              <TouchableOpacity style={styles.navigationButton} onPress={handlePrevious}>
-                <Text style={styles.navigationButtonText}>Anterior</Text>
+              <TouchableOpacity style={themedStyles.navigationButton} onPress={handlePrevious}>
+                <Text style={themedStyles.navigationButtonText}>Anterior</Text>
               </TouchableOpacity>
             )}
 
             {currentQuestion < quizData.questions.length - 1 ? (
               <TouchableOpacity
-                style={[styles.navigationButton, styles.nextButton]}
+                style={[themedStyles.navigationButton, themedStyles.nextButton]}
                 onPress={handleNext}
                 disabled={
                   getCurrentQuestion().format === 'SingleOption'
@@ -384,11 +552,11 @@ export default function Quiz() {
                     : !showCurrentFeedback && (getCurrentSelectedAnswers() as number[]).length === 0
                 }
               >
-                <Text style={styles.navigationButtonText}>Próxima</Text>
+                <Text style={themedStyles.navigationButtonText}>Próxima</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                style={[styles.navigationButton, styles.finishButton]}
+                style={[themedStyles.navigationButton, themedStyles.finishButton]}
                 onPress={handleFinish}
                 disabled={
                   getCurrentQuestion().format === 'SingleOption'
@@ -396,7 +564,7 @@ export default function Quiz() {
                     : !showCurrentFeedback && (getCurrentSelectedAnswers() as number[]).length === 0
                 }
               >
-                <Text style={styles.navigationButtonText}>Finalizar</Text>
+                <Text style={themedStyles.navigationButtonText}>Finalizar</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -420,180 +588,3 @@ export default function Quiz() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121214',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#323238',
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    flex: 1,
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  progressContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#323238',
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: '#323238',
-    borderRadius: 3,
-    marginTop: 8,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#1fa2df',
-    borderRadius: 3,
-  },
-  questionCounter: {
-    color: '#A8A8B3',
-    fontSize: 16,
-  },
-  content: {
-    flex: 1,
-  },
-  questionContainer: {
-    padding: 24,
-  },
-  questionText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '500',
-    marginBottom: 24,
-  },
-  optionsContainer: {
-    gap: 16,
-  },
-  optionButton: {
-    padding: 16,
-    backgroundColor: '#202024',
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#323238',
-  },
-  selectedOption: {
-    borderColor: '#1fa2df',
-  },
-  correctOption: {
-    borderColor: '#04D361',
-    backgroundColor: 'rgba(4, 211, 97, 0.1)',
-  },
-  incorrectOption: {
-    borderColor: '#FF3B30',
-    backgroundColor: 'rgba(255, 59, 48, 0.1)',
-  },
-  optionContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  optionTextContainer: {
-    flex: 1,
-    marginRight: 16,
-  },
-  optionText: {
-    color: '#FFF',
-    fontSize: 16,
-  },
-  selectedOptionText: {
-    color: '#1fa2df',
-  },
-  iconContainer: {
-    paddingTop: 4,
-  },
-  footer: {
-    flexDirection: 'row',
-    padding: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#323238',
-    justifyContent: 'space-between',
-  },
-  navigationButton: {
-    flex: 1,
-    backgroundColor: '#323238',
-    padding: 16,
-    borderRadius: 50,
-    alignItems: 'center',
-    marginHorizontal: 8,
-  },
-  nextButton: {
-    backgroundColor: '#1fa2df',
-  },
-  finishButton: {
-    backgroundColor: '#04D361',
-  },
-  navigationButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  retakeButton: {
-    backgroundColor: '#FF3B30',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 16,
-  },
-  retakeButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  AllThatApplySelectHint: {
-    color: '#A8A8B3',
-    fontSize: 14,
-    marginBottom: 16,
-    fontStyle: 'italic',
-  },
-  checkboxContainer: {
-    marginRight: 12,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#323238',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  squareCheckbox: {
-    borderRadius: 4,
-  },
-  checkedCheckbox: {
-    backgroundColor: '#1fa2df',
-    borderColor: '#1fa2df',
-  },
-  verifyButton: {
-    backgroundColor: '#1fa2df',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  verifyButtonDisabled: {
-    opacity: 0.5,
-  },
-  verifyButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

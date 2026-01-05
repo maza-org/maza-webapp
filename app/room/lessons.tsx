@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -44,6 +44,8 @@ import {
 } from '@/services/catalog';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthUser } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 // Import the celebration image
 const celebrateImage = require('@/assets/images/celebrate.webp');
@@ -53,6 +55,224 @@ export default function CourseDetail() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const { toast, config, showSuccess, showError, showInfo, hideToast } = useToast();
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const themedStyles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      padding: 24,
+    },
+    errorText: {
+      color: colors.text,
+      fontSize: 16,
+      textAlign: 'center',
+      marginBottom: 16,
+    },
+    courseInfo: {
+      padding: 24,
+      backgroundColor: colors.background,
+    },
+    courseTitle: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 16,
+    },
+    instructorName: {
+      color: colors.text,
+      fontSize: 14,
+    },
+    descriptionText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 22,
+    },
+    tabContainer: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    moduleItem: {
+      padding: 16,
+      backgroundColor: colors.cardBackground,
+      borderRadius: 15,
+      marginBottom: 12,
+    },
+    moduleNumber: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '500',
+    },
+    moduleTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '500',
+      flex: 1,
+    },
+    footer: {
+      padding: 24,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      backgroundColor: colors.background,
+    },
+    inputContainer: {
+      backgroundColor: colors.background,
+    },
+    replyPreview: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 12,
+    },
+    replyPreviewLabel: {
+      color: colors.textMuted,
+      fontSize: 12,
+    },
+    replyPreviewText: {
+      color: colors.textMuted,
+      fontSize: 13,
+      flex: 1,
+      fontStyle: 'italic',
+    },
+    input: {
+      flex: 1,
+      backgroundColor: colors.cardBackground,
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      color: colors.text,
+      maxHeight: 100,
+    },
+    progressContainer: {
+      marginBottom: 16,
+      backgroundColor: colors.cardBackground,
+      borderRadius: 12,
+      padding: 16,
+    },
+    progressTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    progressBar: {
+      height: 6,
+      backgroundColor: colors.border,
+      borderRadius: 3,
+      overflow: 'hidden',
+    },
+    progressSubtitle: {
+      color: colors.textMuted,
+      fontSize: 12,
+      marginTop: 2,
+    },
+    completionCard: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 16,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: colors.primary,
+    },
+    completionSubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    noModulesContainer: {
+      padding: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.cardBackground,
+      borderRadius: 15,
+      marginVertical: 12,
+    },
+    noModulesText: {
+      color: colors.textMuted,
+      fontSize: 16,
+      textAlign: 'center',
+      fontWeight: '500',
+    },
+    menuContainer: {
+      position: 'absolute',
+      right: 0,
+      top: 45,
+      backgroundColor: colors.cardBackground,
+      borderRadius: 8,
+      padding: 8,
+      width: 200,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+      zIndex: 1000,
+    },
+    menuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    menuItemText: {
+      color: colors.text,
+      fontSize: 16,
+      marginLeft: 12,
+    },
+    disabledButton: {
+      backgroundColor: colors.border,
+      opacity: 0.5,
+    },
+    videoCountText: {
+      color: colors.textMuted,
+      fontSize: 12,
+    },
+    loadingText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '500',
+      marginTop: 16,
+    },
+    shimmerBox: {
+      width: '100%',
+      height: '100%',
+      backgroundColor: colors.inputBackground,
+      borderRadius: 4,
+    },
+    headerShimmer: {
+      height: 200,
+      backgroundColor: colors.cardBackground,
+    },
+    courseInfoShimmer: {
+      padding: 24,
+      backgroundColor: colors.background,
+    },
+    moduleItemShimmer: {
+      padding: 16,
+      backgroundColor: colors.cardBackground,
+      borderRadius: 15,
+      marginBottom: 12,
+    },
+    iconButtonShimmer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.inputBackground,
+    },
+    levelBadgeShimmer: {
+      width: 80,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: colors.inputBackground,
+    },
+  }), [colors]);
 
   const { documentId } = useLocalSearchParams<{ documentId: string }>();
 
@@ -371,63 +591,63 @@ export default function CourseDetail() {
 
   // Shimmer loading component for course detail
   const CourseDetailShimmer = () => (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
       <ScrollView style={styles.scrollView}>
         {/* Header shimmer */}
-        <Shimmer style={styles.headerShimmer}>
+        <Shimmer style={themedStyles.headerShimmer}>
           <View style={styles.headerShimmerContent}>
             <View style={styles.headerActionsShimmer}>
-              <View style={styles.iconButtonShimmer} />
+              <View style={themedStyles.iconButtonShimmer} />
               <View style={styles.rightActionsShimmer}>
-                <View style={styles.iconButtonShimmer} />
-                <View style={styles.iconButtonShimmer} />
+                <View style={themedStyles.iconButtonShimmer} />
+                <View style={themedStyles.iconButtonShimmer} />
               </View>
             </View>
-            <View style={styles.levelBadgeShimmer} />
+            <View style={themedStyles.levelBadgeShimmer} />
           </View>
         </Shimmer>
 
         {/* Course info shimmer */}
-        <View style={styles.courseInfoShimmer}>
+        <View style={themedStyles.courseInfoShimmer}>
           <Shimmer style={styles.titleShimmer}>
-            <View style={styles.shimmerBox} />
+            <View style={themedStyles.shimmerBox} />
           </Shimmer>
           <Shimmer style={styles.titleShimmerShort}>
-            <View style={styles.shimmerBox} />
+            <View style={themedStyles.shimmerBox} />
           </Shimmer>
 
           <View style={styles.instructorShimmer}>
             <Shimmer style={styles.instructorNameShimmer}>
-              <View style={styles.shimmerBox} />
+              <View style={themedStyles.shimmerBox} />
             </Shimmer>
             <Shimmer style={styles.categoryShimmer}>
-              <View style={styles.shimmerBox} />
+              <View style={themedStyles.shimmerBox} />
             </Shimmer>
           </View>
 
           {/* Description shimmer */}
           <View style={styles.descriptionShimmerContainer}>
             <Shimmer style={styles.descriptionLineShimmer}>
-              <View style={styles.shimmerBox} />
+              <View style={themedStyles.shimmerBox} />
             </Shimmer>
             <Shimmer style={styles.descriptionLineShimmer}>
-              <View style={styles.shimmerBox} />
+              <View style={themedStyles.shimmerBox} />
             </Shimmer>
             <Shimmer style={styles.descriptionLineShimmerShort}>
-              <View style={styles.shimmerBox} />
+              <View style={themedStyles.shimmerBox} />
             </Shimmer>
           </View>
 
           {/* Tabs shimmer */}
           <View style={styles.tabContainerShimmer}>
             <Shimmer style={styles.tabShimmer}>
-              <View style={styles.shimmerBox} />
+              <View style={themedStyles.shimmerBox} />
             </Shimmer>
             <Shimmer style={styles.tabShimmer}>
-              <View style={styles.shimmerBox} />
+              <View style={themedStyles.shimmerBox} />
             </Shimmer>
             <Shimmer style={styles.tabShimmer}>
-              <View style={styles.shimmerBox} />
+              <View style={themedStyles.shimmerBox} />
             </Shimmer>
           </View>
         </View>
@@ -435,23 +655,23 @@ export default function CourseDetail() {
         {/* Modules list shimmer */}
         <View style={styles.modulesListShimmer}>
           {[1, 2, 3, 4].map((key) => (
-            <View key={key} style={styles.moduleItemShimmer}>
+            <View key={key} style={themedStyles.moduleItemShimmer}>
               <View style={styles.moduleTopRowShimmer}>
                 <View style={styles.moduleInfoShimmer}>
                   <Shimmer style={styles.moduleNumberShimmer}>
-                    <View style={styles.shimmerBox} />
+                    <View style={themedStyles.shimmerBox} />
                   </Shimmer>
                   <Shimmer style={styles.moduleTitleShimmer}>
-                    <View style={styles.shimmerBox} />
+                    <View style={themedStyles.shimmerBox} />
                   </Shimmer>
                 </View>
                 <Shimmer style={styles.playIconShimmer}>
-                  <View style={styles.shimmerBox} />
+                  <View style={themedStyles.shimmerBox} />
                 </Shimmer>
               </View>
               <View style={styles.moduleMetaShimmer}>
                 <Shimmer style={styles.videoCountShimmer}>
-                  <View style={styles.shimmerBox} />
+                  <View style={themedStyles.shimmerBox} />
                 </Shimmer>
               </View>
             </View>
@@ -460,9 +680,9 @@ export default function CourseDetail() {
       </ScrollView>
 
       {/* Footer shimmer */}
-      <View style={styles.footer}>
+      <View style={themedStyles.footer}>
         <Shimmer style={styles.startButtonShimmer}>
-          <View style={styles.shimmerBox} />
+          <View style={themedStyles.shimmerBox} />
         </Shimmer>
       </View>
     </SafeAreaView>
@@ -475,9 +695,9 @@ export default function CourseDetail() {
   if (courseError) {
     console.error('Course error:', courseError);
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Erro ao carregar dados do curso</Text>
-        <Text style={[styles.errorText, { fontSize: 12, marginTop: 8 }]}>
+      <View style={themedStyles.errorContainer}>
+        <Text style={themedStyles.errorText}>Erro ao carregar dados do curso</Text>
+        <Text style={[themedStyles.errorText, { fontSize: 12, marginTop: 8 }]}>
           {courseError.message || 'Erro desconhecido'}
         </Text>
         <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
@@ -489,8 +709,8 @@ export default function CourseDetail() {
 
   if (!courseData) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Erro ao carregar curso</Text>
+      <View style={themedStyles.errorContainer}>
+        <Text style={themedStyles.errorText}>Erro ao carregar curso</Text>
       </View>
     );
   }
@@ -548,7 +768,7 @@ export default function CourseDetail() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
       <Toast
         visible={toast.visible}
         message={toast.message}
@@ -566,8 +786,8 @@ export default function CourseDetail() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor="#2EA8FF"
-            colors={['#2EA8FF']}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
       >
@@ -616,9 +836,9 @@ export default function CourseDetail() {
                     </TouchableOpacity>
 
                     {menuVisible && (
-                      <View style={styles.menuContainer}>
-                        <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('certificate')}>
-                          <Text style={styles.menuItemText}>Certificado</Text>
+                      <View style={themedStyles.menuContainer}>
+                        <TouchableOpacity style={themedStyles.menuItem} onPress={() => handleMenuOption('certificate')}>
+                          <Text style={themedStyles.menuItemText}>Certificado</Text>
                         </TouchableOpacity>
                       </View>
                     )}
@@ -632,10 +852,10 @@ export default function CourseDetail() {
           </View>
         </ImageBackground>
 
-        <View style={styles.courseInfo}>
-          <Text style={styles.courseTitle}>{courseData.title}</Text>
+        <View style={themedStyles.courseInfo}>
+          <Text style={themedStyles.courseTitle}>{courseData.title}</Text>
           <View style={styles.instructor}>
-            <Text style={styles.instructorName}>{courseData.author}</Text>
+            <Text style={themedStyles.instructorName}>{courseData.author}</Text>
             <Text style={styles.categoryTag}>• {courseData.subjects[0]?.name || ''}</Text>
             {/*<TouchableOpacity style={styles.pathButton} onPress={handleOnPathPress}>*/}
             {/* <AntDesign name="fork" size={20} color="#fff" />*/}
@@ -645,7 +865,7 @@ export default function CourseDetail() {
           {/* Course Description Section */}
           {courseData.description && (
             <View style={styles.descriptionContainer}>
-              <Text style={styles.descriptionText} numberOfLines={showFullDescription ? undefined : 3}>
+              <Text style={themedStyles.descriptionText} numberOfLines={showFullDescription ? undefined : 3}>
                 {courseData.description}
               </Text>
               <TouchableOpacity onPress={toggleDescription} style={styles.viewMoreButton}>
@@ -654,7 +874,7 @@ export default function CourseDetail() {
             </View>
           )}
 
-          <View style={styles.tabContainer}>
+          <View style={themedStyles.tabContainer}>
             <Tab active={activeTab === 'lessons'} onPress={() => setActiveTab('lessons')}>
               Aulas
             </Tab>
@@ -670,9 +890,9 @@ export default function CourseDetail() {
         {activeTab === 'lessons' ? (
           <View style={styles.modulesList}>
             {!courseData.modules || courseData.modules.length === 0 ? (
-              <View style={styles.noModulesContainer}>
-                <Feather name="book-open" size={48} color="#A8A8B3" style={styles.noModulesIcon} />
-                <Text style={styles.noModulesText}>Nenhum módulo encontrado para este curso</Text>
+              <View style={themedStyles.noModulesContainer}>
+                <Feather name="book-open" size={48} color={colors.textMuted} style={styles.noModulesIcon} />
+                <Text style={themedStyles.noModulesText}>Nenhum módulo encontrado para este curso</Text>
               </View>
             ) : (
               <>
@@ -688,7 +908,7 @@ export default function CourseDetail() {
                 {courseData.final_test && (
                   <TouchableOpacity
                     style={[
-                      styles.moduleItem,
+                      themedStyles.moduleItem,
                       userCourseDetails?.quiz?.state === 'Passed' && styles.moduleItemCompleted,
                     ]}
                     onPress={() => handleStartQuiz(courseData.final_test, true)}
@@ -696,10 +916,10 @@ export default function CourseDetail() {
                     <View style={styles.moduleContent}>
                       <View style={styles.moduleTopRow}>
                         <View style={styles.moduleInfo}>
-                          <Text style={styles.moduleNumber}>Q.</Text>
+                          <Text style={themedStyles.moduleNumber}>Q.</Text>
                           <Text
                             style={[
-                              styles.moduleTitle,
+                              themedStyles.moduleTitle,
                               userCourseDetails?.quiz?.state === 'Passed' && styles.moduleTitleCompleted,
                             ]}
                           >
@@ -711,15 +931,15 @@ export default function CourseDetail() {
                             <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
                           ) : (
                             <View style={styles.iconContainer}>
-                              <Ionicons name="help-circle" size={20} color="#4db5ff" />
+                              <Ionicons name="help-circle" size={20} color={colors.primary} />
                             </View>
                           )}
                         </View>
                       </View>
                       <View style={styles.moduleMetaRow}>
                         <View style={styles.videoCount}>
-                          <Feather name="check-circle" size={14} color="#A8A8B3" />
-                          <Text style={styles.videoCountText}>{courseData.final_test.questions.length} perguntas</Text>
+                          <Feather name="check-circle" size={14} color={colors.textMuted} />
+                          <Text style={themedStyles.videoCountText}>{courseData.final_test.questions.length} perguntas</Text>
                         </View>
                         {userCourseDetails?.quiz?.state === 'Passed' && userCourseDetails?.quiz?.grade != null && (
                           <View style={styles.quizGradeContainer}>
@@ -745,25 +965,25 @@ export default function CourseDetail() {
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={themedStyles.footer}>
         {activeTab === 'forum' ? (
-          <View style={styles.inputContainer}>
+          <View style={themedStyles.inputContainer}>
             {replyingTo && (
-              <View style={styles.replyPreview}>
+              <View style={themedStyles.replyPreview}>
                 <View style={styles.replyPreviewHeader}>
                   <View style={styles.replyPreviewLeft}>
-                    <Ionicons name="arrow-undo" size={14} color="#1fa2df" />
-                    <Text style={styles.replyPreviewLabel}>
+                    <Ionicons name="arrow-undo" size={14} color={colors.primary} />
+                    <Text style={themedStyles.replyPreviewLabel}>
                       Respondendo a <Text style={styles.replyPreviewName}>{replyingTo.user.fullname}</Text>
                     </Text>
                   </View>
                   <TouchableOpacity onPress={cancelReply} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <Ionicons name="close" size={18} color="#A8A8B3" />
+                    <Ionicons name="close" size={18} color={colors.textMuted} />
                   </TouchableOpacity>
                 </View>
                 <View style={styles.replyPreviewQuote}>
                   <View style={styles.replyPreviewLine} />
-                  <Text style={styles.replyPreviewText} numberOfLines={2}>
+                  <Text style={themedStyles.replyPreviewText} numberOfLines={2}>
                     {replyingTo.comment}
                   </Text>
                 </View>
@@ -772,9 +992,9 @@ export default function CourseDetail() {
             <View style={styles.inputRow}>
               <TextInput
                 ref={inputRef}
-                style={[styles.input, isInputFocused && styles.inputExpanded]}
+                style={[themedStyles.input, isInputFocused && styles.inputExpanded]}
                 placeholder={replyingTo ? 'Escreva sua resposta...' : 'Adicione um comentário...'}
-                placeholderTextColor="#A8A8B3"
+                placeholderTextColor={colors.textMuted}
                 value={newComment}
                 onChangeText={setNewComment}
                 onFocus={() => {
@@ -788,7 +1008,7 @@ export default function CourseDetail() {
                 style={[
                   styles.sendButton,
                   (!newComment.trim() || addCommentMutation.isPending || replyMutation.isPending) &&
-                  styles.disabledButton,
+                  themedStyles.disabledButton,
                 ]}
                 onPress={handleAddComment}
                 disabled={!newComment.trim() || addCommentMutation.isPending || replyMutation.isPending}
@@ -802,11 +1022,11 @@ export default function CourseDetail() {
             </View>
           </View>
         ) : isCourseCompleted ? (
-          <View style={styles.completionCard}>
+          <View style={themedStyles.completionCard}>
             <View style={styles.completionContent}>
               <View style={styles.completionTextContainer}>
                 <Text style={styles.completionTitle}>Parabéns!</Text>
-                <Text style={styles.completionSubtitle}>Concluiu este curso.</Text>
+                <Text style={themedStyles.completionSubtitle}>Concluiu este curso.</Text>
               </View>
               <Image source={celebrateImage} style={styles.celebrateImage} resizeMode="contain" />
             </View>
@@ -816,16 +1036,16 @@ export default function CourseDetail() {
             </TouchableOpacity>
           </View>
         ) : isInProgress || !!userCourseDetails ? (
-          <View style={styles.progressContainer}>
+          <View style={themedStyles.progressContainer}>
             <View style={styles.progressHeader}>
               <View>
-                <Text style={styles.progressTitle}>Seu progresso</Text>
-                <Text style={styles.progressSubtitle}>Continue de onde parou</Text>
+                <Text style={themedStyles.progressTitle}>Seu progresso</Text>
+                <Text style={themedStyles.progressSubtitle}>Continue de onde parou</Text>
               </View>
               <Text style={styles.progressPercentage}>{Math.round(userCourseDetails?.progress || progress)}%</Text>
             </View>
             <View style={styles.progressBarContainer}>
-              <View style={styles.progressBar}>
+              <View style={themedStyles.progressBar}>
                 <View style={[styles.progressFill, { width: `${userCourseDetails?.progress || progress}%` }]} />
               </View>
             </View>

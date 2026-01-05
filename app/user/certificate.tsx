@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Platform, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,10 +8,14 @@ import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { baseUrl } from '@/services/api';
 import Pdf from 'react-native-pdf';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export default function Certificate() {
   const { certificateId } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   const [pdfSource, setPdfSource] = useState<{ uri: string; cache: boolean } | null>(null);
   const [localFilePath, setLocalFilePath] = useState<string | null>(null);
@@ -19,6 +23,50 @@ export default function Certificate() {
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const isWeb = Platform.OS === 'web';
   const [error, setError] = useState<string | null>(null);
+
+  const themedStyles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+    },
+    backBtn: {
+      padding: 8,
+      borderColor: colors.border,
+      borderWidth: 0.5,
+      borderRadius: 50,
+      marginRight: 16,
+    },
+    title: { fontSize: 22, fontWeight: '600', color: colors.text },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    textWhite: { color: colors.text, marginTop: 16 },
+    errorText: { color: colors.text, marginTop: 16, fontSize: 16 },
+    pdfContainer: {
+      flex: 1,
+      margin: 16,
+      borderRadius: 12,
+      overflow: 'hidden',
+      backgroundColor: '#f5f5f5',
+    },
+    pdf: {
+      flex: 1,
+      width: Dimensions.get('window').width - 32,
+      height: '100%',
+      backgroundColor: '#f5f5f5',
+    },
+    footer: { padding: 16, paddingBottom: 24 },
+    btn: {
+      height: 56,
+      borderRadius: 30,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    btnPrimary: { backgroundColor: colors.primary },
+    btnDisabled: { backgroundColor: '#4B5563' },
+    btnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+  }), [colors]);
 
   useEffect(() => {
     loadData();
@@ -126,7 +174,7 @@ export default function Certificate() {
     return (
       <Pdf
         source={pdfSource}
-        style={styles.pdf}
+        style={themedStyles.pdf}
         trustAllCerts={false}
         onLoadComplete={(numberOfPages) => {
           console.log(`Number of pages: ${numberOfPages}`);
@@ -139,13 +187,22 @@ export default function Certificate() {
     );
   };
 
+  const Header = () => (
+    <View style={themedStyles.header}>
+      <TouchableOpacity onPress={() => router.back()} style={themedStyles.backBtn}>
+        <Ionicons name="chevron-back-sharp" size={24} color={colors.text} />
+      </TouchableOpacity>
+      <Text style={themedStyles.title}>Certificado</Text>
+    </View>
+  );
+
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={themedStyles.container}>
         <Header />
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#2EA8FF" />
-          <Text style={styles.textWhite}>Carregando certificado...</Text>
+        <View style={themedStyles.center}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={themedStyles.textWhite}>Carregando certificado...</Text>
         </View>
       </SafeAreaView>
     );
@@ -153,25 +210,25 @@ export default function Certificate() {
 
   if (error || !pdfSource) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={themedStyles.container}>
         <Header />
-        <View style={styles.center}>
-          <Ionicons name="alert-circle-outline" size={64} color="#6B7280" />
-          <Text style={styles.errorText}>{error || 'Certificado indisponível'}</Text>
+        <View style={themedStyles.center}>
+          <Ionicons name="alert-circle-outline" size={64} color={colors.textMuted} />
+          <Text style={themedStyles.errorText}>{error || 'Certificado indisponível'}</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
       <Header />
 
-      <View style={styles.pdfContainer}>{renderPdfContent()}</View>
+      <View style={themedStyles.pdfContainer}>{renderPdfContent()}</View>
 
-      <View style={styles.footer}>
+      <View style={themedStyles.footer}>
         <TouchableOpacity
-          style={[styles.btn, styles.btnPrimary, downloadingPdf && styles.btnDisabled]}
+          style={[themedStyles.btn, themedStyles.btnPrimary, downloadingPdf && themedStyles.btnDisabled]}
           onPress={handleSaveToDevice}
           disabled={downloadingPdf}
         >
@@ -179,7 +236,7 @@ export default function Certificate() {
             <ActivityIndicator color="#FFF" />
           ) : (
             <>
-              <Text style={styles.btnText}>{isWeb ? 'Abrir PDF' : 'Guardar'}</Text>
+              <Text style={themedStyles.btnText}>{isWeb ? 'Abrir PDF' : 'Guardar'}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -187,58 +244,3 @@ export default function Certificate() {
     </SafeAreaView>
   );
 }
-
-const Header = () => (
-  <View style={styles.header}>
-    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-      <Ionicons name="chevron-back-sharp" size={24} color="#fff" />
-    </TouchableOpacity>
-    <Text style={styles.title}>Certificado</Text>
-  </View>
-);
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1E1E1E' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  backBtn: {
-    padding: 8,
-    borderColor: '#b3b3b3',
-    borderWidth: 0.5,
-    borderRadius: 50,
-    marginRight: 16,
-  },
-  title: { fontSize: 22, fontWeight: '600', color: '#FFF' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  textWhite: { color: '#FFF', marginTop: 16 },
-  errorText: { color: '#FFF', marginTop: 16, fontSize: 16 },
-
-  pdfContainer: {
-    flex: 1,
-    margin: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: '#f5f5f5',
-  },
-  pdf: {
-    flex: 1,
-    width: Dimensions.get('window').width - 32,
-    height: '100%',
-    backgroundColor: '#f5f5f5',
-  },
-
-  footer: { padding: 16, paddingBottom: 24 },
-  btn: {
-    height: 56,
-    borderRadius: 30,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  btnPrimary: { backgroundColor: '#0CA5E9' },
-  btnDisabled: { backgroundColor: '#4B5563' },
-  btnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
-});

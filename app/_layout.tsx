@@ -1,6 +1,6 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -8,10 +8,10 @@ import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import * as Sentry from '@sentry/react-native';
 import { isRunningInExpoGo } from 'expo';
-import { useColorScheme } from '@/components/useColorScheme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { hasSeenOnboarding } from '@/util/onboarding';
+import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -73,7 +73,6 @@ function RootLayout() {
 export default RootLayout;
 
 function RootLayoutNav({ onReady }: { onReady: () => void }) {
-  const colorScheme = useColorScheme();
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
 
@@ -110,17 +109,27 @@ function RootLayoutNav({ onReady }: { onReady: () => void }) {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider value={colorScheme === 'dark' ? { ...DarkTheme } : DefaultTheme}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-            }}
-          >
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-          </Stack>
+        <ThemeProvider>
+          <ThemedNavigator />
         </ThemeProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
+  );
+}
+
+function ThemedNavigator() {
+  const { isDark } = useTheme();
+
+  return (
+    <NavigationThemeProvider value={isDark ? { ...DarkTheme } : DefaultTheme}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+      </Stack>
+    </NavigationThemeProvider>
   );
 }

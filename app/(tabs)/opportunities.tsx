@@ -22,37 +22,107 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { JobCardSkeleton } from '@/components/opportunities/JobCardSkeleton';
 import { Ionicons } from '@expo/vector-icons';
 import Shimmer from '@/components/Shimmer';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 const SKELETON_COUNT = 6;
-
-const TitleSkeleton = () => <View testID="title-skeleton" style={styles.titleSkeleton} />;
-
-const SearchBar = ({ onPress }: { onPress: () => void }) => (
-  <View style={styles.searchContainer}>
-    <TouchableOpacity style={styles.searchBar} onPress={onPress} activeOpacity={0.7}>
-      <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Pesquisar oportunidades..."
-        placeholderTextColor="#888"
-        onFocus={onPress}
-        editable={false}
-      />
-    </TouchableOpacity>
-  </View>
-);
-
-const SearchBarSkeleton = () => (
-  <View style={styles.searchContainer}>
-    <Shimmer style={styles.searchBar}>
-      <View style={{ height: 24, borderRadius: 8 }} />
-    </Shimmer>
-  </View>
-);
 
 export default function Opportunities() {
   const { jobs, isLoading, isRefreshing, error, fetchJobs, refreshJobs } = useJobsData();
   const [isErrorBoundary, setIsErrorBoundary] = useState(false);
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const themedStyles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingTop: Platform.OS === 'ios' ? 30 : 20,
+      paddingBottom: 20,
+      backgroundColor: colors.background,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: colors.text,
+    },
+    titleSkeleton: {
+      width: 150,
+      height: 24,
+      backgroundColor: colors.inputBackground,
+      borderRadius: 4,
+    },
+    searchContainer: {
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+    },
+    searchBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.inputBackground,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    searchIcon: {
+      marginRight: 12,
+    },
+    searchInput: {
+      flex: 1,
+      color: colors.text,
+      fontSize: 16,
+      fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 16,
+    },
+    jobList: {
+      paddingTop: 8,
+      paddingBottom: 24,
+    },
+    footerLoader: {
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    skeletonContainer: {
+      flex: 1,
+      paddingTop: 8,
+    },
+  }), [colors]);
+
+  const TitleSkeleton = () => <View testID="title-skeleton" style={themedStyles.titleSkeleton} />;
+
+  const SearchBar = ({ onPress }: { onPress: () => void }) => (
+    <View style={themedStyles.searchContainer}>
+      <TouchableOpacity style={themedStyles.searchBar} onPress={onPress} activeOpacity={0.7}>
+        <Ionicons name="search" size={20} color={colors.textMuted} style={themedStyles.searchIcon} />
+        <TextInput
+          style={themedStyles.searchInput}
+          placeholder="Pesquisar oportunidades..."
+          placeholderTextColor={colors.textMuted}
+          onFocus={onPress}
+          editable={false}
+        />
+      </TouchableOpacity>
+    </View>
+  );
+
+  const SearchBarSkeleton = () => (
+    <View style={themedStyles.searchContainer}>
+      <Shimmer style={themedStyles.searchBar}>
+        <View style={{ height: 24, borderRadius: 8 }} />
+      </Shimmer>
+    </View>
+  );
 
   const handleSearchPress = useCallback(() => {
     router.push('/jobs/search');
@@ -106,18 +176,18 @@ export default function Opportunities() {
 
   return (
     <ErrorBoundary onError={handleError}>
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        <StatusBar style="light" />
+      <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
 
-        <View style={styles.header}>
-          {isLoading ? <TitleSkeleton /> : <Text style={styles.title}>Oportunidades</Text>}
+        <View style={themedStyles.header}>
+          {isLoading ? <TitleSkeleton /> : <Text style={themedStyles.title}>Oportunidades</Text>}
         </View>
 
         {isLoading ? <SearchBarSkeleton /> : <SearchBar onPress={handleSearchPress} />}
 
-        <View style={styles.content}>
+        <View style={themedStyles.content}>
           {isLoading ? (
-            <View style={styles.skeletonContainer}>{renderSkeleton()}</View>
+            <View style={themedStyles.skeletonContainer}>{renderSkeleton()}</View>
           ) : error ? (
             <ErrorState message={error} onRetry={fetchJobs} />
           ) : jobs.length === 0 ? (
@@ -128,7 +198,7 @@ export default function Opportunities() {
               data={jobs}
               renderItem={renderJobItem}
               keyExtractor={keyExtractor}
-              contentContainerStyle={styles.jobList}
+              contentContainerStyle={themedStyles.jobList}
               showsVerticalScrollIndicator={false}
               estimatedItemSize={estimatedItemSize}
               getItemType={getItemType}
@@ -140,16 +210,16 @@ export default function Opportunities() {
                 <RefreshControl
                   refreshing={isRefreshing}
                   onRefresh={refreshJobs}
-                  colors={['#2EA8FF']}
-                  tintColor="#2EA8FF"
+                  colors={[colors.primary]}
+                  tintColor={colors.primary}
                   progressViewOffset={20}
                 />
               }
               onEndReachedThreshold={0.5}
               ListFooterComponent={
                 isRefreshing ? (
-                  <View style={styles.footerLoader}>
-                    <ActivityIndicator color="#2EA8FF" />
+                  <View style={themedStyles.footerLoader}>
+                    <ActivityIndicator color={colors.primary} />
                   </View>
                 ) : null
               }
@@ -162,69 +232,3 @@ export default function Opportunities() {
     </ErrorBoundary>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121214',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 30 : 20,
-    paddingBottom: 20,
-    backgroundColor: '#121214',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  titleSkeleton: {
-    width: 150,
-    height: 24,
-    backgroundColor: '#2A2A2A',
-    borderRadius: 4,
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2A2A2A',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#3A3A3A',
-  },
-  searchIcon: {
-    marginRight: 12,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#fff',
-    fontSize: 16,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  jobList: {
-    paddingTop: 8,
-    paddingBottom: 24,
-  },
-  footerLoader: {
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  skeletonContainer: {
-    flex: 1,
-    paddingTop: 8,
-  },
-});

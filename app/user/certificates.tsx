@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -10,13 +10,27 @@ import LoadingState from '@/app/components/certificates/LoadingState';
 import ErrorState from '@/app/components/certificates/ErrorState';
 import EmptyState from '@/app/components/certificates/EmptyState';
 import CertificatesList from '@/app/components/certificates/CertificatesList';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export default function CertificatesScreen() {
   const { data: user } = useUser();
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   const { data: certificatesData, isLoading, error, refetch, isRefetching } = useCertificates(user?.token);
 
   const certificates = certificatesData?.data || [];
+
+  const themedStyles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollView: {
+      flex: 1,
+    },
+  }), [colors]);
 
   const onRefresh = () => {
     refetch();
@@ -33,7 +47,7 @@ export default function CertificatesScreen() {
 
   if (isLoading && !isRefetching) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
         <CertificatesHeader onBackPress={() => router.back()} />
         <LoadingState />
       </SafeAreaView>
@@ -41,12 +55,12 @@ export default function CertificatesScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
       <CertificatesHeader onBackPress={() => router.back()} />
 
       <ScrollView
-        style={styles.scrollView}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={onRefresh} tintColor="#1fa2df" />}
+        style={themedStyles.scrollView}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         {error ? (
           <ErrorState
@@ -62,13 +76,3 @@ export default function CertificatesScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121214',
-  },
-  scrollView: {
-    flex: 1,
-  },
-});

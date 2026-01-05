@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
-import { styles } from '@/app/styles/jobDetails.styles';
+import { createJobDetailsStyles } from '@/app/styles/jobDetails.styles';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface JobErrorStateProps {
   error: string;
@@ -9,6 +11,10 @@ interface JobErrorStateProps {
 }
 
 export default function JobErrorState({ error, onRetry }: JobErrorStateProps) {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+  const styles = useMemo(() => createJobDetailsStyles(colors, isDark), [colors, isDark]);
+
   const handleRetry = () => {
     if (onRetry) {
       onRetry();

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -10,10 +10,16 @@ import JobDetailsHeader from '@/app/components/jobs/JobDetailsHeader';
 import JobApplyFooter from '@/app/components/jobs/JobApplyFooter';
 import JobLoadingState from '@/app/components/jobs/JobLoadingState';
 import JobErrorState from '@/app/components/jobs/JobErrorState';
-import { styles } from '../styles/jobDetails.styles';
+import { createJobDetailsStyles } from '../styles/jobDetails.styles';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export default function JobDetails() {
   const { slug } = useLocalSearchParams();
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+  const styles = useMemo(() => createJobDetailsStyles(colors, isDark), [colors, isDark]);
+
   const {
     data: job,
     isLoading: loading,

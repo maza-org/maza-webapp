@@ -1,6 +1,8 @@
 import React, { useRef } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface SearchBarProps {
   onPress: () => void;
@@ -8,6 +10,8 @@ interface SearchBarProps {
 }
 
 export default function SearchBar({ onPress, placeholder = 'Pesquisar...' }: SearchBarProps) {
+  const { theme } = useTheme();
+  const colors = Colors[theme];
   const searchInputRef = useRef<TextInput>(null);
 
   const handlePress = () => {
@@ -18,24 +22,27 @@ export default function SearchBar({ onPress, placeholder = 'Pesquisar...' }: Sea
   };
 
   return (
-    <TouchableOpacity style={styles.searchContainer} onPress={handlePress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={[styles.searchContainer, { backgroundColor: colors.inputBackground }]}
+      onPress={handlePress}
+      activeOpacity={0.7}
+    >
       <TextInput
         ref={searchInputRef}
-        style={styles.searchInput}
+        style={[styles.searchInput, { color: colors.text }]}
         placeholder={placeholder}
-        placeholderTextColor="#666"
-        selectionColor="#fff"
+        placeholderTextColor={colors.textMuted}
+        selectionColor={colors.text}
         onFocus={handlePress}
         editable={false}
       />
-      <Feather name="search" size={20} color="#666" style={styles.searchIcon} />
+      <Feather name="search" size={20} color={colors.iconColor} style={styles.searchIcon} />
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   searchContainer: {
-    backgroundColor: '#202024',
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -46,7 +53,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: '100%',
-    color: '#fff',
     fontSize: 16,
     marginLeft: 8,
     fontFamily: 'ManropeRegular',

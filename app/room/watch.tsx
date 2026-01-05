@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
@@ -8,9 +8,24 @@ import { Content, ContentState, Quiz, QuizState } from '@/types/learning';
 import ModuleItem from '@/components/ModuleItem';
 import { useMarkContentAsCompleted } from '@/services/catalog';
 import { useAuthUser } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
+
+// Static styles for video container (always black, used outside main component)
+const videoStyles = StyleSheet.create({
+  videoContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#000',
+    zIndex: 999,
+  },
+});
 
 const NativeYoutubeIframe = ({ videoId, onVideoEnd }: { videoId: string; onVideoEnd: () => void }) => {
   React.useEffect(() => {
@@ -73,7 +88,7 @@ const NativeYoutubeIframe = ({ videoId, onVideoEnd }: { videoId: string; onVideo
   `;
 
   return (
-    <View style={styles.videoContainer}>
+    <View style={videoStyles.videoContainer}>
       {Platform.OS === 'web' && (
         <iframe
           src={`data:text/html;charset=utf-8,${encodeURIComponent(iframeHtml)}`}
@@ -103,7 +118,7 @@ const YoutubePlayerModal = ({ videoId, onVideoEnd }: { videoId: string; onVideoE
   }
 
   return (
-    <View style={styles.videoContainer}>
+    <View style={videoStyles.videoContainer}>
       <YoutubeIframe
         play={true}
         initialPlayerParams={{
@@ -164,9 +179,169 @@ export default function CourseScreen() {
   const [selectedContent, setSelectedContent] = React.useState<ExtendedContent | undefined>(undefined);
   const [showFullDescription, setShowFullDescription] = React.useState(false);
 
+  // Theme
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
   // Auth and progress tracking
   const { data: user } = useAuthUser();
   const markContentAsCompletedMutation = useMarkContentAsCompleted();
+
+  const themedStyles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 16,
+    },
+    headerTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      flex: 1,
+      textAlign: 'center',
+      marginHorizontal: 8,
+    },
+    backButton: {
+      padding: 8,
+    },
+    shareButton: {
+      padding: 8,
+    },
+    courseInfo: {
+      padding: 16,
+    },
+    instructorInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    instructorAvatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+    },
+    instructorTextContainer: {
+      marginLeft: 12,
+      justifyContent: 'center',
+      flex: 1,
+    },
+    instructorName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    courseCategory: {
+      fontSize: 14,
+      color: colors.primary,
+      fontWeight: '500',
+    },
+    descriptionContainer: {
+      marginTop: 10,
+      padding: 6,
+    },
+    descriptionText: {
+      fontSize: 14,
+      color: colors.textMuted,
+      lineHeight: 20,
+    },
+    toggleButton: {
+      marginTop: 8,
+    },
+    toggleButtonText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    modulesList: {
+      padding: 16,
+    },
+    moduleItem: {
+      backgroundColor: isDark ? 'rgba(32, 32, 36, 0.5)' : colors.cardBackground,
+      borderRadius: 8,
+      padding: 16,
+      marginBottom: 8,
+      borderWidth: isDark ? 0 : 1,
+      borderColor: colors.border,
+    },
+    moduleHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    moduleNumber: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginRight: 8,
+    },
+    moduleTitle: {
+      fontSize: 16,
+      color: colors.text,
+      flex: 1,
+    },
+    moduleTitleCompleted: {
+      color: colors.primary,
+    },
+    moduleItemCompleted: {
+      borderColor: colors.primary,
+      borderWidth: 1,
+    },
+    quizGradeContainer: {
+      backgroundColor: 'rgba(34, 197, 94, 0.1)',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: 'rgba(34, 197, 94, 0.2)',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    quizGradeText: {
+      color: '#22C55E',
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    quizIcon: {
+      backgroundColor: isDark ? '#2a2d3e' : colors.inputBackground,
+      borderRadius: 50,
+      padding: 5,
+    },
+    moduleFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    moduleDuration: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    moduleDurationText: {
+      color: colors.textMuted,
+      fontSize: 12,
+    },
+    videoContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: '#000',
+      zIndex: 999,
+    },
+  }), [colors, isDark]);
 
   // Helper to get contentId from content (handles both Module and UserCourseModule structures)
   const getContentId = (content: ExtendedContent): number => {
@@ -235,47 +410,47 @@ export default function CourseScreen() {
       {playing && selectedContent && (
         <YoutubePlayerModal videoId={selectedContent.youtubeID} onVideoEnd={handleVideoEnd} />
       )}
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        <ScrollView style={styles.content}>
+      <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
+        <ScrollView style={themedStyles.content}>
           {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <Feather name="chevron-left" size={24} color="#FFF" />
+          <View style={themedStyles.header}>
+            <TouchableOpacity style={themedStyles.backButton} onPress={() => router.back()}>
+              <Feather name="chevron-left" size={24} color={colors.text} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle} numberOfLines={1}>
+            <Text style={themedStyles.headerTitle} numberOfLines={1}>
               {moduleData?.title}
             </Text>
-            <TouchableOpacity style={styles.shareButton}>
-              <Feather name="share" size={24} color="#FFF" />
+            <TouchableOpacity style={themedStyles.shareButton}>
+              <Feather name="share" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
           {/* Course Info */}
-          <View style={styles.courseInfo}>
+          <View style={themedStyles.courseInfo}>
 
-            <View style={styles.instructorInfo}>
-              <Image source={{ uri: imageUrl as string }} style={styles.instructorAvatar} />
-              <View style={styles.instructorTextContainer}>
-                <Text style={styles.instructorName}>{author}</Text>
-                <Text style={styles.courseCategory}>{title}</Text>
+            <View style={themedStyles.instructorInfo}>
+              <Image source={{ uri: imageUrl as string }} style={themedStyles.instructorAvatar} />
+              <View style={themedStyles.instructorTextContainer}>
+                <Text style={themedStyles.instructorName}>{author}</Text>
+                <Text style={themedStyles.courseCategory}>{title}</Text>
               </View>
             </View>
 
             {/* Description Section */}
             {moduleData.description && (
-              <View style={styles.descriptionContainer}>
-                <Text style={styles.descriptionText} numberOfLines={showFullDescription ? undefined : 3}>
+              <View style={themedStyles.descriptionContainer}>
+                <Text style={themedStyles.descriptionText} numberOfLines={showFullDescription ? undefined : 3}>
                   {moduleData.description}
                 </Text>
-                <TouchableOpacity onPress={toggleDescription} style={styles.toggleButton}>
-                  <Text style={styles.toggleButtonText}>{showFullDescription ? 'Ver menos' : 'Ver mais'}</Text>
+                <TouchableOpacity onPress={toggleDescription} style={themedStyles.toggleButton}>
+                  <Text style={themedStyles.toggleButtonText}>{showFullDescription ? 'Ver menos' : 'Ver mais'}</Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
 
           {/* Modules List */}
-          <View style={styles.modulesList}>
+          <View style={themedStyles.modulesList}>
             {moduleData.contents?.map((content, index) => (
               <ModuleItem
                 key={content.id}
@@ -290,17 +465,17 @@ export default function CourseScreen() {
             {moduleData.quiz && (
               <TouchableOpacity
                 style={[
-                  styles.moduleItem,
-                  moduleData.quiz.state === 'Passed' && styles.moduleItemCompleted,
+                  themedStyles.moduleItem,
+                  moduleData.quiz.state === 'Passed' && themedStyles.moduleItemCompleted,
                 ]}
                 onPress={() => handleQuizPress(moduleData.quiz)}
               >
-                <View style={styles.moduleHeader}>
-                  <Text style={styles.moduleNumber}>Q.</Text>
+                <View style={themedStyles.moduleHeader}>
+                  <Text style={themedStyles.moduleNumber}>Q.</Text>
                   <Text
                     style={[
-                      styles.moduleTitle,
-                      moduleData.quiz.state === 'Passed' && styles.moduleTitleCompleted,
+                      themedStyles.moduleTitle,
+                      moduleData.quiz.state === 'Passed' && themedStyles.moduleTitleCompleted,
                     ]}
                   >
                     Avaliação
@@ -308,20 +483,20 @@ export default function CourseScreen() {
                   {moduleData.quiz.state === 'Passed' ? (
                     <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
                   ) : (
-                    <View style={styles.quizIcon}>
-                      <Ionicons name="help-circle" size={20} color="#4db5ff" />
+                    <View style={themedStyles.quizIcon}>
+                      <Ionicons name="help-circle" size={20} color={colors.primary} />
                     </View>
                   )}
                 </View>
-                <View style={styles.moduleFooter}>
-                  <View style={styles.moduleDuration}>
-                    <Feather name="check-circle" size={14} color="#A8A8B3" />
-                    <Text style={styles.moduleDurationText}>{moduleData.quiz.questions?.length || 0} perguntas</Text>
+                <View style={themedStyles.moduleFooter}>
+                  <View style={themedStyles.moduleDuration}>
+                    <Feather name="check-circle" size={14} color={colors.textMuted} />
+                    <Text style={themedStyles.moduleDurationText}>{moduleData.quiz.questions?.length || 0} perguntas</Text>
                   </View>
                   {moduleData.quiz.state === 'Passed' && moduleData.quiz.grade != null && (
-                    <View style={styles.quizGradeContainer}>
+                    <View style={themedStyles.quizGradeContainer}>
                       <Ionicons name="trophy-outline" size={12} color="#22C55E" />
-                      <Text style={styles.quizGradeText}>Nota: {moduleData.quiz.grade}%</Text>
+                      <Text style={themedStyles.quizGradeText}>Nota: {moduleData.quiz.grade}%</Text>
                     </View>
                   )}
                 </View>
@@ -333,158 +508,3 @@ export default function CourseScreen() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121214',
-  },
-  content: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFF',
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: 8,
-  },
-  backButton: {
-    padding: 8,
-  },
-  shareButton: {
-    padding: 8,
-  },
-  courseInfo: {
-    padding: 16,
-  },
-
-  instructorInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  instructorAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  instructorTextContainer: {
-    marginLeft: 12,
-    justifyContent: 'center',
-    flex: 1,
-  },
-  instructorName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#E1E1E6',
-    marginBottom: 2,
-  },
-  courseCategory: {
-    fontSize: 14,
-    color: '#4db5ff',
-    fontWeight: '500',
-  },
-  descriptionContainer: {
-    marginTop: 10,
-    padding: 6,
-  },
-  descriptionText: {
-    fontSize: 14,
-    color: '#A8A8B3',
-    lineHeight: 20,
-  },
-  toggleButton: {
-    marginTop: 8,
-  },
-  toggleButtonText: {
-    color: '#4db5ff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  modulesList: {
-    padding: 16,
-  },
-  moduleItem: {
-    backgroundColor: 'rgba(32, 32, 36, 0.5)',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 8,
-  },
-  moduleHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  moduleNumber: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginRight: 8,
-  },
-  moduleTitle: {
-    fontSize: 16,
-    color: '#FFF',
-    flex: 1,
-  },
-  moduleTitleCompleted: {
-    color: '#1fa2df',
-  },
-  moduleItemCompleted: {
-    borderColor: '#1fa2df',
-    borderWidth: 1,
-  },
-  quizGradeContainer: {
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(34, 197, 94, 0.2)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  quizGradeText: {
-    color: '#22C55E',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  quizIcon: {
-    backgroundColor: '#2a2d3e',
-    borderRadius: 50,
-    padding: 5,
-  },
-  moduleFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  moduleDuration: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  moduleDurationText: {
-    color: '#A8A8B3',
-    fontSize: 12,
-  },
-  videoContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#000',
-    zIndex: 999,
-  },
-});
