@@ -33,184 +33,188 @@ export default function ChangePasswordScreen() {
 
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const themedStyles = useMemo(() => StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    loadingContainer: {
-      flex: 1,
-      backgroundColor: colors.background,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    errorContainer: {
-      flex: 1,
-      backgroundColor: colors.background,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 24,
-    },
-    errorContent: {
-      width: '100%',
-      maxWidth: 320,
-      alignItems: 'center',
-      backgroundColor: colors.cardBackground,
-      borderRadius: 16,
-      padding: 24,
-    },
-    errorIconContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: 'rgba(31, 162, 223, 0.1)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 24,
-    },
-    errorTitle: {
-      color: colors.text,
-      fontSize: 24,
-      fontWeight: '700',
-      marginBottom: 12,
-      textAlign: 'center',
-    },
-    errorDescription: {
-      color: colors.textMuted,
-      fontSize: 14,
-      textAlign: 'center',
-      marginBottom: 24,
-      lineHeight: 20,
-    },
-    loginButton: {
-      backgroundColor: colors.primary,
-      padding: 16,
-      borderRadius: 50,
-      width: '100%',
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-    },
-    loginButtonIcon: {
-      marginRight: 8,
-    },
-    loginButtonText: {
-      color: '#FFF',
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    scrollView: {
-      flex: 1,
-    },
-    header: {
-      height: 100,
-      padding: 24,
-      backgroundColor: colors.cardBackground,
-    },
-    headerActions: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    headerTitle: {
-      color: colors.text,
-      fontSize: 20,
-      fontWeight: '600',
-    },
-    iconButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    formContainer: {
-      padding: 24,
-      gap: 24,
-      paddingBottom: 32,
-    },
-    subtitle: {
-      color: colors.textMuted,
-      fontSize: 14,
-      lineHeight: 20,
-    },
-    errorBanner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: 'rgba(255, 107, 107, 0.1)',
-      padding: 12,
-      borderRadius: 8,
-      gap: 8,
-    },
-    errorBannerText: {
-      color: '#FF6B6B',
-      fontSize: 14,
-      flex: 1,
-    },
-    inputGroup: {
-      gap: 12,
-    },
-    inputLabel: {
-      color: colors.text,
-      fontSize: 14,
-      fontWeight: '500',
-    },
-    inputWrapper: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.inputBackground,
-      borderRadius: 24,
-      height: 48,
-      borderWidth: isDark ? 0 : 1,
-      borderColor: colors.border,
-    },
-    inputError: {
-      borderWidth: 1,
-      borderColor: '#FF6B6B',
-    },
-    input: {
-      flex: 1,
-      paddingHorizontal: 16,
-      fontSize: 16,
-      color: colors.text,
-      height: '100%',
-    },
-    eyeButton: {
-      paddingHorizontal: 16,
-      height: '100%',
-      justifyContent: 'center',
-    },
-    fieldError: {
-      color: '#FF6B6B',
-      fontSize: 12,
-      marginLeft: 8,
-    },
-    footer: {
-      padding: 24,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      backgroundColor: colors.footerBackground,
-    },
-    saveButton: {
-      backgroundColor: colors.primary,
-      padding: 16,
-      borderRadius: 50,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-    },
-    saveButtonDisabled: {
-      backgroundColor: colors.buttonBackground,
-    },
-    saveButtonText: {
-      color: '#FFF',
-      fontSize: 16,
-      fontWeight: '600',
-    },
-  }), [colors, isDark]);
+  const themedStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
+        loadingContainer: {
+          flex: 1,
+          backgroundColor: colors.background,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        errorContainer: {
+          flex: 1,
+          backgroundColor: colors.background,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 24,
+        },
+        errorContent: {
+          width: '100%',
+          maxWidth: 320,
+          alignItems: 'center',
+          backgroundColor: colors.cardBackground,
+          borderRadius: 16,
+          padding: 24,
+        },
+        errorIconContainer: {
+          width: 80,
+          height: 80,
+          borderRadius: 40,
+          backgroundColor: 'rgba(31, 162, 223, 0.1)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: 24,
+        },
+        errorTitle: {
+          color: colors.text,
+          fontSize: 24,
+          fontWeight: '700',
+          marginBottom: 12,
+          textAlign: 'center',
+        },
+        errorDescription: {
+          color: colors.textMuted,
+          fontSize: 14,
+          textAlign: 'center',
+          marginBottom: 24,
+          lineHeight: 20,
+        },
+        loginButton: {
+          backgroundColor: colors.primary,
+          padding: 16,
+          borderRadius: 50,
+          width: '100%',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+        },
+        loginButtonIcon: {
+          marginRight: 8,
+        },
+        loginButtonText: {
+          color: '#FFF',
+          fontSize: 16,
+          fontWeight: '600',
+        },
+        scrollView: {
+          flex: 1,
+        },
+        header: {
+          height: 100,
+          padding: 24,
+          backgroundColor: colors.cardBackground,
+        },
+        headerActions: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        },
+        headerTitle: {
+          color: colors.text,
+          fontSize: 20,
+          fontWeight: '600',
+        },
+        iconButton: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)',
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        formContainer: {
+          padding: 24,
+          gap: 24,
+          paddingBottom: 32,
+        },
+        subtitle: {
+          color: colors.textMuted,
+          fontSize: 14,
+          lineHeight: 20,
+        },
+        errorBanner: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: 'rgba(255, 107, 107, 0.1)',
+          padding: 12,
+          borderRadius: 8,
+          gap: 8,
+        },
+        errorBannerText: {
+          color: '#FF6B6B',
+          fontSize: 14,
+          flex: 1,
+        },
+        inputGroup: {
+          gap: 12,
+        },
+        inputLabel: {
+          color: colors.text,
+          fontSize: 14,
+          fontWeight: '500',
+        },
+        inputWrapper: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: colors.inputBackground,
+          borderRadius: 24,
+          height: 48,
+          borderWidth: isDark ? 0 : 1,
+          borderColor: colors.border,
+        },
+        inputError: {
+          borderWidth: 1,
+          borderColor: '#FF6B6B',
+        },
+        input: {
+          flex: 1,
+          paddingHorizontal: 16,
+          fontSize: 16,
+          color: colors.text,
+          height: '100%',
+        },
+        eyeButton: {
+          paddingHorizontal: 16,
+          height: '100%',
+          justifyContent: 'center',
+        },
+        fieldError: {
+          color: '#FF6B6B',
+          fontSize: 12,
+          marginLeft: 8,
+        },
+        footer: {
+          padding: 24,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          backgroundColor: colors.footerBackground,
+        },
+        saveButton: {
+          backgroundColor: colors.primary,
+          padding: 16,
+          borderRadius: 50,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+        },
+        saveButtonDisabled: {
+          backgroundColor: colors.buttonBackground,
+        },
+        saveButtonText: {
+          color: '#FFF',
+          fontSize: 16,
+          fontWeight: '600',
+        },
+      }),
+    [colors, isDark]
+  );
 
   const clearError = (field: string) => {
     setErrors((prev) => ({ ...prev, [field]: '' }));
@@ -309,7 +313,9 @@ export default function ChangePasswordScreen() {
       </View>
 
       <ScrollView style={themedStyles.scrollView} contentContainerStyle={themedStyles.formContainer}>
-        <Text style={themedStyles.subtitle}>Para sua segurança, insira a sua senha actual e depois crie uma nova senha.</Text>
+        <Text style={themedStyles.subtitle}>
+          Para sua segurança, insira a sua senha actual e depois crie uma nova senha.
+        </Text>
 
         {errors.general && (
           <View style={themedStyles.errorBanner}>
@@ -323,7 +329,6 @@ export default function ChangePasswordScreen() {
           <View style={[themedStyles.inputWrapper, errors.currentPassword ? themedStyles.inputError : null]}>
             <TextInput
               style={themedStyles.input}
-              placeholder="Digite sua senha atual"
               placeholderTextColor={colors.textSecondary}
               value={currentPassword}
               onChangeText={(text) => {
@@ -335,7 +340,10 @@ export default function ChangePasswordScreen() {
               autoCapitalize="none"
               editable={!isSubmitting}
             />
-            <TouchableOpacity style={themedStyles.eyeButton} onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
+            <TouchableOpacity
+              style={themedStyles.eyeButton}
+              onPress={() => setShowCurrentPassword(!showCurrentPassword)}
+            >
               <Feather name={showCurrentPassword ? 'eye-off' : 'eye'} size={20} color={colors.iconColor} />
             </TouchableOpacity>
           </View>
@@ -347,7 +355,6 @@ export default function ChangePasswordScreen() {
           <View style={[themedStyles.inputWrapper, errors.newPassword ? themedStyles.inputError : null]}>
             <TextInput
               style={themedStyles.input}
-              placeholder="Mínimo 6 caracteres"
               placeholderTextColor={colors.textSecondary}
               value={newPassword}
               onChangeText={(text) => {

@@ -1,5 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -8,11 +16,152 @@ import Colors from '@/constants/Colors';
 import { useSurveyQuestions, useSubmitSurvey } from '@/services/survey';
 import { useAuthUser } from '@/hooks/useAuth';
 import { SurveyAnswer } from '@/types/survey';
-import { setOnboardingComplete, hasSeenOnboarding } from '@/util/onboarding';
-
-const theme = Colors['dark'];
+import { setOnboardingComplete } from '@/util/onboarding';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function SurveyOnboardingScreen() {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const themedStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
+        centerContainer: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 40,
+        },
+        header: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 20,
+          paddingTop: 8,
+          paddingBottom: 16,
+          gap: 12,
+        },
+        backButton: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+        },
+        progressBarContainer: {
+          flex: 1,
+          justifyContent: 'center',
+        },
+        progressBarBackground: {
+          height: 7.2,
+          borderRadius: 3.6,
+          overflow: 'hidden',
+          backgroundColor: isDark ? '#29292E' : '#E1E1E6',
+        },
+        progressBarFill: {
+          height: 7.2,
+          borderRadius: 3.6,
+          backgroundColor: colors.tint,
+        },
+        progressText: {
+          fontSize: 12,
+          opacity: 0.6,
+          minWidth: 50,
+          textAlign: 'center',
+          color: colors.text,
+        },
+        content: {
+          flex: 1,
+          paddingHorizontal: 20,
+        },
+        questionTitle: {
+          fontSize: 24,
+          fontWeight: 'bold',
+          lineHeight: 32,
+          marginBottom: 32,
+          color: colors.text,
+        },
+        answersContainer: {
+          gap: 12,
+        },
+        answerOption: {
+          paddingVertical: 20,
+          paddingHorizontal: 20,
+          borderRadius: 16,
+          borderWidth: 1,
+          backgroundColor: colors.cardBackground,
+          borderColor: colors.border,
+        },
+        answerOptionSelected: {
+          backgroundColor: colors.tint,
+          borderColor: colors.tint,
+        },
+        answerText: {
+          fontSize: 16,
+          fontWeight: '500',
+          color: colors.text,
+        },
+        answerTextSelected: {
+          color: '#FFFFFF',
+        },
+        footer: {
+          paddingHorizontal: 20,
+          paddingVertical: 20,
+        },
+        loadingText: {
+          marginTop: 16,
+          fontSize: 16,
+          color: colors.text,
+        },
+        errorTitle: {
+          fontSize: 20,
+          fontWeight: 'bold',
+          marginTop: 16,
+          marginBottom: 8,
+          color: colors.text,
+        },
+        errorMessage: {
+          fontSize: 16,
+          textAlign: 'center',
+          marginBottom: 24,
+          color: colors.text,
+          opacity: 0.7,
+        },
+        successContainer: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 40,
+        },
+        successIconContainer: {
+          marginBottom: 32,
+        },
+        successTitle: {
+          fontSize: 28,
+          fontWeight: 'bold',
+          marginBottom: 16,
+          textAlign: 'center',
+          color: colors.text,
+        },
+        successMessage: {
+          fontSize: 16,
+          textAlign: 'center',
+          opacity: 0.7,
+          lineHeight: 24,
+          marginBottom: 48,
+          color: colors.text,
+        },
+        successButtonContainer: {
+          width: '100%',
+        },
+      }),
+    [colors, isDark]
+  );
+
   const { fromProfile } = useLocalSearchParams<{ fromProfile?: string }>();
   const isFromProfile = fromProfile === 'true';
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -61,10 +210,12 @@ export default function SurveyOnboardingScreen() {
       return;
     }
 
-    const surveyData: SurveyAnswer[] = Object.entries(selectedAnswers).map(([questionDocId, answerDocId]) => ({
-      question: questionDocId,
-      answer: answerDocId,
-    }));
+    const surveyData: SurveyAnswer[] = Object.entries(selectedAnswers).map(
+      ([questionDocId, answerDocId]) => ({
+        question: questionDocId,
+        answer: answerDocId,
+      })
+    );
 
     try {
       await submitSurveyMutation.mutateAsync({
@@ -81,16 +232,19 @@ export default function SurveyOnboardingScreen() {
       setShowSuccess(true);
     } catch (error: any) {
       console.error('Error submitting survey:', error);
-      Alert.alert('Erro', error.message || 'Falha ao enviar o questionário. Por favor, tente novamente.');
+      Alert.alert(
+        'Erro',
+        error.message || 'Falha ao enviar o questionário. Por favor, tente novamente.'
+      );
     }
   };
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={theme.tint} />
-          <Text style={[styles.loadingText, { color: theme.text }]}>A carregar perguntas...</Text>
+      <SafeAreaView style={themedStyles.container}>
+        <View style={themedStyles.centerContainer}>
+          <ActivityIndicator size="large" color={colors.tint} />
+          <Text style={themedStyles.loadingText}>A carregar perguntas...</Text>
         </View>
       </SafeAreaView>
     );
@@ -98,11 +252,11 @@ export default function SurveyOnboardingScreen() {
 
   if (error) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={styles.centerContainer}>
+      <SafeAreaView style={themedStyles.container}>
+        <View style={themedStyles.centerContainer}>
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text style={[styles.errorTitle, { color: theme.text }]}>Erro ao carregar</Text>
-          <Text style={[styles.errorMessage, { color: theme.text, opacity: 0.7 }]}>
+          <Text style={themedStyles.errorTitle}>Erro ao carregar</Text>
+          <Text style={themedStyles.errorMessage}>
             Não foi possível carregar as perguntas. Por favor, tente novamente.
           </Text>
           <Button handle={() => router.back()} text="Voltar" />
@@ -113,9 +267,9 @@ export default function SurveyOnboardingScreen() {
 
   if (!questions.length) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={styles.centerContainer}>
-          <Text style={[styles.errorTitle, { color: theme.text }]}>Nenhuma pergunta disponível</Text>
+      <SafeAreaView style={themedStyles.container}>
+        <View style={themedStyles.centerContainer}>
+          <Text style={themedStyles.errorTitle}>Nenhuma pergunta disponível</Text>
           <Button handle={() => router.back()} text="Voltar" />
         </View>
       </SafeAreaView>
@@ -124,23 +278,23 @@ export default function SurveyOnboardingScreen() {
 
   if (showSuccess) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={styles.successContainer}>
-          <View style={styles.successIconContainer}>
-            <Ionicons name="checkmark-circle" size={120} color="#22ACE3" />
+      <SafeAreaView style={themedStyles.container}>
+        <View style={themedStyles.successContainer}>
+          <View style={themedStyles.successIconContainer}>
+            <Ionicons name="checkmark-circle" size={120} color={colors.tint} />
           </View>
 
-          <Text style={[styles.successTitle, { color: theme.text }]}>
-            {isFromProfile ? 'Preferências Atualizadas!' : 'Questionário Concluído!'}
+          <Text style={themedStyles.successTitle}>
+            {isFromProfile ? 'Preferências Actualizadas!' : 'Questionário Concluído!'}
           </Text>
 
-          <Text style={[styles.successMessage, { color: theme.text }]}>
+          <Text style={themedStyles.successMessage}>
             {isFromProfile
-              ? 'Suas preferências foram atualizadas com sucesso. A sua experiência será personalizada de acordo.'
+              ? 'Suas preferências foram actualizadas com sucesso. A sua experiência será personalizada de acordo.'
               : 'Obrigado por partilhar suas preferências. Vamos personalizar sua experiência de aprendizagem.'}
           </Text>
 
-          <View style={styles.successButtonContainer}>
+          <View style={themedStyles.successButtonContainer}>
             <Button
               handle={() => {
                 if (isFromProfile) {
@@ -158,42 +312,54 @@ export default function SurveyOnboardingScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={themedStyles.container}>
       {/* Header with back button and progress */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={theme.text} />
+      <View style={themedStyles.header}>
+        <TouchableOpacity onPress={handleBack} style={themedStyles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
 
         {/* Progress Bar */}
-        <View style={styles.progressBarContainer}>
-          <View style={styles.progressBarBackground}>
-            <View style={[styles.progressBarFill, { width: `${progress * 100}%`, backgroundColor: '#22ACE3' }]} />
+        <View style={themedStyles.progressBarContainer}>
+          <View style={themedStyles.progressBarBackground}>
+            <View
+              style={[themedStyles.progressBarFill, { width: `${progress * 100}%` }]}
+            />
           </View>
         </View>
 
         {/* Progress Text */}
-        <Text style={[styles.progressText, { color: theme.text }]}>
+        <Text style={themedStyles.progressText}>
           {currentQuestionIndex + 1} de {totalQuestions}
         </Text>
       </View>
 
       {/* Question and Answers */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.questionTitle, { color: theme.text }]}>{currentQuestion.question}</Text>
+      <ScrollView style={themedStyles.content} showsVerticalScrollIndicator={false}>
+        <Text style={themedStyles.questionTitle}>{currentQuestion.question}</Text>
 
-        <View style={styles.answersContainer}>
+        <View style={themedStyles.answersContainer}>
           {currentQuestion.survey_answer_options.map((option) => {
             const isSelected = selectedAnswers[currentQuestion.documentId] === option.documentId;
 
             return (
               <TouchableOpacity
                 key={option.id}
-                style={[styles.answerOption, isSelected && styles.answerOptionSelected]}
+                style={[
+                  themedStyles.answerOption,
+                  isSelected && themedStyles.answerOptionSelected,
+                ]}
                 onPress={() => handleSelectAnswer(currentQuestion.documentId, option.documentId)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.answerText, { color: isSelected ? '#000000' : '#FFFFFF' }]}>{option.answer}</Text>
+                <Text
+                  style={[
+                    themedStyles.answerText,
+                    isSelected && themedStyles.answerTextSelected,
+                  ]}
+                >
+                  {option.answer}
+                </Text>
               </TouchableOpacity>
             );
           })}
@@ -201,7 +367,7 @@ export default function SurveyOnboardingScreen() {
       </ScrollView>
 
       {/* Continue Button */}
-      <View style={styles.footer}>
+      <View style={themedStyles.footer}>
         <Button
           handle={handleContinue}
           text={currentQuestionIndex === totalQuestions - 1 ? 'Concluir' : 'Continuar'}
@@ -212,125 +378,3 @@ export default function SurveyOnboardingScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-    gap: 12,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  progressBarContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  progressBarBackground: {
-    height: 7.2,
-    backgroundColor: '#1F1F1F',
-    borderRadius: 3.6,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: 7.2,
-    borderRadius: 3.6,
-  },
-  progressText: {
-    fontSize: 12,
-    color: '#FFFFFF',
-    opacity: 0.6,
-    minWidth: 50,
-    textAlign: 'center',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  questionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    lineHeight: 32,
-    marginBottom: 32,
-  },
-  answersContainer: {
-    gap: 12,
-  },
-  answerOption: {
-    backgroundColor: '#1F1F1F',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
-  },
-  answerOptionSelected: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#FFFFFF',
-  },
-  answerText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-  },
-  footer: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  errorMessage: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  successContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  successIconContainer: {
-    marginBottom: 32,
-  },
-  successTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  successMessage: {
-    fontSize: 16,
-    textAlign: 'center',
-    opacity: 0.7,
-    lineHeight: 24,
-    marginBottom: 48,
-  },
-  successButtonContainer: {
-    width: '100%',
-  },
-});
