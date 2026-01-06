@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import Button from '@/components/Button';
@@ -9,13 +9,77 @@ import AuthHeader from '@/app/components/auth/AuthHeader';
 import AuthTitle from '@/app/components/auth/AuthTitle';
 import FormInput from '@/app/components/auth/FormInput';
 import AuthFooter from '@/app/components/auth/AuthFooter';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   const forgotPasswordMutation = useForgotPassword();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        subtitleText: {
+          fontSize: 14,
+          color: colors.textSecondary,
+          marginTop: 12,
+          lineHeight: 20,
+          paddingHorizontal: 24,
+        },
+        successContainer: {
+          alignItems: 'center',
+          paddingVertical: 32,
+        },
+        successIconContainer: {
+          marginBottom: 24,
+        },
+        successTitle: {
+          fontSize: 22,
+          fontWeight: '600',
+          color: colors.text,
+          marginBottom: 16,
+          textAlign: 'center',
+        },
+        successMessage: {
+          fontSize: 14,
+          color: colors.textSecondary,
+          textAlign: 'center',
+          lineHeight: 22,
+          marginBottom: 16,
+        },
+        successIdentifier: {
+          color: colors.primary,
+          fontWeight: '500',
+        },
+        successInstructions: {
+          fontSize: 14,
+          color: colors.textSecondary,
+          textAlign: 'center',
+          lineHeight: 22,
+          paddingHorizontal: 16,
+        },
+        resendContainer: {
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginTop: 24,
+        },
+        resendText: {
+          color: colors.textSecondary,
+          fontSize: 14,
+        },
+        resendLink: {
+          color: colors.primary,
+          fontSize: 14,
+        },
+      }),
+    [colors]
+  );
 
   const handleSubmit = () => {
     const trimmedEmail = email.trim();
@@ -131,59 +195,3 @@ export default function ForgotPassword() {
     </AuthContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  subtitleText: {
-    fontSize: 14,
-    color: '#999999',
-    marginTop: 12,
-    lineHeight: 20,
-    paddingHorizontal: 24,
-  },
-  successContainer: {
-    alignItems: 'center',
-    paddingVertical: 32,
-  },
-  successIconContainer: {
-    marginBottom: 24,
-  },
-  successTitle: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  successMessage: {
-    fontSize: 14,
-    color: '#999999',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 16,
-  },
-  successIdentifier: {
-    color: '#2196F3',
-    fontWeight: '500',
-  },
-  successInstructions: {
-    fontSize: 14,
-    color: '#999999',
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 16,
-  },
-  resendContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  resendText: {
-    color: '#999999',
-    fontSize: 14,
-  },
-  resendLink: {
-    color: '#2196F3',
-    fontSize: 14,
-  },
-});

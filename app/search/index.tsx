@@ -33,10 +33,9 @@ export default function Search() {
   };
 
   const categories = [
-    { id: 43, icon: 'brush', label: 'Design' },
-    { id: 71, icon: 'laptop', label: 'Tecnologia' },
-    { id: 69, icon: 'heart', label: 'Saúde e Bem-estar' },
-    { id: 45, icon: 'cash', label: 'Finanças' },
+    { id: 113, icon: 'desktop-outline', label: 'Competências Digitais' },
+    { id: 133, icon: 'globe-outline', label: 'Competências Verdes' },
+    { id: 117, icon: 'cloud-outline', label: 'Mudanças Climáticas' },
   ];
 
   function handleOpenCourse(course: Course) {

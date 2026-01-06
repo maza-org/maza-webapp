@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface AuthFooterProps {
   linkText?: string;
@@ -7,12 +9,15 @@ interface AuthFooterProps {
 }
 
 export default function AuthFooter({ linkText, onLinkPress }: AuthFooterProps) {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
   if (!linkText || !onLinkPress) return null;
 
   return (
     <View style={styles.footerContainer}>
       <TouchableOpacity onPress={onLinkPress}>
-        <Text style={styles.footerLinkText}>{linkText}</Text>
+        <Text style={[styles.footerLinkText, { color: colors.textSecondary }]}>{linkText}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -24,7 +29,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   footerLinkText: {
-    color: '#999999',
     fontSize: 16,
     textAlign: 'center',
     paddingVertical: 8,

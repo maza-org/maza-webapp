@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { ScrollView, View, StyleSheet, Text, Platform } from 'react-native';
+import { ScrollView, View, StyleSheet, Text, Platform, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Button from '@/components/Button';
@@ -9,9 +9,13 @@ import AuthHeader from '@/app/components/auth/AuthHeader';
 import AuthTitle from '@/app/components/auth/AuthTitle';
 import FormInput from '@/app/components/auth/FormInput';
 import SearchablePicker from '@/app/components/auth/SearchablePicker';
-import DatePicker from '@/app/components/auth/DatePicker';
+
 import ConsentCheckbox from '@/app/components/auth/ConsentCheckbox';
 import AuthFooter from '@/app/components/auth/AuthFooter';
+import CustomDatePicker, { MONTHS } from '@/app/components/CustomDatePicker';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 import MOZAMBIQUE_PROVINCES from '@/data/mozambique/provinces.json';
 import MOZAMBIQUE_DISTRICTS_DATA from '@/data/mozambique/districts.json';
@@ -48,12 +52,85 @@ export default function CreateEmail() {
   const [occupation, setOccupation] = useState('');
   const [academicInstitution, setAcademicInstitution] = useState('');
   const [academicLevel, setAcademicLevel] = useState('');
+
   const [underageConsent, setUnderageConsent] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [warnings, setWarnings] = useState<Record<string, string>>({});
 
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
   const createAccountMutation = useCreateAccount();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        formContainer: {
+          gap: 24,
+          paddingBottom: 120,
+        },
+        errorContainer: {
+          backgroundColor: isDark ? '#3D1E1E' : '#FFE5E5',
+          padding: 12,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: isDark ? '#FF6B6B' : '#FF4444',
+          marginBottom: 16,
+        },
+        errorText: {
+          color: isDark ? '#FF6B6B' : '#CC0000',
+          fontSize: 12,
+        },
+        helpText: {
+          color: colors.textSecondary,
+          fontSize: 12,
+          textAlign: 'center',
+          marginTop: 8,
+          marginBottom: 16,
+        },
+        warningContainer: {
+          backgroundColor: isDark ? '#3D2E1E' : '#FFF4E5',
+          padding: 12,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: isDark ? '#FFA726' : '#FF9800',
+          marginTop: -16,
+          marginBottom: 8,
+        },
+        warningText: {
+          color: isDark ? '#FFA726' : '#EF6C00',
+          fontSize: 12,
+        },
+        inputGroup: {
+          gap: 12,
+        },
+        inputLabel: {
+          color: colors.text,
+          fontSize: 14,
+          fontWeight: '500',
+        },
+        pickerButton: {
+          height: 48,
+          backgroundColor: colors.inputBackground,
+          borderRadius: 24,
+          paddingHorizontal: 16,
+          fontSize: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        },
+        pickerButtonText: {
+          fontSize: 16,
+          color: colors.text,
+        },
+        placeholderText: {
+          color: colors.textMuted,
+        },
+      }),
+    [colors, isDark]
+  );
 
   // Calculate max date (today)
   const maxDate = useMemo(() => new Date(), []);
@@ -293,16 +370,32 @@ export default function CreateEmail() {
             error={errors.nationalID}
           />
 
-          <DatePicker
-            label="Data de Nascimento"
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Data de Nascimento</Text>
+            <TouchableOpacity
+              style={styles.pickerButton}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={[styles.pickerButtonText, !dateOfBirth && styles.placeholderText]}>
+                {dateOfBirth
+                  ? `${String(dateOfBirth.getDate()).padStart(2, '0')} de ${MONTHS[dateOfBirth.getMonth()]} de ${dateOfBirth.getFullYear()}`
+                  : 'Selecionar data'}
+              </Text>
+              <Ionicons name="calendar-outline" size={20} color={colors.textMuted} />
+            </TouchableOpacity>
+            {errors.dateOfBirth && <Text style={styles.errorText}>{errors.dateOfBirth}</Text>}
+          </View>
+
+          <CustomDatePicker
             value={dateOfBirth}
             onChange={(date) => {
               setDateOfBirth(date);
               clearError('dateOfBirth');
             }}
-            maximumDate={maxDate}
-            minimumDate={minDate}
-            error={errors.dateOfBirth}
+            minDate={minDate}
+            maxDate={maxDate}
+            visible={showDatePicker}
+            onClose={() => setShowDatePicker(false)}
           />
 
           <SearchablePicker
@@ -392,42 +485,3 @@ export default function CreateEmail() {
     </AuthContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  formContainer: {
-    gap: 24,
-    paddingBottom: 120,
-  },
-  errorContainer: {
-    backgroundColor: '#3D1E1E',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FF6B6B',
-    marginBottom: 16,
-  },
-  errorText: {
-    color: '#FF6B6B',
-    fontSize: 12,
-  },
-  helpText: {
-    color: '#666',
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  warningContainer: {
-    backgroundColor: '#3D2E1E',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FFA726',
-    marginTop: -16,
-    marginBottom: 8,
-  },
-  warningText: {
-    color: '#FFA726',
-    fontSize: 12,
-  },
-});

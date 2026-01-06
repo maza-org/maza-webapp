@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useMemo } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import axios, { AxiosError } from 'axios';
 import Button from '@/components/Button';
-import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
 import { baseUrl } from '@/services/api';
 import { ErrorResponse, LoginResponse, User } from '@/types/user';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { navigateAfterLogin } from '@/util/onboarding';
+import AuthContainer, { AuthTopSection, AuthContent, AuthForm } from '@/app/components/auth/AuthContainer';
+import AuthHeader from '@/app/components/auth/AuthHeader';
+import AuthTitle from '@/app/components/auth/AuthTitle';
+import FormInput from '@/app/components/auth/FormInput';
+import AuthFooter from '@/app/components/auth/AuthFooter';
 
 export default function LoginEmail() {
   const [identifier, setIdentifier] = useState('');
@@ -150,74 +152,49 @@ export default function LoginEmail() {
   const isLoading = loginMutation.isPending || fetchUserDataMutation.isPending;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <View style={styles.topSection}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Image
-            source={require('@/assets/images/maza-logo.png')}
-            style={{ width: 129, height: 78, marginStart: 20 }}
-            contentFit={'contain'}
+    <AuthContainer edges={['top', 'bottom']}>
+      <AuthTopSection>
+        <AuthHeader />
+        <AuthTitle
+          title="Login com Email"
+          subtitle="Não possui uma conta?"
+          linkText="Registar"
+          linkAction={() => router.push('/login/create-email')}
+        />
+      </AuthTopSection>
+
+      <AuthContent>
+        <AuthForm>
+          <FormInput
+            label="Email ou Username"
+            keyboardType="email-address"
+            value={identifier}
+            onChangeText={(text) => {
+              setIdentifier(text);
+              if (error) setError(undefined);
+            }}
+            autoCapitalize="none"
+            editable={!isLoading}
           />
-        </View>
-        <View style={styles.titleSection}>
-          <Text style={styles.headerText}>Login com Email</Text>
 
-          <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Não possui uma conta? </Text>
-            <TouchableOpacity onPress={() => router.push('/login/create-email')}>
-              <Text style={styles.loginLink}>Registar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.formContainer}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Email ou Username</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="email-address"
-              value={identifier}
+          <View>
+            <FormInput
+              label="Palavra-passe"
+              value={password}
               onChangeText={(text) => {
-                setIdentifier(text);
+                setPassword(text);
                 if (error) setError(undefined);
+                if (warning) setWarning(undefined);
+                if (text.includes(' ')) {
+                  setWarning('Atenção: A palavra-passe contém espaços');
+                }
               }}
+              showPasswordToggle
+              isPasswordVisible={showPassword}
+              onPasswordToggle={() => setShowPassword(!showPassword)}
               autoCapitalize="none"
               editable={!isLoading}
             />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Palavra-passe</Text>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={[styles.input, styles.passwordInput]}
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  if (error) setError(undefined);
-                  if (warning) setWarning(undefined);
-                  // Show warning for spaces without blocking
-                  if (text.includes(' ')) {
-                    setWarning('Atenção: A palavra-passe contém espaços');
-                  }
-                }}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                editable={!isLoading}
-              />
-              <TouchableOpacity
-                style={styles.eyeButton}
-                onPress={() => setShowPassword(!showPassword)}
-                disabled={isLoading}
-              >
-                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#999" />
-              </TouchableOpacity>
-            </View>
             <TouchableOpacity onPress={() => router.push('/login/forgot-password')} disabled={isLoading}>
               <Text style={styles.forgotPasswordLink}>Esqueceu a palavra-passe?</Text>
             </TouchableOpacity>
@@ -234,104 +211,25 @@ export default function LoginEmail() {
               <Text style={styles.errorText}>{error}</Text>
             </View>
           )}
-        </View>
+        </AuthForm>
 
-        <View>
-          <Button
-            text={isLoading ? 'A processar...' : 'Entrar'}
-            handle={handleLogin}
-            disabled={!identifier || !password || isLoading}
-            loading={isLoading}
-          />
-        </View>
+        <Button
+          text={isLoading ? 'A processar...' : 'Entrar'}
+          handle={handleLogin}
+          disabled={!identifier || !password || isLoading}
+          loading={isLoading}
+        />
 
-        <View style={styles.textButtonContainer}>
-          <TouchableOpacity onPress={() => router.push('/login')}>
-            <Text style={styles.bottomLinkText}>Prefere usar número de telefone?</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </SafeAreaView>
+        <AuthFooter
+          linkText="Prefere usar número de telefone?"
+          onLinkPress={() => router.push('/login')}
+        />
+      </AuthContent>
+    </AuthContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1E1E1E',
-  },
-  topSection: {
-    backgroundColor: '#1E1E1E',
-    paddingBottom: 20,
-    marginBottom: 10,
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  titleSection: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
-    gap: 24,
-    backgroundColor: '#121212',
-  },
-  headerText: {
-    fontSize: 28,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    width: 260,
-  },
-  loginContainer: {
-    flexDirection: 'row',
-    marginTop: 12,
-  },
-  loginText: {
-    color: '#999999',
-    fontSize: 14,
-  },
-  loginLink: {
-    color: '#2196F3',
-    fontSize: 14,
-  },
-  formContainer: {
-    gap: 24,
-    marginBottom: 32,
-    marginTop: 16,
-  },
-  inputGroup: {
-    gap: 12,
-  },
-  inputLabel: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  input: {
-    height: 48,
-    backgroundColor: '#252525',
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  passwordContainer: {
-    position: 'relative',
-  },
-  passwordInput: {
-    paddingRight: 48,
-  },
-  eyeButton: {
-    position: 'absolute',
-    right: 16,
-    top: '50%',
-    transform: [{ translateY: -10 }],
-  },
   forgotPasswordLink: {
     color: '#2196F3',
     fontSize: 14,
@@ -350,30 +248,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 8,
   },
-  textButtonContainer: {
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  bottomLinkText: {
-    color: '#999999',
-    fontSize: 16,
-    textAlign: 'center',
-    paddingVertical: 8,
-  },
-  backButton: {
-    padding: 8,
-    borderStyle: 'solid',
-    borderColor: '#b3b3b3',
-    borderWidth: 0.5,
-    borderRadius: 50,
-  },
   warningContainer: {
     backgroundColor: '#3D2E1E',
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#FFA726',
-    marginBottom: 16,
+    marginBottom: 0,
   },
   warningText: {
     color: '#FFA726',

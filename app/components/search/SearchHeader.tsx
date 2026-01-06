@@ -21,12 +21,13 @@ export default function SearchHeader({ onBackPress }: SearchHeaderProps) {
       backgroundColor: 'transparent',
     },
     backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)',
+      justifyContent: 'center',
+      alignItems: 'center',
       marginRight: 16,
-      borderStyle: 'solid',
-      borderColor: colors.border,
-      borderWidth: 0.5,
-      padding: 8,
-      borderRadius: 50,
     },
     headerTitle: {
       fontSize: 24,

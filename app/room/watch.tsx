@@ -14,7 +14,6 @@ import Colors from '@/constants/Colors';
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
 
-// Static styles for video container (always black, used outside main component)
 const videoStyles = StyleSheet.create({
   videoContainer: {
     position: 'absolute',
@@ -205,161 +204,175 @@ export default function CourseScreen() {
   const { data: user } = useAuthUser();
   const markContentAsCompletedMutation = useMarkContentAsCompleted();
 
-  const themedStyles = useMemo(() => StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    content: {
-      flex: 1,
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 16,
-    },
-    headerTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: colors.text,
-      flex: 1,
-      textAlign: 'center',
-      marginHorizontal: 8,
-    },
-    backButton: {
-      padding: 8,
-    },
-    shareButton: {
-      padding: 8,
-    },
-    courseInfo: {
-      padding: 16,
-    },
-    instructorInfo: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 24,
-    },
-    instructorAvatar: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-    },
-    instructorTextContainer: {
-      marginLeft: 12,
-      justifyContent: 'center',
-      flex: 1,
-    },
-    instructorName: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 2,
-    },
-    courseCategory: {
-      fontSize: 14,
-      color: colors.primary,
-      fontWeight: '500',
-    },
-    descriptionContainer: {
-      marginTop: 10,
-      padding: 6,
-    },
-    descriptionText: {
-      fontSize: 14,
-      color: colors.textMuted,
-      lineHeight: 20,
-    },
-    toggleButton: {
-      marginTop: 8,
-    },
-    toggleButtonText: {
-      color: colors.primary,
-      fontSize: 14,
-      fontWeight: '500',
-    },
-    modulesList: {
-      padding: 16,
-    },
-    moduleItem: {
-      backgroundColor: isDark ? 'rgba(32, 32, 36, 0.5)' : colors.cardBackground,
-      borderRadius: 8,
-      padding: 16,
-      marginBottom: 8,
-      borderWidth: isDark ? 0 : 1,
-      borderColor: colors.border,
-    },
-    moduleHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 8,
-    },
-    moduleNumber: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: colors.text,
-      marginRight: 8,
-    },
-    moduleTitle: {
-      fontSize: 16,
-      color: colors.text,
-      flex: 1,
-    },
-    moduleTitleCompleted: {
-      color: colors.primary,
-    },
-    moduleItemCompleted: {
-      borderColor: colors.primary,
-      borderWidth: 1,
-    },
-    quizGradeContainer: {
-      backgroundColor: 'rgba(34, 197, 94, 0.1)',
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: 'rgba(34, 197, 94, 0.2)',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    quizGradeText: {
-      color: '#22C55E',
-      fontSize: 12,
-      fontWeight: '700',
-    },
-    quizIcon: {
-      backgroundColor: isDark ? '#2a2d3e' : colors.inputBackground,
-      borderRadius: 50,
-      padding: 5,
-    },
-    moduleFooter: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    moduleDuration: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    moduleDurationText: {
-      color: colors.textMuted,
-      fontSize: 12,
-    },
-    videoContainer: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: '#000',
-      zIndex: 999,
-    },
-  }), [colors, isDark]);
+  const themedStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
+        content: {
+          flex: 1,
+        },
+        header: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: 16,
+        },
+        headerTitle: {
+          fontSize: 16,
+          fontWeight: '600',
+          color: colors.text,
+          flex: 1,
+          textAlign: 'center',
+          marginHorizontal: 8,
+        },
+        backButton: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)',
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        shareButton: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)',
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        courseInfo: {
+          padding: 16,
+        },
+        instructorInfo: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: 24,
+        },
+        instructorAvatar: {
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          borderWidth: 1.5,
+          borderColor: colors.border,
+        },
+        instructorTextContainer: {
+          marginLeft: 12,
+          justifyContent: 'center',
+          flex: 1,
+        },
+        instructorName: {
+          fontSize: 16,
+          fontWeight: '600',
+          color: colors.text,
+          marginBottom: 2,
+        },
+        courseCategory: {
+          fontSize: 14,
+          color: colors.primary,
+          fontWeight: '500',
+        },
+        descriptionContainer: {
+          marginTop: 10,
+          padding: 6,
+        },
+        descriptionText: {
+          fontSize: 14,
+          color: colors.textMuted,
+          lineHeight: 20,
+        },
+        toggleButton: {
+          marginTop: 8,
+        },
+        toggleButtonText: {
+          color: colors.primary,
+          fontSize: 14,
+          fontWeight: '500',
+        },
+        modulesList: {
+          padding: 16,
+        },
+        moduleItem: {
+          backgroundColor: isDark ? 'rgba(32, 32, 36, 0.5)' : colors.cardBackground,
+          borderRadius: 8,
+          padding: 16,
+          marginBottom: 8,
+          borderWidth: isDark ? 0 : 1,
+          borderColor: colors.border,
+        },
+        moduleHeader: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: 8,
+        },
+        moduleNumber: {
+          fontSize: 16,
+          fontWeight: 'bold',
+          color: colors.text,
+          marginRight: 8,
+        },
+        moduleTitle: {
+          fontSize: 16,
+          color: colors.text,
+          flex: 1,
+        },
+        moduleTitleCompleted: {
+          color: colors.primary,
+        },
+        moduleItemCompleted: {
+          borderColor: colors.primary,
+          borderWidth: 1,
+        },
+        quizGradeContainer: {
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          paddingHorizontal: 10,
+          paddingVertical: 4,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: 'rgba(34, 197, 94, 0.2)',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+        },
+        quizGradeText: {
+          color: '#22C55E',
+          fontSize: 12,
+          fontWeight: '700',
+        },
+        quizIcon: {
+          backgroundColor: isDark ? '#2a2d3e' : colors.inputBackground,
+          borderRadius: 50,
+          padding: 5,
+        },
+        moduleFooter: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        },
+        moduleDuration: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+        },
+        moduleDurationText: {
+          color: colors.textMuted,
+          fontSize: 12,
+        },
+        videoContainer: {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: '#000',
+          zIndex: 999,
+        },
+      }),
+    [colors, isDark]
+  );
 
   // Helper to get contentId from content (handles both Module and UserCourseModule structures)
   const getContentId = (content: ExtendedContent): number => {
@@ -445,7 +458,6 @@ export default function CourseScreen() {
 
           {/* Course Info */}
           <View style={themedStyles.courseInfo}>
-
             <View style={themedStyles.instructorInfo}>
               <Image source={{ uri: imageUrl as string }} style={themedStyles.instructorAvatar} />
               <View style={themedStyles.instructorTextContainer}>
@@ -509,7 +521,9 @@ export default function CourseScreen() {
                 <View style={themedStyles.moduleFooter}>
                   <View style={themedStyles.moduleDuration}>
                     <Feather name="check-circle" size={14} color={colors.textMuted} />
-                    <Text style={themedStyles.moduleDurationText}>{moduleData.quiz.questions?.length || 0} perguntas</Text>
+                    <Text style={themedStyles.moduleDurationText}>
+                      {moduleData.quiz.questions?.length || 0} perguntas
+                    </Text>
                   </View>
                   {moduleData.quiz.state === 'Passed' && moduleData.quiz.grade != null && (
                     <View style={themedStyles.quizGradeContainer}>

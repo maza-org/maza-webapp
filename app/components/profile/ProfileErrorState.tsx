@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface ProfileErrorStateProps {
   title?: string;
@@ -15,77 +17,85 @@ export default function ProfileErrorState({
   buttonText = 'Iniciar Sessão',
   onButtonPress,
 }: ProfileErrorStateProps) {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const themedStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        errorContainer: {
+          flex: 1,
+          backgroundColor: colors.background,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 24,
+        },
+        errorContent: {
+          width: '100%',
+          maxWidth: 320,
+          alignItems: 'center',
+          backgroundColor: colors.cardBackground,
+          borderRadius: 16,
+          padding: 24,
+        },
+        errorIconContainer: {
+          width: 80,
+          height: 80,
+          borderRadius: 40,
+          backgroundColor: isDark ? 'rgba(31, 162, 223, 0.1)' : 'rgba(31, 162, 223, 0.15)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: 24,
+        },
+        errorTitle: {
+          color: colors.text,
+          fontSize: 24,
+          fontWeight: '700',
+          marginBottom: 12,
+          textAlign: 'center',
+        },
+        errorText: {
+          color: colors.textMuted,
+          fontSize: 16,
+          textAlign: 'center',
+          marginBottom: 24,
+          lineHeight: 24,
+        },
+        loginButton: {
+          backgroundColor: colors.primary,
+          padding: 16,
+          borderRadius: 50,
+          width: '100%',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+        },
+        loginButtonIcon: {
+          marginRight: 8,
+        },
+        loginButtonText: {
+          color: '#FFF',
+          fontSize: 16,
+          fontWeight: '600',
+        },
+      }),
+    [colors, isDark]
+  );
+
   return (
-    <View style={styles.errorContainer}>
-      <View style={styles.errorContent}>
-        <View style={styles.errorIconContainer}>
-          <Feather name="user-x" size={48} color="#1fa2df" />
+    <View style={themedStyles.errorContainer}>
+      <View style={themedStyles.errorContent}>
+        <View style={themedStyles.errorIconContainer}>
+          <Feather name="user-x" size={48} color={colors.primary} />
         </View>
-        <Text style={styles.errorTitle}>{title}</Text>
-        <Text style={styles.errorText}>{message}</Text>
-        <TouchableOpacity style={styles.loginButton} onPress={onButtonPress}>
-          <Feather name="log-in" size={20} color="#FFF" style={styles.loginButtonIcon} />
-          <Text style={styles.loginButtonText}>{buttonText}</Text>
+        <Text style={themedStyles.errorTitle}>{title}</Text>
+        <Text style={themedStyles.errorText}>{message}</Text>
+        <TouchableOpacity style={themedStyles.loginButton} onPress={onButtonPress}>
+          <Feather name="log-in" size={20} color="#FFF" style={themedStyles.loginButtonIcon} />
+          <Text style={themedStyles.loginButtonText}>{buttonText}</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  errorContainer: {
-    flex: 1,
-    backgroundColor: '#121214',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  errorContent: {
-    width: '100%',
-    maxWidth: 320,
-    alignItems: 'center',
-    borderRadius: 16,
-    padding: 24,
-  },
-  errorIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(31, 162, 223, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  errorTitle: {
-    color: '#FFF',
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  errorText: {
-    color: '#A8A8B3',
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 24,
-  },
-  loginButton: {
-    backgroundColor: '#1fa2df',
-    padding: 16,
-    borderRadius: 50,
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  loginButtonIcon: {
-    marginRight: 8,
-  },
-  loginButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

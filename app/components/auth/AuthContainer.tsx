@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { Edges } from 'react-native-safe-area-context';
+import { SafeAreaView, Edges } from 'react-native-safe-area-context';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface AuthContainerProps {
   children: React.ReactNode;
@@ -10,19 +10,64 @@ interface AuthContainerProps {
 }
 
 export default function AuthContainer({ children, edges = ['top', 'bottom'] }: AuthContainerProps) {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const themedStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: isDark ? '#1E1E1E' : colors.cardBackground,
+        },
+      }),
+    [colors, isDark]
+  );
+
   return (
-    <SafeAreaView style={styles.container} edges={edges}>
+    <SafeAreaView style={themedStyles.container} edges={edges}>
       {children}
     </SafeAreaView>
   );
 }
 
 export function AuthTopSection({ children }: { children: React.ReactNode }) {
-  return <View style={styles.topSection}>{children}</View>;
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const themedStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        topSection: {
+          backgroundColor: isDark ? '#1E1E1E' : colors.cardBackground,
+          paddingBottom: 20,
+          marginBottom: 10,
+        },
+      }),
+    [colors, isDark]
+  );
+
+  return <View style={themedStyles.topSection}>{children}</View>;
 }
 
 export function AuthContent({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
-  return <View style={[styles.content, style]}>{children}</View>;
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const themedStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        content: {
+          flex: 1,
+          padding: 24,
+          gap: 24,
+          backgroundColor: isDark ? '#121212' : colors.background,
+        },
+      }),
+    [colors, isDark]
+  );
+
+  return <View style={[themedStyles.content, style]}>{children}</View>;
 }
 
 export function AuthForm({ children }: { children: React.ReactNode }) {
@@ -30,21 +75,6 @@ export function AuthForm({ children }: { children: React.ReactNode }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1E1E1E',
-  },
-  topSection: {
-    backgroundColor: '#1E1E1E',
-    paddingBottom: 20,
-    marginBottom: 10,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
-    gap: 24,
-    backgroundColor: '#121212',
-  },
   formContainer: {
     gap: 24,
     marginBottom: 32,

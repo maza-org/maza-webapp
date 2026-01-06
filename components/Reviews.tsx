@@ -92,7 +92,7 @@ const ReviewItem = ({ review }: { review: Review }) => {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: colors.inputBackground,
+      backgroundColor: isDark ? colors.inputBackground : 'rgba(0,0,0,0.1)',
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: 12,
@@ -395,7 +395,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       textAlign: 'center',
     },
     reviewInput: {
-      backgroundColor: colors.inputBackground,
+      backgroundColor: isDark ? colors.inputBackground : 'rgba(0,0,0,0.1)',
       borderRadius: 8,
       padding: 12,
       color: colors.text,

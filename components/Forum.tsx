@@ -72,7 +72,7 @@ const CommentItem = ({
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: colors.inputBackground,
+      backgroundColor: isDark ? colors.inputBackground : 'rgba(0,0,0,0.1)',
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: 12,

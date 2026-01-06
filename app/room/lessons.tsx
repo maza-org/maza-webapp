@@ -1316,7 +1316,7 @@ export default function CourseDetail() {
                           {userCourseDetails?.quiz?.state === 'Passed' ? (
                             <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
                           ) : (
-                            <View style={styles.iconContainer}>
+                            <View style={themedStyles.iconContainer}>
                               <Ionicons name="help-circle" size={20} color={colors.primary} />
                             </View>
                           )}
