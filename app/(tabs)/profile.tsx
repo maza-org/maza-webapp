@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/useToast';
 import Toast from '@/components/Toast';
 import { Subject, Certificate } from '@/app/types/profile';
 import { useCertificates, useDeleteInterest, useLogout, useProfileRefresh } from '@/app/hooks/useProfileQueries';
+import Constants from 'expo-constants';
 import ProfileHeader from '@/app/components/profile/ProfileHeader';
 import ProfileImageSection from '@/app/components/profile/ProfileImageSection';
 import ProfileInfoItem from '@/app/components/profile/ProfileInfoItem';
@@ -351,7 +352,7 @@ export default function ProfileScreen() {
             icon={<Feather name="lock" size={20} color={colors.primary} />}
           />
 
-          <Text style={themedStyles.versionLabel}>Versão 1.0.0</Text>
+          <Text style={themedStyles.versionLabel}>Versão {Constants.expoConfig?.version ?? '1.0.0'}</Text>
         </View>
       </ScrollView>
 
