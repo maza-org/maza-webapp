@@ -1,11 +1,11 @@
-import { View, StyleSheet, Animated, useColorScheme } from 'react-native';
+import { View, StyleSheet, Animated } from 'react-native';
 import { useEffect, useRef } from 'react';
+import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 
 export const JobCardSkeleton = () => {
-  const colorScheme = useColorScheme() ?? 'light';
-  const theme = Colors[colorScheme];
-  const isDark = colorScheme === 'dark';
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   const animatedValue = useRef(new Animated.Value(0)).current;
 
@@ -37,9 +37,9 @@ export const JobCardSkeleton = () => {
     outputRange: [0.3, 0.7],
   });
 
-  const skeletonBg = isDark ? '#29292E' : '#E5E5E5';
-  const containerBg = isDark ? '#1C1C1E' : '#FFFFFF';
-  const borderColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
+  const skeletonBg = isDark ? '#29292E' : '#E0E0E0';
+  const containerBg = colors.cardBackground;
+  const borderColor = colors.border;
 
   return (
     <View style={[styles.container, { backgroundColor: containerBg, borderColor }]}>

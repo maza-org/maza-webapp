@@ -5,6 +5,8 @@ import { useForumComments, useDeleteForumComment } from '@/services/catalog';
 import { useAuthUser } from '@/hooks/useAuth';
 import { ForumComment } from '@/types/learning';
 import LoginBottomSheet from './LoginBottomSheet';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface ForumProps {
   courseId: string;
@@ -51,6 +53,120 @@ const CommentItem = ({
 }) => {
   const [showReplies, setShowReplies] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const styles = useMemo(() => StyleSheet.create({
+    commentCard: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 16,
+    },
+    commentHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginBottom: 12,
+    },
+    avatarContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.inputBackground,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+      overflow: 'hidden',
+    },
+    avatarImage: {
+      width: '100%',
+      height: '100%',
+    },
+    avatarText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    commentUserInfo: {
+      flex: 1,
+    },
+    userName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '500',
+    },
+    commentDate: {
+      color: colors.textMuted,
+      fontSize: 12,
+      marginTop: 2,
+    },
+    deleteButton: {
+      padding: 4,
+      marginTop: 2,
+    },
+    commentText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 22,
+      marginBottom: 12,
+    },
+    viewMoreButton: {
+      marginBottom: 12,
+      alignSelf: 'flex-end',
+    },
+    viewMoreText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    actionsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingTop: 12,
+    },
+    replyButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    replyButtonText: {
+      color: colors.textMuted,
+      fontSize: 14,
+    },
+    showRepliesButton: {
+      padding: 4,
+    },
+    showRepliesText: {
+      color: colors.primary,
+      fontSize: 14,
+    },
+    repliesContainer: {
+      marginTop: 16,
+      paddingLeft: 16,
+      borderLeftWidth: 2,
+      borderLeftColor: colors.border,
+    },
+    replyCard: {
+      marginTop: 12,
+      backgroundColor: colors.background,
+      padding: 12,
+      borderRadius: 8,
+    },
+    smallAvatar: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+    },
+    smallAvatarText: {
+      fontSize: 14,
+    },
+    smallUserName: {
+      fontSize: 14,
+    },
+  }), [colors]);
 
   const hasReplies = comment.replies && comment.replies.length > 0;
   const isLongComment = comment.comment.length > 200;
@@ -76,9 +192,9 @@ const CommentItem = ({
         {isOwner && (
           <TouchableOpacity style={styles.deleteButton} onPress={() => onDelete(comment)} disabled={isDeleting}>
             {isDeleting ? (
-              <ActivityIndicator size="small" color="#A8A8B3" />
+              <ActivityIndicator size="small" color={colors.textMuted} />
             ) : (
-              <Ionicons name="trash-outline" size={18} color="#A8A8B3" />
+              <Ionicons name="trash-outline" size={18} color={colors.textMuted} />
             )}
           </TouchableOpacity>
         )}
@@ -93,7 +209,7 @@ const CommentItem = ({
 
       <View style={styles.actionsRow}>
         <TouchableOpacity style={styles.replyButton} onPress={() => onReply(comment)}>
-          <Ionicons name="chatbubble-outline" size={16} color="#A8A8B3" />
+          <Ionicons name="chatbubble-outline" size={16} color={colors.textMuted} />
           <Text style={styles.replyButtonText}>Responder</Text>
         </TouchableOpacity>
 
@@ -132,9 +248,9 @@ const CommentItem = ({
                   {isReplyOwner && (
                     <TouchableOpacity style={styles.deleteButton} onPress={() => onDelete(reply)} disabled={isReplyDeleting}>
                       {isReplyDeleting ? (
-                        <ActivityIndicator size="small" color="#A8A8B3" />
+                        <ActivityIndicator size="small" color={colors.textMuted} />
                       ) : (
-                        <Ionicons name="trash-outline" size={16} color="#A8A8B3" />
+                        <Ionicons name="trash-outline" size={16} color={colors.textMuted} />
                       )}
                     </TouchableOpacity>
                   )}
@@ -152,6 +268,8 @@ const CommentItem = ({
 const Forum = ({ courseId, onReplySelect }: ForumProps) => {
   const { data: user } = useAuthUser();
   const token = user?.token || '';
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   const { data: comments, isLoading, error } = useForumComments(courseId, token);
   const deleteCommentMutation = useDeleteForumComment();
@@ -162,6 +280,144 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<ForumComment | null>(null);
   const [deleteStatus, setDeleteStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      width: '100%',
+      backgroundColor: colors.background,
+    },
+    loadingContainer: {
+      padding: 24,
+      alignItems: 'center',
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      padding: 32,
+    },
+    emptyText: {
+      color: colors.textMuted,
+      fontSize: 14,
+      textAlign: 'center',
+    },
+    emptyTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    sortContainer: {
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    commentsCountText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    sortButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    sortText: {
+      color: colors.textMuted,
+      fontSize: 14,
+    },
+    listContent: {
+      padding: 24,
+      paddingTop: 0,
+      paddingBottom: 100,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    modalContent: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 16,
+      padding: 24,
+      width: '90%',
+      maxWidth: 400,
+      minHeight: 300,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modalIconContainer: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: 'rgba(255, 75, 75, 0.1)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    modalTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    modalMessage: {
+      color: colors.textMuted,
+      fontSize: 14,
+      textAlign: 'center',
+      lineHeight: 20,
+      marginBottom: 24,
+    },
+    modalButtons: {
+      flexDirection: 'column',
+      gap: 12,
+      width: '100%',
+    },
+    modalDeleteButton: {
+      width: '100%',
+      backgroundColor: '#FF4B4B',
+      paddingVertical: 14,
+      borderRadius: 50,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 48,
+    },
+    modalDeleteText: {
+      color: '#FFF',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    modalCancelButton: {
+      width: '100%',
+      backgroundColor: colors.inputBackground,
+      paddingVertical: 14,
+      borderRadius: 50,
+      alignItems: 'center',
+    },
+    modalCancelText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '500',
+    },
+    modalButtonDisabled: {
+      opacity: 0.6,
+    },
+    commentPreview: {
+      backgroundColor: colors.background,
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 12,
+      width: '100%',
+    },
+    commentPreviewText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontStyle: 'italic',
+      lineHeight: 20,
+    },
+  }), [colors]);
 
   const checkAuth = () => {
     if (!token) {
@@ -219,7 +475,7 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1fa2df" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -240,7 +496,7 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
           style={styles.sortButton}
           onPress={() => setSortOrder((prev) => (prev === 'newest' ? 'oldest' : 'newest'))}
         >
-          <Ionicons name="swap-vertical" size={16} color="#A8A8B3" />
+          <Ionicons name="swap-vertical" size={16} color={colors.textMuted} />
           <Text style={styles.sortText}>{sortOrder === 'newest' ? 'Mais recentes' : 'Mais antigos'}</Text>
         </TouchableOpacity>
       </View>
@@ -338,258 +594,5 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    backgroundColor: '#121214',
-  },
-  loadingContainer: {
-    padding: 24,
-    alignItems: 'center',
-  },
-  listContent: {
-    padding: 24,
-    paddingTop: 0,
-    paddingBottom: 100,
-  },
-  sortContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  commentsCountText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  sortButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  sortText: {
-    color: '#A8A8B3',
-    fontSize: 14,
-  },
-  commentCard: {
-    backgroundColor: '#202024',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  commentHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  deleteButton: {
-    padding: 4,
-    marginTop: 2,
-  },
-  avatarContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#323238',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    overflow: 'hidden',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  avatarText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  commentUserInfo: {
-    flex: 1,
-  },
-  userName: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  commentDate: {
-    color: '#7C7C8A',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  commentText: {
-    color: '#E1E1E6',
-    fontSize: 14,
-    lineHeight: 22,
-    marginBottom: 12,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: '#323238',
-    paddingTop: 12,
-  },
-  replyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  replyButtonText: {
-    color: '#A8A8B3',
-    fontSize: 14,
-  },
-  showRepliesButton: {
-    padding: 4,
-  },
-  showRepliesText: {
-    color: '#1fa2df',
-    fontSize: 14,
-  },
-  repliesContainer: {
-    marginTop: 16,
-    paddingLeft: 16,
-    borderLeftWidth: 2,
-    borderLeftColor: '#323238',
-  },
-  replyCard: {
-    marginTop: 12,
-    backgroundColor: '#29292e',
-    padding: 12,
-    borderRadius: 8,
-  },
-  smallAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  smallAvatarText: {
-    fontSize: 14,
-  },
-  smallUserName: {
-    fontSize: 14,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyTitle: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  emptyText: {
-    color: '#A8A8B3',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  viewMoreButton: {
-    marginBottom: 12,
-    alignSelf: 'flex-end',
-  },
-  viewMoreText: {
-    color: '#1fa2df',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  modalContent: {
-    backgroundColor: '#202024',
-    borderRadius: 16,
-    padding: 24,
-    width: '90%',
-    maxWidth: 400,
-    minHeight: 300,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(255, 75, 75, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  modalMessage: {
-    color: '#A8A8B3',
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 24,
-  },
-  modalButtons: {
-    flexDirection: 'column',
-    gap: 12,
-    width: '100%',
-  },
-  modalCancelButton: {
-    width: '100%',
-    backgroundColor: '#323238',
-    paddingVertical: 14,
-    borderRadius: 50,
-    alignItems: 'center',
-  },
-  modalCancelText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  modalDeleteButton: {
-    width: '100%',
-    backgroundColor: '#FF4B4B',
-    paddingVertical: 14,
-    borderRadius: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 48,
-  },
-  modalDeleteText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalLoader: {
-    marginBottom: 16,
-  },
-  modalSuccessIcon: {
-    backgroundColor: 'rgba(4, 211, 97, 0.1)',
-  },
-  modalButtonDisabled: {
-    opacity: 0.6,
-  },
-  commentPreview: {
-    backgroundColor: '#29292e',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    width: '100%',
-  },
-  commentPreviewText: {
-    color: '#A8A8B3',
-    fontSize: 14,
-    fontStyle: 'italic',
-    lineHeight: 20,
-  },
-});
 
 export default Forum;

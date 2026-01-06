@@ -5,6 +5,8 @@ import { useCourseReviews, useSubmitReview } from '@/services/catalog';
 import { useAuthUser } from '@/hooks/useAuth';
 import { Review } from '@/types/learning';
 import LoginBottomSheet from './LoginBottomSheet';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 interface ReviewsProps {
   courseId: string;
@@ -41,6 +43,9 @@ const StarRating = ({
   onRatingChange?: (rating: number) => void;
   interactive?: boolean;
 }) => {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
   return (
     <View style={styles.starsContainer}>
       {[1, 2, 3, 4, 5].map((star) => (
@@ -53,7 +58,7 @@ const StarRating = ({
           <Ionicons
             name={star <= rating ? 'star' : 'star-outline'}
             size={size}
-            color={star <= rating ? '#FFD700' : '#A8A8B3'}
+            color={star <= rating ? '#FFD700' : colors.textMuted}
           />
         </TouchableOpacity>
       ))}
@@ -65,9 +70,77 @@ const ReviewItem = ({ review }: { review: Review }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const isLongComment = review.comment.length > 200;
   const displayedComment = isExpanded || !isLongComment ? review.comment : `${review.comment.substring(0, 200)}...`;
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   const userName = review.user?.fullname || 'Utilizador anónimo';
   const userInitial = userName.charAt(0).toUpperCase();
+
+  const styles = useMemo(() => StyleSheet.create({
+    reviewCard: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 16,
+    },
+    reviewHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginBottom: 12,
+    },
+    avatarContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.inputBackground,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+      overflow: 'hidden',
+    },
+    avatarImage: {
+      width: '100%',
+      height: '100%',
+    },
+    avatarText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    reviewUserInfo: {
+      flex: 1,
+    },
+    userName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '500',
+    },
+    ratingDateRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 4,
+      gap: 8,
+    },
+    reviewDate: {
+      color: colors.textMuted,
+      fontSize: 12,
+    },
+    reviewText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 22,
+    },
+    viewMoreButton: {
+      marginTop: 8,
+      alignSelf: 'flex-end',
+    },
+    viewMoreText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+  }), [colors]);
+
 
   return (
     <View style={styles.reviewCard}>
@@ -99,6 +172,74 @@ const ReviewItem = ({ review }: { review: Review }) => {
 };
 
 const RatingSummary = ({ reviews }: { reviews: Review[] }) => {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const styles = useMemo(() => StyleSheet.create({
+    summaryContainer: {
+      flexDirection: 'row',
+      backgroundColor: colors.cardBackground,
+      borderRadius: 12,
+      padding: 16,
+      marginHorizontal: 24,
+      marginTop: 16,
+      marginBottom: 16,
+    },
+    summaryLeft: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingRight: 16,
+      borderRightWidth: 1,
+      borderRightColor: colors.border,
+    },
+    averageRating: {
+      color: colors.text,
+      fontSize: 36,
+      fontWeight: '700',
+      marginBottom: 4,
+    },
+    totalReviews: {
+      color: colors.textMuted,
+      fontSize: 12,
+      marginTop: 4,
+    },
+    summaryRight: {
+      flex: 1,
+      paddingLeft: 16,
+      justifyContent: 'center',
+    },
+    ratingBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 2,
+    },
+    ratingBarLabel: {
+      color: colors.textMuted,
+      fontSize: 12,
+      width: 12,
+      marginRight: 4,
+    },
+    ratingBarTrack: {
+      flex: 1,
+      height: 6,
+      backgroundColor: colors.inputBackground,
+      borderRadius: 3,
+      marginHorizontal: 8,
+      overflow: 'hidden',
+    },
+    ratingBarFill: {
+      height: '100%',
+      backgroundColor: '#FFD700',
+      borderRadius: 3,
+    },
+    ratingBarCount: {
+      color: colors.textMuted,
+      fontSize: 12,
+      width: 24,
+      textAlign: 'right',
+    },
+  }), [colors]);
+
   const averageRating = useMemo(() => {
     if (reviews.length === 0) return 0;
     const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
@@ -147,6 +288,8 @@ const RatingSummary = ({ reviews }: { reviews: Review[] }) => {
 const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
   const { data: user } = useAuthUser();
   const token = user?.token || '';
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   const { data: reviews = [], isLoading, error, refetch } = useCourseReviews(courseId);
   const submitReviewMutation = useSubmitReview();
@@ -156,6 +299,193 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'highest' | 'lowest'>('newest');
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    errorText: {
+      color: colors.textMuted,
+      fontSize: 16,
+      marginBottom: 16,
+    },
+    retryButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 25,
+    },
+    retryButtonText: {
+      color: '#FFF',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    addReviewButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.cardBackground,
+      borderRadius: 12,
+      padding: 16,
+      marginHorizontal: 24,
+      marginBottom: 16,
+      gap: 8,
+    },
+    addReviewButtonText: {
+      color: colors.primary,
+      fontSize: 16,
+      fontWeight: '500',
+    },
+    loginPromptButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.cardBackground,
+      borderRadius: 12,
+      padding: 16,
+      marginHorizontal: 24,
+      marginBottom: 16,
+      gap: 8,
+    },
+    loginPromptButtonText: {
+      color: colors.textMuted,
+      fontSize: 14,
+    },
+    reviewForm: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 12,
+      padding: 16,
+      marginHorizontal: 24,
+      marginBottom: 16,
+    },
+    reviewFormTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '600',
+      marginBottom: 16,
+    },
+    ratingSelector: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    ratingSelectorLabel: {
+      color: colors.textMuted,
+      fontSize: 14,
+      marginRight: 12,
+    },
+    ratingText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '500',
+      marginBottom: 16,
+      textAlign: 'center',
+    },
+    reviewInput: {
+      backgroundColor: colors.inputBackground,
+      borderRadius: 8,
+      padding: 12,
+      color: colors.text,
+      fontSize: 14,
+      minHeight: 100,
+      marginBottom: 16,
+    },
+    reviewFormButtons: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    cancelButton: {
+      flex: 1,
+      backgroundColor: colors.inputBackground,
+      paddingVertical: 12,
+      borderRadius: 50,
+      alignItems: 'center',
+    },
+    cancelButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '500',
+    },
+    submitButton: {
+      flex: 1,
+      backgroundColor: colors.primary,
+      paddingVertical: 12,
+      borderRadius: 50,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 44,
+    },
+    submitButtonDisabled: {
+      backgroundColor: colors.inputBackground,
+      opacity: 0.5,
+    },
+    submitButtonText: {
+      color: '#FFF',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    formErrorText: {
+      color: '#FF4B4B',
+      fontSize: 14,
+      textAlign: 'center',
+      marginTop: 12,
+    },
+    sortContainer: {
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    reviewsCountText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    sortButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    sortText: {
+      color: colors.textMuted,
+      fontSize: 14,
+    },
+    listContent: {
+      padding: 24,
+      paddingTop: 0,
+      paddingBottom: 100,
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      padding: 32,
+    },
+    emptyTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '600',
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    emptyText: {
+      color: colors.textMuted,
+      fontSize: 14,
+      textAlign: 'center',
+    },
+  }), [colors]);
 
   const handleSubmitReview = async () => {
     if (rating === 0) return;
@@ -217,7 +547,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1fa2df" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -240,7 +570,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       {token ? (
         !showReviewForm ? (
           <TouchableOpacity style={styles.addReviewButton} onPress={() => setShowReviewForm(true)}>
-            <Ionicons name="create-outline" size={20} color="#1fa2df" />
+            <Ionicons name="create-outline" size={20} color={colors.primary} />
             <Text style={styles.addReviewButtonText}>Escrever uma opinião</Text>
           </TouchableOpacity>
         ) : (
@@ -262,7 +592,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
             <TextInput
               style={styles.reviewInput}
               placeholder="Compartilhe sua experiência com este curso..."
-              placeholderTextColor="#7C7C8A"
+              placeholderTextColor={colors.textMuted}
               value={comment}
               onChangeText={setComment}
               multiline
@@ -302,7 +632,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
         )
       ) : (
         <TouchableOpacity style={styles.loginPromptButton} onPress={() => setLoginSheetVisible(true)}>
-          <Ionicons name="lock-closed-outline" size={18} color="#A8A8B3" />
+          <Ionicons name="lock-closed-outline" size={18} color={colors.textMuted} />
           <Text style={styles.loginPromptButtonText}>Faça login para avaliar este curso</Text>
         </TouchableOpacity>
       )}
@@ -311,7 +641,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
         <Text style={styles.reviewsCountText}>{reviews.length} {reviews.length === 1 ? 'Opinião' : 'Opiniões'}</Text>
         {reviews.length > 1 && (
           <TouchableOpacity style={styles.sortButton} onPress={cycleSortOrder}>
-            <Ionicons name="swap-vertical" size={16} color="#A8A8B3" />
+            <Ionicons name="swap-vertical" size={16} color={colors.textMuted} />
             <Text style={styles.sortText}>{getSortLabel()}</Text>
           </TouchableOpacity>
         )}
@@ -320,7 +650,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       <View style={styles.listContent}>
         {sortedReviews.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="chatbubbles-outline" size={48} color="#A8A8B3" />
+            <Ionicons name="chatbubbles-outline" size={48} color={colors.textMuted} />
             <Text style={styles.emptyTitle}>Sem opiniões ainda</Text>
             <Text style={styles.emptyText}>Seja o primeiro a avaliar este curso!</Text>
           </View>
@@ -335,319 +665,11 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121214',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  errorText: {
-    color: '#A8A8B3',
-    fontSize: 16,
-    marginBottom: 16,
-  },
-  retryButton: {
-    backgroundColor: '#1fa2df',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
-  },
-  retryButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  summaryContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#202024',
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 24,
-    marginTop: 16,
-    marginBottom: 16,
-  },
-  summaryLeft: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingRight: 16,
-    borderRightWidth: 1,
-    borderRightColor: '#323238',
-  },
-  averageRating: {
-    color: '#FFF',
-    fontSize: 36,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  totalReviews: {
-    color: '#A8A8B3',
-    fontSize: 12,
-    marginTop: 4,
-  },
-  summaryRight: {
-    flex: 1,
-    paddingLeft: 16,
-    justifyContent: 'center',
-  },
-  ratingBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 2,
-  },
-  ratingBarLabel: {
-    color: '#A8A8B3',
-    fontSize: 12,
-    width: 12,
-    marginRight: 4,
-  },
-  ratingBarTrack: {
-    flex: 1,
-    height: 6,
-    backgroundColor: '#323238',
-    borderRadius: 3,
-    marginHorizontal: 8,
-    overflow: 'hidden',
-  },
-  ratingBarFill: {
-    height: '100%',
-    backgroundColor: '#FFD700',
-    borderRadius: 3,
-  },
-  ratingBarCount: {
-    color: '#A8A8B3',
-    fontSize: 12,
-    width: 24,
-    textAlign: 'right',
-  },
   starsContainer: {
     flexDirection: 'row',
   },
   starButton: {
     padding: 2,
-  },
-  addReviewButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#202024',
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 24,
-    marginBottom: 16,
-    gap: 8,
-  },
-  addReviewButtonText: {
-    color: '#1fa2df',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  loginPromptButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#202024',
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 24,
-    marginBottom: 16,
-    gap: 8,
-  },
-  loginPromptButtonText: {
-    color: '#A8A8B3',
-    fontSize: 14,
-  },
-  reviewForm: {
-    backgroundColor: '#202024',
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 24,
-    marginBottom: 16,
-  },
-  reviewFormTitle: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  ratingSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  ratingSelectorLabel: {
-    color: '#A8A8B3',
-    fontSize: 14,
-    marginRight: 12,
-  },
-  ratingText: {
-    color: '#1fa2df',
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  reviewInput: {
-    backgroundColor: '#29292e',
-    borderRadius: 8,
-    padding: 12,
-    color: '#FFF',
-    fontSize: 14,
-    minHeight: 100,
-    marginBottom: 16,
-  },
-  reviewFormButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#323238',
-    paddingVertical: 12,
-    borderRadius: 50,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  submitButton: {
-    flex: 1,
-    backgroundColor: '#1fa2df',
-    paddingVertical: 12,
-    borderRadius: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 44,
-  },
-  submitButtonDisabled: {
-    backgroundColor: '#323238',
-    opacity: 0.5,
-  },
-  submitButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  formErrorText: {
-    color: '#FF4B4B',
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 12,
-  },
-  sortContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  reviewsCountText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  sortButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  sortText: {
-    color: '#A8A8B3',
-    fontSize: 14,
-  },
-  listContent: {
-    padding: 24,
-    paddingTop: 0,
-    paddingBottom: 100,
-  },
-  reviewCard: {
-    backgroundColor: '#202024',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  reviewHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  avatarContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#323238',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    overflow: 'hidden',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  avatarText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  reviewUserInfo: {
-    flex: 1,
-  },
-  userName: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  ratingDateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-    gap: 8,
-  },
-  reviewDate: {
-    color: '#7C7C8A',
-    fontSize: 12,
-  },
-  reviewText: {
-    color: '#E1E1E6',
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  viewMoreButton: {
-    marginTop: 8,
-    alignSelf: 'flex-end',
-  },
-  viewMoreText: {
-    color: '#1fa2df',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyTitle: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    color: '#A8A8B3',
-    fontSize: 14,
-    textAlign: 'center',
   },
 });
 

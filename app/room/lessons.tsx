@@ -59,9 +59,54 @@ export default function CourseDetail() {
   const colors = isDark ? Colors.dark : Colors.light;
 
   const themedStyles = useMemo(() => StyleSheet.create({
+
     container: {
       flex: 1,
       backgroundColor: colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    header: {
+      height: 200,
+      backgroundColor: colors.background, // Fallback
+    },
+    headerOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      padding: 24,
+      justifyContent: 'space-between',
+    },
+    headerActions: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    rightActions: {
+      flexDirection: 'row',
+      gap: 16,
+    },
+    iconButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    iconButtonDisabled: {
+      opacity: 0.6,
+    },
+    refreshIndicator: {
+      width: 20,
+      height: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     errorContainer: {
       flex: 1,
@@ -76,6 +121,17 @@ export default function CourseDetail() {
       textAlign: 'center',
       marginBottom: 16,
     },
+    retryButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 25,
+    },
+    retryButtonText: {
+      color: '#FFF',
+      fontSize: 16,
+      fontWeight: '600',
+    },
     courseInfo: {
       padding: 24,
       backgroundColor: colors.background,
@@ -86,25 +142,65 @@ export default function CourseDetail() {
       color: colors.text,
       marginBottom: 16,
     },
+    instructor: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
     instructorName: {
       color: colors.text,
       fontSize: 14,
+    },
+    categoryTag: {
+      color: colors.primary,
+      fontSize: 14,
+      marginLeft: 8,
+      marginRight: 8,
+    },
+    descriptionContainer: {
+      marginBottom: 16,
+      borderRadius: 8,
     },
     descriptionText: {
       color: colors.textSecondary,
       fontSize: 14,
       lineHeight: 22,
     },
+    viewMoreButton: {
+      marginTop: 8,
+      alignSelf: 'flex-end',
+    },
+    viewMoreText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '500',
+    },
     tabContainer: {
       flexDirection: 'row',
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
+    },
+    modulesList: {
+      padding: 24,
     },
     moduleItem: {
       padding: 16,
       backgroundColor: colors.cardBackground,
       borderRadius: 15,
       marginBottom: 12,
+    },
+    moduleContent: {
+      gap: 12,
+    },
+    moduleTopRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    moduleInfo: {
+      flex: 1,
+      flexDirection: 'row',
+      gap: 12,
     },
     moduleNumber: {
       color: colors.text,
@@ -116,6 +212,54 @@ export default function CourseDetail() {
       fontSize: 16,
       fontWeight: '500',
       flex: 1,
+    },
+    moduleTitleCompleted: {
+      color: colors.primary,
+    },
+    moduleDetails: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    iconContainer: {
+      backgroundColor: colors.inputBackground,
+      borderRadius: 50,
+      padding: 5,
+    },
+    moduleMetaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 8,
+    },
+    videoCount: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginStart: 25,
+    },
+    videoCountText: {
+      color: colors.textMuted,
+      fontSize: 12,
+    },
+    quizGradeContainer: {
+      backgroundColor: 'rgba(34, 197, 94, 0.1)',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: 'rgba(34, 197, 94, 0.2)',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    quizGradeText: {
+      color: '#22C55E',
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    moduleItemCompleted: {
+      borderColor: colors.primary,
+      borderWidth: 1,
     },
     footer: {
       padding: 24,
@@ -132,15 +276,45 @@ export default function CourseDetail() {
       padding: 12,
       marginBottom: 12,
     },
+    replyPreviewHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    replyPreviewLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      flex: 1,
+    },
     replyPreviewLabel: {
       color: colors.textMuted,
       fontSize: 12,
+    },
+    replyPreviewName: {
+      color: colors.primary,
+      fontWeight: '600',
+    },
+    replyPreviewQuote: {
+      flexDirection: 'row',
+    },
+    replyPreviewLine: {
+      width: 3,
+      backgroundColor: colors.primary,
+      borderRadius: 2,
+      marginRight: 10,
     },
     replyPreviewText: {
       color: colors.textMuted,
       fontSize: 13,
       flex: 1,
       fontStyle: 'italic',
+    },
+    inputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
     },
     input: {
       flex: 1,
@@ -151,16 +325,66 @@ export default function CourseDetail() {
       color: colors.text,
       maxHeight: 100,
     },
+    inputExpanded: {
+      height: 250,
+      textAlignVertical: 'top',
+    },
+    sendButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    disabledButton: {
+      backgroundColor: colors.border,
+      opacity: 0.5,
+    },
+    startButton: {
+      backgroundColor: colors.primary,
+      padding: 16,
+      borderRadius: 50,
+      alignItems: 'center',
+    },
+    startButtonDisabled: {
+      backgroundColor: colors.primary + '80', // Opacity
+    },
+    startButtonText: {
+      color: '#FFF',
+      fontSize: 16,
+      fontWeight: '600',
+      fontFamily: 'ManropeBold',
+    },
     progressContainer: {
       marginBottom: 16,
       backgroundColor: colors.cardBackground,
       borderRadius: 12,
       padding: 16,
     },
+    progressHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
     progressTitle: {
       color: colors.text,
       fontSize: 16,
       fontWeight: '600',
+    },
+    progressSubtitle: {
+      color: colors.textMuted,
+      fontSize: 12,
+      marginTop: 2,
+    },
+    progressPercentage: {
+      color: colors.primary,
+      fontSize: 18,
+      fontWeight: '700',
+    },
+    progressBarContainer: {
+      marginBottom: 8,
     },
     progressBar: {
       height: 6,
@@ -168,10 +392,10 @@ export default function CourseDetail() {
       borderRadius: 3,
       overflow: 'hidden',
     },
-    progressSubtitle: {
-      color: colors.textMuted,
-      fontSize: 12,
-      marginTop: 2,
+    progressFill: {
+      height: '100%',
+      backgroundColor: colors.primary,
+      borderRadius: 3,
     },
     completionCard: {
       backgroundColor: colors.cardBackground,
@@ -180,9 +404,43 @@ export default function CourseDetail() {
       borderWidth: 1,
       borderColor: colors.primary,
     },
+    completionContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    completionTextContainer: {
+      flex: 1,
+      paddingRight: 10,
+    },
+    completionTitle: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: colors.primary,
+      marginBottom: 4,
+    },
     completionSubtitle: {
       fontSize: 14,
       color: colors.textSecondary,
+    },
+    celebrateImage: {
+      width: 80,
+      height: 80,
+    },
+    certificateButtonFull: {
+      backgroundColor: colors.primary,
+      paddingVertical: 14,
+      borderRadius: 50,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 8,
+    },
+    certificateButtonText: {
+      color: '#FFF',
+      fontSize: 16,
+      fontWeight: '700',
     },
     noModulesContainer: {
       padding: 24,
@@ -197,6 +455,9 @@ export default function CourseDetail() {
       fontSize: 16,
       textAlign: 'center',
       fontWeight: '500',
+    },
+    noModulesIcon: {
+      marginBottom: 16,
     },
     menuContainer: {
       position: 'absolute',
@@ -226,13 +487,9 @@ export default function CourseDetail() {
       fontSize: 16,
       marginLeft: 12,
     },
-    disabledButton: {
-      backgroundColor: colors.border,
-      opacity: 0.5,
-    },
-    videoCountText: {
-      color: colors.textMuted,
-      fontSize: 12,
+    opinionsContainer: {
+      flex: 1,
+      minHeight: 400,
     },
     loadingText: {
       color: colors.text,
@@ -249,6 +506,19 @@ export default function CourseDetail() {
     headerShimmer: {
       height: 200,
       backgroundColor: colors.cardBackground,
+    },
+    headerShimmerContent: {
+      flex: 1,
+      padding: 24,
+      justifyContent: 'space-between',
+    },
+    headerActionsShimmer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    rightActionsShimmer: {
+      flexDirection: 'row',
+      gap: 16,
     },
     courseInfoShimmer: {
       padding: 24,
@@ -271,6 +541,122 @@ export default function CourseDetail() {
       height: 28,
       borderRadius: 14,
       backgroundColor: colors.inputBackground,
+    },
+    titleShimmer: {
+      height: 28,
+      marginBottom: 8,
+      borderRadius: 4,
+    },
+    titleShimmerShort: {
+      height: 28,
+      width: '60%',
+      marginBottom: 16,
+      borderRadius: 4,
+    },
+    instructorShimmer: {
+      flexDirection: 'row',
+      marginBottom: 24,
+      gap: 12,
+    },
+    instructorNameShimmer: {
+      height: 20,
+      width: 120,
+      borderRadius: 4,
+    },
+    categoryShimmer: {
+      height: 20,
+      width: 80,
+      borderRadius: 4,
+    },
+    descriptionLineShimmer: {
+      height: 16,
+      marginBottom: 8,
+      borderRadius: 4,
+    },
+    descriptionLineShimmerShort: {
+      height: 16,
+      width: '80%',
+      marginBottom: 24,
+      borderRadius: 4,
+    },
+    tabContainerShimmer: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      paddingBottom: 0,
+    },
+    tabShimmer: {
+      width: '33%',
+      height: 48,
+    },
+    modulesListShimmer: {
+      padding: 24,
+    },
+    moduleTopRowShimmer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 12,
+    },
+    moduleInfoShimmer: {
+      flex: 1,
+      flexDirection: 'row',
+      gap: 12,
+    },
+    moduleNumberShimmer: {
+      width: 20,
+      height: 20,
+      borderRadius: 4,
+    },
+    moduleTitleShimmer: {
+      width: '70%',
+      height: 20,
+      borderRadius: 4,
+    },
+    playIconShimmer: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+    },
+    moduleMetaShimmer: {
+      paddingLeft: 32,
+    },
+    videoCountShimmer: {
+      width: 60,
+      height: 16,
+      borderRadius: 4,
+    },
+    startButtonShimmer: {
+      height: 56,
+      borderRadius: 50,
+    },
+    descriptionShimmerContainer: {
+      marginBottom: 16,
+      gap: 8,
+    },
+    continueButton: {
+      backgroundColor: colors.primary,
+    },
+    ratingOverview: {
+      marginBottom: 24,
+    },
+    certificateButton: {
+      backgroundColor: '#22C55E',
+      padding: 16,
+      borderRadius: 50,
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'center',
+    },
+    certificateButtonIcon: {
+      marginRight: 8,
+    },
+    certificateIcon: {
+      marginLeft: 4,
+    },
+    progressText: {
+      color: colors.textMuted,
+      fontSize: 12,
+      textAlign: 'center',
     },
   }), [colors]);
 
@@ -592,13 +978,13 @@ export default function CourseDetail() {
   // Shimmer loading component for course detail
   const CourseDetailShimmer = () => (
     <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={themedStyles.scrollView}>
         {/* Header shimmer */}
         <Shimmer style={themedStyles.headerShimmer}>
-          <View style={styles.headerShimmerContent}>
-            <View style={styles.headerActionsShimmer}>
+          <View style={themedStyles.headerShimmerContent}>
+            <View style={themedStyles.headerActionsShimmer}>
               <View style={themedStyles.iconButtonShimmer} />
-              <View style={styles.rightActionsShimmer}>
+              <View style={themedStyles.rightActionsShimmer}>
                 <View style={themedStyles.iconButtonShimmer} />
                 <View style={themedStyles.iconButtonShimmer} />
               </View>
@@ -609,68 +995,68 @@ export default function CourseDetail() {
 
         {/* Course info shimmer */}
         <View style={themedStyles.courseInfoShimmer}>
-          <Shimmer style={styles.titleShimmer}>
+          <Shimmer style={themedStyles.titleShimmer}>
             <View style={themedStyles.shimmerBox} />
           </Shimmer>
-          <Shimmer style={styles.titleShimmerShort}>
+          <Shimmer style={themedStyles.titleShimmerShort}>
             <View style={themedStyles.shimmerBox} />
           </Shimmer>
 
-          <View style={styles.instructorShimmer}>
-            <Shimmer style={styles.instructorNameShimmer}>
+          <View style={themedStyles.instructorShimmer}>
+            <Shimmer style={themedStyles.instructorNameShimmer}>
               <View style={themedStyles.shimmerBox} />
             </Shimmer>
-            <Shimmer style={styles.categoryShimmer}>
+            <Shimmer style={themedStyles.categoryShimmer}>
               <View style={themedStyles.shimmerBox} />
             </Shimmer>
           </View>
 
           {/* Description shimmer */}
-          <View style={styles.descriptionShimmerContainer}>
-            <Shimmer style={styles.descriptionLineShimmer}>
+          <View style={themedStyles.descriptionShimmerContainer}>
+            <Shimmer style={themedStyles.descriptionLineShimmer}>
               <View style={themedStyles.shimmerBox} />
             </Shimmer>
-            <Shimmer style={styles.descriptionLineShimmer}>
+            <Shimmer style={themedStyles.descriptionLineShimmer}>
               <View style={themedStyles.shimmerBox} />
             </Shimmer>
-            <Shimmer style={styles.descriptionLineShimmerShort}>
+            <Shimmer style={themedStyles.descriptionLineShimmerShort}>
               <View style={themedStyles.shimmerBox} />
             </Shimmer>
           </View>
 
           {/* Tabs shimmer */}
-          <View style={styles.tabContainerShimmer}>
-            <Shimmer style={styles.tabShimmer}>
+          <View style={themedStyles.tabContainerShimmer}>
+            <Shimmer style={themedStyles.tabShimmer}>
               <View style={themedStyles.shimmerBox} />
             </Shimmer>
-            <Shimmer style={styles.tabShimmer}>
+            <Shimmer style={themedStyles.tabShimmer}>
               <View style={themedStyles.shimmerBox} />
             </Shimmer>
-            <Shimmer style={styles.tabShimmer}>
+            <Shimmer style={themedStyles.tabShimmer}>
               <View style={themedStyles.shimmerBox} />
             </Shimmer>
           </View>
         </View>
 
         {/* Modules list shimmer */}
-        <View style={styles.modulesListShimmer}>
+        <View style={themedStyles.modulesListShimmer}>
           {[1, 2, 3, 4].map((key) => (
             <View key={key} style={themedStyles.moduleItemShimmer}>
-              <View style={styles.moduleTopRowShimmer}>
-                <View style={styles.moduleInfoShimmer}>
-                  <Shimmer style={styles.moduleNumberShimmer}>
+              <View style={themedStyles.moduleTopRowShimmer}>
+                <View style={themedStyles.moduleInfoShimmer}>
+                  <Shimmer style={themedStyles.moduleNumberShimmer}>
                     <View style={themedStyles.shimmerBox} />
                   </Shimmer>
-                  <Shimmer style={styles.moduleTitleShimmer}>
+                  <Shimmer style={themedStyles.moduleTitleShimmer}>
                     <View style={themedStyles.shimmerBox} />
                   </Shimmer>
                 </View>
-                <Shimmer style={styles.playIconShimmer}>
+                <Shimmer style={themedStyles.playIconShimmer}>
                   <View style={themedStyles.shimmerBox} />
                 </Shimmer>
               </View>
-              <View style={styles.moduleMetaShimmer}>
-                <Shimmer style={styles.videoCountShimmer}>
+              <View style={themedStyles.moduleMetaShimmer}>
+                <Shimmer style={themedStyles.videoCountShimmer}>
                   <View style={themedStyles.shimmerBox} />
                 </Shimmer>
               </View>
@@ -681,7 +1067,7 @@ export default function CourseDetail() {
 
       {/* Footer shimmer */}
       <View style={themedStyles.footer}>
-        <Shimmer style={styles.startButtonShimmer}>
+        <Shimmer style={themedStyles.startButtonShimmer}>
           <View style={themedStyles.shimmerBox} />
         </Shimmer>
       </View>

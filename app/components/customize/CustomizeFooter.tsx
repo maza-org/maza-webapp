@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 
@@ -7,9 +7,10 @@ interface CustomizeFooterProps {
   selectedCount: number;
   onConfirm: () => void;
   onSkip: () => void;
+  isLoading?: boolean;
 }
 
-export default function CustomizeFooter({ selectedCount, onConfirm, onSkip }: CustomizeFooterProps) {
+export default function CustomizeFooter({ selectedCount, onConfirm, onSkip, isLoading = false }: CustomizeFooterProps) {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
@@ -45,16 +46,22 @@ export default function CustomizeFooter({ selectedCount, onConfirm, onSkip }: Cu
     },
   }), [colors]);
 
+  const isDisabled = selectedCount === 0 || isLoading;
+
   return (
     <View style={themedStyles.footer}>
       <TouchableOpacity
-        style={[themedStyles.confirmButton, selectedCount === 0 && themedStyles.confirmButtonDisabled]}
-        disabled={selectedCount === 0}
+        style={[themedStyles.confirmButton, isDisabled && themedStyles.confirmButtonDisabled]}
+        disabled={isDisabled}
         onPress={onConfirm}
       >
-        <Text style={themedStyles.confirmButtonText}>Confirmar</Text>
+        {isLoading ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Text style={themedStyles.confirmButtonText}>Confirmar</Text>
+        )}
       </TouchableOpacity>
-      <TouchableOpacity style={themedStyles.skipButton} onPress={onSkip}>
+      <TouchableOpacity style={themedStyles.skipButton} onPress={onSkip} disabled={isLoading}>
         <Text style={themedStyles.skipButtonText}>Deixar para depois</Text>
       </TouchableOpacity>
     </View>

@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 
 export type ToastType = 'info' | 'success' | 'warning' | 'error' | 'loading' | 'custom';
 
@@ -37,6 +39,8 @@ export default function Toast({
   const translateY = useRef(new Animated.Value(position === 'bottom' ? 100 : -100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   useEffect(() => {
     if (visible) {
@@ -150,7 +154,7 @@ export default function Toast({
         {
           transform: [{ translateY }],
           opacity,
-          backgroundColor: '#202024',
+          backgroundColor: colors.cardBackground,
           borderColor: config.borderColor,
           [isTop ? 'top' : 'bottom']: isTop ? 60 + insets.top : 120 + insets.bottom,
         },
@@ -166,7 +170,7 @@ export default function Toast({
             )}
           </View>
         )}
-        <Text style={styles.message}>{message}</Text>
+        <Text style={[styles.message, { color: colors.text }]}>{message}</Text>
       </View>
     </Animated.View>
   );
@@ -203,7 +207,6 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   message: {
-    color: '#FFF',
     fontSize: 16,
     fontWeight: '500',
     flex: 1,

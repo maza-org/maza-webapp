@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ScrollView, Alert, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { User } from '@/types/user';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -13,11 +13,18 @@ import LoadingState from '@/app/components/customize/LoadingState';
 import ErrorState from '@/app/components/customize/ErrorState';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import Toast, { ToastType } from '@/components/Toast';
 
 export default function Customize() {
   const [selectedTopics, setSelectedTopics] = useState<Topic[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [initialSelectedTopics, setInitialSelectedTopics] = useState<Topic[]>([]);
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: ToastType }>({
+    visible: false,
+    message: '',
+    type: 'info',
+  });
+  const [isConfirming, setIsConfirming] = useState(false);
   const { interests } = useLocalSearchParams();
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
@@ -81,11 +88,21 @@ export default function Customize() {
     );
   };
 
+  const showToast = (message: string, type: ToastType) => {
+    setToast({ visible: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast((prev) => ({ ...prev, visible: false }));
+  };
+
   const handleConfirm = async (): Promise<void> => {
     if (!user) {
-      Alert.alert('Error', 'No user data found. Please try logging in again.');
+      showToast('Dados do usuário não encontrados. Tente fazer login novamente.', 'error');
       return;
     }
+
+    setIsConfirming(true);
 
     try {
       // Handle removed interests
@@ -124,10 +141,21 @@ export default function Customize() {
       };
       await AsyncStorage.setItem('@user', JSON.stringify(updatedUser));
 
-      router.push('/');
+      setIsConfirming(false);
+      showToast('Interesses atualizados com sucesso!', 'success');
+
+      // Navigate to profile if coming from profile, otherwise go to home
+      setTimeout(() => {
+        if (showBackButton) {
+          router.push('/profile');
+        } else {
+          router.push('/');
+        }
+      }, 1000);
     } catch (error) {
       console.error('Error saving topics:', error);
-      Alert.alert('Error', 'Failed to save topics. Please try again.');
+      setIsConfirming(false);
+      showToast('Falha ao salvar os tópicos. Tente novamente.', 'error');
     }
   };
 
@@ -151,7 +179,15 @@ export default function Customize() {
         <CustomizeContent topics={topics} selectedTopics={selectedTopics} onTopicToggle={toggleTopic} />
       </ScrollView>
 
-      <CustomizeFooter selectedCount={selectedTopics.length} onConfirm={handleConfirm} onSkip={handleSkip} />
+      <CustomizeFooter selectedCount={selectedTopics.length} onConfirm={handleConfirm} onSkip={handleSkip} isLoading={isConfirming} />
+
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+        position="top"
+      />
     </SafeAreaView>
   );
 }

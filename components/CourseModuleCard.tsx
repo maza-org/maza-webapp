@@ -1,7 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Module, UserCourseModule } from '@/types/learning';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
+import { useMemo } from 'react';
 
 // Unified module data for display
 export interface CourseModuleData {
@@ -29,6 +32,97 @@ export default function CourseModuleCard({
   showProgress,
   onPress,
 }: CourseModuleCardProps) {
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
+
+  const styles = useMemo(() => StyleSheet.create({
+    moduleItem: {
+      padding: 16,
+      backgroundColor: colors.cardBackground,
+      borderRadius: 15,
+      marginBottom: 12,
+    },
+    moduleContent: {
+      gap: 12,
+    },
+    moduleTopRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    moduleInfo: {
+      flex: 1,
+      flexDirection: 'row',
+      gap: 12,
+    },
+    moduleNumber: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '500',
+    },
+    moduleTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '500',
+      flex: 1,
+    },
+    moduleDetails: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    iconContainer: {
+      backgroundColor: colors.inputBackground,
+      borderRadius: 50,
+      padding: 5,
+    },
+    completedIconContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    moduleMetaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 8,
+    },
+    videoCount: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginStart: 25,
+    },
+    videoCountText: {
+      color: colors.textMuted,
+      fontSize: 12,
+    },
+    moduleProgressContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 8,
+      marginStart: 25,
+      gap: 8,
+    },
+    moduleProgressBar: {
+      flex: 1,
+      height: 4,
+      backgroundColor: colors.border,
+      borderRadius: 2,
+      overflow: 'hidden',
+    },
+    moduleProgressFill: {
+      height: '100%',
+      backgroundColor: colors.primary,
+      borderRadius: 2,
+    },
+    moduleProgressText: {
+      color: colors.primary,
+      fontSize: 12,
+      fontWeight: '600',
+      minWidth: 35,
+      textAlign: 'right',
+    },
+  }), [colors]);
+
   return (
     <TouchableOpacity
       style={styles.moduleItem}
@@ -47,7 +141,7 @@ export default function CourseModuleCard({
               </View>
             ) : (
               <View style={styles.iconContainer}>
-                <Ionicons name="play" size={20} color="#4db5ff" />
+                <Ionicons name="play" size={20} color={colors.primary} />
               </View>
             )}
           </View>
@@ -55,7 +149,7 @@ export default function CourseModuleCard({
 
         <View style={styles.moduleMetaRow}>
           <View style={styles.videoCount}>
-            <Feather name="film" size={14} color="#A8A8B3" />
+            <Feather name="film" size={14} color={colors.textMuted} />
             <Text style={styles.videoCountText}>
               {showProgress
                 ? `${module.completedContents}/${module.totalContents} aulas`
@@ -76,91 +170,3 @@ export default function CourseModuleCard({
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  moduleItem: {
-    padding: 16,
-    backgroundColor: '#202024',
-    borderRadius: 15,
-    marginBottom: 12,
-  },
-  moduleContent: {
-    gap: 12,
-  },
-  moduleTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  moduleInfo: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 12,
-  },
-  moduleNumber: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  moduleTitle: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '500',
-    flex: 1,
-  },
-  moduleDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconContainer: {
-    backgroundColor: '#2a2d3e',
-    borderRadius: 50,
-    padding: 5,
-  },
-  completedIconContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  moduleMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  videoCount: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginStart: 25,
-  },
-  videoCountText: {
-    color: '#A8A8B3',
-    fontSize: 12,
-  },
-  moduleProgressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-    marginStart: 25,
-    gap: 8,
-  },
-  moduleProgressBar: {
-    flex: 1,
-    height: 4,
-    backgroundColor: '#323238',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  moduleProgressFill: {
-    height: '100%',
-    backgroundColor: '#1fa2df',
-    borderRadius: 2,
-  },
-  moduleProgressText: {
-    color: '#1fa2df',
-    fontSize: 12,
-    fontWeight: '600',
-    minWidth: 35,
-    textAlign: 'right',
-  },
-});
