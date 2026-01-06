@@ -36,102 +36,106 @@ export default function ProfileScreen() {
 
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const themedStyles = useMemo(() => StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    loadingContainer: {
-      flex: 1,
-      backgroundColor: colors.background,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    scrollView: {
-      flex: 1,
-    },
-    infoSection: {
-      padding: 24,
-      gap: 24,
-    },
-    footer: {
-      paddingHorizontal: 24,
-      paddingTop: 24,
-      paddingBottom: 0,
-      borderTopWidth: 1,
-      paddingVertical: 0,
-      borderTopColor: colors.border,
-      gap: 12,
-      alignItems: 'center',
-    },
-    versionLabel: {
-      color: colors.textMuted,
-      fontSize: 12,
-      textAlign: 'center',
-    },
-    logoutButton: {
-      backgroundColor: colors.logoutButton,
-      padding: 16,
-      borderRadius: 50,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      width: '100%',
-    },
-    logoutButtonText: {
-      color: colors.text,
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    themeSection: {
-      gap: 16,
-      marginBottom: 12,
-    },
-    themeSectionHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      paddingHorizontal: 0,
-    },
-    themeSectionLabel: {
-      color: colors.text,
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    themeOptions: {
-      flexDirection: 'row',
-      backgroundColor: colors.buttonBackground,
-      padding: 4,
-      borderRadius: 100,
-    },
-    themeOption: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      paddingVertical: 12,
-      borderRadius: 100,
-    },
-    themeOptionActive: {
-      backgroundColor: colors.cardBackground,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 3,
-      elevation: 2,
-    },
-    themeOptionText: {
-      color: colors.textSecondary,
-      fontSize: 14,
-      fontWeight: '500',
-    },
-    themeOptionTextActive: {
-      color: colors.text,
-      fontWeight: '600',
-    },
-  }), [colors]);
+  const themedStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
+        loadingContainer: {
+          flex: 1,
+          backgroundColor: colors.background,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        scrollView: {
+          flex: 1,
+        },
+        infoSection: {
+          padding: 24,
+          gap: 24,
+        },
+        footer: {
+          paddingHorizontal: 24,
+          paddingTop: 24,
+          paddingBottom: 0,
+          borderTopWidth: 1,
+          paddingVertical: 0,
+          borderTopColor: colors.border,
+          gap: 12,
+          alignItems: 'center',
+        },
+        versionLabel: {
+          color: colors.textMuted,
+          fontSize: 12,
+          textAlign: 'center',
+        },
+        logoutButton: {
+          backgroundColor: colors.logoutButton,
+          padding: 16,
+          borderRadius: 50,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          width: '100%',
+        },
+        logoutButtonText: {
+          color: colors.text,
+          fontSize: 16,
+          fontWeight: '600',
+        },
+        themeSection: {
+          gap: 16,
+          marginBottom: 12,
+        },
+        themeSectionHeader: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          paddingHorizontal: 0,
+        },
+        themeSectionLabel: {
+          color: colors.text,
+          fontSize: 16,
+          fontWeight: '600',
+        },
+        themeOptions: {
+          flexDirection: 'row',
+          backgroundColor: colors.buttonBackground,
+          padding: 4,
+          borderRadius: 100,
+        },
+        themeOption: {
+          flex: 1,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          paddingVertical: 12,
+          borderRadius: 100,
+        },
+        themeOptionActive: {
+          backgroundColor: colors.cardBackground,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          elevation: 2,
+        },
+        themeOptionText: {
+          color: colors.textSecondary,
+          fontSize: 14,
+          fontWeight: '500',
+        },
+        themeOptionTextActive: {
+          color: colors.text,
+          fontWeight: '600',
+        },
+      }),
+    [colors]
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -303,11 +307,7 @@ export default function ProfileScreen() {
                 onPress={() => setThemeMode('light')}
                 activeOpacity={0.7}
               >
-                <Feather
-                  name="sun"
-                  size={18}
-                  color={themeMode === 'light' ? colors.text : colors.textSecondary}
-                />
+                <Feather name="sun" size={18} color={themeMode === 'light' ? colors.text : colors.textSecondary} />
                 <Text style={themeMode === 'light' ? themedStyles.themeOptionTextActive : themedStyles.themeOptionText}>
                   Claro
                 </Text>
@@ -318,11 +318,7 @@ export default function ProfileScreen() {
                 onPress={() => setThemeMode('dark')}
                 activeOpacity={0.7}
               >
-                <Feather
-                  name="moon"
-                  size={18}
-                  color={themeMode === 'dark' ? colors.text : colors.textSecondary}
-                />
+                <Feather name="moon" size={18} color={themeMode === 'dark' ? colors.text : colors.textSecondary} />
                 <Text style={themeMode === 'dark' ? themedStyles.themeOptionTextActive : themedStyles.themeOptionText}>
                   Escuro
                 </Text>
@@ -338,7 +334,9 @@ export default function ProfileScreen() {
                   size={18}
                   color={themeMode === 'system' ? colors.text : colors.textSecondary}
                 />
-                <Text style={themeMode === 'system' ? themedStyles.themeOptionTextActive : themedStyles.themeOptionText}>
+                <Text
+                  style={themeMode === 'system' ? themedStyles.themeOptionTextActive : themedStyles.themeOptionText}
+                >
                   Sistema
                 </Text>
               </TouchableOpacity>
@@ -352,7 +350,7 @@ export default function ProfileScreen() {
             icon={<Feather name="lock" size={20} color={colors.primary} />}
           />
 
-          <Text style={themedStyles.versionLabel}>Versão {Constants.expoConfig?.version ?? '1.0.0'}</Text>
+          <Text style={themedStyles.versionLabel}>Versão {Constants.expoConfig?.version ?? '3.5.0'}</Text>
         </View>
       </ScrollView>
 
@@ -365,4 +363,3 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-
