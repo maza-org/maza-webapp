@@ -64,10 +64,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     isDark: resolvedTheme === 'dark',
   };
 
-  if (!isLoaded) {
-    return null;
-  }
-
+  // Always render children to prevent white screen on app resume.
+  // The theme will update from system default to saved preference once AsyncStorage loads.
   return (
     <ThemeContext.Provider value={value}>
       {children}

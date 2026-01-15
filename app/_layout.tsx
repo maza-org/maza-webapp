@@ -74,7 +74,7 @@ export default RootLayout;
 
 function RootLayoutNav({ onReady }: { onReady: () => void }) {
   const router = useRouter();
-  const [isChecking, setIsChecking] = useState(true);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -88,7 +88,7 @@ function RootLayoutNav({ onReady }: { onReady: () => void }) {
       } catch (error) {
         console.error('Error checking onboarding status:', error);
       } finally {
-        setIsChecking(false);
+        setIsReady(true);
       }
     };
 
@@ -96,16 +96,13 @@ function RootLayoutNav({ onReady }: { onReady: () => void }) {
   }, []);
 
   useEffect(() => {
-    if (!isChecking) {
+    if (isReady) {
       onReady();
     }
-  }, [isChecking, onReady]);
+  }, [isReady, onReady]);
 
-  // Don't render anything until we've checked the onboarding status
-  if (isChecking) {
-    return null;
-  }
-
+  // Always render the full tree - splash screen stays visible until isReady
+  // This prevents any white screen flash
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
