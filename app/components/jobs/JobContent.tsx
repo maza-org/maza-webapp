@@ -21,7 +21,7 @@ export default function JobContent({ job, children }: JobContentProps) {
   const renderHTMLContent = (htmlContent: string) => {
     const baseStyle: MixedStyleDeclaration = {
       color: colors.text,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      fontFamily: 'ManropeRegular',
     };
 
     const tagsStyles: Record<string, MixedStyleDeclaration> = {

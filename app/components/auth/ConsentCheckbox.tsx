@@ -67,10 +67,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     lineHeight: 20,
+    fontFamily: 'ManropeRegular',
   },
   consentErrorText: {
     color: '#FF6B6B',
     fontSize: 12,
     marginTop: 12,
+    fontFamily: 'ManropeRegular',
   },
 });

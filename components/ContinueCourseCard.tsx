@@ -83,6 +83,7 @@ const styles = StyleSheet.create({
   },
   instructorName: {
     fontSize: 14,
+    fontFamily: 'ManropeRegular',
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -95,6 +96,7 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 12,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
   coverImage: {
     width: '100%',
@@ -106,6 +108,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '500',
     marginBottom: 16,
+    fontFamily: 'ManropeMedium',
   },
   progressContainer: {
     gap: 8,
@@ -116,6 +119,7 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 12,
+    fontFamily: 'ManropeRegular',
   },
   progressBar: {
     height: 8,

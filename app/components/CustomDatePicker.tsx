@@ -151,15 +151,18 @@ export default function CustomDatePicker({
           fontSize: 18,
           fontWeight: '600',
           color: colors.text,
+          fontFamily: 'ManropeBold',
         },
         cancelText: {
           fontSize: 16,
           color: colors.textMuted,
+          fontFamily: 'ManropeRegular',
         },
         confirmText: {
           fontSize: 16,
           color: colors.primary,
           fontWeight: '600',
+          fontFamily: 'ManropeBold',
         },
         pickerContainer: {
           flexDirection: 'row',
@@ -184,11 +187,13 @@ export default function CustomDatePicker({
         itemText: {
           fontSize: 18,
           color: colors.textMuted,
+          fontFamily: 'ManropeRegular',
         },
         itemTextSelected: {
           fontSize: 20,
           fontWeight: '600',
           color: colors.text,
+          fontFamily: 'ManropeBold',
         },
         selectionIndicator: {
           position: 'absolute',
@@ -206,6 +211,7 @@ export default function CustomDatePicker({
           color: colors.textMuted,
           marginTop: 8,
           fontWeight: '500',
+          fontFamily: 'ManropeMedium',
         },
       }),
     [colors, insets.bottom]

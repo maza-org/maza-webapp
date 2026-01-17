@@ -115,6 +115,7 @@ const styles = StyleSheet.create({
     color: '#1fa2df',
     fontSize: 14,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
   coursesList: {
     ...(Platform.OS === 'web' ? { marginHorizontal: 0 } : { marginHorizontal: -25, paddingHorizontal: 25 }),

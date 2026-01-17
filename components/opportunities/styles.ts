@@ -14,6 +14,7 @@ export const createThemedStyles = (colors: ThemeColors, isDark: boolean) => Styl
     fontSize: 16,
     color: colors.textMuted,
     marginTop: 16,
+    fontFamily: 'ManropeRegular',
   },
   errorText: {
     fontSize: 16,
@@ -21,6 +22,7 @@ export const createThemedStyles = (colors: ThemeColors, isDark: boolean) => Styl
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 24,
+    fontFamily: 'ManropeRegular',
   },
   retryButton: {
     backgroundColor: colors.primary,
@@ -31,12 +33,14 @@ export const createThemedStyles = (colors: ThemeColors, isDark: boolean) => Styl
   retryButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontFamily: 'ManropeBold',
   },
   emptyText: {
     fontSize: 18,
     color: colors.textMuted,
     textAlign: 'center',
     marginTop: 16,
+    fontFamily: 'ManropeRegular',
   },
   jobCard: {
     backgroundColor: colors.cardBackground,
@@ -75,6 +79,7 @@ export const createThemedStyles = (colors: ThemeColors, isDark: boolean) => Styl
     fontSize: 20,
     fontWeight: 'bold',
     color: colors.text,
+    fontFamily: 'ManropeBold',
   },
   jobInfo: {
     flex: 1,
@@ -84,11 +89,13 @@ export const createThemedStyles = (colors: ThemeColors, isDark: boolean) => Styl
     fontWeight: 'bold',
     color: colors.text,
     marginBottom: 4,
+    fontFamily: 'ManropeBold',
   },
   companyName: {
     fontSize: 14,
     color: colors.primary,
     marginBottom: 8,
+    fontFamily: 'ManropeRegular',
   },
   jobMeta: {
     flexDirection: 'row',
@@ -104,6 +111,7 @@ export const createThemedStyles = (colors: ThemeColors, isDark: boolean) => Styl
     fontSize: 12,
     color: colors.textMuted,
     marginLeft: 4,
+    fontFamily: 'ManropeRegular',
   },
   badge: {
     position: 'absolute',
@@ -120,6 +128,7 @@ export const createThemedStyles = (colors: ThemeColors, isDark: boolean) => Styl
     fontSize: 10,
     color: colors.text,
     textTransform: 'uppercase',
+    fontFamily: 'ManropeRegular',
   },
   newBadge: {
     bottom: 12,
@@ -130,6 +139,7 @@ export const createThemedStyles = (colors: ThemeColors, isDark: boolean) => Styl
     fontSize: 10,
     color: '#fff',
     fontWeight: 'bold',
+    fontFamily: 'ManropeBold',
   },
 });
 

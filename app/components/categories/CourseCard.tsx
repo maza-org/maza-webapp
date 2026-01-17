@@ -43,6 +43,7 @@ export default function CourseCard({ course, onPress }: CourseCardProps) {
           fontWeight: '600',
           marginBottom: 8,
           lineHeight: 22,
+          fontFamily: 'ManropeBold',
         },
         courseDetails: {
           gap: 4,
@@ -50,11 +51,13 @@ export default function CourseCard({ course, onPress }: CourseCardProps) {
         author: {
           color: colors.textSecondary,
           fontSize: 14,
+          fontFamily: 'ManropeRegular',
         },
         rating: {
           color: '#FFD700',
           fontSize: 14,
           marginTop: 6,
+          fontFamily: 'ManropeRegular',
         },
       }),
     [colors]

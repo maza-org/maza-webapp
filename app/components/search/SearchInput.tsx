@@ -33,6 +33,7 @@ export default function SearchInput({ searchTerm, onSearchChange, onClearSearch 
       color: colors.text,
       fontSize: 16,
       marginRight: 8,
+      fontFamily: 'ManropeRegular',
     },
     clearButton: {
       padding: 4,

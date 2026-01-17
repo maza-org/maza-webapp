@@ -34,6 +34,7 @@ export default function FormInput({
           color: colors.text,
           fontSize: 14,
           fontWeight: '500',
+          fontFamily: 'ManropeMedium',
         },
         inputContainer: {
           position: 'relative',
@@ -45,6 +46,7 @@ export default function FormInput({
           paddingHorizontal: 16,
           fontSize: 16,
           color: colors.text,
+          fontFamily: 'ManropeRegular',
         },
         inputWithIcon: {
           paddingRight: 50,
@@ -64,6 +66,7 @@ export default function FormInput({
           fontSize: 12,
           marginTop: 4,
           marginLeft: 8,
+          fontFamily: 'ManropeRegular',
         },
       }),
     [colors, isDark]

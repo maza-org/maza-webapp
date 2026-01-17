@@ -179,10 +179,12 @@ const FavoriteCoursesGrid = () => {
       textTransform: 'uppercase',
       letterSpacing: 0.5,
       marginBottom: 4,
+      fontFamily: 'ManropeBold',
     },
     titleText: {
       color: colors.text,
       fontWeight: '700',
+      fontFamily: 'ManropeBold',
     },
     titleGrid: {
       fontSize: 14,
@@ -213,6 +215,7 @@ const FavoriteCoursesGrid = () => {
       color: '#FBA94C',
       fontSize: 10,
       fontWeight: '700',
+      fontFamily: 'ManropeBold',
     },
     divider: {
       width: 3,
@@ -224,6 +227,7 @@ const FavoriteCoursesGrid = () => {
       color: colors.textMuted,
       fontSize: 11,
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
     cardFooter: {
       backgroundColor: isDark ? '#1c1c1f' : colors.inputBackground,
@@ -243,16 +247,19 @@ const FavoriteCoursesGrid = () => {
       fontSize: 12,
       fontWeight: '700',
       textTransform: 'uppercase',
+      fontFamily: 'ManropeBold',
     },
     loadingText: {
       color: colors.textMuted,
       marginTop: 16,
+      fontFamily: 'ManropeRegular',
     },
     errorTitle: {
       color: colors.text,
       fontSize: 18,
       fontWeight: '700',
       marginTop: 16,
+      fontFamily: 'ManropeBold',
     },
     retryButton: {
       marginTop: 16,
@@ -260,17 +267,19 @@ const FavoriteCoursesGrid = () => {
       padding: 12,
       borderRadius: 8,
     },
-    retryButtonText: { color: colors.text },
+    retryButtonText: { color: colors.text, fontFamily: 'ManropeRegular' },
     emptyTitle: {
       color: colors.text,
       fontSize: 20,
       fontWeight: '700',
       marginTop: 16,
+      fontFamily: 'ManropeBold',
     },
     emptySubtitle: {
       color: colors.textMuted,
       marginTop: 8,
       marginBottom: 24,
+      fontFamily: 'ManropeRegular',
     },
     exploreButton: {
       backgroundColor: colors.primary,
@@ -281,6 +290,7 @@ const FavoriteCoursesGrid = () => {
     exploreButtonText: {
       color: '#FFF',
       fontWeight: '700',
+      fontFamily: 'ManropeBold',
     },
     toolbar: {
       paddingHorizontal: 16,

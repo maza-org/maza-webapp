@@ -26,7 +26,7 @@ export default function ErrorState({ onSkip }: ErrorStateProps) {
     },
     errorTitle: {
       fontSize: 20,
-      fontWeight: '600',
+      fontFamily: 'Manrope-SemiBold',
       color: colors.text,
       textAlign: 'center',
       marginTop: 24,
@@ -34,6 +34,7 @@ export default function ErrorState({ onSkip }: ErrorStateProps) {
     },
     errorMessage: {
       fontSize: 16,
+      fontFamily: 'Manrope-Regular',
       color: colors.textMuted,
       textAlign: 'center',
       lineHeight: 24,
@@ -48,7 +49,7 @@ export default function ErrorState({ onSkip }: ErrorStateProps) {
     errorSkipButtonText: {
       color: '#FFFFFF',
       fontSize: 16,
-      fontWeight: '600',
+      fontFamily: 'Manrope-SemiBold',
     },
   }), [colors]);
 

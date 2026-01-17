@@ -27,6 +27,7 @@ export function Tab({ active, onPress, children }: TabProps) {
       color: colors.textMuted,
       fontSize: 16,
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
     activeTabText: {
       color: colors.primary,

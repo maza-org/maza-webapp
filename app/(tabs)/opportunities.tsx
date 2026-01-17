@@ -79,7 +79,7 @@ export default function Opportunities() {
       flex: 1,
       color: colors.text,
       fontSize: 16,
-      fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+      fontFamily: 'ManropeRegular',
     },
     content: {
       flex: 1,

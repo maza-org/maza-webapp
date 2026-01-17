@@ -98,6 +98,7 @@ function SearchablePicker({ label, value, options, onSelect, placeholder }: Sear
           color: colors.text,
           fontSize: 14,
           fontWeight: '500',
+          fontFamily: 'ManropeMedium',
         },
         pickerButton: {
           height: 48,
@@ -112,9 +113,11 @@ function SearchablePicker({ label, value, options, onSelect, placeholder }: Sear
         pickerButtonText: {
           fontSize: 16,
           color: colors.text,
+          fontFamily: 'ManropeRegular',
         },
         placeholderText: {
           color: colors.textMuted,
+          fontFamily: 'ManropeRegular',
         },
         modalOverlay: {
           flex: 1,
@@ -140,6 +143,7 @@ function SearchablePicker({ label, value, options, onSelect, placeholder }: Sear
           fontSize: 18,
           fontWeight: '600',
           color: colors.text,
+          fontFamily: 'ManropeBold',
         },
         searchInput: {
           height: 48,
@@ -149,6 +153,7 @@ function SearchablePicker({ label, value, options, onSelect, placeholder }: Sear
           fontSize: 16,
           color: colors.text,
           margin: 16,
+          fontFamily: 'ManropeRegular',
         },
         optionItem: {
           flexDirection: 'row',
@@ -162,6 +167,7 @@ function SearchablePicker({ label, value, options, onSelect, placeholder }: Sear
         optionText: {
           fontSize: 16,
           color: colors.text,
+          fontFamily: 'ManropeRegular',
         },
       }),
     [colors]
@@ -514,12 +520,14 @@ export default function EditProfileScreen() {
           fontWeight: '700',
           marginBottom: 12,
           textAlign: 'center',
+          fontFamily: 'ManropeBold',
         },
         errorText: {
           color: '#FF6B6B',
           fontSize: 12,
           marginTop: 4,
           marginLeft: 8,
+          fontFamily: 'ManropeRegular',
         },
         errorDescriptionText: {
           color: colors.textSecondary,
@@ -527,6 +535,7 @@ export default function EditProfileScreen() {
           textAlign: 'center',
           marginBottom: 24,
           lineHeight: 24,
+          fontFamily: 'ManropeRegular',
         },
         loginButton: {
           backgroundColor: colors.primary,
@@ -545,6 +554,7 @@ export default function EditProfileScreen() {
           color: '#FFF',
           fontSize: 16,
           fontWeight: '600',
+          fontFamily: 'ManropeBold',
         },
         scrollView: {
           flex: 1,
@@ -563,6 +573,7 @@ export default function EditProfileScreen() {
           color: colors.text,
           fontSize: 20,
           fontWeight: '600',
+          fontFamily: 'ManropeBold',
         },
         iconButton: {
           width: 40,
@@ -584,6 +595,7 @@ export default function EditProfileScreen() {
           color: colors.text,
           fontSize: 14,
           fontWeight: '500',
+          fontFamily: 'ManropeMedium',
         },
         input: {
           height: 48,
@@ -592,6 +604,7 @@ export default function EditProfileScreen() {
           paddingHorizontal: 16,
           fontSize: 16,
           color: colors.text,
+          fontFamily: 'ManropeRegular',
         },
         inputError: {
           borderWidth: 1,
@@ -610,9 +623,11 @@ export default function EditProfileScreen() {
         pickerButtonText: {
           fontSize: 16,
           color: colors.text,
+          fontFamily: 'ManropeRegular',
         },
         placeholderText: {
           color: colors.textMuted,
+          fontFamily: 'ManropeRegular',
         },
         footer: {
           padding: 24,
@@ -635,9 +650,11 @@ export default function EditProfileScreen() {
           color: '#FFF',
           fontSize: 16,
           fontWeight: '600',
+          fontFamily: 'ManropeBold',
         },
         saveButtonTextDisabled: {
           color: isDark ? '#FFF' : colors.text,
+          fontFamily: 'ManropeBold',
         },
         formErrorContainer: {
           padding: 12,
@@ -802,7 +819,7 @@ export default function EditProfileScreen() {
                 color: colors.text,
                 border: 'none',
                 outline: 'none',
-                fontFamily: 'inherit',
+                fontFamily: 'ManropeRegular',
               }}
               value={
                 dateOfBirth

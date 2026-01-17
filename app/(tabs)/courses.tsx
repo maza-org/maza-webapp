@@ -6,9 +6,9 @@ import CoursesInProgress from '@/components/CourseInProgress';
 import useUser from '@/hooks/useUser';
 import {
   LoginPrompt,
-  CompletedCourses,
   CoursesHeader,
   CoursesTabs,
+  CertificatesTab,
   FilterOptions,
   CourseTabType,
 } from '@/app/components/courses';
@@ -39,8 +39,8 @@ export default function Courses() {
       <CoursesHeader />
       <CoursesTabs selectedFilter={selectedFilter} onFilterChange={setSelectedFilter} />
       {selectedFilter === 'favorites' && <FavoriteCoursesGrid />}
-      {selectedFilter === 'completed' && <CompletedCourses />}
       {selectedFilter === 'inProgress' && <CoursesInProgress />}
+      {selectedFilter === 'certificates' && <CertificatesTab />}
     </SafeAreaView>
   );
 }

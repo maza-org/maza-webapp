@@ -34,7 +34,7 @@ export default function CustomizeFooter({ selectedCount, onConfirm, onSkip, isLo
     confirmButtonText: {
       color: '#FFFFFF',
       fontSize: 16,
-      fontWeight: '600',
+      fontFamily: 'Manrope-SemiBold',
     },
     skipButton: {
       padding: 16,
@@ -43,6 +43,7 @@ export default function CustomizeFooter({ selectedCount, onConfirm, onSkip, isLo
     skipButtonText: {
       color: colors.textMuted,
       fontSize: 16,
+      fontFamily: 'Manrope-Regular',
     },
   }), [colors]);
 

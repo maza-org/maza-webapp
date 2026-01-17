@@ -28,5 +28,6 @@ const styles = StyleSheet.create({
   searchTagText: {
     color: '#fff',
     fontSize: 14,
+    fontFamily: 'ManropeRegular',
   },
 });

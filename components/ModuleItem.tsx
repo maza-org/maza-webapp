@@ -60,12 +60,14 @@ const ModuleItem = ({ content, index, selectedContent, onPress }: ModuleItemProp
           color: colors.text,
           fontSize: 16,
           fontWeight: '500',
+          fontFamily: 'ManropeMedium',
         },
         moduleTitle: {
           color: colors.text,
           fontSize: 16,
           fontWeight: '500',
           flex: 1,
+          fontFamily: 'ManropeMedium',
         },
         moduleDetails: {
           flexDirection: 'row',
@@ -92,6 +94,7 @@ const ModuleItem = ({ content, index, selectedContent, onPress }: ModuleItemProp
         moduleTypeText: {
           color: colors.textMuted,
           fontSize: 12,
+          fontFamily: 'ManropeRegular',
         },
       }),
     [colors, isDark]

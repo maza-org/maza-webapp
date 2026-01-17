@@ -52,11 +52,13 @@ const styles = StyleSheet.create({
     color: '#FFF',
     opacity: 0.7,
     fontSize: 12,
+    fontFamily: 'ManropeRegular',
   },
   percentageText: {
     color: '#2EA8FF',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'ManropeBold',
   },
   coursesHeader: {
     flexDirection: 'row',
@@ -89,11 +91,13 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
   courseCategory: {
     color: '#2EA8FF',
     fontSize: 14,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
 });
 

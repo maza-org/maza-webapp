@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   itemText: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Manrope',
+    fontFamily: 'ManropeRegular',
     lineHeight: 20,
   },
   separator: {

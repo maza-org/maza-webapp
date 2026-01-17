@@ -128,6 +128,7 @@ const styles = StyleSheet.create({
     color: '#1fa2df',
     fontSize: 14,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
   coursesList: {
     gap: 12,
@@ -154,17 +155,21 @@ const styles = StyleSheet.create({
   },
   courseCategory: {
     fontSize: 14,
+    fontFamily: 'ManropeRegular',
   },
   courseItemTitle: {
     fontSize: 16,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
   moduleCount: {
     fontSize: 12,
+    fontFamily: 'ManropeRegular',
   },
   percentageText: {
     color: '#1fa2df',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'ManropeBold',
   },
 });

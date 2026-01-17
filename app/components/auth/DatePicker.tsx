@@ -64,6 +64,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     marginBottom: 8,
+    fontFamily: 'ManropeMedium',
   },
   dateButton: {
     height: 48,
@@ -81,11 +82,13 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     color: '#FFFFFF',
+    fontFamily: 'ManropeRegular',
   },
   errorText: {
     color: '#FF6B6B',
     fontSize: 12,
     marginTop: 4,
     marginLeft: 8,
+    fontFamily: 'ManropeRegular',
   },
 });

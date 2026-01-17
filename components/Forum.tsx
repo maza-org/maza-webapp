@@ -86,6 +86,7 @@ const CommentItem = ({
       color: colors.text,
       fontSize: 16,
       fontWeight: '600',
+      fontFamily: 'ManropeBold',
     },
     commentUserInfo: {
       flex: 1,
@@ -94,11 +95,13 @@ const CommentItem = ({
       color: colors.text,
       fontSize: 16,
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
     commentDate: {
       color: colors.textMuted,
       fontSize: 12,
       marginTop: 2,
+      fontFamily: 'ManropeRegular',
     },
     deleteButton: {
       padding: 4,
@@ -109,6 +112,7 @@ const CommentItem = ({
       fontSize: 14,
       lineHeight: 22,
       marginBottom: 12,
+      fontFamily: 'ManropeRegular',
     },
     viewMoreButton: {
       marginBottom: 12,
@@ -118,6 +122,7 @@ const CommentItem = ({
       color: colors.primary,
       fontSize: 14,
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
     actionsRow: {
       flexDirection: 'row',
@@ -135,6 +140,7 @@ const CommentItem = ({
     replyButtonText: {
       color: colors.textMuted,
       fontSize: 14,
+      fontFamily: 'ManropeRegular',
     },
     showRepliesButton: {
       padding: 4,
@@ -142,6 +148,7 @@ const CommentItem = ({
     showRepliesText: {
       color: colors.primary,
       fontSize: 14,
+      fontFamily: 'ManropeRegular',
     },
     repliesContainer: {
       marginTop: 16,
@@ -162,9 +169,11 @@ const CommentItem = ({
     },
     smallAvatarText: {
       fontSize: 14,
+      fontFamily: 'ManropeBold',
     },
     smallUserName: {
       fontSize: 14,
+      fontFamily: 'ManropeMedium',
     },
   }), [colors]);
 
@@ -298,12 +307,14 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
       color: colors.textMuted,
       fontSize: 14,
       textAlign: 'center',
+      fontFamily: 'ManropeRegular',
     },
     emptyTitle: {
       color: colors.text,
       fontSize: 18,
       fontWeight: '600',
       marginBottom: 8,
+      fontFamily: 'ManropeBold',
     },
     sortContainer: {
       paddingHorizontal: 24,
@@ -316,6 +327,7 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
       color: colors.text,
       fontSize: 16,
       fontWeight: '600',
+      fontFamily: 'ManropeBold',
     },
     sortButton: {
       flexDirection: 'row',
@@ -325,6 +337,7 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
     sortText: {
       color: colors.textMuted,
       fontSize: 14,
+      fontFamily: 'ManropeRegular',
     },
     listContent: {
       padding: 24,
@@ -362,6 +375,7 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
       fontSize: 18,
       fontWeight: '600',
       marginBottom: 8,
+      fontFamily: 'ManropeBold',
     },
     modalMessage: {
       color: colors.textMuted,
@@ -369,6 +383,7 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
       textAlign: 'center',
       lineHeight: 20,
       marginBottom: 24,
+      fontFamily: 'ManropeRegular',
     },
     modalButtons: {
       flexDirection: 'column',
@@ -388,6 +403,7 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
       color: '#FFF',
       fontSize: 16,
       fontWeight: '600',
+      fontFamily: 'ManropeBold',
     },
     modalCancelButton: {
       width: '100%',
@@ -400,6 +416,7 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
       color: colors.text,
       fontSize: 16,
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
     modalButtonDisabled: {
       opacity: 0.6,
@@ -416,6 +433,7 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
       fontSize: 14,
       fontStyle: 'italic',
       lineHeight: 20,
+      fontFamily: 'ManropeRegular',
     },
   }), [colors]);
 

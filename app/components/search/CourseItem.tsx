@@ -34,12 +34,14 @@ export default function CourseItem({ item, onPress }: CourseItemProps) {
       fontSize: 12,
       fontWeight: '500',
       marginBottom: 4,
+      fontFamily: 'ManropeMedium',
     },
     courseTitle: {
       color: colors.text,
       fontSize: 14,
       fontWeight: '500',
       marginBottom: 4,
+      fontFamily: 'ManropeMedium',
     },
     courseDetails: {
       flexDirection: 'row',
@@ -56,10 +58,12 @@ export default function CourseItem({ item, onPress }: CourseItemProps) {
       color: '#FFD700',
       fontSize: 12,
       marginLeft: 4,
+      fontFamily: 'ManropeRegular',
     },
     subscriberText: {
       color: colors.textMuted,
       fontSize: 11,
+      fontFamily: 'ManropeRegular',
     },
   });
 

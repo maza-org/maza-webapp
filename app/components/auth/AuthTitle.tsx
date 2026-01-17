@@ -26,6 +26,7 @@ export default function AuthTitle({ title, subtitle, linkText, linkAction }: Aut
           fontWeight: '600',
           color: colors.text,
           width: 200,
+          fontFamily: 'ManropeBold',
         },
         linkContainer: {
           flexDirection: 'row',
@@ -34,10 +35,12 @@ export default function AuthTitle({ title, subtitle, linkText, linkAction }: Aut
         subtitleText: {
           color: colors.textMuted,
           fontSize: 14,
+          fontFamily: 'ManropeRegular',
         },
         linkText: {
           color: colors.primary,
           fontSize: 14,
+          fontFamily: 'ManropeRegular',
         },
       }),
     [colors]

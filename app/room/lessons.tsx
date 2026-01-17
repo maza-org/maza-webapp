@@ -120,6 +120,7 @@ export default function CourseDetail() {
       fontSize: 16,
       textAlign: 'center',
       marginBottom: 16,
+      fontFamily: 'ManropeRegular',
     },
     retryButton: {
       backgroundColor: colors.primary,
@@ -131,6 +132,7 @@ export default function CourseDetail() {
       color: '#FFF',
       fontSize: 16,
       fontWeight: '600',
+      fontFamily: 'ManropeBold',
     },
     courseInfo: {
       padding: 24,
@@ -141,6 +143,7 @@ export default function CourseDetail() {
       fontWeight: '700',
       color: colors.text,
       marginBottom: 16,
+      fontFamily: 'ManropeBold',
     },
     instructor: {
       flexDirection: 'row',
@@ -150,12 +153,14 @@ export default function CourseDetail() {
     instructorName: {
       color: colors.text,
       fontSize: 14,
+      fontFamily: 'ManropeRegular',
     },
     categoryTag: {
       color: colors.primary,
       fontSize: 14,
       marginLeft: 8,
       marginRight: 8,
+      fontFamily: 'ManropeRegular',
     },
     descriptionContainer: {
       marginBottom: 16,
@@ -165,6 +170,7 @@ export default function CourseDetail() {
       color: colors.textSecondary,
       fontSize: 14,
       lineHeight: 22,
+      fontFamily: 'ManropeRegular',
     },
     viewMoreButton: {
       marginTop: 8,
@@ -174,6 +180,7 @@ export default function CourseDetail() {
       color: colors.primary,
       fontSize: 14,
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
     tabContainer: {
       flexDirection: 'row',
@@ -206,12 +213,14 @@ export default function CourseDetail() {
       color: colors.text,
       fontSize: 16,
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
     moduleTitle: {
       color: colors.text,
       fontSize: 16,
       fontWeight: '500',
       flex: 1,
+      fontFamily: 'ManropeMedium',
     },
     moduleTitleCompleted: {
       color: colors.primary,
@@ -240,6 +249,7 @@ export default function CourseDetail() {
     videoCountText: {
       color: colors.textMuted,
       fontSize: 12,
+      fontFamily: 'ManropeRegular',
     },
     quizGradeContainer: {
       backgroundColor: 'rgba(34, 197, 94, 0.1)',
@@ -256,6 +266,7 @@ export default function CourseDetail() {
       color: '#22C55E',
       fontSize: 12,
       fontWeight: '700',
+      fontFamily: 'ManropeBold',
     },
     moduleItemCompleted: {
       borderColor: colors.primary,
@@ -291,10 +302,12 @@ export default function CourseDetail() {
     replyPreviewLabel: {
       color: colors.textMuted,
       fontSize: 12,
+      fontFamily: 'ManropeRegular',
     },
     replyPreviewName: {
       color: colors.primary,
       fontWeight: '600',
+      fontFamily: 'ManropeBold',
     },
     replyPreviewQuote: {
       flexDirection: 'row',
@@ -310,6 +323,7 @@ export default function CourseDetail() {
       fontSize: 13,
       flex: 1,
       fontStyle: 'italic',
+      fontFamily: 'ManropeRegular',
     },
     inputRow: {
       flexDirection: 'row',
@@ -372,16 +386,19 @@ export default function CourseDetail() {
       color: colors.text,
       fontSize: 16,
       fontWeight: '600',
+      fontFamily: 'ManropeBold',
     },
     progressSubtitle: {
       color: colors.textMuted,
       fontSize: 12,
       marginTop: 2,
+      fontFamily: 'ManropeRegular',
     },
     progressPercentage: {
       color: colors.primary,
       fontSize: 18,
       fontWeight: '700',
+      fontFamily: 'ManropeBold',
     },
     progressBarContainer: {
       marginBottom: 8,
@@ -419,10 +436,12 @@ export default function CourseDetail() {
       fontWeight: 'bold',
       color: colors.primary,
       marginBottom: 4,
+      fontFamily: 'ManropeBold',
     },
     completionSubtitle: {
       fontSize: 14,
       color: colors.textSecondary,
+      fontFamily: 'ManropeRegular',
     },
     celebrateImage: {
       width: 80,
@@ -441,6 +460,7 @@ export default function CourseDetail() {
       color: '#FFF',
       fontSize: 16,
       fontWeight: '700',
+      fontFamily: 'ManropeBold',
     },
     noModulesContainer: {
       padding: 24,
@@ -455,6 +475,7 @@ export default function CourseDetail() {
       fontSize: 16,
       textAlign: 'center',
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
     noModulesIcon: {
       marginBottom: 16,
@@ -486,6 +507,7 @@ export default function CourseDetail() {
       color: colors.text,
       fontSize: 16,
       marginLeft: 12,
+      fontFamily: 'ManropeRegular',
     },
     opinionsContainer: {
       flex: 1,
@@ -496,6 +518,7 @@ export default function CourseDetail() {
       fontSize: 16,
       fontWeight: '500',
       marginTop: 16,
+      fontFamily: 'ManropeMedium',
     },
     shimmerBox: {
       width: '100%',
@@ -657,6 +680,7 @@ export default function CourseDetail() {
       color: colors.textMuted,
       fontSize: 12,
       textAlign: 'center',
+      fontFamily: 'ManropeRegular',
     },
   }), [colors]);
 
@@ -1474,6 +1498,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 16,
+    fontFamily: 'ManropeRegular',
   },
   retryButton: {
     backgroundColor: '#1fa2df',
@@ -1485,6 +1510,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'ManropeBold',
   },
   container: {
     flex: 1,
@@ -1548,6 +1574,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     marginLeft: 12,
+    fontFamily: 'ManropeRegular',
   },
   courseInfo: {
     padding: 24,
@@ -1558,6 +1585,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFF',
     marginBottom: 16,
+    fontFamily: 'ManropeBold',
   },
   instructor: {
     flexDirection: 'row',
@@ -1567,12 +1595,14 @@ const styles = StyleSheet.create({
   instructorName: {
     color: '#FFF',
     fontSize: 14,
+    fontFamily: 'ManropeRegular',
   },
   categoryTag: {
     color: '#1fa2df',
     fontSize: 14,
     marginLeft: 8,
     marginRight: 8,
+    fontFamily: 'ManropeRegular',
   },
   pathButton: {
     backgroundColor: '#1fa2df',
@@ -1589,6 +1619,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 12,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
   descriptionContainer: {
     marginBottom: 16,
@@ -1598,6 +1629,7 @@ const styles = StyleSheet.create({
     color: '#E1E1E6',
     fontSize: 14,
     lineHeight: 22,
+    fontFamily: 'ManropeRegular',
   },
   viewMoreButton: {
     marginTop: 8,
@@ -1607,6 +1639,7 @@ const styles = StyleSheet.create({
     color: '#1fa2df',
     fontSize: 14,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
   tabContainer: {
     flexDirection: 'row',
@@ -1639,12 +1672,14 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
   moduleTitle: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '500',
     flex: 1,
+    fontFamily: 'ManropeMedium',
   },
   moduleTitleCompleted: {
     color: '#1fa2df',
@@ -1668,6 +1703,7 @@ const styles = StyleSheet.create({
   videoCountText: {
     color: '#A8A8B3',
     fontSize: 12,
+    fontFamily: 'ManropeRegular',
   },
   footer: {
     padding: 24,
@@ -1698,10 +1734,12 @@ const styles = StyleSheet.create({
   replyPreviewLabel: {
     color: '#A8A8B3',
     fontSize: 12,
+    fontFamily: 'ManropeRegular',
   },
   replyPreviewName: {
     color: '#1fa2df',
     fontWeight: '600',
+    fontFamily: 'ManropeBold',
   },
   replyPreviewQuote: {
     flexDirection: 'row',
@@ -1717,6 +1755,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     flex: 1,
     fontStyle: 'italic',
+    fontFamily: 'ManropeRegular',
   },
   inputRow: {
     flexDirection: 'row',
@@ -1783,6 +1822,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
   noModulesIcon: {
     marginBottom: 16,
@@ -1795,6 +1835,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginTop: 16,
+    fontFamily: 'ManropeMedium',
   },
   refreshIndicator: {
     width: 20,
@@ -1818,11 +1859,13 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'ManropeBold',
   },
   progressPercentage: {
     color: '#1fa2df',
     fontSize: 18,
     fontWeight: '700',
+    fontFamily: 'ManropeBold',
   },
   progressBarContainer: {
     marginBottom: 8,
@@ -1842,6 +1885,7 @@ const styles = StyleSheet.create({
     color: '#A8A8B3',
     fontSize: 12,
     textAlign: 'center',
+    fontFamily: 'ManropeRegular',
   },
   certificateButton: {
     backgroundColor: '#22C55E',
@@ -1876,10 +1920,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1fa2df',
     marginBottom: 4,
+    fontFamily: 'ManropeBold',
   },
   completionSubtitle: {
     fontSize: 14,
     color: '#E1E1E6',
+    fontFamily: 'ManropeRegular',
   },
   celebrateImage: {
     width: 80,
@@ -1898,6 +1944,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '700',
+    fontFamily: 'ManropeBold',
   },
   certificateIcon: {
     marginLeft: 4,
@@ -1928,11 +1975,13 @@ const styles = StyleSheet.create({
     color: '#22C55E',
     fontSize: 12,
     fontWeight: '700',
+    fontFamily: 'ManropeBold',
   },
   progressSubtitle: {
     color: '#A8A8B3',
     fontSize: 12,
     marginTop: 2,
+    fontFamily: 'ManropeRegular',
   },
   // Shimmer loading styles
   shimmerBox: {

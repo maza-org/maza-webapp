@@ -33,6 +33,7 @@ export default function EmptyState({
           marginTop: 16,
           marginBottom: 8,
           textAlign: 'center',
+          fontFamily: 'ManropeBold',
         },
         message: {
           color: colors.textSecondary,
@@ -40,6 +41,7 @@ export default function EmptyState({
           textAlign: 'center',
           lineHeight: 24,
           maxWidth: 280,
+          fontFamily: 'ManropeRegular',
         },
       }),
     [colors]

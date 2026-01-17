@@ -57,14 +57,17 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
   author: {
     color: '#A8A8B3',
     fontSize: 14,
+    fontFamily: 'ManropeRegular',
   },
   date: {
     color: '#A8A8B3',
     fontSize: 12,
+    fontFamily: 'ManropeRegular',
   },
 });
 

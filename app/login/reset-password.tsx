@@ -135,11 +135,13 @@ const styles = StyleSheet.create({
     marginTop: 12,
     lineHeight: 20,
     paddingHorizontal: 24,
+    fontFamily: 'Manrope-Regular',
   },
   errorText: {
     fontSize: 14,
     color: '#FF3B30',
     textAlign: 'center',
     marginBottom: 16,
+    fontFamily: 'Manrope-Regular',
   },
 });

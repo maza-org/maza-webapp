@@ -54,6 +54,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#121214',
     marginRight: 8,
+    fontFamily: 'ManropeBold',
   },
   levelDot: {
     width: 15,

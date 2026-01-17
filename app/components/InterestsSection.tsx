@@ -76,6 +76,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
   editButton: {
     padding: 8,
@@ -113,6 +114,7 @@ const styles = StyleSheet.create({
     color: '#1fa2df',
     fontSize: 14,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
   deleteInterestButton: {
     width: 24,
@@ -136,6 +138,7 @@ const styles = StyleSheet.create({
     color: '#A8A8B3',
     fontSize: 14,
     textAlign: 'center',
+    fontFamily: 'ManropeRegular',
   },
   addInterestButton: {
     marginTop: 8,
@@ -151,5 +154,6 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 14,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
 });

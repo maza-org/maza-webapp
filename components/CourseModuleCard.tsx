@@ -59,12 +59,14 @@ export default function CourseModuleCard({
       color: colors.text,
       fontSize: 16,
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
     moduleTitle: {
       color: colors.text,
       fontSize: 16,
       fontWeight: '500',
       flex: 1,
+      fontFamily: 'ManropeMedium',
     },
     moduleDetails: {
       flexDirection: 'row',
@@ -94,6 +96,7 @@ export default function CourseModuleCard({
     videoCountText: {
       color: colors.textMuted,
       fontSize: 12,
+      fontFamily: 'ManropeRegular',
     },
     moduleProgressContainer: {
       flexDirection: 'row',
@@ -120,6 +123,7 @@ export default function CourseModuleCard({
       fontWeight: '600',
       minWidth: 35,
       textAlign: 'right',
+      fontFamily: 'ManropeBold',
     },
   }), [colors]);
 

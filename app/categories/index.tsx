@@ -40,7 +40,7 @@ export default function CategorySelection() {
   if (isLoading) {
     return (
       <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
-        <Header title={'Escolha uma categoria'} />
+        <Header title={'Escolha uma Jornada'} />
         <LoadingState />
       </SafeAreaView>
     );
@@ -49,7 +49,7 @@ export default function CategorySelection() {
   if (error) {
     return (
       <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
-        <Header title={'Escolha uma categoria'} />
+        <Header title={'Escolha uma Jornada'} />
         <ErrorState error={error.message} onRetry={() => refetch()} />
       </SafeAreaView>
     );
@@ -57,7 +57,7 @@ export default function CategorySelection() {
 
   return (
     <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
-      <Header title={'Escolha uma categoria'} />
+      <Header title={'Escolha uma Jornada'} />
 
       <FlatList
         data={categories}
@@ -68,4 +68,3 @@ export default function CategorySelection() {
     </SafeAreaView>
   );
 }
-

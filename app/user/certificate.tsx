@@ -38,10 +38,10 @@ export default function Certificate() {
       borderRadius: 50,
       marginRight: 16,
     },
-    title: { fontSize: 22, fontWeight: '600', color: colors.text },
+    title: { fontSize: 22, fontWeight: '600', color: colors.text, fontFamily: 'ManropeBold' },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    textWhite: { color: colors.text, marginTop: 16 },
-    errorText: { color: colors.text, marginTop: 16, fontSize: 16 },
+    textWhite: { color: colors.text, marginTop: 16, fontFamily: 'ManropeRegular' },
+    errorText: { color: colors.text, marginTop: 16, fontSize: 16, fontFamily: 'ManropeRegular' },
     pdfContainer: {
       flex: 1,
       margin: 16,
@@ -65,7 +65,7 @@ export default function Certificate() {
     },
     btnPrimary: { backgroundColor: colors.primary },
     btnDisabled: { backgroundColor: '#4B5563' },
-    btnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+    btnText: { color: '#FFF', fontSize: 16, fontWeight: '600', fontFamily: 'ManropeBold' },
   }), [colors]);
 
   useEffect(() => {

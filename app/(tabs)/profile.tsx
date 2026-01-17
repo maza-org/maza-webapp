@@ -6,14 +6,13 @@ import { router, useFocusEffect } from 'expo-router';
 import useUser from '@/hooks/useUser';
 import { useToast } from '@/hooks/useToast';
 import Toast from '@/components/Toast';
-import { Subject, Certificate } from '@/app/types/profile';
-import { useCertificates, useDeleteInterest, useLogout, useProfileRefresh } from '@/app/hooks/useProfileQueries';
+import { Subject } from '@/app/types/profile';
+import { useDeleteInterest, useLogout, useProfileRefresh } from '@/app/hooks/useProfileQueries';
 import Constants from 'expo-constants';
 import ProfileHeader from '@/app/components/profile/ProfileHeader';
 import ProfileImageSection from '@/app/components/profile/ProfileImageSection';
 import ProfileInfoItem from '@/app/components/profile/ProfileInfoItem';
 import InterestsSection from '@/app/components/profile/InterestsSection';
-import CertificatesSection from '@/app/components/profile/CertificatesSection';
 import ProfileErrorState from '@/app/components/profile/ProfileErrorState';
 import { formatDate } from '@/util/util';
 import Button from '@/components/Button';
@@ -29,7 +28,6 @@ export default function ProfileScreen() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  const { data: certificates = [], isLoading: isLoadingCertificates, refetch: refetchCertificates } = useCertificates();
   const deleteInterestMutation = useDeleteInterest();
   const logoutMutation = useLogout();
   const profileRefreshMutation = useProfileRefresh();
@@ -70,6 +68,7 @@ export default function ProfileScreen() {
           color: colors.textMuted,
           fontSize: 12,
           textAlign: 'center',
+          fontFamily: 'ManropeRegular',
         },
         logoutButton: {
           backgroundColor: colors.logoutButton,
@@ -85,6 +84,7 @@ export default function ProfileScreen() {
           color: colors.text,
           fontSize: 16,
           fontWeight: '600',
+          fontFamily: 'ManropeBold',
         },
         themeSection: {
           gap: 16,
@@ -100,6 +100,7 @@ export default function ProfileScreen() {
           color: colors.text,
           fontSize: 16,
           fontWeight: '600',
+          fontFamily: 'ManropeBold',
         },
         themeOptions: {
           flexDirection: 'row',
@@ -128,10 +129,12 @@ export default function ProfileScreen() {
           color: colors.textSecondary,
           fontSize: 14,
           fontWeight: '500',
+          fontFamily: 'ManropeMedium',
         },
         themeOptionTextActive: {
           color: colors.text,
           fontWeight: '600',
+          fontFamily: 'ManropeBold',
         },
       }),
     [colors]
@@ -142,7 +145,6 @@ export default function ProfileScreen() {
       const refreshProfileData = async () => {
         try {
           await profileRefreshMutation.mutateAsync();
-          await refetchCertificates();
         } catch (error) {
           console.error('Error refreshing profile data:', error);
         }
@@ -183,13 +185,6 @@ export default function ProfileScreen() {
         },
       },
     ]);
-  };
-
-  const viewCertificateDetails = (certificate: Certificate) => {
-    router.push({
-      pathname: '/user/certificate',
-      params: { certificateId: certificate.documentId },
-    });
   };
 
   if (isLoading || profileRefreshMutation.isPending) {
@@ -287,13 +282,6 @@ export default function ProfileScreen() {
             handle={handleCustomizeSurvey}
             variant="outline"
             icon={<Feather name="sliders" size={20} color={colors.primary} />}
-          />
-
-          <CertificatesSection
-            certificates={certificates}
-            isLoadingCertificates={isLoadingCertificates}
-            onViewCertificate={viewCertificateDetails}
-            onViewAll={() => router.push('/user/certificates')}
           />
 
           <View style={themedStyles.themeSection}>

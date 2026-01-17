@@ -39,18 +39,19 @@ const CertificateItem: React.FC<CertificateItemProps> = ({ certificate, onPress 
     certificateTitle: {
       color: colors.text,
       fontSize: 16,
-      fontWeight: '600',
+      fontFamily: 'Manrope-SemiBold',
       marginBottom: 4,
     },
     certificateIssuer: {
       color: colors.primary,
       fontSize: 14,
-      fontWeight: '500',
+      fontFamily: 'Manrope-Medium',
       marginBottom: 4,
     },
     certificateDate: {
       color: colors.textMuted,
       fontSize: 12,
+      fontFamily: 'Manrope-Regular',
     },
   }), [colors]);
 

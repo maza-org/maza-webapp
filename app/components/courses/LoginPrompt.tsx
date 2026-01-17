@@ -21,58 +21,63 @@ export default function LoginPrompt({
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const themedStyles = useMemo(() => StyleSheet.create({
-    loginContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.background,
-      padding: 24,
-    },
-    errorIconContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: 'rgba(31, 162, 223, 0.1)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 24,
-    },
-    errorTitle: {
-      color: colors.text,
-      fontSize: 24,
-      fontWeight: '700',
-      marginBottom: 12,
-      textAlign: 'center',
-    },
-    errorText: {
-      color: colors.textMuted,
-      fontSize: 16,
-      textAlign: 'center',
-      marginBottom: 24,
-      lineHeight: 24,
-      maxWidth: 320,
-    },
-    loginButton: {
-      backgroundColor: colors.primary,
-      padding: 16,
-      borderRadius: 50,
-      width: '100%',
-      maxWidth: 320,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-    },
-    loginButtonIcon: {
-      marginRight: 8,
-    },
-    loginButtonText: {
-      color: '#FFF',
-      fontSize: 16,
-      fontWeight: '600',
-    },
-  }), [colors]);
+  const themedStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        loginContainer: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.background,
+          padding: 24,
+        },
+        errorIconContainer: {
+          width: 80,
+          height: 80,
+          borderRadius: 40,
+          backgroundColor: 'rgba(31, 162, 223, 0.1)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: 24,
+        },
+        errorTitle: {
+          color: colors.text,
+          fontSize: 24,
+          fontFamily: 'Manrope-Bold',
+          marginBottom: 12,
+          textAlign: 'center',
+        },
+        errorText: {
+          color: colors.textMuted,
+          fontSize: 16,
+          fontFamily: 'Manrope-Regular',
+          textAlign: 'center',
+          marginBottom: 24,
+          lineHeight: 24,
+          maxWidth: 320,
+        },
+        loginButton: {
+          backgroundColor: colors.primary,
+          padding: 16,
+          borderRadius: 50,
+          width: '100%',
+          maxWidth: 320,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+        },
+        loginButtonIcon: {
+          marginRight: 8,
+        },
+        loginButtonText: {
+          color: '#FFF',
+          fontSize: 16,
+          fontFamily: 'Manrope-SemiBold',
+        },
+      }),
+    [colors]
+  );
 
   const handleLogin = () => {
     if (onLogin) {
@@ -84,13 +89,9 @@ export default function LoginPrompt({
 
   return (
     <View style={themedStyles.loginContainer}>
-      <View style={themedStyles.errorIconContainer}>
-        <Feather name="user-x" size={48} color={colors.primary} />
-      </View>
       <Text style={themedStyles.errorTitle}>{title}</Text>
       <Text style={themedStyles.errorText}>{message}</Text>
       <TouchableOpacity style={themedStyles.loginButton} onPress={handleLogin}>
-        <Feather name="log-in" size={20} color="#FFF" style={themedStyles.loginButtonIcon} />
         <Text style={themedStyles.loginButtonText}>{buttonText}</Text>
       </TouchableOpacity>
     </View>

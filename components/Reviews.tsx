@@ -106,6 +106,7 @@ const ReviewItem = ({ review }: { review: Review }) => {
       color: colors.text,
       fontSize: 16,
       fontWeight: '600',
+      fontFamily: 'ManropeBold',
     },
     reviewUserInfo: {
       flex: 1,
@@ -114,6 +115,7 @@ const ReviewItem = ({ review }: { review: Review }) => {
       color: colors.text,
       fontSize: 16,
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
     ratingDateRow: {
       flexDirection: 'row',
@@ -124,11 +126,13 @@ const ReviewItem = ({ review }: { review: Review }) => {
     reviewDate: {
       color: colors.textMuted,
       fontSize: 12,
+      fontFamily: 'ManropeRegular',
     },
     reviewText: {
       color: colors.textSecondary,
       fontSize: 14,
       lineHeight: 22,
+      fontFamily: 'ManropeRegular',
     },
     viewMoreButton: {
       marginTop: 8,
@@ -138,6 +142,7 @@ const ReviewItem = ({ review }: { review: Review }) => {
       color: colors.primary,
       fontSize: 14,
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
   }), [colors]);
 
@@ -197,11 +202,13 @@ const RatingSummary = ({ reviews }: { reviews: Review[] }) => {
       fontSize: 36,
       fontWeight: '700',
       marginBottom: 4,
+      fontFamily: 'ManropeBold',
     },
     totalReviews: {
       color: colors.textMuted,
       fontSize: 12,
       marginTop: 4,
+      fontFamily: 'ManropeRegular',
     },
     summaryRight: {
       flex: 1,
@@ -218,6 +225,7 @@ const RatingSummary = ({ reviews }: { reviews: Review[] }) => {
       fontSize: 12,
       width: 12,
       marginRight: 4,
+      fontFamily: 'ManropeRegular',
     },
     ratingBarTrack: {
       flex: 1,
@@ -237,6 +245,7 @@ const RatingSummary = ({ reviews }: { reviews: Review[] }) => {
       fontSize: 12,
       width: 24,
       textAlign: 'right',
+      fontFamily: 'ManropeRegular',
     },
   }), [colors]);
 
@@ -321,6 +330,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       color: colors.textMuted,
       fontSize: 16,
       marginBottom: 16,
+      fontFamily: 'ManropeRegular',
     },
     retryButton: {
       backgroundColor: colors.primary,
@@ -332,6 +342,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       color: '#FFF',
       fontSize: 16,
       fontWeight: '600',
+      fontFamily: 'ManropeBold',
     },
     addReviewButton: {
       flexDirection: 'row',
@@ -348,6 +359,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       color: colors.primary,
       fontSize: 16,
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
     loginPromptButton: {
       flexDirection: 'row',
@@ -363,6 +375,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
     loginPromptButtonText: {
       color: colors.textMuted,
       fontSize: 14,
+      fontFamily: 'ManropeRegular',
     },
     reviewForm: {
       backgroundColor: colors.cardBackground,
@@ -376,6 +389,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       fontSize: 18,
       fontWeight: '600',
       marginBottom: 16,
+      fontFamily: 'ManropeBold',
     },
     ratingSelector: {
       flexDirection: 'row',
@@ -386,6 +400,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       color: colors.textMuted,
       fontSize: 14,
       marginRight: 12,
+      fontFamily: 'ManropeRegular',
     },
     ratingText: {
       color: colors.primary,
@@ -393,6 +408,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       fontWeight: '500',
       marginBottom: 16,
       textAlign: 'center',
+      fontFamily: 'ManropeMedium',
     },
     reviewInput: {
       backgroundColor: isDark ? colors.inputBackground : 'rgba(0,0,0,0.1)',
@@ -402,6 +418,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       fontSize: 14,
       minHeight: 100,
       marginBottom: 16,
+      fontFamily: 'ManropeRegular',
     },
     reviewFormButtons: {
       flexDirection: 'row',
@@ -418,6 +435,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       color: colors.text,
       fontSize: 16,
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
     submitButton: {
       flex: 1,
@@ -436,12 +454,14 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       color: '#FFF',
       fontSize: 16,
       fontWeight: '600',
+      fontFamily: 'ManropeBold',
     },
     formErrorText: {
       color: '#FF4B4B',
       fontSize: 14,
       textAlign: 'center',
       marginTop: 12,
+      fontFamily: 'ManropeRegular',
     },
     sortContainer: {
       paddingHorizontal: 24,
@@ -454,6 +474,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       color: colors.text,
       fontSize: 16,
       fontWeight: '600',
+      fontFamily: 'ManropeBold',
     },
     sortButton: {
       flexDirection: 'row',
@@ -463,6 +484,7 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
     sortText: {
       color: colors.textMuted,
       fontSize: 14,
+      fontFamily: 'ManropeRegular',
     },
     listContent: {
       padding: 24,
@@ -479,11 +501,13 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
       fontWeight: '600',
       marginTop: 16,
       marginBottom: 8,
+      fontFamily: 'ManropeBold',
     },
     emptyText: {
       color: colors.textMuted,
       fontSize: 14,
       textAlign: 'center',
+      fontFamily: 'ManropeRegular',
     },
   }), [colors]);
 

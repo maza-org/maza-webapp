@@ -1,13 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -39,15 +31,15 @@ export default function SurveyOnboardingScreen() {
         header: {
           flexDirection: 'row',
           alignItems: 'center',
-          paddingHorizontal: 20,
-          paddingTop: 8,
-          paddingBottom: 16,
-          gap: 12,
+          paddingHorizontal: 24,
+          paddingTop: 16,
+          paddingBottom: 24,
+          gap: 16,
         },
         backButton: {
-          width: 40,
-          height: 40,
-          borderRadius: 20,
+          width: 44,
+          height: 44,
+          borderRadius: 22,
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
@@ -57,41 +49,44 @@ export default function SurveyOnboardingScreen() {
           justifyContent: 'center',
         },
         progressBarBackground: {
-          height: 7.2,
-          borderRadius: 3.6,
+          height: 8,
+          borderRadius: 4,
           overflow: 'hidden',
           backgroundColor: isDark ? '#29292E' : '#E1E1E6',
         },
         progressBarFill: {
-          height: 7.2,
-          borderRadius: 3.6,
+          height: 8,
+          borderRadius: 4,
           backgroundColor: colors.tint,
         },
         progressText: {
-          fontSize: 12,
-          opacity: 0.6,
+          fontSize: 13,
+          fontWeight: '600',
+          opacity: 0.7,
           minWidth: 50,
           textAlign: 'center',
           color: colors.text,
+          fontFamily: 'Manrope-Medium',
         },
         content: {
           flex: 1,
-          paddingHorizontal: 20,
+          paddingHorizontal: 24,
+          paddingTop: 8,
         },
         questionTitle: {
-          fontSize: 24,
-          fontWeight: 'bold',
-          lineHeight: 32,
-          marginBottom: 32,
+          fontSize: 22,
+          fontFamily: 'Manrope-Bold',
+          lineHeight: 36,
+          marginBottom: 40,
           color: colors.text,
         },
         answersContainer: {
-          gap: 12,
+          gap: 16,
         },
         answerOption: {
-          paddingVertical: 20,
-          paddingHorizontal: 20,
-          borderRadius: 16,
+          paddingVertical: 24,
+          paddingHorizontal: 24,
+          borderRadius: 20,
           borderWidth: 1,
           backgroundColor: colors.cardBackground,
           borderColor: colors.border,
@@ -101,31 +96,33 @@ export default function SurveyOnboardingScreen() {
           borderColor: colors.tint,
         },
         answerText: {
-          fontSize: 16,
-          fontWeight: '500',
+          fontSize: 17,
+          fontFamily: 'Manrope-Medium',
           color: colors.text,
         },
         answerTextSelected: {
           color: '#FFFFFF',
         },
         footer: {
-          paddingHorizontal: 20,
-          paddingVertical: 20,
+          paddingHorizontal: 24,
+          paddingVertical: 24,
         },
         loadingText: {
           marginTop: 16,
           fontSize: 16,
           color: colors.text,
+          fontFamily: 'Manrope-Regular',
         },
         errorTitle: {
           fontSize: 20,
-          fontWeight: 'bold',
+          fontFamily: 'Manrope-Bold',
           marginTop: 16,
           marginBottom: 8,
           color: colors.text,
         },
         errorMessage: {
           fontSize: 16,
+          fontFamily: 'Manrope-Regular',
           textAlign: 'center',
           marginBottom: 24,
           color: colors.text,
@@ -142,13 +139,14 @@ export default function SurveyOnboardingScreen() {
         },
         successTitle: {
           fontSize: 28,
-          fontWeight: 'bold',
+          fontFamily: 'Manrope-Bold',
           marginBottom: 16,
           textAlign: 'center',
           color: colors.text,
         },
         successMessage: {
           fontSize: 16,
+          fontFamily: 'Manrope-Regular',
           textAlign: 'center',
           opacity: 0.7,
           lineHeight: 24,
@@ -210,12 +208,10 @@ export default function SurveyOnboardingScreen() {
       return;
     }
 
-    const surveyData: SurveyAnswer[] = Object.entries(selectedAnswers).map(
-      ([questionDocId, answerDocId]) => ({
-        question: questionDocId,
-        answer: answerDocId,
-      })
-    );
+    const surveyData: SurveyAnswer[] = Object.entries(selectedAnswers).map(([questionDocId, answerDocId]) => ({
+      question: questionDocId,
+      answer: answerDocId,
+    }));
 
     try {
       await submitSurveyMutation.mutateAsync({
@@ -232,10 +228,7 @@ export default function SurveyOnboardingScreen() {
       setShowSuccess(true);
     } catch (error: any) {
       console.error('Error submitting survey:', error);
-      Alert.alert(
-        'Erro',
-        error.message || 'Falha ao enviar o questionário. Por favor, tente novamente.'
-      );
+      Alert.alert('Erro', error.message || 'Falha ao enviar o questionário. Por favor, tente novamente.');
     }
   };
 
@@ -316,15 +309,13 @@ export default function SurveyOnboardingScreen() {
       {/* Header with back button and progress */}
       <View style={themedStyles.header}>
         <TouchableOpacity onPress={handleBack} style={themedStyles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
 
         {/* Progress Bar */}
         <View style={themedStyles.progressBarContainer}>
           <View style={themedStyles.progressBarBackground}>
-            <View
-              style={[themedStyles.progressBarFill, { width: `${progress * 100}%` }]}
-            />
+            <View style={[themedStyles.progressBarFill, { width: `${progress * 100}%` }]} />
           </View>
         </View>
 
@@ -345,19 +336,11 @@ export default function SurveyOnboardingScreen() {
             return (
               <TouchableOpacity
                 key={option.id}
-                style={[
-                  themedStyles.answerOption,
-                  isSelected && themedStyles.answerOptionSelected,
-                ]}
+                style={[themedStyles.answerOption, isSelected && themedStyles.answerOptionSelected]}
                 onPress={() => handleSelectAnswer(currentQuestion.documentId, option.documentId)}
                 activeOpacity={0.7}
               >
-                <Text
-                  style={[
-                    themedStyles.answerText,
-                    isSelected && themedStyles.answerTextSelected,
-                  ]}
-                >
+                <Text style={[themedStyles.answerText, isSelected && themedStyles.answerTextSelected]}>
                   {option.answer}
                 </Text>
               </TouchableOpacity>

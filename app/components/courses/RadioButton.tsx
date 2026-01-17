@@ -15,6 +15,7 @@ export default function RadioButton({ label, selected, onPress, animatedBg, anim
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
   const selectedTextColor = isDark ? colors.text : '#FFFFFF';
+  const unselectedTextColor = isDark ? colors.textMuted : colors.textSecondary;
 
   return (
     <Pressable
@@ -25,7 +26,7 @@ export default function RadioButton({ label, selected, onPress, animatedBg, anim
         style={[
           styles.radioButtonText,
           {
-            color: animatedText as any || (selected ? selectedTextColor : colors.textMuted),
+            color: animatedText as any || (selected ? selectedTextColor : unselectedTextColor),
           },
         ]}
       >
@@ -49,5 +50,6 @@ const styles = StyleSheet.create({
   radioButtonText: {
     fontSize: 14,
     fontWeight: '500',
+    fontFamily: 'ManropeMedium',
   },
 });

@@ -114,6 +114,7 @@ const styles = StyleSheet.create({
   baseText: {
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'ManropeBold',
   },
   primaryButtonText: {
     color: '#FFFFFF',

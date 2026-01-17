@@ -30,6 +30,7 @@ export default function SearchResults({
       fontSize: 16,
       color: colors.textMuted,
       marginBottom: 16,
+      fontFamily: 'ManropeRegular',
     },
     loadingContainer: {
       flex: 1,

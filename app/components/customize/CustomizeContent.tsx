@@ -21,18 +21,19 @@ export default function CustomizeContent({ topics, selectedTopics, onTopicToggle
     },
     title: {
       fontSize: 32,
-      fontWeight: '700',
+      fontFamily: 'Manrope-Bold',
       color: colors.text,
       marginBottom: 16,
     },
     subtitle: {
       fontSize: 16,
+      fontFamily: 'Manrope-Regular',
       color: colors.textMuted,
       lineHeight: 24,
     },
     sectionTitle: {
       fontSize: 18,
-      fontWeight: '600',
+      fontFamily: 'Manrope-SemiBold',
       color: colors.text,
       marginBottom: 16,
     },

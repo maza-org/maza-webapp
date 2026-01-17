@@ -82,6 +82,7 @@ export default function CreateEmail() {
         errorText: {
           color: isDark ? '#FF6B6B' : '#CC0000',
           fontSize: 12,
+          fontFamily: 'Manrope-Regular',
         },
         helpText: {
           color: colors.textSecondary,
@@ -89,6 +90,7 @@ export default function CreateEmail() {
           textAlign: 'center',
           marginTop: 8,
           marginBottom: 16,
+          fontFamily: 'Manrope-Regular',
         },
         warningContainer: {
           backgroundColor: isDark ? '#3D2E1E' : '#FFF4E5',
@@ -102,6 +104,7 @@ export default function CreateEmail() {
         warningText: {
           color: isDark ? '#FFA726' : '#EF6C00',
           fontSize: 12,
+          fontFamily: 'Manrope-Regular',
         },
         inputGroup: {
           gap: 12,
@@ -109,7 +112,7 @@ export default function CreateEmail() {
         inputLabel: {
           color: colors.text,
           fontSize: 14,
-          fontWeight: '500',
+          fontFamily: 'Manrope-Medium',
         },
         pickerButton: {
           height: 48,
@@ -124,9 +127,11 @@ export default function CreateEmail() {
         pickerButtonText: {
           fontSize: 16,
           color: colors.text,
+          fontFamily: 'Manrope-Regular',
         },
         placeholderText: {
           color: colors.textMuted,
+          fontFamily: 'Manrope-Regular',
         },
       }),
     [colors, isDark]

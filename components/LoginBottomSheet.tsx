@@ -199,6 +199,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     marginBottom: 8,
     textAlign: 'center',
+    fontFamily: 'ManropeBold',
   },
   description: {
     fontSize: 14,
@@ -206,6 +207,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 32,
+    fontFamily: 'ManropeRegular',
   },
   buttonsContainer: {
     gap: 12,
@@ -221,6 +223,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'ManropeBold',
   },
   createButton: {
     backgroundColor: 'transparent',
@@ -234,6 +237,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'ManropeBold',
   },
   closeButton: {
     position: 'absolute',

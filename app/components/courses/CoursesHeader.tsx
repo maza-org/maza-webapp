@@ -13,7 +13,7 @@ interface CoursesHeaderProps {
 }
 
 export default function CoursesHeader({
-  title = 'Meus Cursos',
+  title = 'Minha Jornada',
   showMenu = false,
   showMaximize = false,
   onMenuPress,
@@ -22,44 +22,49 @@ export default function CoursesHeader({
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const themedStyles = useMemo(() => StyleSheet.create({
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingTop: 24,
-      paddingBottom: 32,
-      backgroundColor: colors.background,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: colors.text,
-    },
-    headerButtons: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    maximizeButton: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.inputBackground,
-      borderRadius: 6,
-    },
-    menuButton: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.inputBackground,
-      borderRadius: 6,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-  }), [colors]);
+  const themedStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        header: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingHorizontal: 16,
+          paddingTop: 24,
+          paddingBottom: 32,
+          backgroundColor: colors.background,
+        },
+        title: {
+          fontSize: 24,
+          fontWeight: 'bold',
+          color: colors.text,
+          fontFamily: 'ManropeBold',
+        },
+        headerButtons: {
+          flexDirection: 'row',
+          gap: 8,
+        },
+        maximizeButton: {
+          width: 40,
+          height: 40,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.inputBackground,
+          borderRadius: 6,
+        },
+        menuButton: {
+          width: 40,
+          height: 40,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.inputBackground,
+          borderRadius: 6,
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+      }),
+    [colors]
+  );
 
   return (
     <View style={themedStyles.header}>

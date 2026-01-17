@@ -235,6 +235,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'right',
     marginTop: 8,
+    fontFamily: 'Manrope-Medium',
   },
   errorContainer: {
     backgroundColor: '#3D1E1E',
@@ -247,6 +248,7 @@ const styles = StyleSheet.create({
     color: '#FF6B6B',
     fontSize: 12,
     marginLeft: 8,
+    fontFamily: 'Manrope-Regular',
   },
   warningContainer: {
     backgroundColor: '#3D2E1E',
@@ -260,5 +262,6 @@ const styles = StyleSheet.create({
     color: '#FFA726',
     fontSize: 12,
     marginLeft: 8,
+    fontFamily: 'Manrope-Regular',
   },
 });

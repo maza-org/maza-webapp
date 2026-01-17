@@ -28,6 +28,7 @@ export default function TopicButton({ topic, isSelected, onPress, ...props }: To
     topicText: {
       color: colors.textMuted,
       fontSize: 14,
+      fontFamily: 'Manrope-Regular',
     },
     topicTextSelected: {
       color: colors.text,

@@ -36,11 +36,13 @@ export default function CategoryItem({ category, onPress }: CategoryItemProps) {
           fontSize: 16,
           fontWeight: '500',
           color: colors.text,
+          fontFamily: 'ManropeMedium',
         },
         coursesCount: {
           fontSize: 14,
           color: colors.textSecondary,
           marginTop: 4,
+          fontFamily: 'ManropeRegular',
         },
       }),
     [colors]

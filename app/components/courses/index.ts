@@ -4,6 +4,7 @@ export { default as FilterModal } from './FilterModal';
 export { default as CompletedCourses } from './CompletedCourses';
 export { default as CoursesHeader } from './CoursesHeader';
 export { default as CoursesTabs } from './CoursesTabs';
+export { default as CertificatesTab } from './CertificatesTab';
 
 export type { FilterOptions } from './FilterModal';
 export type { CourseTabType } from './CoursesTabs';

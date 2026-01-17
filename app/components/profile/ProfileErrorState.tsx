@@ -50,13 +50,14 @@ export default function ProfileErrorState({
         errorTitle: {
           color: colors.text,
           fontSize: 24,
-          fontWeight: '700',
+          fontFamily: 'Manrope-Bold',
           marginBottom: 12,
           textAlign: 'center',
         },
         errorText: {
           color: colors.textMuted,
           fontSize: 16,
+          fontFamily: 'Manrope-Regular',
           textAlign: 'center',
           marginBottom: 24,
           lineHeight: 24,
@@ -77,7 +78,7 @@ export default function ProfileErrorState({
         loginButtonText: {
           color: '#FFF',
           fontSize: 16,
-          fontWeight: '600',
+          fontFamily: 'Manrope-SemiBold',
         },
       }),
     [colors, isDark]
@@ -92,7 +93,6 @@ export default function ProfileErrorState({
         <Text style={themedStyles.errorTitle}>{title}</Text>
         <Text style={themedStyles.errorText}>{message}</Text>
         <TouchableOpacity style={themedStyles.loginButton} onPress={onButtonPress}>
-          <Feather name="log-in" size={20} color="#FFF" style={themedStyles.loginButtonIcon} />
           <Text style={themedStyles.loginButtonText}>{buttonText}</Text>
         </TouchableOpacity>
       </View>

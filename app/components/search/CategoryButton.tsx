@@ -24,6 +24,7 @@ export default function CategoryButton({ icon, label, category, handlePressCateg
     categoryButtonText: {
       color: colors.text,
       fontSize: 14,
+      fontFamily: 'ManropeRegular',
     },
   });
 

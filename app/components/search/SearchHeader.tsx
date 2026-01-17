@@ -33,6 +33,7 @@ export default function SearchHeader({ onBackPress }: SearchHeaderProps) {
       fontSize: 24,
       fontWeight: 'bold',
       color: colors.text,
+      fontFamily: 'ManropeBold',
     },
   });
 

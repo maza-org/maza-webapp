@@ -31,7 +31,7 @@ export default function Header({ title }: HeaderProps) {
         },
         headerTitle: {
           fontSize: 18,
-          fontWeight: '600',
+          fontFamily: 'Manrope-SemiBold',
           marginStart: 20,
           color: colors.text,
         },

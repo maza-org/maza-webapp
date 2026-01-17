@@ -73,13 +73,14 @@ export default function ChangePasswordScreen() {
         errorTitle: {
           color: colors.text,
           fontSize: 24,
-          fontWeight: '700',
+          fontFamily: 'Manrope-Bold',
           marginBottom: 12,
           textAlign: 'center',
         },
         errorDescription: {
           color: colors.textMuted,
           fontSize: 14,
+          fontFamily: 'Manrope-Regular',
           textAlign: 'center',
           marginBottom: 24,
           lineHeight: 20,
@@ -100,7 +101,7 @@ export default function ChangePasswordScreen() {
         loginButtonText: {
           color: '#FFF',
           fontSize: 16,
-          fontWeight: '600',
+          fontFamily: 'Manrope-SemiBold',
         },
         scrollView: {
           flex: 1,
@@ -118,7 +119,7 @@ export default function ChangePasswordScreen() {
         headerTitle: {
           color: colors.text,
           fontSize: 20,
-          fontWeight: '600',
+          fontFamily: 'Manrope-SemiBold',
         },
         iconButton: {
           width: 40,
@@ -137,6 +138,7 @@ export default function ChangePasswordScreen() {
           color: colors.textMuted,
           fontSize: 14,
           lineHeight: 20,
+          fontFamily: 'Manrope-Regular',
         },
         errorBanner: {
           flexDirection: 'row',
@@ -150,6 +152,7 @@ export default function ChangePasswordScreen() {
           color: '#FF6B6B',
           fontSize: 14,
           flex: 1,
+          fontFamily: 'Manrope-Regular',
         },
         inputGroup: {
           gap: 12,
@@ -157,7 +160,7 @@ export default function ChangePasswordScreen() {
         inputLabel: {
           color: colors.text,
           fontSize: 14,
-          fontWeight: '500',
+          fontFamily: 'Manrope-Medium',
         },
         inputWrapper: {
           flexDirection: 'row',
@@ -178,6 +181,7 @@ export default function ChangePasswordScreen() {
           fontSize: 16,
           color: colors.text,
           height: '100%',
+          fontFamily: 'Manrope-Regular',
         },
         eyeButton: {
           paddingHorizontal: 16,
@@ -188,6 +192,7 @@ export default function ChangePasswordScreen() {
           color: '#FF6B6B',
           fontSize: 12,
           marginLeft: 8,
+          fontFamily: 'Manrope-Regular',
         },
         footer: {
           padding: 24,
@@ -210,7 +215,7 @@ export default function ChangePasswordScreen() {
         saveButtonText: {
           color: '#FFF',
           fontSize: 16,
-          fontWeight: '600',
+          fontFamily: 'Manrope-SemiBold',
         },
       }),
     [colors, isDark]

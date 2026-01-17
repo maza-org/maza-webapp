@@ -4,59 +4,54 @@ import RadioButton from './RadioButton';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 
-export type CourseTabType = 'inProgress' | 'favorites' | 'completed';
+export type CourseTabType = 'inProgress' | 'favorites' | 'certificates';
 
 interface CoursesTabsProps {
   selectedFilter: CourseTabType;
   onFilterChange: (filter: CourseTabType) => void;
 }
 
+// Position values for each tab (3 tabs) - must match visual order: Favoritos, Em Curso, Certificados
+const positions: Record<CourseTabType, number> = {
+  favorites: 0,
+  inProgress: 130,
+  certificates: 260,
+};
+
 export default function CoursesTabs({ selectedFilter, onFilterChange }: CoursesTabsProps) {
-  const animationValue = useRef(new Animated.Value(0)).current;
+  const animationValue = useRef(new Animated.Value(positions[selectedFilter])).current;
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  // Position values for each tab
-  const positions = {
-    inProgress: 0,
-    favorites: 130,
-    completed: 260,
-  };
+  const themedStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        radioGroup: {
+          flexDirection: 'row',
+          marginHorizontal: 16,
+          backgroundColor: colors.cardBackground,
+          borderRadius: 999,
+          padding: 4,
+          position: 'relative',
+          borderWidth: isDark ? 0 : 1,
+          borderColor: colors.border,
+        },
+        animatedSelection: {
+          position: 'absolute',
+          top: 4,
+          left: 4,
+          right: 4,
+          bottom: 4,
+          width: '33%',
+          backgroundColor: isDark ? colors.inputBackground : colors.primary,
+          borderRadius: 999,
+          zIndex: 0,
+        },
+      }),
+    [colors, isDark]
+  );
 
-  const themedStyles = useMemo(() => StyleSheet.create({
-    radioGroup: {
-      flexDirection: 'row',
-      marginHorizontal: 16,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 999,
-      padding: 4,
-      position: 'relative',
-    },
-    animatedSelection: {
-      position: 'absolute',
-      top: 4,
-      left: 4,
-      right: 4,
-      bottom: 4,
-      width: '33%',
-      backgroundColor: isDark ? colors.inputBackground : colors.primary,
-      borderRadius: 999,
-      zIndex: 0,
-    },
-  }), [colors, isDark]);
-
-  const getAnimatedPosition = () => {
-    switch (selectedFilter) {
-      case 'inProgress':
-        return positions.inProgress;
-      case 'favorites':
-        return positions.favorites;
-      case 'completed':
-        return positions.completed;
-      default:
-        return 0;
-    }
-  };
+  const getAnimatedPosition = () => positions[selectedFilter];
 
   useEffect(() => {
     Animated.spring(animationValue, {
@@ -68,9 +63,11 @@ export default function CoursesTabs({ selectedFilter, onFilterChange }: CoursesT
   }, [selectedFilter]);
 
   const selectedTextColor = isDark ? colors.text : '#FFFFFF';
+  const unselectedTextColor = isDark ? colors.textMuted : colors.textSecondary;
 
   const animatedText = (buttonIndex: number) => {
-    const positionValues = [positions.inProgress, positions.favorites, positions.completed];
+    // Order matches visual layout: Favoritos (0), Em Curso (130), Certificados (260)
+    const positionValues = [positions.favorites, positions.inProgress, positions.certificates];
     const currentPos = positionValues[buttonIndex];
     const prevPos = buttonIndex > 0 ? positionValues[buttonIndex - 1] : -65;
     const nextPos = buttonIndex < 2 ? positionValues[buttonIndex + 1] : 325;
@@ -80,7 +77,7 @@ export default function CoursesTabs({ selectedFilter, onFilterChange }: CoursesT
 
     return animationValue.interpolate({
       inputRange: [midBefore, currentPos, midAfter],
-      outputRange: [colors.textMuted, selectedTextColor, colors.textMuted],
+      outputRange: [unselectedTextColor, selectedTextColor, unselectedTextColor],
       extrapolate: 'clamp',
     });
   };
@@ -100,21 +97,21 @@ export default function CoursesTabs({ selectedFilter, onFilterChange }: CoursesT
         ]}
       />
       <RadioButton
-        label="Em progresso"
-        selected={selectedFilter === 'inProgress'}
-        onPress={() => onFilterChange('inProgress')}
-        animatedText={animatedText(0)}
-      />
-      <RadioButton
         label="Favoritos"
         selected={selectedFilter === 'favorites'}
         onPress={() => onFilterChange('favorites')}
+        animatedText={animatedText(0)}
+      />
+      <RadioButton
+        label="Em Curso"
+        selected={selectedFilter === 'inProgress'}
+        onPress={() => onFilterChange('inProgress')}
         animatedText={animatedText(1)}
       />
       <RadioButton
-        label="Terminados"
-        selected={selectedFilter === 'completed'}
-        onPress={() => onFilterChange('completed')}
+        label="Certificados"
+        selected={selectedFilter === 'certificates'}
+        onPress={() => onFilterChange('certificates')}
         animatedText={animatedText(2)}
       />
     </View>

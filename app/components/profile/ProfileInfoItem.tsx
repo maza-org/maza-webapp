@@ -28,11 +28,13 @@ export default function ProfileInfoItem({ icon, label, value, children }: Profil
       color: colors.text,
       fontSize: 16,
       fontWeight: '500',
+      fontFamily: 'ManropeMedium',
     },
     infoValue: {
       color: colors.textSecondary,
       fontSize: 14,
       marginLeft: 28,
+      fontFamily: 'ManropeRegular',
     },
   });
 
@@ -42,7 +44,11 @@ export default function ProfileInfoItem({ icon, label, value, children }: Profil
         <Feather name={icon as any} size={20} color={colors.primary} />
         <Text style={styles.infoLabel}>{label}</Text>
       </View>
-      {children || <Text style={styles.infoValue}>{value}</Text>}
+      {children || (
+        <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">
+          {value}
+        </Text>
+      )}
     </View>
   );
 }

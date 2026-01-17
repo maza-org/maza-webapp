@@ -22,6 +22,7 @@ export default function SearchResults({ query, results, onJobPress }: SearchResu
       fontSize: 16,
       color: colors.textMuted,
       marginBottom: 16,
+      fontFamily: 'ManropeRegular',
     },
     listContent: {
       paddingTop: 8,

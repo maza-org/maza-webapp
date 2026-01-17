@@ -25,6 +25,7 @@ export default function CategoriesSection({ categories, handleCategoryPress }: C
       fontWeight: '600',
       color: colors.textMuted,
       marginBottom: 16,
+      fontFamily: 'ManropeBold',
     },
     categoriesContainer: {
       flexDirection: 'row',
@@ -36,7 +37,7 @@ export default function CategoriesSection({ categories, handleCategoryPress }: C
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Pesquisar por categoria</Text>
+      <Text style={styles.sectionTitle}>Pesquisar por Jornada</Text>
       <View style={styles.categoriesContainer}>
         {categories.map((category) => (
           <CategoryButton
