@@ -23,7 +23,9 @@ const ModuleItem = ({ content, index, selectedContent, onPress }: ModuleItemProp
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const isVideo = content.format !== 'Text';
+  const isVideo = content.format === 'Video';
+  const isPdf = content.format === 'PDF';
+  const isText = content.format === 'Text';
   const isSelected = selectedContent?.id === content.id;
   const isCompleted = content.state === 'Finished';
 
@@ -117,7 +119,15 @@ const ModuleItem = ({ content, index, selectedContent, onPress }: ModuleItemProp
       );
     }
 
-    if (content.format === 'Text') {
+    if (isPdf) {
+      return (
+        <View style={themedStyles.iconContainer}>
+          <Ionicons name="document-text" size={20} color={colors.primary} />
+        </View>
+      );
+    }
+
+    if (isText) {
       return (
         <View style={themedStyles.iconContainer}>
           <Ionicons name="reader" size={20} color={colors.primary} />
@@ -145,8 +155,14 @@ const ModuleItem = ({ content, index, selectedContent, onPress }: ModuleItemProp
           <View style={themedStyles.moduleDetails}>{renderIcon()}</View>
         </View>
         <View style={themedStyles.moduleType}>
-          <Feather name={isVideo ? 'video' : 'file-text'} size={14} color={colors.textMuted} />
-          <Text style={themedStyles.moduleTypeText}>{isVideo ? 'Video' : 'Texto'}</Text>
+          <Feather
+            name={isVideo ? 'video' : isPdf ? 'file' : 'file-text'}
+            size={14}
+            color={colors.textMuted}
+          />
+          <Text style={themedStyles.moduleTypeText}>
+            {isVideo ? 'Video' : isPdf ? 'PDF' : 'Texto'}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>
