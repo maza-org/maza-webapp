@@ -2,7 +2,7 @@
   "expo": {
     "name": "Maza",
     "slug": "org-maza-app",
-    "version": "3.8.9",
+    "version": "3.9.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
