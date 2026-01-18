@@ -3,16 +3,55 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import YoutubeIframe from 'react-native-youtube-iframe';
+import { useEventListener } from 'expo';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Content, ContentState, Quiz, QuizState } from '@/types/learning';
 import ModuleItem from '@/components/ModuleItem';
 import { useMarkContentAsCompleted } from '@/services/catalog';
 import { useAuthUser } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import { baseUrl } from '@/services/api';
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
+
+const getFullMediaUrl = (url?: string): string => {
+  if (!url) return '';
+  if (url.startsWith('http') || url.startsWith('blob:')) return url;
+
+  const mediaBaseUrl = baseUrl.replace(/\/api$/, '');
+
+  return `${mediaBaseUrl}${url}`;
+};
+
+const LocalVideoPlayerModal = ({ videoUrl, onVideoEnd }: { videoUrl: string; onVideoEnd: () => void }) => {
+  const fullVideoUrl = getFullMediaUrl(videoUrl);
+  const player = useVideoPlayer(fullVideoUrl, (player) => {
+    player.loop = false;
+    player.play();
+  });
+
+  useEventListener(player, 'playToEnd', () => {
+    onVideoEnd();
+  });
+
+  return (
+    <View style={videoStyles.videoContainer}>
+      <TouchableOpacity style={videoStyles.closeButton} onPress={onVideoEnd}>
+        <Ionicons name="close" size={24} color="#FFF" />
+      </TouchableOpacity>
+      <VideoView
+        style={{ width: width, height: height, flex: 1 }}
+        player={player}
+        allowsFullscreen
+        allowsPictureInPicture
+        nativeControls
+        fullscreenOptions={{ enable: true, orientation: 'landscape', autoExitOnRotate: true }}
+      />
+    </View>
+  );
+};
 
 const videoStyles = StyleSheet.create({
   videoContainer: {
@@ -37,132 +76,6 @@ const videoStyles = StyleSheet.create({
     alignItems: 'center',
   },
 });
-
-const NativeYoutubeIframe = ({ videoId, onVideoEnd }: { videoId: string; onVideoEnd: () => void }) => {
-  React.useEffect(() => {
-    if (Platform.OS !== 'web') return;
-
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data === 'video-ended') {
-        onVideoEnd();
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [onVideoEnd]);
-
-  const iframeHtml = `
-    <!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <style>
-          body { margin: 0; padding: 0; background: #000; }
-          #player { width: 100vw; height: 100vh; }
-        </style>
-      </head>
-      <body>
-        <div id="player"></div>
-        <script>
-          const tag = document.createElement('script');
-          tag.src = "https://www.youtube.com/iframe_api";
-          const firstScriptTag = document.getElementsByTagName('script')[0];
-          firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-          let player;
-          window.onYouTubeIframeAPIReady = function() {
-            player = new window.YT.Player('player', {
-              height: '100%',
-              width: '100%',
-              videoId: '${videoId}',
-              playerVars: {
-                'autoplay': 1,
-                'controls': 1,
-                'modestbranding': 1,
-                'rel': 0,
-                'loop': 0
-              },
-              events: {
-                'onStateChange': onPlayerStateChange
-              }
-            });
-          }
-
-          function onPlayerStateChange(event) {
-            if (event.data === window.YT.PlayerState.ENDED) {
-              window.parent.postMessage('video-ended', '*');
-            }
-          }
-        </script>
-      </body>
-    </html>
-  `;
-
-  return (
-    <View style={videoStyles.videoContainer}>
-      <TouchableOpacity style={videoStyles.closeButton} onPress={onVideoEnd}>
-        <Ionicons name="close" size={24} color="#FFF" />
-      </TouchableOpacity>
-      {Platform.OS === 'web' && (
-        <iframe
-          src={`data:text/html;charset=utf-8,${encodeURIComponent(iframeHtml)}`}
-          style={
-            {
-              width: '100%',
-              height: '100%',
-              border: 'none',
-            } as React.CSSProperties
-          }
-          allowFullScreen
-        />
-      )}
-    </View>
-  );
-};
-
-const YoutubePlayerModal = ({ videoId, onVideoEnd }: { videoId: string; onVideoEnd: () => void }) => {
-  const onStateChange = (state: string) => {
-    if (state === 'ended') {
-      onVideoEnd();
-    }
-  };
-
-  if (Platform.OS === 'web') {
-    return <NativeYoutubeIframe videoId={videoId} onVideoEnd={onVideoEnd} />;
-  }
-
-  return (
-    <View style={videoStyles.videoContainer}>
-      <TouchableOpacity style={videoStyles.closeButton} onPress={onVideoEnd}>
-        <Ionicons name="close" size={24} color="#FFF" />
-      </TouchableOpacity>
-      <YoutubeIframe
-        play={true}
-        initialPlayerParams={{
-          loop: false,
-          controls: true,
-          modestbranding: true,
-          rel: false,
-        }}
-        width={width}
-        height={height}
-        videoId={videoId}
-        onChangeState={onStateChange}
-        webViewProps={{
-          injectedJavaScript: `
-            var element = document.getElementsByClassName('container')[0];
-            element.style.position = 'unset';
-            element.style.paddingBottom = 'unset';
-            // Force fullscreen when video starts playing
-            var player = document.querySelector('iframe');
-            player.requestFullscreen();
-            true;
-          `,
-        }}
-      />
-    </View>
-  );
-};
 
 // Extended content type that handles both Content and UserCourseContent
 interface ExtendedContent extends Content {
@@ -420,10 +333,15 @@ export default function CourseScreen() {
       });
       return;
     } else {
-      setSelectedContent(content);
-      setPlaying(true);
-      // Mark video content as completed when user starts playing
-      markContentAsCompleted(content);
+      // Check if it's a video content (either youtubeID or file/url)
+      const isVideo =
+        content.format === 'Video' || content.youtubeID || content.file?.url || content.url?.endsWith('.mp4');
+
+      if (isVideo) {
+        setSelectedContent(content);
+        setPlaying(true);
+        markContentAsCompleted(content);
+      }
     }
   };
 
@@ -449,8 +367,11 @@ export default function CourseScreen() {
 
   return (
     <>
-      {playing && selectedContent && (
-        <YoutubePlayerModal videoId={selectedContent.youtubeID} onVideoEnd={handleVideoEnd} />
+      {playing && selectedContent && (selectedContent.file?.url || selectedContent.url) && (
+        <LocalVideoPlayerModal
+          videoUrl={selectedContent.file?.url || selectedContent.url}
+          onVideoEnd={handleVideoEnd}
+        />
       )}
       <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
         <ScrollView style={themedStyles.content}>
