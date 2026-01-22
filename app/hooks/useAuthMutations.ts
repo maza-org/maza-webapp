@@ -14,6 +14,7 @@ import {
 } from '@/app/types/auth';
 import useUser from '@/hooks/useUser';
 import { LoginResponse, User } from '@/types/user';
+import { usePostHog } from 'posthog-react-native';
 
 export function usePhoneLogin() {
   return useMutation({
@@ -34,12 +35,22 @@ export function usePhoneLogin() {
 }
 
 export function useOtpVerification() {
+  const posthostog = usePostHog();
+
   return useMutation({
     mutationFn: (data: OtpVerificationRequest) => AuthService.loginWithOtp(data),
     onSuccess: async (response: LoginResponse) => {
       try {
         const userData = await AuthService.getUserData(response.jwt);
         await AuthService.saveUserSession(userData, response.jwt);
+
+        if(posthostog){
+          posthostog.identify(userData.documentId, {
+            name: userData.fullname,
+            identifier: userData.email || userData.phone,
+          });
+        }
+
         navigateAfterLogin();
       } catch (error) {
         console.error('Error fetching user data after OTP verification:', error);
@@ -52,12 +63,22 @@ export function useOtpVerification() {
 }
 
 export function useEmailLogin() {
+  const posthostog = usePostHog();
+
   return useMutation({
     mutationFn: (data: EmailLoginRequest) => AuthService.loginWithEmail(data),
     onSuccess: async (response: LoginResponse) => {
       try {
         const userData = await AuthService.getUserData(response.jwt);
         await AuthService.saveUserSession(userData, response.jwt);
+
+        if(posthostog){
+          posthostog.identify(userData.documentId, {
+            name: userData.fullname,
+            identifier: userData.email || userData.phone,
+          });
+        }
+
         navigateAfterLogin();
       } catch (error) {
         console.error('Error fetching user data after email login:', error);
@@ -70,6 +91,8 @@ export function useEmailLogin() {
 }
 
 export function useCreateAccount() {
+  const posthostog = usePostHog();
+
   return useMutation({
     mutationFn: (data: CreateAccountRequest) => AuthService.createAccount(data),
     onSuccess: async (_, variables) => {
@@ -81,6 +104,14 @@ export function useCreateAccount() {
         });
         const userData = await AuthService.getUserData(loginResponse.jwt);
         await AuthService.saveUserSession(userData, loginResponse.jwt);
+
+        if(posthostog){
+          posthostog.identify(userData.documentId, {
+            name: userData.fullname,
+            identifier: userData.email || userData.phone,
+          });
+        }
+
         navigateAfterLogin();
       } catch (error) {
         console.error('Error during auto-login after registration:', error);

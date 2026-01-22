@@ -2,7 +2,7 @@ import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useSegments, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
@@ -12,6 +12,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { hasSeenOnboarding } from '@/util/onboarding';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
+import { PostHogProvider, usePostHog } from 'posthog-react-native';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -104,18 +105,43 @@ function RootLayoutNav({ onReady }: { onReady: () => void }) {
   // Always render the full tree - splash screen stays visible until isReady
   // This prevents any white screen flash
   return (
-    <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <ThemedNavigator />
-        </ThemeProvider>
-      </QueryClientProvider>
-    </SafeAreaProvider>
+    <PostHogProvider
+      apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY}
+      options={{
+        host: 'https://us.i.posthog.com',
+        enableSessionReplay: false,
+        disabled: __DEV__,
+      }}
+      autocapture={{
+        captureScreens: false, // We'll handle screen tracking manually for Expo Router
+        captureTouches: true,
+      }}
+    >
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <ThemedNavigator />
+          </ThemeProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </PostHogProvider>
   );
 }
 
 function ThemedNavigator() {
   const { isDark } = useTheme();
+  const posthog = usePostHog();
+  const pathname = usePathname();
+  const segments = useSegments();
+
+  // Track screen views whenever the route changes
+  useEffect(() => {
+    if (posthog && pathname) {
+      posthog.screen(pathname, {
+        segments: segments.join('/'),
+      });
+    }
+  }, [pathname, segments, posthog]);
 
   return (
     <NavigationThemeProvider value={isDark ? { ...DarkTheme } : DefaultTheme}>
@@ -130,3 +156,4 @@ function ThemedNavigator() {
     </NavigationThemeProvider>
   );
 }
+

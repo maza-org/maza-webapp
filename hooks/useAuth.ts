@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { usePostHog } from 'posthog-react-native';
 import { AuthUser } from '@/types/learning';
 import api from '@/services/api';
 import { User } from '@/types/user';
@@ -98,9 +99,11 @@ export function useGetUserData(token: string) {
   });
 }
 
-// Set user data in cache
+// Set user data in cache and identify user in PostHog
 export function useSetUserData() {
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
+
   return useMutation({
     mutationFn: async (user: User) => {
       await AsyncStorage.setItem('@user', JSON.stringify(user));
@@ -109,13 +112,22 @@ export function useSetUserData() {
     onSuccess: (user) => {
       // Update the auth user query
       queryClient.setQueryData(['auth-user'], user);
+
+      // Identify user in PostHog for analytics tracking
+      if(posthog){
+        posthog.identify(user.documentId, {
+          name: user.fullname,
+          identifier: user.email || user.phone,
+        });
+      }
     },
   });
 }
 
-// Clear user data (logout)
+// Clear user data (logout) and reset PostHog identity
 export function useLogout() {
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
   return useMutation({
     mutationFn: async () => {
@@ -124,6 +136,11 @@ export function useLogout() {
     onSuccess: () => {
       // Clear all user-related queries
       queryClient.clear();
+
+      // Reset PostHog identity so events are anonymous again
+      if(posthog){
+        posthog.reset();
+      }
     },
   });
 }
