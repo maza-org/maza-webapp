@@ -12,6 +12,7 @@ import { useAuthUser } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 import { baseUrl } from '@/services/api';
+import YoutubePlayerModal from '@/components/YoutubePlayerModal';
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -365,14 +366,24 @@ export default function CourseScreen() {
     setShowFullDescription(!showFullDescription);
   };
 
+  // Determine which video type to show
+  // We prioritize file.url (direct upload). If that exists, we show direct player.
+  // If not, we check if it is a youtube video (has youtubeID).
+  // If no youtubeID, we fall back to checking .url for a direct link.
+  // This prevents the 'url' field (which might contain the youtube link) from triggering showDirectVideo when we want showYoutubeVideo.
+  const showDirectVideo =
+    playing && selectedContent && (selectedContent.file?.url || (selectedContent.url && !selectedContent.youtubeID));
+  const showYoutubeVideo = playing && selectedContent && selectedContent.youtubeID && !selectedContent.file?.url;
+
   return (
     <>
-      {playing && selectedContent && (selectedContent.file?.url || selectedContent.url) && (
+      {showDirectVideo && (
         <LocalVideoPlayerModal
-          videoUrl={selectedContent.file?.url || selectedContent.url}
+          videoUrl={selectedContent?.file?.url || selectedContent?.url || ''}
           onVideoEnd={handleVideoEnd}
         />
       )}
+      {showYoutubeVideo && <YoutubePlayerModal youtubeId={selectedContent?.youtubeID || ''} onClose={handleVideoEnd} />}
       <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
         <ScrollView style={themedStyles.content}>
           {/* Header */}
