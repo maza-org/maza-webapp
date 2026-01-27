@@ -5,6 +5,20 @@ export interface Content {
   youtubeID: string;
   url: string;
   description: string | null;
+  file?: { url: string; mime?: string };
+}
+// ...
+export interface UserCourseContent {
+  id: number;
+  contentId: number;
+  format: string;
+  date: string | null;
+  state: ContentState;
+  title: string;
+  url: string;
+  youtubeID: string | null;
+  description: string;
+  file?: { url: string; mime?: string };
 }
 
 export interface QuestionOption {
