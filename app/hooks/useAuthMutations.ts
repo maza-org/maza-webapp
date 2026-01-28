@@ -14,7 +14,6 @@ import {
 } from '@/app/types/auth';
 import useUser from '@/hooks/useUser';
 import { LoginResponse, User } from '@/types/user';
-import { usePostHog } from 'posthog-react-native';
 import { identifyAnalyticsUser } from '@/utils/analytics';
 
 export function usePhoneLogin() {
@@ -36,7 +35,6 @@ export function usePhoneLogin() {
 }
 
 export function useOtpVerification() {
-  const posthostog = usePostHog();
 
   return useMutation({
     mutationFn: (data: OtpVerificationRequest) => AuthService.loginWithOtp(data),
@@ -45,12 +43,7 @@ export function useOtpVerification() {
         const userData = await AuthService.getUserData(response.jwt);
         await AuthService.saveUserSession(userData, response.jwt);
 
-        if(posthostog){
-          posthostog.identify(userData.documentId, {
-            name: userData.fullname,
-            identifier: userData.email || userData.phone,
-          });
-        }
+        identifyAnalyticsUser(userData);
 
         navigateAfterLogin();
       } catch (error) {

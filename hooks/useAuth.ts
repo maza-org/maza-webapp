@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { usePostHog } from 'posthog-react-native';
 import { AuthUser } from '@/types/learning';
 import api from '@/services/api';
 import { User } from '@/types/user';

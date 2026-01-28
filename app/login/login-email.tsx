@@ -7,7 +7,6 @@ import Button from '@/components/Button';
 import { baseUrl } from '@/services/api';
 import { ErrorResponse, LoginResponse, User } from '@/types/user';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { usePostHog } from 'posthog-react-native';
 import { navigateAfterLogin } from '@/util/onboarding';
 import AuthContainer, { AuthTopSection, AuthContent, AuthForm } from '@/app/components/auth/AuthContainer';
 import AuthHeader from '@/app/components/auth/AuthHeader';
@@ -22,7 +21,6 @@ export default function LoginEmail() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [warning, setWarning] = useState<string | undefined>(undefined);
-  const posthog = usePostHog();
 
   // Mutation to fetch user data
   const fetchUserDataMutation = useMutation({

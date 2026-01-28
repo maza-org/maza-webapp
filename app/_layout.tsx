@@ -12,7 +12,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { hasSeenOnboarding } from '@/util/onboarding';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
-import { PostHogProvider, usePostHog } from 'posthog-react-native';
+import { PostHogProvider } from 'posthog-react-native';
 import { posthogClient } from '@/utils/analytics';
 
 export {
