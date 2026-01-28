@@ -110,6 +110,12 @@ export function useCreateAccount() {
             name: userData.fullname,
             identifier: userData.email || userData.phone,
           });
+        if(posthostog){
+        
+          posthostog.identify(userData.documentId, {
+            name: userData.fullname,
+            identifier: userData.email || userData.phone,
+          });
         }
 
         navigateAfterLogin();
