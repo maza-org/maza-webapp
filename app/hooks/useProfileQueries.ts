@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { usePostHog } from 'posthog-react-native';
 import { ProfileService } from '@/app/services/profileService';
 import { Certificate, Subject } from '@/app/types/profile';
 import useUser from '@/hooks/useUser';
@@ -63,6 +64,7 @@ export function useDeleteInterest() {
 export function useLogout() {
   const { showLoading, showSuccess, hideToast } = useToast();
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
   return useMutation({
     mutationFn: async () => {
@@ -73,6 +75,9 @@ export function useLogout() {
     onSuccess: () => {
       hideToast();
       showSuccess('Sessão terminada com sucesso');
+
+      // Reset PostHog identity so events are anonymous again
+      posthog.reset();
 
       // Clear all cached data
       queryClient.clear();

@@ -14,6 +14,7 @@ import {
 } from '@/app/types/auth';
 import useUser from '@/hooks/useUser';
 import { LoginResponse, User } from '@/types/user';
+import { identifyAnalyticsUser } from '@/utils/analytics';
 
 export function usePhoneLogin() {
   return useMutation({
@@ -34,12 +35,16 @@ export function usePhoneLogin() {
 }
 
 export function useOtpVerification() {
+
   return useMutation({
     mutationFn: (data: OtpVerificationRequest) => AuthService.loginWithOtp(data),
     onSuccess: async (response: LoginResponse) => {
       try {
         const userData = await AuthService.getUserData(response.jwt);
         await AuthService.saveUserSession(userData, response.jwt);
+
+        identifyAnalyticsUser(userData);
+
         navigateAfterLogin();
       } catch (error) {
         console.error('Error fetching user data after OTP verification:', error);
@@ -58,6 +63,9 @@ export function useEmailLogin() {
       try {
         const userData = await AuthService.getUserData(response.jwt);
         await AuthService.saveUserSession(userData, response.jwt);
+
+       identifyAnalyticsUser(userData);
+
         navigateAfterLogin();
       } catch (error) {
         console.error('Error fetching user data after email login:', error);
@@ -81,6 +89,9 @@ export function useCreateAccount() {
         });
         const userData = await AuthService.getUserData(loginResponse.jwt);
         await AuthService.saveUserSession(userData, loginResponse.jwt);
+
+        identifyAnalyticsUser(userData);
+
         navigateAfterLogin();
       } catch (error) {
         console.error('Error during auto-login after registration:', error);

@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthUser } from '@/types/learning';
 import api from '@/services/api';
 import { User } from '@/types/user';
+import { identifyAnalyticsUser, posthogClient } from '@/utils/analytics';
 
 // Get cached user data with API refresh
 export function useAuthUser() {
@@ -98,9 +99,10 @@ export function useGetUserData(token: string) {
   });
 }
 
-// Set user data in cache
+// Set user data in cache and identify user in PostHog
 export function useSetUserData() {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (user: User) => {
       await AsyncStorage.setItem('@user', JSON.stringify(user));
@@ -109,11 +111,14 @@ export function useSetUserData() {
     onSuccess: (user) => {
       // Update the auth user query
       queryClient.setQueryData(['auth-user'], user);
+
+      // Identify user in PostHog for analytics tracking
+      identifyAnalyticsUser(user);
     },
   });
 }
 
-// Clear user data (logout)
+// Clear user data (logout) and reset PostHog identity
 export function useLogout() {
   const queryClient = useQueryClient();
 
@@ -124,6 +129,11 @@ export function useLogout() {
     onSuccess: () => {
       // Clear all user-related queries
       queryClient.clear();
+
+      // Reset PostHog identity so events are anonymous again
+      if(posthogClient){
+        posthogClient.reset();
+      }
     },
   });
 }
