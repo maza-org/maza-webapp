@@ -4,6 +4,7 @@ import { usePostHog } from 'posthog-react-native';
 import { AuthUser } from '@/types/learning';
 import api from '@/services/api';
 import { User } from '@/types/user';
+import { identifyAnalyticsUser, posthogClient } from '@/utils/analytics';
 
 // Get cached user data with API refresh
 export function useAuthUser() {
@@ -102,7 +103,6 @@ export function useGetUserData(token: string) {
 // Set user data in cache and identify user in PostHog
 export function useSetUserData() {
   const queryClient = useQueryClient();
-  const posthog = usePostHog();
 
   return useMutation({
     mutationFn: async (user: User) => {
@@ -114,12 +114,7 @@ export function useSetUserData() {
       queryClient.setQueryData(['auth-user'], user);
 
       // Identify user in PostHog for analytics tracking
-      if(posthog){
-        posthog.identify(user.documentId, {
-          name: user.fullname,
-          identifier: user.email || user.phone,
-        });
-      }
+      identifyAnalyticsUser(user);
     },
   });
 }
@@ -127,7 +122,6 @@ export function useSetUserData() {
 // Clear user data (logout) and reset PostHog identity
 export function useLogout() {
   const queryClient = useQueryClient();
-  const posthog = usePostHog();
 
   return useMutation({
     mutationFn: async () => {
@@ -138,8 +132,8 @@ export function useLogout() {
       queryClient.clear();
 
       // Reset PostHog identity so events are anonymous again
-      if(posthog){
-        posthog.reset();
+      if(posthogClient){
+        posthogClient.reset();
       }
     },
   });

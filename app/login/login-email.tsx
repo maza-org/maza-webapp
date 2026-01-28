@@ -14,6 +14,7 @@ import AuthHeader from '@/app/components/auth/AuthHeader';
 import AuthTitle from '@/app/components/auth/AuthTitle';
 import FormInput from '@/app/components/auth/FormInput';
 import AuthFooter from '@/app/components/auth/AuthFooter';
+import { identifyAnalyticsUser } from '@/utils/analytics';
 
 export default function LoginEmail() {
   const [identifier, setIdentifier] = useState('');
@@ -70,13 +71,7 @@ export default function LoginEmail() {
           await AsyncStorage.setItem('@user', JSON.stringify(userWithToken));
 
           // Identify user in PostHog for analytics tracking
-          if (posthog) {
-            posthog.identify(userData.documentId, {
-              name: userData.fullname,
-              identifier: userData.email || userData.phone,
-            });
-          }
-
+          identifyAnalyticsUser(userData);
           // Navigate based on onboarding status and interests
           await navigateAfterLogin(userData.interests);
         } else {

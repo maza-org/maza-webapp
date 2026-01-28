@@ -13,6 +13,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { hasSeenOnboarding } from '@/util/onboarding';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { PostHogProvider, usePostHog } from 'posthog-react-native';
+import { posthogClient } from '@/utils/analytics';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -106,12 +107,7 @@ function RootLayoutNav({ onReady }: { onReady: () => void }) {
   // This prevents any white screen flash
   return (
     <PostHogProvider
-      apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY}
-      options={{
-        host: 'https://us.i.posthog.com',
-        enableSessionReplay: false,
-        disabled: __DEV__,
-      }}
+      client={posthogClient}
       autocapture={{
         captureScreens: false, // We'll handle screen tracking manually for Expo Router
         captureTouches: true,
@@ -130,18 +126,17 @@ function RootLayoutNav({ onReady }: { onReady: () => void }) {
 
 function ThemedNavigator() {
   const { isDark } = useTheme();
-  const posthog = usePostHog();
   const pathname = usePathname();
   const segments = useSegments();
 
   // Track screen views whenever the route changes
   useEffect(() => {
-    if (posthog && pathname) {
-      posthog.screen(pathname, {
+    if (posthogClient && pathname) {
+      posthogClient.screen(pathname, {
         segments: segments.join('/'),
       });
     }
-  }, [pathname, segments, posthog]);
+  }, [pathname, segments, posthogClient]);
 
   return (
     <NavigationThemeProvider value={isDark ? { ...DarkTheme } : DefaultTheme}>

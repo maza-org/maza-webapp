@@ -15,6 +15,7 @@ import {
 import useUser from '@/hooks/useUser';
 import { LoginResponse, User } from '@/types/user';
 import { usePostHog } from 'posthog-react-native';
+import { identifyAnalyticsUser } from '@/utils/analytics';
 
 export function usePhoneLogin() {
   return useMutation({
@@ -63,8 +64,6 @@ export function useOtpVerification() {
 }
 
 export function useEmailLogin() {
-  const posthostog = usePostHog();
-
   return useMutation({
     mutationFn: (data: EmailLoginRequest) => AuthService.loginWithEmail(data),
     onSuccess: async (response: LoginResponse) => {
@@ -72,12 +71,7 @@ export function useEmailLogin() {
         const userData = await AuthService.getUserData(response.jwt);
         await AuthService.saveUserSession(userData, response.jwt);
 
-        if(posthostog){
-          posthostog.identify(userData.documentId, {
-            name: userData.fullname,
-            identifier: userData.email || userData.phone,
-          });
-        }
+       identifyAnalyticsUser(userData);
 
         navigateAfterLogin();
       } catch (error) {
@@ -91,8 +85,6 @@ export function useEmailLogin() {
 }
 
 export function useCreateAccount() {
-  const posthostog = usePostHog();
-
   return useMutation({
     mutationFn: (data: CreateAccountRequest) => AuthService.createAccount(data),
     onSuccess: async (_, variables) => {
@@ -105,18 +97,7 @@ export function useCreateAccount() {
         const userData = await AuthService.getUserData(loginResponse.jwt);
         await AuthService.saveUserSession(userData, loginResponse.jwt);
 
-        if(posthostog){
-          posthostog.identify(userData.documentId, {
-            name: userData.fullname,
-            identifier: userData.email || userData.phone,
-          });
-        if(posthostog){
-        
-          posthostog.identify(userData.documentId, {
-            name: userData.fullname,
-            identifier: userData.email || userData.phone,
-          });
-        }
+        identifyAnalyticsUser(userData);
 
         navigateAfterLogin();
       } catch (error) {
