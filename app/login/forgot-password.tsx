@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import Button from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
@@ -115,83 +115,95 @@ export default function ForgotPassword() {
 
   if (success) {
     return (
-      <AuthContainer>
-        <AuthTopSection>
-          <AuthHeader />
-          <AuthTitle title="Código Enviado" />
-        </AuthTopSection>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      >
+        <AuthContainer>
+          <AuthTopSection>
+            <AuthHeader />
+            <AuthTitle title="Código Enviado" />
+          </AuthTopSection>
 
-        <AuthContent>
-          <View style={styles.successContainer}>
-            <View style={styles.successIconContainer}>
-              <Ionicons name="checkmark-circle" size={64} color="#4CAF50" />
+          <AuthContent>
+            <View style={styles.successContainer}>
+              <View style={styles.successIconContainer}>
+                <Ionicons name="checkmark-circle" size={64} color="#4CAF50" />
+              </View>
+              <Text style={styles.successTitle}>PIN enviado com sucesso!</Text>
+              <Text style={styles.successMessage}>
+                Enviámos um código de verificação para{'\n'}
+                <Text style={styles.successIdentifier}>{email}</Text>
+              </Text>
+              <Text style={styles.successInstructions}>
+                Por favor, verifique a sua caixa de entrada e use o código para redefinir a sua palavra-passe.
+              </Text>
             </View>
-            <Text style={styles.successTitle}>PIN enviado com sucesso!</Text>
-            <Text style={styles.successMessage}>
-              Enviámos um código de verificação para{'\n'}
-              <Text style={styles.successIdentifier}>{email}</Text>
-            </Text>
-            <Text style={styles.successInstructions}>
-              Por favor, verifique a sua caixa de entrada e use o código para redefinir a sua palavra-passe.
-            </Text>
-          </View>
 
-          <Button
-            text="Introduzir Código"
-            handle={() => router.push({ pathname: '/login/reset-password', params: { email } })}
-          />
+            <Button
+              text="Introduzir Código"
+              handle={() => router.push({ pathname: '/login/reset-password', params: { email } })}
+            />
 
-          <TouchableOpacity
-            style={styles.resendContainer}
-            onPress={() => {
-              setSuccess(false);
-              handleSubmit();
-            }}
-          >
-            <Text style={styles.resendText}>Não recebeu o código? </Text>
-            <Text style={styles.resendLink}>Reenviar</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.resendContainer}
+              onPress={() => {
+                setSuccess(false);
+                handleSubmit();
+              }}
+            >
+              <Text style={styles.resendText}>Não recebeu o código? </Text>
+              <Text style={styles.resendLink}>Reenviar</Text>
+            </TouchableOpacity>
 
-          <AuthFooter linkText="Voltar ao Login" onLinkPress={() => router.back()} />
-        </AuthContent>
-      </AuthContainer>
+            <AuthFooter linkText="Voltar ao Login" onLinkPress={() => router.back()} />
+          </AuthContent>
+        </AuthContainer>
+      </KeyboardAvoidingView>
     );
   }
 
   return (
-    <AuthContainer>
-      <AuthTopSection>
-        <AuthHeader />
-        <AuthTitle title="Recuperar Palavra-passe" />
-        <Text style={styles.subtitleText}>Insira o seu email para receber um código de verificação.</Text>
-      </AuthTopSection>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    >
+      <AuthContainer>
+        <AuthTopSection>
+          <AuthHeader />
+          <AuthTitle title="Recuperar Palavra-passe" />
+          <Text style={styles.subtitleText}>Insira o seu email para receber um código de verificação.</Text>
+        </AuthTopSection>
 
-      <AuthContent>
-        <AuthForm>
-          <FormInput
-            label="Email"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              if (error) setError('');
-            }}
-            autoCapitalize="none"
-            error={error}
+        <AuthContent>
+          <AuthForm>
+            <FormInput
+              label="Email"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (error) setError('');
+              }}
+              autoCapitalize="none"
+              error={error}
+            />
+          </AuthForm>
+
+          <Button
+            text={forgotPasswordMutation.isPending ? 'A enviar...' : 'Enviar Código'}
+            handle={handleSubmit}
+            disabled={!email.trim() || forgotPasswordMutation.isPending}
+            loading={forgotPasswordMutation.isPending}
           />
-        </AuthForm>
 
-        <Button
-          text={forgotPasswordMutation.isPending ? 'A enviar...' : 'Enviar Código'}
-          handle={handleSubmit}
-          disabled={!email.trim() || forgotPasswordMutation.isPending}
-          loading={forgotPasswordMutation.isPending}
-        />
+          <AuthFooter linkText="Já tem um código?" onLinkPress={() => router.push('/login/reset-password')} />
 
-        <AuthFooter linkText="Já tem um código?" onLinkPress={() => router.push('/login/reset-password')} />
-
-        <AuthFooter linkText="Voltar ao Login" onLinkPress={() => router.back()} />
-      </AuthContent>
-    </AuthContainer>
+          <AuthFooter linkText="Voltar ao Login" onLinkPress={() => router.back()} />
+        </AuthContent>
+      </AuthContainer>
+    </KeyboardAvoidingView>
   );
 }

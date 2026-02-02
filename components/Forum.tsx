@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Image, Modal } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Image, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useForumComments, useDeleteForumComment } from '@/services/catalog';
 import { useAuthUser } from '@/hooks/useAuth';
@@ -507,109 +507,115 @@ const Forum = ({ courseId, onReplySelect }: ForumProps) => {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.sortContainer}>
-        <Text style={styles.commentsCountText}>{comments?.length || 0} Comentários</Text>
-        <TouchableOpacity
-          style={styles.sortButton}
-          onPress={() => setSortOrder((prev) => (prev === 'newest' ? 'oldest' : 'newest'))}
-        >
-          <Ionicons name="swap-vertical" size={16} color={colors.textMuted} />
-          <Text style={styles.sortText}>{sortOrder === 'newest' ? 'Mais recentes' : 'Mais antigos'}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.listContent}>
-        {sortedComments.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>Seja o primeiro a comentar!</Text>
-            <Text style={styles.emptyText}>Inicie uma discussão sobre este curso.</Text>
-          </View>
-        ) : (
-          sortedComments.map((item) => (
-            <CommentItem
-              key={item.id.toString()}
-              comment={item}
-              courseId={courseId}
-              token={token}
-              currentUserEmail={user?.email}
-              onReply={(comment) => {
-                if (checkAuth() && onReplySelect) {
-                  onReplySelect(comment);
-                }
-              }}
-              onDelete={handleDeleteComment}
-              deletingCommentId={deletingCommentId}
-            />
-          ))
-        )}
-      </View>
-
-      <Modal visible={deleteModalVisible} transparent animationType="fade" onRequestClose={cancelDelete}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            {deleteStatus === 'error' ? (
-              <>
-                <View style={styles.modalIconContainer}>
-                  <Ionicons name="close" size={32} color="#FF4B4B" />
-                </View>
-                <Text style={styles.modalTitle}>Erro ao apagar</Text>
-                <Text style={styles.modalMessage}>Não foi possível apagar o comentário. Tente novamente.</Text>
-                <View style={styles.modalButtons}>
-                  <TouchableOpacity style={styles.modalDeleteButton} onPress={confirmDelete}>
-                    <Text style={styles.modalDeleteText}>Tentar novamente</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.modalCancelButton} onPress={cancelDelete}>
-                    <Text style={styles.modalCancelText}>Fechar</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              <>
-                <View style={styles.modalIconContainer}>
-                  <Ionicons name="trash-outline" size={32} color="#FF4B4B" />
-                </View>
-                <Text style={styles.modalTitle}>Apagar comentário</Text>
-                {commentToDelete && (
-                  <View style={styles.commentPreview}>
-                    <Text style={styles.commentPreviewText} numberOfLines={2}>
-                      "{commentToDelete.comment.length > 80
-                        ? `${commentToDelete.comment.substring(0, 80)}...`
-                        : commentToDelete.comment}"
-                    </Text>
-                  </View>
-                )}
-                <Text style={styles.modalMessage}>
-                  Esta ação não pode ser desfeita.
-                </Text>
-                <View style={styles.modalButtons}>
-                  <TouchableOpacity
-                    style={[styles.modalDeleteButton, deleteStatus === 'loading' && styles.modalButtonDisabled]}
-                    onPress={confirmDelete}
-                    disabled={deleteStatus === 'loading'}
-                  >
-                    {deleteStatus === 'loading' ? (
-                      <ActivityIndicator size="small" color="#FFF" />
-                    ) : (
-                      <Text style={styles.modalDeleteText}>Apagar</Text>
-                    )}
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.modalCancelButton, deleteStatus === 'loading' && styles.modalButtonDisabled]}
-                    onPress={cancelDelete}
-                    disabled={deleteStatus === 'loading'}
-                  >
-                    <Text style={styles.modalCancelText}>Cancelar</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </View>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    >
+      <View style={styles.container}>
+        <View style={styles.sortContainer}>
+          <Text style={styles.commentsCountText}>{comments?.length || 0} Comentários</Text>
+          <TouchableOpacity
+            style={styles.sortButton}
+            onPress={() => setSortOrder((prev) => (prev === 'newest' ? 'oldest' : 'newest'))}
+          >
+            <Ionicons name="swap-vertical" size={16} color={colors.textMuted} />
+            <Text style={styles.sortText}>{sortOrder === 'newest' ? 'Mais recentes' : 'Mais antigos'}</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
 
-      <LoginBottomSheet visible={loginSheetVisible} onClose={() => setLoginSheetVisible(false)} />
-    </View>
+        <View style={styles.listContent}>
+          {sortedComments.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyTitle}>Seja o primeiro a comentar!</Text>
+              <Text style={styles.emptyText}>Inicie uma discussão sobre este curso.</Text>
+            </View>
+          ) : (
+            sortedComments.map((item) => (
+              <CommentItem
+                key={item.id.toString()}
+                comment={item}
+                courseId={courseId}
+                token={token}
+                currentUserEmail={user?.email}
+                onReply={(comment) => {
+                  if (checkAuth() && onReplySelect) {
+                    onReplySelect(comment);
+                  }
+                }}
+                onDelete={handleDeleteComment}
+                deletingCommentId={deletingCommentId}
+              />
+            ))
+          )}
+        </View>
+
+        <Modal visible={deleteModalVisible} transparent animationType="fade" onRequestClose={cancelDelete}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              {deleteStatus === 'error' ? (
+                <>
+                  <View style={styles.modalIconContainer}>
+                    <Ionicons name="close" size={32} color="#FF4B4B" />
+                  </View>
+                  <Text style={styles.modalTitle}>Erro ao apagar</Text>
+                  <Text style={styles.modalMessage}>Não foi possível apagar o comentário. Tente novamente.</Text>
+                  <View style={styles.modalButtons}>
+                    <TouchableOpacity style={styles.modalDeleteButton} onPress={confirmDelete}>
+                      <Text style={styles.modalDeleteText}>Tentar novamente</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.modalCancelButton} onPress={cancelDelete}>
+                      <Text style={styles.modalCancelText}>Fechar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View style={styles.modalIconContainer}>
+                    <Ionicons name="trash-outline" size={32} color="#FF4B4B" />
+                  </View>
+                  <Text style={styles.modalTitle}>Apagar comentário</Text>
+                  {commentToDelete && (
+                    <View style={styles.commentPreview}>
+                      <Text style={styles.commentPreviewText} numberOfLines={2}>
+                        "{commentToDelete.comment.length > 80
+                          ? `${commentToDelete.comment.substring(0, 80)}...`
+                          : commentToDelete.comment}"
+                      </Text>
+                    </View>
+                  )}
+                  <Text style={styles.modalMessage}>
+                    Esta ação não pode ser desfeita.
+                  </Text>
+                  <View style={styles.modalButtons}>
+                    <TouchableOpacity
+                      style={[styles.modalDeleteButton, deleteStatus === 'loading' && styles.modalButtonDisabled]}
+                      onPress={confirmDelete}
+                      disabled={deleteStatus === 'loading'}
+                    >
+                      {deleteStatus === 'loading' ? (
+                        <ActivityIndicator size="small" color="#FFF" />
+                      ) : (
+                        <Text style={styles.modalDeleteText}>Apagar</Text>
+                      )}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.modalCancelButton, deleteStatus === 'loading' && styles.modalButtonDisabled]}
+                      onPress={cancelDelete}
+                      disabled={deleteStatus === 'loading'}
+                    >
+                      <Text style={styles.modalCancelText}>Cancelar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
+
+        <LoginBottomSheet visible={loginSheetVisible} onClose={() => setLoginSheetVisible(false)} />
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 

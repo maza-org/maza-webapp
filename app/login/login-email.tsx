@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import axios, { AxiosError } from 'axios';
@@ -155,80 +155,86 @@ export default function LoginEmail() {
   const isLoading = loginMutation.isPending || fetchUserDataMutation.isPending;
 
   return (
-    <AuthContainer edges={['top', 'bottom']}>
-      <AuthTopSection>
-        <AuthHeader />
-        <AuthTitle
-          title="Login com Email"
-          subtitle="Não possui uma conta?"
-          linkText="Registar"
-          linkAction={() => router.push('/login/create-email')}
-        />
-      </AuthTopSection>
-
-      <AuthContent>
-        <AuthForm>
-          <FormInput
-            label="Email ou Username"
-            keyboardType="email-address"
-            value={identifier}
-            onChangeText={(text) => {
-              setIdentifier(text);
-              if (error) setError(undefined);
-            }}
-            autoCapitalize="none"
-            editable={!isLoading}
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    >
+      <AuthContainer edges={['top', 'bottom']}>
+        <AuthTopSection>
+          <AuthHeader />
+          <AuthTitle
+            title="Login com Email"
+            subtitle="Não possui uma conta?"
+            linkText="Registar"
+            linkAction={() => router.push('/login/create-email')}
           />
+        </AuthTopSection>
 
-          <View>
+        <AuthContent>
+          <AuthForm>
             <FormInput
-              label="Palavra-passe"
-              value={password}
+              label="Email ou Username"
+              keyboardType="email-address"
+              value={identifier}
               onChangeText={(text) => {
-                setPassword(text);
+                setIdentifier(text);
                 if (error) setError(undefined);
-                if (warning) setWarning(undefined);
-                if (text.includes(' ')) {
-                  setWarning('Atenção: A palavra-passe contém espaços');
-                }
               }}
-              showPasswordToggle
-              isPasswordVisible={showPassword}
-              onPasswordToggle={() => setShowPassword(!showPassword)}
               autoCapitalize="none"
               editable={!isLoading}
             />
-            <TouchableOpacity onPress={() => router.push('/login/forgot-password')} disabled={isLoading}>
-              <Text style={styles.forgotPasswordLink}>Esqueceu a palavra-passe?</Text>
-            </TouchableOpacity>
-          </View>
 
-          {warning && (
-            <View style={styles.warningContainer}>
-              <Text style={styles.warningText}>{warning}</Text>
+            <View>
+              <FormInput
+                label="Palavra-passe"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (error) setError(undefined);
+                  if (warning) setWarning(undefined);
+                  if (text.includes(' ')) {
+                    setWarning('Atenção: A palavra-passe contém espaços');
+                  }
+                }}
+                showPasswordToggle
+                isPasswordVisible={showPassword}
+                onPasswordToggle={() => setShowPassword(!showPassword)}
+                autoCapitalize="none"
+                editable={!isLoading}
+              />
+              <TouchableOpacity onPress={() => router.push('/login/forgot-password')} disabled={isLoading}>
+                <Text style={styles.forgotPasswordLink}>Esqueceu a palavra-passe?</Text>
+              </TouchableOpacity>
             </View>
-          )}
 
-          {error && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
-        </AuthForm>
+            {warning && (
+              <View style={styles.warningContainer}>
+                <Text style={styles.warningText}>{warning}</Text>
+              </View>
+            )}
 
-        <Button
-          text={isLoading ? 'A processar...' : 'Entrar'}
-          handle={handleLogin}
-          disabled={!identifier || !password || isLoading}
-          loading={isLoading}
-        />
+            {error && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            )}
+          </AuthForm>
 
-        <AuthFooter
-          linkText="Prefere usar número de telefone?"
-          onLinkPress={() => router.push('/login')}
-        />
-      </AuthContent>
-    </AuthContainer>
+          <Button
+            text={isLoading ? 'A processar...' : 'Entrar'}
+            handle={handleLogin}
+            disabled={!identifier || !password || isLoading}
+            loading={isLoading}
+          />
+
+          <AuthFooter
+            linkText="Prefere usar número de telefone?"
+            onLinkPress={() => router.push('/login')}
+          />
+        </AuthContent>
+      </AuthContainer>
+    </KeyboardAvoidingView>
   );
 }
 

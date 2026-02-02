@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import Button from '@/components/Button';
 import { validateMozambiquePhone } from '@/util/util';
@@ -64,42 +65,48 @@ export default function Login() {
   };
 
   return (
-    <AuthContainer>
-      <AuthTopSection>
-        <AuthHeader />
-        <AuthTitle
-          title="Faça login com a sua conta"
-          subtitle="Não possui uma conta?"
-          linkText="Registar"
-          linkAction={() => router.push('/login/create-email')}
-        />
-      </AuthTopSection>
-
-      <AuthContent>
-        <AuthForm>
-          <FormInput
-            label="Número de Telemóvel"
-            keyboardType="phone-pad"
-            value={phoneNumber}
-            onChangeText={handlePhoneNumberChange}
-            onBlur={() => setTouched(true)}
-            maxLength={13}
-            error={error && touched ? error : undefined}
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    >
+      <AuthContainer>
+        <AuthTopSection>
+          <AuthHeader />
+          <AuthTitle
+            title="Faça login com a sua conta"
+            subtitle="Não possui uma conta?"
+            linkText="Registar"
+            linkAction={() => router.push('/login/create-email')}
           />
-        </AuthForm>
+        </AuthTopSection>
 
-        <Button
-          text={phoneLoginMutation.isPending ? 'A processar...' : 'Entrar'}
-          handle={handleLogin}
-          disabled={!!error || !phoneNumber || phoneLoginMutation.isPending}
-          loading={phoneLoginMutation.isPending}
-        />
+        <AuthContent>
+          <AuthForm>
+            <FormInput
+              label="Número de Telemóvel"
+              keyboardType="phone-pad"
+              value={phoneNumber}
+              onChangeText={handlePhoneNumberChange}
+              onBlur={() => setTouched(true)}
+              maxLength={13}
+              error={error && touched ? error : undefined}
+            />
+          </AuthForm>
 
-        <AuthFooter
-          linkText="Prefere usar email e palavra-passe?"
-          onLinkPress={() => router.push('/login/login-email')}
-        />
-      </AuthContent>
-    </AuthContainer>
+          <Button
+            text={phoneLoginMutation.isPending ? 'A processar...' : 'Entrar'}
+            handle={handleLogin}
+            disabled={!!error || !phoneNumber || phoneLoginMutation.isPending}
+            loading={phoneLoginMutation.isPending}
+          />
+
+          <AuthFooter
+            linkText="Prefere usar email e palavra-passe?"
+            onLinkPress={() => router.push('/login/login-email')}
+          />
+        </AuthContent>
+      </AuthContainer>
+    </KeyboardAvoidingView>
   );
 }

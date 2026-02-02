@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, Image } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, Image, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCourseReviews, useSubmitReview } from '@/services/catalog';
 import { useAuthUser } from '@/hooks/useAuth';
@@ -588,103 +588,109 @@ const Reviews = ({ courseId, onReviewSubmitted }: ReviewsProps) => {
   }
 
   return (
-    <View style={styles.container}>
-      <RatingSummary reviews={reviews} />
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    >
+      <View style={styles.container}>
+        <RatingSummary reviews={reviews} />
 
-      {token ? (
-        !showReviewForm ? (
-          <TouchableOpacity style={styles.addReviewButton} onPress={() => setShowReviewForm(true)}>
-            <Ionicons name="create-outline" size={20} color={colors.primary} />
-            <Text style={styles.addReviewButtonText}>Escrever uma opinião</Text>
-          </TouchableOpacity>
+        {token ? (
+          !showReviewForm ? (
+            <TouchableOpacity style={styles.addReviewButton} onPress={() => setShowReviewForm(true)}>
+              <Ionicons name="create-outline" size={20} color={colors.primary} />
+              <Text style={styles.addReviewButtonText}>Escrever uma opinião</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.reviewForm}>
+              <Text style={styles.reviewFormTitle}>Sua opinião</Text>
+              <View style={styles.ratingSelector}>
+                <Text style={styles.ratingSelectorLabel}>Sua nota:</Text>
+                <StarRating rating={rating} size={32} onRatingChange={setRating} interactive />
+              </View>
+              {rating > 0 && (
+                <Text style={styles.ratingText}>
+                  {rating === 1 && 'Muito fraco'}
+                  {rating === 2 && 'Fraco'}
+                  {rating === 3 && 'Razoável'}
+                  {rating === 4 && 'Bom'}
+                  {rating === 5 && 'Excelente'}
+                </Text>
+              )}
+              <TextInput
+                style={styles.reviewInput}
+                placeholder="Compartilhe sua experiência com este curso..."
+                placeholderTextColor={colors.textMuted}
+                value={comment}
+                onChangeText={setComment}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+              <View style={styles.reviewFormButtons}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => {
+                    setShowReviewForm(false);
+                    setRating(0);
+                    setComment('');
+                  }}
+                >
+                  <Text style={styles.cancelButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.submitButton,
+                    (rating === 0 || submitReviewMutation.isPending) && styles.submitButtonDisabled,
+                  ]}
+                  onPress={handleSubmitReview}
+                  disabled={rating === 0 || submitReviewMutation.isPending}
+                >
+                  {submitReviewMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Text style={styles.submitButtonText}>Enviar</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+              {submitReviewMutation.isError && (
+                <Text style={styles.formErrorText}>Erro ao enviar opinião. Tente novamente.</Text>
+              )}
+            </View>
+          )
         ) : (
-          <View style={styles.reviewForm}>
-            <Text style={styles.reviewFormTitle}>Sua opinião</Text>
-            <View style={styles.ratingSelector}>
-              <Text style={styles.ratingSelectorLabel}>Sua nota:</Text>
-              <StarRating rating={rating} size={32} onRatingChange={setRating} interactive />
-            </View>
-            {rating > 0 && (
-              <Text style={styles.ratingText}>
-                {rating === 1 && 'Muito fraco'}
-                {rating === 2 && 'Fraco'}
-                {rating === 3 && 'Razoável'}
-                {rating === 4 && 'Bom'}
-                {rating === 5 && 'Excelente'}
-              </Text>
-            )}
-            <TextInput
-              style={styles.reviewInput}
-              placeholder="Compartilhe sua experiência com este curso..."
-              placeholderTextColor={colors.textMuted}
-              value={comment}
-              onChangeText={setComment}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-            <View style={styles.reviewFormButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => {
-                  setShowReviewForm(false);
-                  setRating(0);
-                  setComment('');
-                }}
-              >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.submitButton,
-                  (rating === 0 || submitReviewMutation.isPending) && styles.submitButtonDisabled,
-                ]}
-                onPress={handleSubmitReview}
-                disabled={rating === 0 || submitReviewMutation.isPending}
-              >
-                {submitReviewMutation.isPending ? (
-                  <ActivityIndicator size="small" color="#FFF" />
-                ) : (
-                  <Text style={styles.submitButtonText}>Enviar</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-            {submitReviewMutation.isError && (
-              <Text style={styles.formErrorText}>Erro ao enviar opinião. Tente novamente.</Text>
-            )}
-          </View>
-        )
-      ) : (
-        <TouchableOpacity style={styles.loginPromptButton} onPress={() => setLoginSheetVisible(true)}>
-          <Ionicons name="lock-closed-outline" size={18} color={colors.textMuted} />
-          <Text style={styles.loginPromptButtonText}>Faça login para avaliar este curso</Text>
-        </TouchableOpacity>
-      )}
-
-      <View style={styles.sortContainer}>
-        <Text style={styles.reviewsCountText}>{reviews.length} {reviews.length === 1 ? 'Opinião' : 'Opiniões'}</Text>
-        {reviews.length > 1 && (
-          <TouchableOpacity style={styles.sortButton} onPress={cycleSortOrder}>
-            <Ionicons name="swap-vertical" size={16} color={colors.textMuted} />
-            <Text style={styles.sortText}>{getSortLabel()}</Text>
+          <TouchableOpacity style={styles.loginPromptButton} onPress={() => setLoginSheetVisible(true)}>
+            <Ionicons name="lock-closed-outline" size={18} color={colors.textMuted} />
+            <Text style={styles.loginPromptButtonText}>Faça login para avaliar este curso</Text>
           </TouchableOpacity>
         )}
-      </View>
 
-      <View style={styles.listContent}>
-        {sortedReviews.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="chatbubbles-outline" size={48} color={colors.textMuted} />
-            <Text style={styles.emptyTitle}>Sem opiniões ainda</Text>
-            <Text style={styles.emptyText}>Seja o primeiro a avaliar este curso!</Text>
-          </View>
-        ) : (
-          sortedReviews.map((review) => <ReviewItem key={review.id} review={review} />)
-        )}
-      </View>
+        <View style={styles.sortContainer}>
+          <Text style={styles.reviewsCountText}>{reviews.length} {reviews.length === 1 ? 'Opinião' : 'Opiniões'}</Text>
+          {reviews.length > 1 && (
+            <TouchableOpacity style={styles.sortButton} onPress={cycleSortOrder}>
+              <Ionicons name="swap-vertical" size={16} color={colors.textMuted} />
+              <Text style={styles.sortText}>{getSortLabel()}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
-      <LoginBottomSheet visible={loginSheetVisible} onClose={() => setLoginSheetVisible(false)} />
-    </View>
+        <View style={styles.listContent}>
+          {sortedReviews.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="chatbubbles-outline" size={48} color={colors.textMuted} />
+              <Text style={styles.emptyTitle}>Sem opiniões ainda</Text>
+              <Text style={styles.emptyText}>Seja o primeiro a avaliar este curso!</Text>
+            </View>
+          ) : (
+            sortedReviews.map((review) => <ReviewItem key={review.id} review={review} />)
+          )}
+        </View>
+
+        <LoginBottomSheet visible={loginSheetVisible} onClose={() => setLoginSheetVisible(false)} />
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 

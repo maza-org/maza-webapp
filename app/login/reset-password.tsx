@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import Button from '@/components/Button';
 import { useResetPassword } from '@/app/hooks/useAuthMutations';
@@ -65,66 +65,72 @@ export default function ResetPassword() {
   };
 
   return (
-    <AuthContainer>
-      <AuthTopSection>
-        <AuthHeader />
-        <AuthTitle title="Redefinir Palavra-passe" />
-        <Text style={styles.subtitleText}>
-          Insira o código enviado para {email || 'o seu email'} e crie uma nova palavra-passe.
-        </Text>
-      </AuthTopSection>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior="padding"
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    >
+      <AuthContainer>
+        <AuthTopSection>
+          <AuthHeader />
+          <AuthTitle title="Redefinir Palavra-passe" />
+          <Text style={styles.subtitleText}>
+            Insira o código enviado para {email || 'o seu email'} e crie uma nova palavra-passe.
+          </Text>
+        </AuthTopSection>
 
-      <AuthContent>
-        {errors.general && <Text style={styles.errorText}>{errors.general}</Text>}
-        <AuthForm>
-          <FormInput
-            label="Código de Verificação"
-            value={code}
-            onChangeText={(text) => {
-              setCode(text);
-              clearError('code');
-            }}
-            autoCapitalize="none"
-            error={errors.code}
+        <AuthContent>
+          {errors.general && <Text style={styles.errorText}>{errors.general}</Text>}
+          <AuthForm>
+            <FormInput
+              label="Código de Verificação"
+              value={code}
+              onChangeText={(text) => {
+                setCode(text);
+                clearError('code');
+              }}
+              autoCapitalize="none"
+              error={errors.code}
+            />
+
+            <FormInput
+              label="Nova Palavra-passe"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                clearError('password');
+              }}
+              showPasswordToggle
+              isPasswordVisible={showPassword}
+              onPasswordToggle={() => setShowPassword(!showPassword)}
+              error={errors.password}
+            />
+
+            <FormInput
+              label="Confirmar Palavra-passe"
+              value={confirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                clearError('confirmPassword');
+              }}
+              showPasswordToggle
+              isPasswordVisible={showConfirmPassword}
+              onPasswordToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+              error={errors.confirmPassword}
+            />
+          </AuthForm>
+
+          <Button
+            text={resetPasswordMutation.isPending ? 'A processar...' : 'Redefinir Palavra-passe'}
+            handle={handleSubmit}
+            disabled={!isFormValid || resetPasswordMutation.isPending}
+            loading={resetPasswordMutation.isPending}
           />
 
-          <FormInput
-            label="Nova Palavra-passe"
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              clearError('password');
-            }}
-            showPasswordToggle
-            isPasswordVisible={showPassword}
-            onPasswordToggle={() => setShowPassword(!showPassword)}
-            error={errors.password}
-          />
-
-          <FormInput
-            label="Confirmar Palavra-passe"
-            value={confirmPassword}
-            onChangeText={(text) => {
-              setConfirmPassword(text);
-              clearError('confirmPassword');
-            }}
-            showPasswordToggle
-            isPasswordVisible={showConfirmPassword}
-            onPasswordToggle={() => setShowConfirmPassword(!showConfirmPassword)}
-            error={errors.confirmPassword}
-          />
-        </AuthForm>
-
-        <Button
-          text={resetPasswordMutation.isPending ? 'A processar...' : 'Redefinir Palavra-passe'}
-          handle={handleSubmit}
-          disabled={!isFormValid || resetPasswordMutation.isPending}
-          loading={resetPasswordMutation.isPending}
-        />
-
-        <AuthFooter linkText="Voltar ao Login" onLinkPress={() => router.replace('/login/login-email')} />
-      </AuthContent>
-    </AuthContainer>
+          <AuthFooter linkText="Voltar ao Login" onLinkPress={() => router.replace('/login/login-email')} />
+        </AuthContent>
+      </AuthContainer>
+    </KeyboardAvoidingView>
   );
 }
 
