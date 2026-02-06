@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { getMediaUrl } from '@/util/util';
 import { Course } from '@/types/course';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
@@ -54,7 +55,10 @@ export default function CourseCard({ course, onPress, badge, showRating = true }
       onPress={() => onPress(course)}
     >
       {course.picture ? (
-        <Image source={{ uri: course.picture.formats.small?.url }} style={styles.courseImage} />
+        <Image
+          source={{ uri: getMediaUrl(course.picture.formats.small?.url || course.picture.url) }}
+          style={styles.courseImage}
+        />
       ) : (
         <View style={[styles.courseImage, styles.placeholderImage, { backgroundColor: colors.buttonBackground }]}>
           <Feather name="image" size={24} color={colors.iconColor} />
@@ -104,7 +108,10 @@ export default function CourseCard({ course, onPress, badge, showRating = true }
         </Text>
 
         <View style={styles.instructorInfo}>
-          <Image source={{ uri: course.picture?.formats.thumbnail?.url }} style={styles.instructorAvatar} />
+          <Image
+            source={{ uri: getMediaUrl(course.picture?.formats.thumbnail?.url || course.picture?.url) }}
+            style={styles.instructorAvatar}
+          />
           <Text style={[styles.instructorName, { color: colors.textSecondary }]}>
             {course.author ? course.author.slice(0, 5) + '...' : 'Instrutor'}
           </Text>

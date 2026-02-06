@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { CourseCardProps } from '@/app/types/categories';
-import { blurhash } from '@/util/util';
+import { blurhash, getMediaUrl } from '@/util/util';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 
@@ -67,7 +67,7 @@ export default function CourseCard({ course, onPress }: CourseCardProps) {
     const imageUrl =
       course.picture?.formats?.thumbnail?.url || course.picture?.formats?.small?.url || course.picture?.url;
 
-    return imageUrl ? { uri: imageUrl } : null;
+    return imageUrl ? { uri: getMediaUrl(imageUrl) } : null;
   };
 
   const handlePress = () => {
