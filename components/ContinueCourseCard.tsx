@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { UserCourse } from '@/types/home';
 import { Course } from '@/types/course';
+import { getMediaUrl } from '@/util/util';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 
@@ -22,7 +23,10 @@ export default function ContinueCourseCard({ userCourse, onPress }: ContinueCour
     >
       <View style={styles.courseHeader}>
         {userCourse.course.picture ? (
-          <Image source={{ uri: userCourse.course.picture.formats.thumbnail.url }} style={styles.profileImage} />
+          <Image
+            source={{ uri: getMediaUrl(userCourse.course.picture.formats.thumbnail.url) }}
+            style={styles.profileImage}
+          />
         ) : (
           <View style={[styles.profileImage, styles.placeholderImage, { backgroundColor: colors.buttonBackground }]}>
             <Feather name="user" size={20} color={colors.iconColor} />
@@ -37,7 +41,10 @@ export default function ContinueCourseCard({ userCourse, onPress }: ContinueCour
         </View>
       </View>
 
-      <Image source={{ uri: userCourse.course.cover?.formats?.thumbnail?.url }} style={styles.coverImage} />
+      <Image
+        source={{ uri: getMediaUrl(userCourse.course.cover?.formats?.thumbnail?.url) }}
+        style={styles.coverImage}
+      />
 
       <Text style={[styles.courseTitle, { color: colors.text }]}>{userCourse.course.title}</Text>
 

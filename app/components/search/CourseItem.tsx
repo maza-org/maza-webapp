@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { View } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
+import { getMediaUrl } from '@/util/util';
 import { CourseItemProps } from '@/app/types/search';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
@@ -69,7 +70,7 @@ export default function CourseItem({ item, onPress }: CourseItemProps) {
 
   return (
     <TouchableOpacity style={styles.courseResult} onPress={onPress}>
-      <Image source={{ uri: item?.picture?.formats?.thumbnail?.url }} style={styles.courseImage} />
+      <Image source={{ uri: getMediaUrl(item?.picture?.formats?.thumbnail?.url) }} style={styles.courseImage} />
       <View style={styles.courseInfo}>
         <Text style={styles.courseCategory}>{item.subjects?.[0]?.name || item.author}</Text>
         <Text style={styles.courseTitle} numberOfLines={1}>

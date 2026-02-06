@@ -14,7 +14,7 @@ import ProfileImageSection from '@/app/components/profile/ProfileImageSection';
 import ProfileInfoItem from '@/app/components/profile/ProfileInfoItem';
 import InterestsSection from '@/app/components/profile/InterestsSection';
 import ProfileErrorState from '@/app/components/profile/ProfileErrorState';
-import { formatDate } from '@/util/util';
+import { formatDate, getMediaUrl } from '@/util/util';
 import Button from '@/components/Button';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
@@ -157,7 +157,7 @@ export default function ProfileScreen() {
 
   React.useEffect(() => {
     if (user?.profile_image?.formats?.thumbnail?.url) {
-      setProfileImage(user.profile_image.formats.thumbnail.url);
+      setProfileImage(getMediaUrl(user.profile_image.formats.thumbnail.url));
     }
   }, [user?.profile_image?.formats?.thumbnail?.url]);
 

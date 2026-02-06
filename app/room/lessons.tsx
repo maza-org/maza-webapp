@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { getMediaUrl } from '@/util/util';
 import {
   View,
   Text,
@@ -58,631 +59,634 @@ export default function CourseDetail() {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const themedStyles = useMemo(() => StyleSheet.create({
-
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.background,
-    },
-    scrollView: {
-      flex: 1,
-    },
-    header: {
-      height: 200,
-      backgroundColor: colors.background, // Fallback
-    },
-    headerOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.4)',
-      padding: 24,
-      justifyContent: 'space-between',
-    },
-    headerActions: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-    },
-    rightActions: {
-      flexDirection: 'row',
-      gap: 16,
-    },
-    iconButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    iconButtonDisabled: {
-      opacity: 0.6,
-    },
-    refreshIndicator: {
-      width: 20,
-      height: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    errorContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.background,
-      padding: 24,
-    },
-    errorText: {
-      color: colors.text,
-      fontSize: 16,
-      textAlign: 'center',
-      marginBottom: 16,
-      fontFamily: 'ManropeRegular',
-    },
-    retryButton: {
-      backgroundColor: colors.primary,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 25,
-    },
-    retryButtonText: {
-      color: '#FFF',
-      fontSize: 16,
-      fontWeight: '600',
-      fontFamily: 'ManropeBold',
-    },
-    courseInfo: {
-      padding: 24,
-      backgroundColor: colors.background,
-    },
-    courseTitle: {
-      fontSize: 24,
-      fontWeight: '700',
-      color: colors.text,
-      marginBottom: 16,
-      fontFamily: 'ManropeBold',
-    },
-    instructor: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    instructorName: {
-      color: colors.text,
-      fontSize: 14,
-      fontFamily: 'ManropeRegular',
-    },
-    categoryTag: {
-      color: colors.primary,
-      fontSize: 14,
-      marginLeft: 8,
-      marginRight: 8,
-      fontFamily: 'ManropeRegular',
-    },
-    descriptionContainer: {
-      marginBottom: 16,
-      borderRadius: 8,
-    },
-    descriptionText: {
-      color: colors.textSecondary,
-      fontSize: 14,
-      lineHeight: 22,
-      fontFamily: 'ManropeRegular',
-    },
-    viewMoreButton: {
-      marginTop: 8,
-      alignSelf: 'flex-end',
-    },
-    viewMoreText: {
-      color: colors.primary,
-      fontSize: 14,
-      fontWeight: '500',
-      fontFamily: 'ManropeMedium',
-    },
-    tabContainer: {
-      flexDirection: 'row',
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    modulesList: {
-      padding: 24,
-    },
-    moduleItem: {
-      padding: 16,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 15,
-      marginBottom: 12,
-    },
-    moduleContent: {
-      gap: 12,
-    },
-    moduleTopRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    moduleInfo: {
-      flex: 1,
-      flexDirection: 'row',
-      gap: 12,
-    },
-    moduleNumber: {
-      color: colors.text,
-      fontSize: 16,
-      fontWeight: '500',
-      fontFamily: 'ManropeMedium',
-    },
-    moduleTitle: {
-      color: colors.text,
-      fontSize: 16,
-      fontWeight: '500',
-      flex: 1,
-      fontFamily: 'ManropeMedium',
-    },
-    moduleTitleCompleted: {
-      color: colors.primary,
-    },
-    moduleDetails: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    iconContainer: {
-      backgroundColor: colors.inputBackground,
-      borderRadius: 50,
-      padding: 5,
-    },
-    moduleMetaRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginTop: 8,
-    },
-    videoCount: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      marginStart: 25,
-    },
-    videoCountText: {
-      color: colors.textMuted,
-      fontSize: 12,
-      fontFamily: 'ManropeRegular',
-    },
-    quizGradeContainer: {
-      backgroundColor: 'rgba(34, 197, 94, 0.1)',
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: 'rgba(34, 197, 94, 0.2)',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    quizGradeText: {
-      color: '#22C55E',
-      fontSize: 12,
-      fontWeight: '700',
-      fontFamily: 'ManropeBold',
-    },
-    moduleItemCompleted: {
-      borderColor: colors.primary,
-      borderWidth: 1,
-    },
-    footer: {
-      padding: 24,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      backgroundColor: colors.background,
-    },
-    inputContainer: {
-      backgroundColor: colors.background,
-    },
-    replyPreview: {
-      backgroundColor: colors.cardBackground,
-      borderRadius: 12,
-      padding: 12,
-      marginBottom: 12,
-    },
-    replyPreviewHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 8,
-    },
-    replyPreviewLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      flex: 1,
-    },
-    replyPreviewLabel: {
-      color: colors.textMuted,
-      fontSize: 12,
-      fontFamily: 'ManropeRegular',
-    },
-    replyPreviewName: {
-      color: colors.primary,
-      fontWeight: '600',
-      fontFamily: 'ManropeBold',
-    },
-    replyPreviewQuote: {
-      flexDirection: 'row',
-    },
-    replyPreviewLine: {
-      width: 3,
-      backgroundColor: colors.primary,
-      borderRadius: 2,
-      marginRight: 10,
-    },
-    replyPreviewText: {
-      color: colors.textMuted,
-      fontSize: 13,
-      flex: 1,
-      fontStyle: 'italic',
-      fontFamily: 'ManropeRegular',
-    },
-    inputRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    input: {
-      flex: 1,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 20,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      color: colors.text,
-      maxHeight: 100,
-    },
-    inputExpanded: {
-      height: 250,
-      textAlignVertical: 'top',
-    },
-    sendButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.primary,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    disabledButton: {
-      backgroundColor: colors.border,
-      opacity: 0.5,
-    },
-    startButton: {
-      backgroundColor: colors.primary,
-      padding: 16,
-      borderRadius: 50,
-      alignItems: 'center',
-    },
-    startButtonDisabled: {
-      backgroundColor: colors.primary + '80', // Opacity
-    },
-    startButtonText: {
-      color: '#FFF',
-      fontSize: 16,
-      fontWeight: '600',
-      fontFamily: 'ManropeBold',
-    },
-    progressContainer: {
-      marginBottom: 16,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 12,
-      padding: 16,
-    },
-    progressHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    progressTitle: {
-      color: colors.text,
-      fontSize: 16,
-      fontWeight: '600',
-      fontFamily: 'ManropeBold',
-    },
-    progressSubtitle: {
-      color: colors.textMuted,
-      fontSize: 12,
-      marginTop: 2,
-      fontFamily: 'ManropeRegular',
-    },
-    progressPercentage: {
-      color: colors.primary,
-      fontSize: 18,
-      fontWeight: '700',
-      fontFamily: 'ManropeBold',
-    },
-    progressBarContainer: {
-      marginBottom: 8,
-    },
-    progressBar: {
-      height: 6,
-      backgroundColor: colors.border,
-      borderRadius: 3,
-      overflow: 'hidden',
-    },
-    progressFill: {
-      height: '100%',
-      backgroundColor: colors.primary,
-      borderRadius: 3,
-    },
-    completionCard: {
-      backgroundColor: colors.cardBackground,
-      borderRadius: 16,
-      padding: 20,
-      borderWidth: 1,
-      borderColor: colors.primary,
-    },
-    completionContent: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    completionTextContainer: {
-      flex: 1,
-      paddingRight: 10,
-    },
-    completionTitle: {
-      fontSize: 22,
-      fontWeight: 'bold',
-      color: colors.primary,
-      marginBottom: 4,
-      fontFamily: 'ManropeBold',
-    },
-    completionSubtitle: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      fontFamily: 'ManropeRegular',
-    },
-    celebrateImage: {
-      width: 80,
-      height: 80,
-    },
-    certificateButtonFull: {
-      backgroundColor: colors.primary,
-      paddingVertical: 14,
-      borderRadius: 50,
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: 8,
-    },
-    certificateButtonText: {
-      color: '#FFF',
-      fontSize: 16,
-      fontWeight: '700',
-      fontFamily: 'ManropeBold',
-    },
-    noModulesContainer: {
-      padding: 24,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.cardBackground,
-      borderRadius: 15,
-      marginVertical: 12,
-    },
-    noModulesText: {
-      color: colors.textMuted,
-      fontSize: 16,
-      textAlign: 'center',
-      fontWeight: '500',
-      fontFamily: 'ManropeMedium',
-    },
-    noModulesIcon: {
-      marginBottom: 16,
-    },
-    menuContainer: {
-      position: 'absolute',
-      right: 0,
-      top: 45,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 8,
-      padding: 8,
-      width: 200,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-      zIndex: 1000,
-    },
-    menuItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    menuItemText: {
-      color: colors.text,
-      fontSize: 16,
-      marginLeft: 12,
-      fontFamily: 'ManropeRegular',
-    },
-    opinionsContainer: {
-      flex: 1,
-      minHeight: 400,
-    },
-    loadingText: {
-      color: colors.text,
-      fontSize: 16,
-      fontWeight: '500',
-      marginTop: 16,
-      fontFamily: 'ManropeMedium',
-    },
-    shimmerBox: {
-      width: '100%',
-      height: '100%',
-      backgroundColor: colors.inputBackground,
-      borderRadius: 4,
-    },
-    headerShimmer: {
-      height: 200,
-      backgroundColor: colors.cardBackground,
-    },
-    headerShimmerContent: {
-      flex: 1,
-      padding: 24,
-      justifyContent: 'space-between',
-    },
-    headerActionsShimmer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-    },
-    rightActionsShimmer: {
-      flexDirection: 'row',
-      gap: 16,
-    },
-    courseInfoShimmer: {
-      padding: 24,
-      backgroundColor: colors.background,
-    },
-    moduleItemShimmer: {
-      padding: 16,
-      backgroundColor: colors.cardBackground,
-      borderRadius: 15,
-      marginBottom: 12,
-    },
-    iconButtonShimmer: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.inputBackground,
-    },
-    levelBadgeShimmer: {
-      width: 80,
-      height: 28,
-      borderRadius: 14,
-      backgroundColor: colors.inputBackground,
-    },
-    titleShimmer: {
-      height: 28,
-      marginBottom: 8,
-      borderRadius: 4,
-    },
-    titleShimmerShort: {
-      height: 28,
-      width: '60%',
-      marginBottom: 16,
-      borderRadius: 4,
-    },
-    instructorShimmer: {
-      flexDirection: 'row',
-      marginBottom: 24,
-      gap: 12,
-    },
-    instructorNameShimmer: {
-      height: 20,
-      width: 120,
-      borderRadius: 4,
-    },
-    categoryShimmer: {
-      height: 20,
-      width: 80,
-      borderRadius: 4,
-    },
-    descriptionLineShimmer: {
-      height: 16,
-      marginBottom: 8,
-      borderRadius: 4,
-    },
-    descriptionLineShimmerShort: {
-      height: 16,
-      width: '80%',
-      marginBottom: 24,
-      borderRadius: 4,
-    },
-    tabContainerShimmer: {
-      flexDirection: 'row',
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      paddingBottom: 0,
-    },
-    tabShimmer: {
-      width: '33%',
-      height: 48,
-    },
-    modulesListShimmer: {
-      padding: 24,
-    },
-    moduleTopRowShimmer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 12,
-    },
-    moduleInfoShimmer: {
-      flex: 1,
-      flexDirection: 'row',
-      gap: 12,
-    },
-    moduleNumberShimmer: {
-      width: 20,
-      height: 20,
-      borderRadius: 4,
-    },
-    moduleTitleShimmer: {
-      width: '70%',
-      height: 20,
-      borderRadius: 4,
-    },
-    playIconShimmer: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-    },
-    moduleMetaShimmer: {
-      paddingLeft: 32,
-    },
-    videoCountShimmer: {
-      width: 60,
-      height: 16,
-      borderRadius: 4,
-    },
-    startButtonShimmer: {
-      height: 56,
-      borderRadius: 50,
-    },
-    descriptionShimmerContainer: {
-      marginBottom: 16,
-      gap: 8,
-    },
-    continueButton: {
-      backgroundColor: colors.primary,
-    },
-    ratingOverview: {
-      marginBottom: 24,
-    },
-    certificateButton: {
-      backgroundColor: '#22C55E',
-      padding: 16,
-      borderRadius: 50,
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
-    },
-    certificateButtonIcon: {
-      marginRight: 8,
-    },
-    certificateIcon: {
-      marginLeft: 4,
-    },
-    progressText: {
-      color: colors.textMuted,
-      fontSize: 12,
-      textAlign: 'center',
-      fontFamily: 'ManropeRegular',
-    },
-  }), [colors]);
+  const themedStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
+        loadingContainer: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.background,
+        },
+        scrollView: {
+          flex: 1,
+        },
+        header: {
+          height: 200,
+          backgroundColor: colors.background, // Fallback
+        },
+        headerOverlay: {
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.4)',
+          padding: 24,
+          justifyContent: 'space-between',
+        },
+        headerActions: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+        },
+        rightActions: {
+          flexDirection: 'row',
+          gap: 16,
+        },
+        iconButton: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        iconButtonDisabled: {
+          opacity: 0.6,
+        },
+        refreshIndicator: {
+          width: 20,
+          height: 20,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        errorContainer: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.background,
+          padding: 24,
+        },
+        errorText: {
+          color: colors.text,
+          fontSize: 16,
+          textAlign: 'center',
+          marginBottom: 16,
+          fontFamily: 'ManropeRegular',
+        },
+        retryButton: {
+          backgroundColor: colors.primary,
+          paddingHorizontal: 24,
+          paddingVertical: 12,
+          borderRadius: 25,
+        },
+        retryButtonText: {
+          color: '#FFF',
+          fontSize: 16,
+          fontWeight: '600',
+          fontFamily: 'ManropeBold',
+        },
+        courseInfo: {
+          padding: 24,
+          backgroundColor: colors.background,
+        },
+        courseTitle: {
+          fontSize: 24,
+          fontWeight: '700',
+          color: colors.text,
+          marginBottom: 16,
+          fontFamily: 'ManropeBold',
+        },
+        instructor: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: 16,
+        },
+        instructorName: {
+          color: colors.text,
+          fontSize: 14,
+          fontFamily: 'ManropeRegular',
+        },
+        categoryTag: {
+          color: colors.primary,
+          fontSize: 14,
+          marginLeft: 8,
+          marginRight: 8,
+          fontFamily: 'ManropeRegular',
+        },
+        descriptionContainer: {
+          marginBottom: 16,
+          borderRadius: 8,
+        },
+        descriptionText: {
+          color: colors.textSecondary,
+          fontSize: 14,
+          lineHeight: 22,
+          fontFamily: 'ManropeRegular',
+        },
+        viewMoreButton: {
+          marginTop: 8,
+          alignSelf: 'flex-end',
+        },
+        viewMoreText: {
+          color: colors.primary,
+          fontSize: 14,
+          fontWeight: '500',
+          fontFamily: 'ManropeMedium',
+        },
+        tabContainer: {
+          flexDirection: 'row',
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        modulesList: {
+          padding: 24,
+        },
+        moduleItem: {
+          padding: 16,
+          backgroundColor: colors.cardBackground,
+          borderRadius: 15,
+          marginBottom: 12,
+        },
+        moduleContent: {
+          gap: 12,
+        },
+        moduleTopRow: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        },
+        moduleInfo: {
+          flex: 1,
+          flexDirection: 'row',
+          gap: 12,
+        },
+        moduleNumber: {
+          color: colors.text,
+          fontSize: 16,
+          fontWeight: '500',
+          fontFamily: 'ManropeMedium',
+        },
+        moduleTitle: {
+          color: colors.text,
+          fontSize: 16,
+          fontWeight: '500',
+          flex: 1,
+          fontFamily: 'ManropeMedium',
+        },
+        moduleTitleCompleted: {
+          color: colors.primary,
+        },
+        moduleDetails: {
+          flexDirection: 'row',
+          alignItems: 'center',
+        },
+        iconContainer: {
+          backgroundColor: colors.inputBackground,
+          borderRadius: 50,
+          padding: 5,
+        },
+        moduleMetaRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: 8,
+        },
+        videoCount: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+          marginStart: 25,
+        },
+        videoCountText: {
+          color: colors.textMuted,
+          fontSize: 12,
+          fontFamily: 'ManropeRegular',
+        },
+        quizGradeContainer: {
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          paddingHorizontal: 10,
+          paddingVertical: 4,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: 'rgba(34, 197, 94, 0.2)',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+        },
+        quizGradeText: {
+          color: '#22C55E',
+          fontSize: 12,
+          fontWeight: '700',
+          fontFamily: 'ManropeBold',
+        },
+        moduleItemCompleted: {
+          borderColor: colors.primary,
+          borderWidth: 1,
+        },
+        footer: {
+          padding: 24,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          backgroundColor: colors.background,
+        },
+        inputContainer: {
+          backgroundColor: colors.background,
+        },
+        replyPreview: {
+          backgroundColor: colors.cardBackground,
+          borderRadius: 12,
+          padding: 12,
+          marginBottom: 12,
+        },
+        replyPreviewHeader: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 8,
+        },
+        replyPreviewLeft: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+          flex: 1,
+        },
+        replyPreviewLabel: {
+          color: colors.textMuted,
+          fontSize: 12,
+          fontFamily: 'ManropeRegular',
+        },
+        replyPreviewName: {
+          color: colors.primary,
+          fontWeight: '600',
+          fontFamily: 'ManropeBold',
+        },
+        replyPreviewQuote: {
+          flexDirection: 'row',
+        },
+        replyPreviewLine: {
+          width: 3,
+          backgroundColor: colors.primary,
+          borderRadius: 2,
+          marginRight: 10,
+        },
+        replyPreviewText: {
+          color: colors.textMuted,
+          fontSize: 13,
+          flex: 1,
+          fontStyle: 'italic',
+          fontFamily: 'ManropeRegular',
+        },
+        inputRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+        },
+        input: {
+          flex: 1,
+          backgroundColor: colors.cardBackground,
+          borderRadius: 20,
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          color: colors.text,
+          maxHeight: 100,
+        },
+        inputExpanded: {
+          height: 250,
+          textAlignVertical: 'top',
+        },
+        sendButton: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: colors.primary,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        disabledButton: {
+          backgroundColor: colors.border,
+          opacity: 0.5,
+        },
+        startButton: {
+          backgroundColor: colors.primary,
+          padding: 16,
+          borderRadius: 50,
+          alignItems: 'center',
+        },
+        startButtonDisabled: {
+          backgroundColor: colors.primary + '80', // Opacity
+        },
+        startButtonText: {
+          color: '#FFF',
+          fontSize: 16,
+          fontWeight: '600',
+          fontFamily: 'ManropeBold',
+        },
+        progressContainer: {
+          marginBottom: 16,
+          backgroundColor: colors.cardBackground,
+          borderRadius: 12,
+          padding: 16,
+        },
+        progressHeader: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 12,
+        },
+        progressTitle: {
+          color: colors.text,
+          fontSize: 16,
+          fontWeight: '600',
+          fontFamily: 'ManropeBold',
+        },
+        progressSubtitle: {
+          color: colors.textMuted,
+          fontSize: 12,
+          marginTop: 2,
+          fontFamily: 'ManropeRegular',
+        },
+        progressPercentage: {
+          color: colors.primary,
+          fontSize: 18,
+          fontWeight: '700',
+          fontFamily: 'ManropeBold',
+        },
+        progressBarContainer: {
+          marginBottom: 8,
+        },
+        progressBar: {
+          height: 6,
+          backgroundColor: colors.border,
+          borderRadius: 3,
+          overflow: 'hidden',
+        },
+        progressFill: {
+          height: '100%',
+          backgroundColor: colors.primary,
+          borderRadius: 3,
+        },
+        completionCard: {
+          backgroundColor: colors.cardBackground,
+          borderRadius: 16,
+          padding: 20,
+          borderWidth: 1,
+          borderColor: colors.primary,
+        },
+        completionContent: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        },
+        completionTextContainer: {
+          flex: 1,
+          paddingRight: 10,
+        },
+        completionTitle: {
+          fontSize: 22,
+          fontWeight: 'bold',
+          color: colors.primary,
+          marginBottom: 4,
+          fontFamily: 'ManropeBold',
+        },
+        completionSubtitle: {
+          fontSize: 14,
+          color: colors.textSecondary,
+          fontFamily: 'ManropeRegular',
+        },
+        celebrateImage: {
+          width: 80,
+          height: 80,
+        },
+        certificateButtonFull: {
+          backgroundColor: colors.primary,
+          paddingVertical: 14,
+          borderRadius: 50,
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 8,
+        },
+        certificateButtonText: {
+          color: '#FFF',
+          fontSize: 16,
+          fontWeight: '700',
+          fontFamily: 'ManropeBold',
+        },
+        noModulesContainer: {
+          padding: 24,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.cardBackground,
+          borderRadius: 15,
+          marginVertical: 12,
+        },
+        noModulesText: {
+          color: colors.textMuted,
+          fontSize: 16,
+          textAlign: 'center',
+          fontWeight: '500',
+          fontFamily: 'ManropeMedium',
+        },
+        noModulesIcon: {
+          marginBottom: 16,
+        },
+        menuContainer: {
+          position: 'absolute',
+          right: 0,
+          top: 45,
+          backgroundColor: colors.cardBackground,
+          borderRadius: 8,
+          padding: 8,
+          width: 200,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5,
+          zIndex: 1000,
+        },
+        menuItem: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingVertical: 12,
+          paddingHorizontal: 16,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        menuItemText: {
+          color: colors.text,
+          fontSize: 16,
+          marginLeft: 12,
+          fontFamily: 'ManropeRegular',
+        },
+        opinionsContainer: {
+          flex: 1,
+          minHeight: 400,
+        },
+        loadingText: {
+          color: colors.text,
+          fontSize: 16,
+          fontWeight: '500',
+          marginTop: 16,
+          fontFamily: 'ManropeMedium',
+        },
+        shimmerBox: {
+          width: '100%',
+          height: '100%',
+          backgroundColor: colors.inputBackground,
+          borderRadius: 4,
+        },
+        headerShimmer: {
+          height: 200,
+          backgroundColor: colors.cardBackground,
+        },
+        headerShimmerContent: {
+          flex: 1,
+          padding: 24,
+          justifyContent: 'space-between',
+        },
+        headerActionsShimmer: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+        },
+        rightActionsShimmer: {
+          flexDirection: 'row',
+          gap: 16,
+        },
+        courseInfoShimmer: {
+          padding: 24,
+          backgroundColor: colors.background,
+        },
+        moduleItemShimmer: {
+          padding: 16,
+          backgroundColor: colors.cardBackground,
+          borderRadius: 15,
+          marginBottom: 12,
+        },
+        iconButtonShimmer: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: colors.inputBackground,
+        },
+        levelBadgeShimmer: {
+          width: 80,
+          height: 28,
+          borderRadius: 14,
+          backgroundColor: colors.inputBackground,
+        },
+        titleShimmer: {
+          height: 28,
+          marginBottom: 8,
+          borderRadius: 4,
+        },
+        titleShimmerShort: {
+          height: 28,
+          width: '60%',
+          marginBottom: 16,
+          borderRadius: 4,
+        },
+        instructorShimmer: {
+          flexDirection: 'row',
+          marginBottom: 24,
+          gap: 12,
+        },
+        instructorNameShimmer: {
+          height: 20,
+          width: 120,
+          borderRadius: 4,
+        },
+        categoryShimmer: {
+          height: 20,
+          width: 80,
+          borderRadius: 4,
+        },
+        descriptionLineShimmer: {
+          height: 16,
+          marginBottom: 8,
+          borderRadius: 4,
+        },
+        descriptionLineShimmerShort: {
+          height: 16,
+          width: '80%',
+          marginBottom: 24,
+          borderRadius: 4,
+        },
+        tabContainerShimmer: {
+          flexDirection: 'row',
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+          paddingBottom: 0,
+        },
+        tabShimmer: {
+          width: '33%',
+          height: 48,
+        },
+        modulesListShimmer: {
+          padding: 24,
+        },
+        moduleTopRowShimmer: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginBottom: 12,
+        },
+        moduleInfoShimmer: {
+          flex: 1,
+          flexDirection: 'row',
+          gap: 12,
+        },
+        moduleNumberShimmer: {
+          width: 20,
+          height: 20,
+          borderRadius: 4,
+        },
+        moduleTitleShimmer: {
+          width: '70%',
+          height: 20,
+          borderRadius: 4,
+        },
+        playIconShimmer: {
+          width: 24,
+          height: 24,
+          borderRadius: 12,
+        },
+        moduleMetaShimmer: {
+          paddingLeft: 32,
+        },
+        videoCountShimmer: {
+          width: 60,
+          height: 16,
+          borderRadius: 4,
+        },
+        startButtonShimmer: {
+          height: 56,
+          borderRadius: 50,
+        },
+        descriptionShimmerContainer: {
+          marginBottom: 16,
+          gap: 8,
+        },
+        continueButton: {
+          backgroundColor: colors.primary,
+        },
+        ratingOverview: {
+          marginBottom: 24,
+        },
+        certificateButton: {
+          backgroundColor: '#22C55E',
+          padding: 16,
+          borderRadius: 50,
+          alignItems: 'center',
+          flexDirection: 'row',
+          justifyContent: 'center',
+        },
+        certificateButtonIcon: {
+          marginRight: 8,
+        },
+        certificateIcon: {
+          marginLeft: 4,
+        },
+        progressText: {
+          color: colors.textMuted,
+          fontSize: 12,
+          textAlign: 'center',
+          fontFamily: 'ManropeRegular',
+        },
+      }),
+    [colors]
+  );
 
   const { documentId } = useLocalSearchParams<{ documentId: string }>();
 
@@ -1125,7 +1129,11 @@ export default function CourseDetail() {
     );
   }
 
+  // Import the celebration image
+  const celebrateImage = require('@/assets/images/celebrate.webp');
+
   function handlePlayModule(module: CourseModuleData) {
+    console.log('module', courseData?.cover.formats?.thumbnail?.url);
     // Use the original module data for navigation
     // When user is logged in, originalModule is UserCourseModule with content progress states
     router.push({
@@ -1134,7 +1142,7 @@ export default function CourseDetail() {
         module: JSON.stringify(module.originalModule),
         author: courseData?.author,
         title: courseData?.title,
-        imageUrl: courseData?.cover?.formats?.thumbnail?.url,
+        imageUrl: getMediaUrl(courseData?.cover?.formats?.thumbnail?.url),
         userCourseId: userCourseDetails?.userCourseId,
         moduleId: module.moduleId?.toString(),
       },
@@ -1201,7 +1209,10 @@ export default function CourseDetail() {
           />
         }
       >
-        <ImageBackground source={{ uri: courseData?.cover?.formats?.thumbnail?.url }} style={styles.header}>
+        <ImageBackground
+          source={{ uri: getMediaUrl(courseData?.cover?.formats?.thumbnail?.url) }}
+          style={styles.header}
+        >
           <View style={styles.headerOverlay}>
             <View style={styles.headerActions}>
               <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
@@ -1221,7 +1232,7 @@ export default function CourseDetail() {
                     style={[
                       styles.iconButton,
                       (addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending || favoriteLoading) &&
-                      styles.iconButtonDisabled,
+                        styles.iconButtonDisabled,
                     ]}
                     onPress={handleFavorite}
                     disabled={
@@ -1349,7 +1360,9 @@ export default function CourseDetail() {
                       <View style={styles.moduleMetaRow}>
                         <View style={styles.videoCount}>
                           <Feather name="check-circle" size={14} color={colors.textMuted} />
-                          <Text style={themedStyles.videoCountText}>{courseData.final_test.questions.length} perguntas</Text>
+                          <Text style={themedStyles.videoCountText}>
+                            {courseData.final_test.questions.length} perguntas
+                          </Text>
                         </View>
                         {userCourseDetails?.quiz?.state === 'Passed' && userCourseDetails?.quiz?.grade != null && (
                           <View style={styles.quizGradeContainer}>
@@ -1418,7 +1431,7 @@ export default function CourseDetail() {
                 style={[
                   styles.sendButton,
                   (!newComment.trim() || addCommentMutation.isPending || replyMutation.isPending) &&
-                  themedStyles.disabledButton,
+                    themedStyles.disabledButton,
                 ]}
                 onPress={handleAddComment}
                 disabled={!newComment.trim() || addCommentMutation.isPending || replyMutation.isPending}

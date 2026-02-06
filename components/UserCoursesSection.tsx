@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { UserCourse } from '@/types/home';
 import { Course } from '@/types/course';
+import { getMediaUrl } from '@/util/util';
 import Shimmer from './Shimmer';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
@@ -89,7 +90,10 @@ export default function UserCoursesSection({
             onPress={() => onCoursePress(userCourse.course)}
           >
             {userCourse.course.picture ? (
-              <Image source={{ uri: userCourse.course.picture.formats.thumbnail.url }} style={styles.courseImage} />
+              <Image
+                source={{ uri: getMediaUrl(userCourse.course.picture.formats.thumbnail.url) }}
+                style={styles.courseImage}
+              />
             ) : (
               <View style={[styles.courseImage, styles.placeholderImage, { backgroundColor: colors.buttonBackground }]}>
                 <Feather name="image" size={20} color={colors.iconColor} />
