@@ -210,7 +210,7 @@ export default function ProfileScreen() {
 
   function handleCustomizeSurvey() {
     router.push({
-      pathname: '/onboarding/survey',
+      pathname: '/onboarding/self-assessment',
       params: { fromProfile: 'true' },
     });
   }
