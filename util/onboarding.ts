@@ -120,7 +120,7 @@ export async function navigateAfterLogin(userInterests?: any[]): Promise<void> {
 
     // If user hasn't seen onboarding survey, redirect there
     if (!hasCompletedOnboarding) {
-      router.replace('/onboarding/survey');
+      router.replace('/onboarding/self-assessment' as any);
       return;
     }
 

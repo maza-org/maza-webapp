@@ -23,6 +23,7 @@ export async function getCachedUserData(): Promise<User | null> {
     });
 
     const userData = response.data;
+    console.log('DEBUG: userData from API:', JSON.stringify(userData, null, 2));
 
     // Transform the API response to match our User interface
     const user: User = {
@@ -47,7 +48,7 @@ export async function getCachedUserData(): Promise<User | null> {
       token: cachedUser.token,
       interests: userData.interests || [],
       profile_image: userData.profile_image,
-      survey: userData.survey || [],
+      survey: userData.survey || null,
     };
 
     // Update the cached data with fresh data
@@ -102,7 +103,7 @@ export async function getUserData(token: string): Promise<User | null> {
       token: token,
       interests: userData.interests || [],
       profile_image: userData.profile_image,
-      survey: userData.survey || [],
+      survey: userData.survey || null,
     };
 
     return user;

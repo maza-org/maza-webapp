@@ -15,6 +15,7 @@ export default function OnboardingLayout() {
       }}
     >
       <Stack.Screen name="survey" />
+      <Stack.Screen name="self-assessment" />
     </Stack>
   );
 }

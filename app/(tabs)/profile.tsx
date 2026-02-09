@@ -18,6 +18,7 @@ import { formatDate, getMediaUrl } from '@/util/util';
 import Button from '@/components/Button';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import SurveyRecommendationModal from '@/app/components/profile/SurveyRecommendationModal';
 
 export default function ProfileScreen() {
   const { data: user, isLoading, error } = useUser();
@@ -27,6 +28,7 @@ export default function ProfileScreen() {
   const [deletingInterestId, setDeletingInterestId] = useState<number | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [showRecommendationModal, setShowRecommendationModal] = useState(false);
 
   const deleteInterestMutation = useDeleteInterest();
   const logoutMutation = useLogout();
@@ -210,9 +212,13 @@ export default function ProfileScreen() {
 
   function handleCustomizeSurvey() {
     router.push({
-      pathname: '/onboarding/survey',
+      pathname: '/onboarding/self-assessment',
       params: { fromProfile: 'true' },
     });
+  }
+
+  function handleViewRecommendation() {
+    setShowRecommendationModal(true);
   }
 
   return (
@@ -277,12 +283,30 @@ export default function ProfileScreen() {
             onAddInterest={handleAddInterest}
           />
 
-          <Button
-            text="Personalizar Experiência"
-            handle={handleCustomizeSurvey}
-            variant="outline"
-            icon={<Feather name="sliders" size={20} color={colors.primary} />}
-          />
+          {user.survey && user.survey.length > 0 ? (
+            <>
+              <Button
+                text="Ver Recomendação"
+                handle={handleViewRecommendation}
+                variant="outline"
+                icon={<Feather name="eye" size={20} color={colors.primary} />}
+              />
+
+              <Button
+                text="Personalizar Experiência"
+                handle={handleCustomizeSurvey}
+                variant="outline"
+                icon={<Feather name="sliders" size={20} color={colors.primary} />}
+              />
+            </>
+          ) : (
+            <Button
+              text="Personalizar Experiência"
+              handle={handleCustomizeSurvey}
+              variant="outline"
+              icon={<Feather name="sliders" size={20} color={colors.primary} />}
+            />
+          )}
 
           <View style={themedStyles.themeSection}>
             <View style={themedStyles.themeSectionHeader}>
@@ -348,6 +372,14 @@ export default function ProfileScreen() {
           <Text style={themedStyles.logoutButtonText}>Terminar Sessão</Text>
         </TouchableOpacity>
       </View>
+
+      <SurveyRecommendationModal
+        visible={showRecommendationModal}
+        onClose={() => setShowRecommendationModal(false)}
+        survey={user.survey || null}
+        isDark={isDark}
+        colors={colors}
+      />
     </SafeAreaView>
   );
 }

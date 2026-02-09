@@ -65,7 +65,7 @@ export default function Home() {
 
   const handleCustomizeSurvey = () => {
     router.push({
-      pathname: '/onboarding/survey',
+      pathname: '/onboarding/self-assessment' as const,
       params: { fromProfile: 'true' },
     });
   };
