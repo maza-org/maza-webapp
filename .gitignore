@@ -40,3 +40,6 @@ yarn-error.*
 *.ipa
 *.apk
 .vscode/
+credentials.json
+credentials/
+android-keys.text
