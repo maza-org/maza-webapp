@@ -1,19 +1,4 @@
-import { Course } from '@/app/(tabs)/profile';
-import { Picture } from '@/types/course';
-
-export interface SurveyAnswer {
-  id: number;
-  question: {
-    id: number;
-    documentId: string;
-    question: string;
-  };
-  answer: {
-    id: number;
-    documentId: string;
-    answer: string;
-  };
-}
+import { Course, Picture } from '@/types/course';
 
 export interface User {
   id: number;
@@ -37,7 +22,7 @@ export interface User {
   token?: string;
   interests: Subject[];
   profile_image: Picture | null;
-  survey?: SurveyAnswer[];
+  survey?: string | null;
 }
 
 export interface Subject {
