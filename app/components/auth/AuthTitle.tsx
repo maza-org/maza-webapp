@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import { useCompactMode } from './CompactModeContext';
 
 interface AuthTitleProps {
   title: string;
@@ -11,6 +12,10 @@ interface AuthTitleProps {
 }
 
 export default function AuthTitle({ title, subtitle, linkText, linkAction }: AuthTitleProps) {
+  const { isCompact } = useCompactMode();
+
+
+
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
@@ -19,10 +24,10 @@ export default function AuthTitle({ title, subtitle, linkText, linkAction }: Aut
       StyleSheet.create({
         titleSection: {
           paddingHorizontal: 24,
-          paddingTop: 24,
+          paddingTop: isCompact ? 12 : 24,
         },
         headerText: {
-          fontSize: 28,
+          fontSize: isCompact ? 20 : 28,
           fontWeight: '600',
           color: colors.text,
           width: 200,
@@ -30,7 +35,7 @@ export default function AuthTitle({ title, subtitle, linkText, linkAction }: Aut
         },
         linkContainer: {
           flexDirection: 'row',
-          marginTop: 12,
+          marginTop: isCompact ? 6 : 12,
         },
         subtitleText: {
           color: colors.textMuted,
@@ -43,7 +48,7 @@ export default function AuthTitle({ title, subtitle, linkText, linkAction }: Aut
           fontFamily: 'ManropeRegular',
         },
       }),
-    [colors]
+    [colors, isCompact]
   );
 
   return (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, Text, KeyboardAvoidingView, Platform, useWindowDimensions, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import Button from '@/components/Button';
 import { useResetPassword } from '@/app/hooks/useAuthMutations';
@@ -8,10 +8,14 @@ import AuthHeader from '@/app/components/auth/AuthHeader';
 import AuthTitle from '@/app/components/auth/AuthTitle';
 import FormInput from '@/app/components/auth/FormInput';
 import AuthFooter from '@/app/components/auth/AuthFooter';
+import { CompactModeProvider } from '@/app/components/auth/CompactModeContext';
 import { navigateAfterLogin } from '@/util/onboarding';
 
 export default function ResetPassword() {
   const { email } = useLocalSearchParams<{ email: string }>();
+
+  const { height: screenHeight } = useWindowDimensions();
+  const isSmallScreen = screenHeight < 700; // iPhone SE, 7, 8 have ~667px height
 
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
@@ -65,18 +69,26 @@ export default function ResetPassword() {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <CompactModeProvider>
+    <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior="padding"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? (isSmallScreen ? 60 : 100) : 0}
     >
       <AuthContainer>
-        <AuthTopSection>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <AuthTopSection>
           <AuthHeader />
           <AuthTitle title="Redefinir Palavra-passe" />
-          <Text style={styles.subtitleText}>
-            Insira o código enviado para {email || 'o seu email'} e crie uma nova palavra-passe.
-          </Text>
+          {!isSmallScreen && (
+            <Text style={styles.subtitleText}>
+              Insira o código enviado para {email || 'o seu email'} e crie uma nova palavra-passe.
+            </Text>
+          )}
         </AuthTopSection>
 
         <AuthContent>
@@ -129,8 +141,10 @@ export default function ResetPassword() {
 
           <AuthFooter linkText="Voltar ao Login" onLinkPress={() => router.replace('/login/login-email')} />
         </AuthContent>
+        </ScrollView>
       </AuthContainer>
     </KeyboardAvoidingView>
+    </CompactModeProvider>
   );
 }
 

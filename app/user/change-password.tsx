@@ -106,6 +106,9 @@ export default function ChangePasswordScreen() {
         scrollView: {
           flex: 1,
         },
+        scrollContent: {
+          flexGrow: 1,
+        },
         header: {
           height: 100,
           padding: 24,
@@ -307,17 +310,18 @@ export default function ChangePasswordScreen() {
 
   return (
     <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
-      <View style={themedStyles.header}>
-        <View style={themedStyles.headerActions}>
-          <TouchableOpacity style={themedStyles.iconButton} onPress={() => router.back()}>
-            <Feather name="chevron-left" size={24} color={colors.text} />
-          </TouchableOpacity>
-          <Text style={themedStyles.headerTitle}>Alterar Senha</Text>
-          <View style={themedStyles.iconButton} />
+      <ScrollView style={themedStyles.scrollView} contentContainerStyle={themedStyles.scrollContent}>
+        <View style={themedStyles.header}>
+          <View style={themedStyles.headerActions}>
+            <TouchableOpacity style={themedStyles.iconButton} onPress={() => router.back()}>
+              <Feather name="chevron-left" size={24} color={colors.text} />
+            </TouchableOpacity>
+            <Text style={themedStyles.headerTitle}>Alterar Senha</Text>
+            <View style={themedStyles.iconButton} />
+          </View>
         </View>
-      </View>
 
-      <ScrollView style={themedStyles.scrollView} contentContainerStyle={themedStyles.formContainer}>
+        <View style={themedStyles.formContainer}>
         <Text style={themedStyles.subtitle}>
           Para sua segurança, insira a sua senha actual e depois crie uma nova senha.
         </Text>
@@ -376,6 +380,7 @@ export default function ChangePasswordScreen() {
             </TouchableOpacity>
           </View>
           {errors.newPassword && <Text style={themedStyles.fieldError}>{errors.newPassword}</Text>}
+        </View>
         </View>
       </ScrollView>
 

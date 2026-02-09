@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, useWindowDimensions, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import Button from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import AuthHeader from '@/app/components/auth/AuthHeader';
 import AuthTitle from '@/app/components/auth/AuthTitle';
 import FormInput from '@/app/components/auth/FormInput';
 import AuthFooter from '@/app/components/auth/AuthFooter';
+import { CompactModeProvider } from '@/app/components/auth/CompactModeContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 
@@ -20,6 +21,9 @@ export default function ForgotPassword() {
   const colors = isDark ? Colors.dark : Colors.light;
 
   const forgotPasswordMutation = useForgotPassword();
+
+  const { height: screenHeight } = useWindowDimensions();
+  const isSmallScreen = screenHeight < 700; // iPhone SE, 7, 8 have ~667px height
 
   const styles = useMemo(
     () =>
@@ -115,13 +119,19 @@ export default function ForgotPassword() {
 
   if (success) {
     return (
-      <KeyboardAvoidingView 
+      <CompactModeProvider>
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior="padding"
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? (isSmallScreen ? 60 : 100) : 0}
       >
         <AuthContainer>
-          <AuthTopSection>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <AuthTopSection>
             <AuthHeader />
             <AuthTitle title="Código Enviado" />
           </AuthTopSection>
@@ -146,35 +156,47 @@ export default function ForgotPassword() {
               handle={() => router.push({ pathname: '/login/reset-password', params: { email } })}
             />
 
-            <TouchableOpacity
-              style={styles.resendContainer}
-              onPress={() => {
-                setSuccess(false);
-                handleSubmit();
-              }}
-            >
-              <Text style={styles.resendText}>Não recebeu o código? </Text>
-              <Text style={styles.resendLink}>Reenviar</Text>
-            </TouchableOpacity>
+            {!isSmallScreen && (
+              <TouchableOpacity
+                style={styles.resendContainer}
+                onPress={() => {
+                  setSuccess(false);
+                  handleSubmit();
+                }}
+              >
+                <Text style={styles.resendText}>Não recebeu o código? </Text>
+                <Text style={styles.resendLink}>Reenviar</Text>
+              </TouchableOpacity>
+            )}
 
             <AuthFooter linkText="Voltar ao Login" onLinkPress={() => router.back()} />
           </AuthContent>
+          </ScrollView>
         </AuthContainer>
       </KeyboardAvoidingView>
+      </CompactModeProvider>
     );
   }
 
   return (
-    <KeyboardAvoidingView 
+    <CompactModeProvider>
+    <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior="padding"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? (isSmallScreen ? 60 : 100) : 0}
     >
       <AuthContainer>
-        <AuthTopSection>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <AuthTopSection>
           <AuthHeader />
           <AuthTitle title="Recuperar Palavra-passe" />
-          <Text style={styles.subtitleText}>Insira o seu email para receber um código de verificação.</Text>
+          {!isSmallScreen && (
+            <Text style={styles.subtitleText}>Insira o seu email para receber um código de verificação.</Text>
+          )}
         </AuthTopSection>
 
         <AuthContent>
@@ -203,7 +225,9 @@ export default function ForgotPassword() {
 
           <AuthFooter linkText="Voltar ao Login" onLinkPress={() => router.back()} />
         </AuthContent>
+        </ScrollView>
       </AuthContainer>
     </KeyboardAvoidingView>
+    </CompactModeProvider>
   );
 }

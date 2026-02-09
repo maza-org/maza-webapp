@@ -3,6 +3,7 @@ import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { SafeAreaView, Edges } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import { useCompactMode } from './CompactModeContext';
 
 interface AuthContainerProps {
   children: React.ReactNode;
@@ -34,17 +35,18 @@ export default function AuthContainer({ children, edges = ['top', 'bottom'] }: A
 export function AuthTopSection({ children }: { children: React.ReactNode }) {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
+  const { isCompact } = useCompactMode();
 
   const themedStyles = useMemo(
     () =>
       StyleSheet.create({
         topSection: {
           backgroundColor: isDark ? '#1E1E1E' : colors.cardBackground,
-          paddingBottom: 20,
-          marginBottom: 10,
+          paddingBottom: isCompact ? 12 : 20,
+          marginBottom: isCompact ? 4 : 10,
         },
       }),
-    [colors, isDark]
+    [colors, isDark, isCompact]
   );
 
   return <View style={themedStyles.topSection}>{children}</View>;
@@ -53,31 +55,38 @@ export function AuthTopSection({ children }: { children: React.ReactNode }) {
 export function AuthContent({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
+  const { isCompact } = useCompactMode();
 
   const themedStyles = useMemo(
     () =>
       StyleSheet.create({
         content: {
           flex: 1,
-          padding: 24,
-          gap: 24,
+          padding: isCompact ? 16 : 24,
+          gap: isCompact ? 16 : 24,
           backgroundColor: isDark ? '#121212' : colors.background,
         },
       }),
-    [colors, isDark]
+    [colors, isDark, isCompact]
   );
 
   return <View style={[themedStyles.content, style]}>{children}</View>;
 }
 
 export function AuthForm({ children }: { children: React.ReactNode }) {
-  return <View style={styles.formContainer}>{children}</View>;
-}
+  const { isCompact } = useCompactMode();
 
-const styles = StyleSheet.create({
-  formContainer: {
-    gap: 24,
-    marginBottom: 32,
-    marginTop: 16,
-  },
-});
+  const formStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        formContainer: {
+          gap: isCompact ? 16 : 24,
+          marginBottom: isCompact ? 16 : 32,
+          marginTop: isCompact ? 8 : 16,
+        },
+      }),
+    [isCompact]
+  );
+
+  return <View style={formStyles.formContainer}>{children}</View>;
+}

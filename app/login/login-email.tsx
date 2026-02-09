@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, KeyboardAvoidingView, Platform, useWindowDimensions, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import axios, { AxiosError } from 'axios';
@@ -13,6 +13,9 @@ import AuthHeader from '@/app/components/auth/AuthHeader';
 import AuthTitle from '@/app/components/auth/AuthTitle';
 import FormInput from '@/app/components/auth/FormInput';
 import AuthFooter from '@/app/components/auth/AuthFooter';
+import { CompactModeProvider } from '@/app/components/auth/CompactModeContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import Colors from '@/constants/Colors';
 import { identifyAnalyticsUser } from '@/utils/analytics';
 
 export default function LoginEmail() {
@@ -21,6 +24,9 @@ export default function LoginEmail() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [warning, setWarning] = useState<string | undefined>(undefined);
+
+  const { isDark } = useTheme();
+  const colors = isDark ? Colors.dark : Colors.light;
 
   // Mutation to fetch user data
   const fetchUserDataMutation = useMutation({
@@ -154,25 +160,75 @@ export default function LoginEmail() {
 
   const isLoading = loginMutation.isPending || fetchUserDataMutation.isPending;
 
+  const { height: screenHeight } = useWindowDimensions();
+  const isSmallScreen = screenHeight < 700; // iPhone SE, 7, 8 have ~667px height
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        forgotPasswordLink: {
+          color: colors.primary,
+          fontSize: 14,
+          textAlign: 'right',
+          marginTop: 8,
+          fontFamily: 'Manrope-Medium',
+        },
+        errorContainer: {
+          backgroundColor: isDark ? '#3D1E1E' : '#FFE5E5',
+          padding: 12,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: isDark ? '#FF6B6B' : '#FF4444',
+        },
+        errorText: {
+          color: isDark ? '#FF6B6B' : '#CC0000',
+          fontSize: 12,
+          marginLeft: 8,
+          fontFamily: 'Manrope-Regular',
+        },
+        warningContainer: {
+          backgroundColor: isDark ? '#3D2E1E' : '#FFF4E5',
+          padding: 12,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: isDark ? '#FFA726' : '#FF9800',
+          marginBottom: 0,
+        },
+        warningText: {
+          color: isDark ? '#FFA726' : '#EF6C00',
+          fontSize: 12,
+          marginLeft: 8,
+          fontFamily: 'Manrope-Regular',
+        },
+      }),
+    [colors, isDark]
+  );
+
   return (
-    <KeyboardAvoidingView 
+    <CompactModeProvider>
+    <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior="padding"
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? (isSmallScreen ? 60 : 100) : 0}
     >
       <AuthContainer edges={['top', 'bottom']}>
-        <AuthTopSection>
-          <AuthHeader />
-          <AuthTitle
-            title="Login com Email"
-            subtitle="Não possui uma conta?"
-            linkText="Registar"
-            linkAction={() => router.push('/login/create-email')}
-          />
-        </AuthTopSection>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <AuthTopSection>
+            <AuthHeader />
+            <AuthTitle
+              title="Login com Email"
+              subtitle="Não possui uma conta?"
+              linkText="Registar"
+              linkAction={() => router.push('/login/create-email')}
+            />
+          </AuthTopSection>
 
-        <AuthContent>
-          <AuthForm>
+          <AuthContent>
+            <AuthForm>
             <FormInput
               label="Email ou Username"
               keyboardType="email-address"
@@ -203,9 +259,11 @@ export default function LoginEmail() {
                 autoCapitalize="none"
                 editable={!isLoading}
               />
-              <TouchableOpacity onPress={() => router.push('/login/forgot-password')} disabled={isLoading}>
-                <Text style={styles.forgotPasswordLink}>Esqueceu a palavra-passe?</Text>
-              </TouchableOpacity>
+              {!isSmallScreen && (
+                <TouchableOpacity onPress={() => router.push('/login/forgot-password')} disabled={isLoading}>
+                  <Text style={styles.forgotPasswordLink}>Esqueceu a palavra-passe?</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {warning && (
@@ -233,44 +291,10 @@ export default function LoginEmail() {
             onLinkPress={() => router.push('/login')}
           />
         </AuthContent>
+        </ScrollView>
       </AuthContainer>
     </KeyboardAvoidingView>
+    </CompactModeProvider>
   );
 }
 
-const styles = StyleSheet.create({
-  forgotPasswordLink: {
-    color: '#2196F3',
-    fontSize: 14,
-    textAlign: 'right',
-    marginTop: 8,
-    fontFamily: 'Manrope-Medium',
-  },
-  errorContainer: {
-    backgroundColor: '#3D1E1E',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FF6B6B',
-  },
-  errorText: {
-    color: '#FF6B6B',
-    fontSize: 12,
-    marginLeft: 8,
-    fontFamily: 'Manrope-Regular',
-  },
-  warningContainer: {
-    backgroundColor: '#3D2E1E',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FFA726',
-    marginBottom: 0,
-  },
-  warningText: {
-    color: '#FFA726',
-    fontSize: 12,
-    marginLeft: 8,
-    fontFamily: 'Manrope-Regular',
-  },
-});

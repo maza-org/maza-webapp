@@ -1,5 +1,14 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { ScrollView, View, StyleSheet, Text, Platform, TouchableOpacity } from 'react-native';
+import {
+  ScrollView,
+  View,
+  StyleSheet,
+  Text,
+  Platform,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  useWindowDimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Button from '@/components/Button';
@@ -12,6 +21,7 @@ import SearchablePicker from '@/app/components/auth/SearchablePicker';
 
 import ConsentCheckbox from '@/app/components/auth/ConsentCheckbox';
 import AuthFooter from '@/app/components/auth/AuthFooter';
+import { CompactModeProvider } from '@/app/components/auth/CompactModeContext';
 import CustomDatePicker, { MONTHS } from '@/app/components/CustomDatePicker';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -69,7 +79,6 @@ export default function CreateEmail() {
       StyleSheet.create({
         formContainer: {
           gap: 24,
-          paddingBottom: 120,
         },
         errorContainer: {
           backgroundColor: isDark ? '#3D1E1E' : '#FFE5E5',
@@ -272,221 +281,232 @@ export default function CreateEmail() {
 
   const insets = useSafeAreaInsets();
 
+  const { height: screenHeight } = useWindowDimensions();
+  const isSmallScreen = screenHeight < 700; // iPhone SE, 7, 8 have ~667px height
+
   return (
-    <AuthContainer edges={['top']}>
-      <AuthTopSection>
-        <AuthHeader />
-        <AuthTitle
-          title="Registar"
-          subtitle="Já tem uma conta?"
-          linkText="Fazer Login"
-          linkAction={() => router.push('/login/login-email')}
-        />
-      </AuthTopSection>
+    <CompactModeProvider>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? (isSmallScreen ? 60 : 100) : 0}
+      >
+        <AuthContainer edges={['top']}>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <AuthTopSection>
+              <AuthHeader />
+              <AuthTitle
+                title="Registar"
+                subtitle="Já tem uma conta?"
+                linkText="Fazer Login"
+                linkAction={() => router.push('/login/login-email')}
+              />
+            </AuthTopSection>
 
-      <AuthContent style={{ paddingBottom: insets.bottom + 24 }}>
-        <ScrollView contentContainerStyle={styles.formContainer} showsVerticalScrollIndicator={false}>
-          <FormInput
-            label="Nome de Utilizador"
-            value={username}
-            onChangeText={(text) => {
-              setUsername(text);
-              clearError('username');
-            }}
-            autoCapitalize="none"
-            error={errors.username}
-          />
+            <AuthContent style={{ paddingBottom: insets.bottom + 24 }}>
+              <View style={styles.formContainer}>
+              <FormInput
+                label="Nome de Utilizador"
+                value={username}
+                onChangeText={(text) => {
+                  setUsername(text);
+                  clearError('username');
+                }}
+                autoCapitalize="none"
+                error={errors.username}
+              />
 
-          <FormInput
-            label="Email"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              clearError('email');
-              clearError('contact');
-            }}
-            autoCapitalize="none"
-            error={errors.email}
-          />
+              <FormInput
+                label="Email"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  clearError('email');
+                  clearError('contact');
+                }}
+                autoCapitalize="none"
+                error={errors.email}
+              />
 
-          <FormInput
-            label="Número de Telemóvel"
-            keyboardType="phone-pad"
-            value={phone}
-            onChangeText={(text) => {
-              setPhone(text);
-              clearError('phone');
-              clearError('contact');
-            }}
-            error={errors.phone}
-          />
+              <FormInput
+                label="Número de Telemóvel"
+                keyboardType="phone-pad"
+                value={phone}
+                onChangeText={(text) => {
+                  setPhone(text);
+                  clearError('phone');
+                  clearError('contact');
+                }}
+                error={errors.phone}
+              />
 
-          {errors.contact && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{errors.contact}</Text>
-            </View>
-          )}
+              {errors.contact && (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{errors.contact}</Text>
+                </View>
+              )}
 
-          <FormInput
-            label="Palavra-passe"
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              clearError('password');
-              clearWarning('password');
-              // Show warning for spaces without blocking
-              if (text.includes(' ')) {
-                setWarnings((prev) => ({ ...prev, password: 'Atenção: A palavra-passe contém espaços' }));
-              }
-            }}
-            showPasswordToggle
-            isPasswordVisible={showPassword}
-            onPasswordToggle={() => setShowPassword(!showPassword)}
-            error={errors.password}
-          />
+              <FormInput
+                label="Palavra-passe"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  clearError('password');
+                  clearWarning('password');
+                  // Show warning for spaces without blocking
+                  if (text.includes(' ')) {
+                    setWarnings((prev) => ({ ...prev, password: 'Atenção: A palavra-passe contém espaços' }));
+                  }
+                }}
+                showPasswordToggle
+                isPasswordVisible={showPassword}
+                onPasswordToggle={() => setShowPassword(!showPassword)}
+                error={errors.password}
+              />
 
-          {warnings.password && (
-            <View style={styles.warningContainer}>
-              <Text style={styles.warningText}>{warnings.password}</Text>
-            </View>
-          )}
+              {warnings.password && (
+                <View style={styles.warningContainer}>
+                  <Text style={styles.warningText}>{warnings.password}</Text>
+                </View>
+              )}
 
-          <FormInput
-            label="Nome Completo"
-            value={fullName}
-            onChangeText={(text) => {
-              setFullName(text);
-              clearError('fullName');
-            }}
-            autoCapitalize="words"
-            error={errors.fullName}
-          />
+              <FormInput
+                label="Nome Completo"
+                value={fullName}
+                onChangeText={(text) => {
+                  setFullName(text);
+                  clearError('fullName');
+                }}
+                autoCapitalize="words"
+                error={errors.fullName}
+              />
 
-          <FormInput
-            label="Bilhete de Identidade"
-            value={nationalID}
-            onChangeText={(text) => {
-              setNationalID(text);
-              clearError('nationalID');
-            }}
-            autoCapitalize="characters"
-            maxLength={13}
-            error={errors.nationalID}
-          />
+              <FormInput
+                label="Bilhete de Identidade"
+                value={nationalID}
+                onChangeText={(text) => {
+                  setNationalID(text);
+                  clearError('nationalID');
+                }}
+                autoCapitalize="characters"
+                maxLength={13}
+                error={errors.nationalID}
+              />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Data de Nascimento</Text>
-            <TouchableOpacity
-              style={styles.pickerButton}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={[styles.pickerButtonText, !dateOfBirth && styles.placeholderText]}>
-                {dateOfBirth
-                  ? `${String(dateOfBirth.getDate()).padStart(2, '0')} de ${MONTHS[dateOfBirth.getMonth()]} de ${dateOfBirth.getFullYear()}`
-                  : 'Selecionar data'}
-              </Text>
-              <Ionicons name="calendar-outline" size={20} color={colors.textMuted} />
-            </TouchableOpacity>
-            {errors.dateOfBirth && <Text style={styles.errorText}>{errors.dateOfBirth}</Text>}
-          </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Data de Nascimento</Text>
+                <TouchableOpacity style={styles.pickerButton} onPress={() => setShowDatePicker(true)}>
+                  <Text style={[styles.pickerButtonText, !dateOfBirth && styles.placeholderText]}>
+                    {dateOfBirth
+                      ? `${String(dateOfBirth.getDate()).padStart(2, '0')} de ${MONTHS[dateOfBirth.getMonth()]} de ${dateOfBirth.getFullYear()}`
+                      : 'Selecionar data'}
+                  </Text>
+                  <Ionicons name="calendar-outline" size={20} color={colors.textMuted} />
+                </TouchableOpacity>
+                {errors.dateOfBirth && <Text style={styles.errorText}>{errors.dateOfBirth}</Text>}
+              </View>
 
-          <CustomDatePicker
-            value={dateOfBirth}
-            onChange={(date) => {
-              setDateOfBirth(date);
-              clearError('dateOfBirth');
-            }}
-            minDate={minDate}
-            maxDate={maxDate}
-            visible={showDatePicker}
-            onClose={() => setShowDatePicker(false)}
-          />
+              <CustomDatePicker
+                value={dateOfBirth}
+                onChange={(date) => {
+                  setDateOfBirth(date);
+                  clearError('dateOfBirth');
+                }}
+                minDate={minDate}
+                maxDate={maxDate}
+                visible={showDatePicker}
+                onClose={() => setShowDatePicker(false)}
+              />
 
-          <SearchablePicker
-            label="Género"
-            value={gender}
-            options={GENDER_OPTIONS}
-            onSelect={(val) => {
-              setGender(val);
-              clearError('gender');
-            }}
-            error={errors.gender}
-          />
+              <SearchablePicker
+                label="Género"
+                value={gender}
+                options={GENDER_OPTIONS}
+                onSelect={(val) => {
+                  setGender(val);
+                  clearError('gender');
+                }}
+                error={errors.gender}
+              />
 
-          <SearchablePicker
-            label="Província (opcional)"
-            value={province}
-            options={MOZAMBIQUE_PROVINCES}
-            onSelect={(value) => {
-              setProvince(value);
-              setDistrict('');
-            }}
-          />
+              <SearchablePicker
+                label="Província (opcional)"
+                value={province}
+                options={MOZAMBIQUE_PROVINCES}
+                onSelect={(value) => {
+                  setProvince(value);
+                  setDistrict('');
+                }}
+              />
 
-          {province && (
-            <SearchablePicker
-              label="Distrito (opcional)"
-              value={district}
-              options={availableDistricts}
-              onSelect={setDistrict}
-            />
-          )}
+              {province && (
+                <SearchablePicker
+                  label="Distrito (opcional)"
+                  value={district}
+                  options={availableDistricts}
+                  onSelect={setDistrict}
+                />
+              )}
 
-          <SearchablePicker
-            label="Ocupação"
-            value={occupation}
-            options={OCCUPATIONS}
-            onSelect={(val) => {
-              setOccupation(val);
-              clearError('occupation');
-            }}
-            error={errors.occupation}
-          />
+              <SearchablePicker
+                label="Ocupação"
+                value={occupation}
+                options={OCCUPATIONS}
+                onSelect={(val) => {
+                  setOccupation(val);
+                  clearError('occupation');
+                }}
+                error={errors.occupation}
+              />
 
-          <SearchablePicker
-            label="Instituição de Ensino (opcional)"
-            value={academicInstitution}
-            options={ACADEMIC_INSTITUTIONS}
-            onSelect={setAcademicInstitution}
-          />
+              <SearchablePicker
+                label="Instituição de Ensino (opcional)"
+                value={academicInstitution}
+                options={ACADEMIC_INSTITUTIONS}
+                onSelect={setAcademicInstitution}
+              />
 
-          <SearchablePicker
-            label="Nível Académico (opcional)"
-            value={academicLevel}
-            options={ACADEMIC_LEVELS}
-            onSelect={setAcademicLevel}
-          />
+              <SearchablePicker
+                label="Nível Académico (opcional)"
+                value={academicLevel}
+                options={ACADEMIC_LEVELS}
+                onSelect={setAcademicLevel}
+              />
 
-          {isUnderage && (
-            <ConsentCheckbox
-              isChecked={underageConsent}
-              onToggle={() => {
-                setUnderageConsent(!underageConsent);
-                clearError('consent');
-              }}
-              error={errors.consent}
-            />
-          )}
+              {isUnderage && (
+                <ConsentCheckbox
+                  isChecked={underageConsent}
+                  onToggle={() => {
+                    setUnderageConsent(!underageConsent);
+                    clearError('consent');
+                  }}
+                  error={errors.consent}
+                />
+              )}
 
-          {errors.general && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{errors.general}</Text>
-            </View>
-          )}
-        </ScrollView>
+              {errors.general && (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{errors.general}</Text>
+                </View>
+              )}
+              </View>
 
-        <Button
-          text={createAccountMutation.isPending ? 'A processar...' : 'Registar'}
-          handle={handleRegister}
-          disabled={createAccountMutation.isPending}
-          loading={createAccountMutation.isPending}
-        />
-
-        <Text style={styles.helpText}>* Forneça pelo menos um email ou número de telefone</Text>
-
-        <AuthFooter linkText="Prefere usar número de telefone?" onLinkPress={() => router.push('/login')} />
-      </AuthContent>
-    </AuthContainer>
+              <Button
+                text={createAccountMutation.isPending ? 'A processar...' : 'Registar'}
+                handle={handleRegister}
+                disabled={createAccountMutation.isPending}
+                loading={createAccountMutation.isPending}
+              />
+              <AuthFooter linkText="Prefere usar número de telefone?" onLinkPress={() => router.push('/login')} />
+            </AuthContent>
+          </ScrollView>
+        </AuthContainer>
+      </KeyboardAvoidingView>
+    </CompactModeProvider>
   );
 }

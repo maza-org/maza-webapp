@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import { useCompactMode } from './CompactModeContext';
 
 interface AuthHeaderProps {
   showBackButton?: boolean;
@@ -13,41 +14,44 @@ interface AuthHeaderProps {
 export default function AuthHeader({ showBackButton = true }: AuthHeaderProps) {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
+  const { isCompact } = useCompactMode();
+
+  const buttonSize = isCompact ? 34 : 40;
+  const iconSize = isCompact ? 20 : 24;
 
   const themedStyles = useMemo(
     () =>
       StyleSheet.create({
         header: {
           paddingHorizontal: 24,
-          paddingTop: 16,
+          paddingTop: isCompact ? 8 : 16,
           flexDirection: 'row',
           alignItems: 'center',
         },
         backButton: {
-          width: 40,
-          height: 40,
-          borderRadius: 20,
+          width: buttonSize,
+          height: buttonSize,
+          borderRadius: buttonSize / 2,
           backgroundColor: colors.buttonBackground,
           justifyContent: 'center',
           alignItems: 'center',
           marginRight: 20,
         },
         logo: {
-          width: 129,
-          height: 78,
+          width: isCompact ? 97 : 129,
+          height: isCompact ? 58 : 78,
         },
       }),
-    [isDark]
+    [isDark, isCompact, buttonSize]
   );
 
   return (
     <View style={themedStyles.header}>
       {showBackButton && (
         <TouchableOpacity onPress={() => router.back()} style={themedStyles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
+          <Ionicons name="chevron-back" size={iconSize} color={colors.text} />
         </TouchableOpacity>
       )}
-      <Image source={require('@/assets/images/maza-logo.png')} style={themedStyles.logo} contentFit="contain" />
     </View>
   );
 }
