@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import Header from '@/components/Header';
 import useUser from '@/hooks/useUser';
-import { useCategoryQuery } from '@/app/hooks/useCategoriesQueries';
 import { CourseData } from '@/app/types/categories';
 import CourseCard from '@/app/components/categories/CourseCard';
 import LoadingShimmer from '@/app/components/categories/LoadingShimmer';
@@ -12,19 +11,17 @@ import ErrorComponent from '@/app/components/categories/ErrorComponent';
 import EmptyState from '@/app/components/categories/EmptyState';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import { useGetJourneyCourses } from '../hooks/useJourneyQueries';
 
-export default function Category() {
-  const { type, name, id } = useLocalSearchParams();
+export default function JourneyScreen() {
+  const { type, name, id, documentId } = useLocalSearchParams();
   const { data: user } = useUser();
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const {
-    data: courses,
-    isLoading,
-    error,
-    refetch,
-  } = useCategoryQuery((type as string) || 'category', name as string, id as string, user?.token);
+  const { data: courses, isLoading, error, refetch } = useGetJourneyCourses(documentId as string);
+
+  console.log(JSON.stringify(error, null, 2));
 
   const themedStyles = useMemo(
     () =>
@@ -100,4 +97,3 @@ export default function Category() {
     </SafeAreaView>
   );
 }
-

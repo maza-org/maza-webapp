@@ -6,12 +6,12 @@ import { Category } from '@/app/types/search';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 
-interface CategoriesSectionProps {
-  categories: Category[];
+interface JourneysSectionProps {
+  journeys: Category[];
   handleCategoryPress: (category: { id: number; label: string }) => void;
 }
 
-export default function CategoriesSection({ categories, handleCategoryPress }: CategoriesSectionProps) {
+export default function JourneysSection({ journeys, handleCategoryPress }: JourneysSectionProps) {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
@@ -39,12 +39,12 @@ export default function CategoriesSection({ categories, handleCategoryPress }: C
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Pesquisar por Jornada</Text>
       <View style={styles.categoriesContainer}>
-        {categories.map((category) => (
+        {journeys.map((journey) => (
           <CategoryButton
-            key={category.id}
-            icon={category.icon}
-            label={category.label}
-            category={category}
+            key={journey.id}
+            icon={journey.icon}
+            label={journey.label}
+            category={journey}
             handlePressCategory={handleCategoryPress}
           />
         ))}
