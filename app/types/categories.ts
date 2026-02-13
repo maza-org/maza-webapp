@@ -87,7 +87,7 @@ export interface CourseForCategories {
 }
 
 export interface CategoriesApiResponse {
-  data: CourseForCategories[];
+  data: Category[];
   meta: {
     pagination: {
       page: number;
@@ -101,4 +101,9 @@ export interface CategoriesApiResponse {
 export interface CategoryItemProps {
   category: Category;
   onPress: (category: Category) => void;
+}
+
+export interface JourneyItemProps {
+  journey: Category;
+  onPress: (journey: Category) => void;
 }

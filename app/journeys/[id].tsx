@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Text, StyleSheet, FlatList } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Text, StyleSheet, FlatList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import Header from '@/components/Header';
@@ -12,16 +12,54 @@ import EmptyState from '@/app/components/categories/EmptyState';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 import { useGetJourneyCourses } from '../hooks/useJourneyQueries';
+import { usePopularCourses, useNewCourses, useSuggestedCourses, useAllSubjects } from '@/services/home';
+import CategoryFilter from '@/app/components/journeys/CategoryFilter';
+import { useCategories } from '../hooks/useCategoriesQueries';
 
 export default function JourneyScreen() {
-  const { type, name, id, documentId } = useLocalSearchParams();
+  const { name, documentId, type } = useLocalSearchParams();
   const { data: user } = useUser();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const { data: courses, isLoading, error, refetch } = useGetJourneyCourses(documentId as string);
+  const {
+    data: journeyCourses,
+    isLoading: loadingJourney,
+    error: errorJourney,
+    refetch,
+  } = useGetJourneyCourses(documentId as string);
 
-  console.log(JSON.stringify(error, null, 2));
+  const { data: popularCourses, isLoading: loadingPopular } = usePopularCourses();
+  const { data: newCourses, isLoading: loadingNew } = useNewCourses();
+  const { data: suggestedCourses, isLoading: loadingSuggested } = useSuggestedCourses(user?.token);
+  const { data: categories } = useCategories();
+
+  let courses = journeyCourses;
+  let isLoading = loadingJourney;
+  let error = errorJourney;
+
+  if (type === 'popular') {
+    courses = popularCourses;
+    isLoading = loadingPopular;
+    error = null;
+  } else if (type === 'new') {
+    courses = newCourses;
+    isLoading = loadingNew;
+    error = null;
+  } else if (type === 'suggested') {
+    courses = suggestedCourses;
+    isLoading = loadingSuggested;
+    error = null;
+  }
+
+  // console.log(JSON.stringify(error, null, 2));
+
+  const filteredCourses = useMemo(() => {
+    if (!courses) return [];
+    if (!selectedCategory) return courses;
+    return courses.filter((course: any) => course.subjects?.some((subject: any) => subject.name === selectedCategory));
+  }, [courses, selectedCategory]);
 
   const themedStyles = useMemo(
     () =>
@@ -33,12 +71,17 @@ export default function JourneyScreen() {
         listContent: {
           paddingHorizontal: 24,
         },
+        headerContainer: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: 24,
+          marginBottom: 16,
+          marginHorizontal: 24,
+        },
         coursesAvailable: {
           color: colors.textSecondary,
           fontSize: 16,
-          marginTop: 24,
-          marginBottom: 16,
-          marginLeft: 24,
         },
       }),
     [colors]
@@ -53,16 +96,26 @@ export default function JourneyScreen() {
     });
   };
 
-  const renderCourseItem = ({ item: course }: { item: CourseData }) => (
+  const renderCourseItem = ({ item: course }: { item: any }) => (
     <CourseCard course={course} onPress={handlePressCourse} />
   );
 
-  const ListHeaderComponent = () =>
-    !isLoading && courses && courses.length > 0 ? (
+  const ListHeaderComponent = () => (
+    <View style={themedStyles.headerContainer}>
       <Text style={themedStyles.coursesAvailable}>
-        {courses.length} {courses.length === 1 ? 'curso disponível' : 'cursos disponíveis'}
+        {!isLoading && filteredCourses ? (
+          <>
+            {filteredCourses.length} {filteredCourses.length === 1 ? 'curso' : 'cursos'}
+          </>
+        ) : null}
       </Text>
-    ) : null;
+      <CategoryFilter
+        categories={categories || []}
+        selectedCategory={selectedCategory}
+        onSelect={setSelectedCategory}
+      />
+    </View>
+  );
 
   if (isLoading) {
     return (
@@ -87,7 +140,7 @@ export default function JourneyScreen() {
       <Header title={name as string} />
 
       <FlatList
-        data={courses || []}
+        data={filteredCourses}
         renderItem={renderCourseItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={themedStyles.listContent}

@@ -21,6 +21,25 @@ export function useSubjects() {
   });
 }
 
+// Get all subjects
+export function useAllSubjects(token?: string) {
+  return useQuery({
+    queryKey: ['all-subjects'],
+    queryFn: async (): Promise<Subject[]> => {
+      const response = await api.get('/subjects?pageSize=100', {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {},
+      });
+      return response.data.data;
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+  });
+}
+
 // Get popular courses
 export function usePopularCourses() {
   return useQuery({

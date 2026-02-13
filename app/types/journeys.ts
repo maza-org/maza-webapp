@@ -1,22 +1,24 @@
 export interface Root {
-  data: Daum[]
-  meta: Meta
+  data: Journey[];
+  meta: Meta;
 }
 
-export interface Daum {
-  id: number
-  documentId: string
-  name: string
-  categories: any[]
+export interface Journey {
+  id: number;
+  documentId: string;
+  name: string;
+  categories: any[];
+  icon?: string;
+  courses?: any[];
 }
 
 export interface Meta {
-  pagination: Pagination
+  pagination: Pagination;
 }
 
 export interface Pagination {
-  page: number
-  pageSize: number
-  pageCount: number
-  total: number
+  page: number;
+  pageSize: number;
+  pageCount: number;
+  total: number;
 }

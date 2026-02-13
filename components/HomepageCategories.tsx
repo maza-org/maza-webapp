@@ -9,9 +9,7 @@ import { useGetJourneys } from '@/app/hooks/useJourneyQueries';
 export default function HomepageCategories() {
   const { theme } = useTheme();
   const colors = Colors[theme];
-  const { data: journeys, error } = useGetJourneys();
-
-  console.log('AAA', JSON.stringify(error, null, 2))
+  const { data: journeys } = useGetJourneys();
 
   return (
     <View style={[styles.listContainer, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>

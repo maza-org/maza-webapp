@@ -355,7 +355,7 @@ const CoursesInProgress = () => {
         <Ionicons name="school-outline" size={64} color={colors.textMuted} />
         <Text style={themedStyles.emptyTitle}>Nenhum curso em progresso</Text>
         <Text style={themedStyles.emptySubtitle}>Comece um novo curso para acompanhar seu progresso aqui</Text>
-        <TouchableOpacity style={themedStyles.exploreButton} onPress={() => router.push('/categories')}>
+        <TouchableOpacity style={themedStyles.exploreButton} onPress={() => router.push('/journeys')}>
           <Text style={themedStyles.exploreButtonText}>Explorar Cursos</Text>
         </TouchableOpacity>
       </View>
