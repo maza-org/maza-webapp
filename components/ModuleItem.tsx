@@ -27,6 +27,7 @@ const ModuleItem = ({ content, index, selectedContent, onPress }: ModuleItemProp
   const isPdf = content.format === 'PDF';
   const isText = content.format === 'Text';
   const isAudio = content.format === 'Audio';
+  const isPicture = content.format === 'Picture';
   const isSelected = selectedContent?.id === content.id;
   const isCompleted = content.state === 'Finished';
 
@@ -144,6 +145,14 @@ const ModuleItem = ({ content, index, selectedContent, onPress }: ModuleItemProp
       );
     }
 
+    if (isPicture) {
+      return (
+        <View style={themedStyles.iconContainer}>
+          <Ionicons name="image" size={20} color={colors.primary} />
+        </View>
+      );
+    }
+
     return null;
   };
 
@@ -165,12 +174,12 @@ const ModuleItem = ({ content, index, selectedContent, onPress }: ModuleItemProp
         </View>
         <View style={themedStyles.moduleType}>
           <Feather
-            name={isVideo ? 'video' : isPdf ? 'file' : isAudio ? 'mic' : 'file-text'}
+            name={isVideo ? 'video' : isPdf ? 'file' : isAudio ? 'mic' : isPicture ? 'image' : 'file-text'}
             size={14}
             color={colors.textMuted}
           />
           <Text style={themedStyles.moduleTypeText}>
-            {isVideo ? 'Video' : isPdf ? 'PDF' : isAudio ? 'Áudio' : 'Texto'}
+            {isVideo ? 'Video' : isPdf ? 'PDF' : isAudio ? 'Áudio' : isPicture ? 'Imagem' : 'Texto'}
           </Text>
         </View>
       </View>

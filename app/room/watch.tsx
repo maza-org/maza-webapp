@@ -325,9 +325,20 @@ export default function CourseScreen() {
         },
       });
       return;
-    } else if (content.format === 'PDF' && content.url) {
+    } else if (content.format === 'PDF' && (content.url || content.file?.url)) {
       router.push({
         pathname: '/room/pdf-viewer',
+        params: {
+          content: JSON.stringify(content),
+          userCourseId: userCourseId as string,
+          moduleId: moduleId as string,
+          contentId: getContentId(content).toString(),
+        },
+      });
+      return;
+    } else if (content.format === 'Picture') {
+      router.push({
+        pathname: '/room/picture-viewer',
         params: {
           content: JSON.stringify(content),
           userCourseId: userCourseId as string,
@@ -343,8 +354,12 @@ export default function CourseScreen() {
       return;
     } else {
       // Check if it's a video content (either youtubeID or file/url)
+      // We explicitly exclude other known formats to prevent false positives
       const isVideo =
-        content.format === 'Video' || content.youtubeID || content.file?.url || content.url?.endsWith('.mp4');
+        content.format === 'Video' ||
+        content.youtubeID ||
+        (content.file?.url && !['PDF', 'Audio', 'Text', 'Picture'].includes(content.format)) ||
+        content.url?.endsWith('.mp4');
 
       if (isVideo) {
         setSelectedContent(content);

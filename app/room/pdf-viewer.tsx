@@ -1,4 +1,13 @@
-import { StyleSheet, View, Text, TouchableOpacity, Platform, Dimensions, ActivityIndicator, StatusBar } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
+  Dimensions,
+  ActivityIndicator,
+  StatusBar,
+} from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -9,8 +18,18 @@ import { useAuthUser } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 import Pdf from 'react-native-pdf';
+import { baseUrl } from '@/services/api';
 
 const { width, height } = Dimensions.get('window');
+
+const getFullMediaUrl = (url?: string): string => {
+  if (!url) return '';
+  if (url.startsWith('http') || url.startsWith('blob:')) return url;
+
+  const mediaBaseUrl = baseUrl.replace(/\/api$/, '');
+
+  return `${mediaBaseUrl}${url}`;
+};
 
 export default function PdfViewer() {
   const { content, userCourseId, moduleId, contentId } = useLocalSearchParams<{
@@ -19,7 +38,9 @@ export default function PdfViewer() {
     moduleId?: string;
     contentId?: string;
   }>();
-  const _content = JSON.parse(content as string) as Content;
+  // Safe parsing in case content is missing
+  const _content = content ? (JSON.parse(content as string) as Content) : ({} as Content);
+
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -34,6 +55,10 @@ export default function PdfViewer() {
   // Auth and progress tracking
   const { data: user } = useAuthUser();
   const markContentAsCompletedMutation = useMarkContentAsCompleted();
+
+  const pdfUrl = useMemo(() => {
+    return getFullMediaUrl(_content.file?.url || _content.url);
+  }, [_content]);
 
   const themedStyles = useMemo(
     () =>
@@ -200,7 +225,7 @@ export default function PdfViewer() {
   };
 
   const renderPdf = () => {
-    if (!_content.url) {
+    if (!pdfUrl) {
       return (
         <View style={themedStyles.errorContainer}>
           <Feather name="file-text" size={48} color={colors.textMuted} />
@@ -213,12 +238,14 @@ export default function PdfViewer() {
       return (
         <View style={themedStyles.webPdfContainer}>
           <iframe
-            src={_content.url}
-            style={{
-              width: '100%',
-              height: '100%',
-              border: 'none',
-            } as React.CSSProperties}
+            src={pdfUrl}
+            style={
+              {
+                width: '100%',
+                height: '100%',
+                border: 'none',
+              } as React.CSSProperties
+            }
             title={_content.title}
           />
         </View>
@@ -229,7 +256,7 @@ export default function PdfViewer() {
       <>
         <Pdf
           ref={pdfRef}
-          source={{ uri: _content.url, cache: true }}
+          source={{ uri: pdfUrl, cache: true }}
           style={themedStyles.pdf}
           trustAllCerts={false}
           onLoadComplete={(numberOfPages) => {
@@ -310,7 +337,7 @@ export default function PdfViewer() {
             {/* Full Screen Button */}
             <TouchableOpacity style={themedStyles.fullscreenButton} onPress={toggleFullScreen}>
               <View style={themedStyles.secondaryControlButtonBackground}>
-                <Feather name={isFullScreen ? "minimize" : "maximize"} size={20} color={colors.text} />
+                <Feather name={isFullScreen ? 'minimize' : 'maximize'} size={20} color={colors.text} />
               </View>
             </TouchableOpacity>
 
