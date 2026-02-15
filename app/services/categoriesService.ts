@@ -112,46 +112,9 @@ export class CategoriesService {
 
   static async fetchCategories(): Promise<Category[]> {
     try {
-      const response = await categoriesClient.get<CategoriesApiResponse>('/courses');
+      const response = await categoriesClient.get<CategoriesApiResponse>('/subjects');
 
-      const coursesBySubject = response.data.data.reduce(
-        (acc: Record<string, { id: number; count: number }>, course) => {
-          course.subjects.forEach((subject) => {
-            if (!acc[subject.name]) {
-              acc[subject.name] = {
-                id: subject.id,
-                count: 1,
-              };
-            } else {
-              acc[subject.name].count++;
-            }
-          });
-          return acc;
-        },
-        {}
-      );
-
-      // TODO: this can be fetched from remote
-      const subjectToIcon: Record<string, string> = {
-        'Competências Vocacionais': 'construct-outline',
-        'Competências Verdes': 'leaf-outline',
-        'Mudanças Climáticas': 'cloud-outline',
-        'Informação sobre proteção': 'shield-checkmark-outline',
-        'Competências Fundamentais': 'school-outline',
-        'Competências Digitais': 'laptop-outline',
-        'Competências Técnicas Digitais': 'code-outline',
-        'Competências da Vida': 'people-outline',
-        'Educação Financeira': 'cash-outline',
-      };
-
-      const categories = Object.entries(coursesBySubject).map(([name, data]) => ({
-        id: data.id,
-        name: name,
-        courses: data.count,
-        icon: subjectToIcon[name] || 'apps-outline',
-      }));
-
-      return categories;
+      return response.data.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new Error(`Erro ao buscar categorias: ${error.response?.status || 'unknown'}`);

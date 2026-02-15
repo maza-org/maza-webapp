@@ -404,7 +404,7 @@ const FavoriteCoursesGrid = () => {
         <Ionicons name="heart-outline" size={64} color={colors.textMuted} />
         <Text style={themedStyles.emptyTitle}>Nenhum curso favorito</Text>
         <Text style={themedStyles.emptySubtitle}>Seus cursos favoritos aparecerão aqui</Text>
-        <TouchableOpacity style={themedStyles.exploreButton} onPress={() => router.push('/categories')}>
+        <TouchableOpacity style={themedStyles.exploreButton} onPress={() => router.push('/journeys')}>
           <Text style={themedStyles.exploreButtonText}>Explorar Cursos</Text>
         </TouchableOpacity>
       </View>

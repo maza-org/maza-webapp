@@ -98,11 +98,14 @@ export default function Certificate() {
       const data = await response.json();
 
       if (data.success && data.url) {
+        const rootUrl = baseUrl.replace(/\/api\/$/, '').replace(/\/api$/, '');
+        const certificateUrl = data.url.startsWith('/') ? `${rootUrl}${data.url}` : data.url;
+
         if (isWeb) {
-          setPdfSource({ uri: data.url, cache: false });
+          setPdfSource({ uri: certificateUrl, cache: false });
           setLoading(false);
         } else {
-          await downloadToCache(data.url, id);
+          await downloadToCache(certificateUrl, id);
         }
       } else {
         throw new Error(data.message || 'URL inválida');
@@ -171,6 +174,8 @@ export default function Certificate() {
         <iframe src={pdfSource?.uri} style={{ width: '100%', height: '100%', border: 'none' }} title="Certificate" />
       );
     }
+    if (!pdfSource) return null;
+
     return (
       <Pdf
         source={pdfSource}

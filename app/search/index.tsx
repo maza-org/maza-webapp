@@ -8,10 +8,11 @@ import { useSearchCourses } from '@/app/hooks/useSearchQueries';
 import { SearchResult } from '@/app/types/search';
 import SearchHeader from '@/app/components/search/SearchHeader';
 import SearchInput from '@/app/components/search/SearchInput';
-import CategoriesSection from '@/app/components/search/CategoriesSection';
+import JourneysSection from '@/app/components/search/JourneysSection';
 import SearchResults from '@/app/components/search/SearchResults';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import { useGetJourneys } from '../hooks/useJourneyQueries';
 
 export default function Search() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,6 +20,7 @@ export default function Search() {
   const colors = isDark ? Colors.dark : Colors.light;
 
   const { data: searchData, isLoading, error } = useSearchCourses(searchTerm);
+  const { data: journeysQuery } = useGetJourneys();
 
   const handleBackPress = () => {
     router.back();
@@ -32,11 +34,13 @@ export default function Search() {
     setSearchTerm(text);
   };
 
-  const categories = [
-    { id: 113, icon: 'desktop-outline', label: 'Competências Digitais' },
-    { id: 133, icon: 'globe-outline', label: 'Competências Verdes' },
-    { id: 117, icon: 'cloud-outline', label: 'Mudanças Climáticas' },
-  ];
+  // Map journeys to the format expected by JourneysSection
+  const journeys =
+    journeysQuery?.data?.map((journey) => ({
+      id: journey.id,
+      icon: 'compass-outline', // Default icon for journeys
+      label: journey.name,
+    })) || [];
 
   function handleOpenCourse(course: Course) {
     router.push({
@@ -49,7 +53,7 @@ export default function Search() {
 
   function handleCategoryPress(category: { id: number; label: string }) {
     router.push({
-      pathname: '/categories/[id]',
+      pathname: '/journeys/[id]',
       params: {
         id: category.id,
         name: category.label,
@@ -74,7 +78,7 @@ export default function Search() {
 
       <SearchInput searchTerm={searchTerm} onSearchChange={handleSearchChange} onClearSearch={handleClearSearch} />
 
-      {!searchTerm && <CategoriesSection categories={categories} handleCategoryPress={handleCategoryPress} />}
+      {!searchTerm && <JourneysSection journeys={journeys} handleCategoryPress={handleCategoryPress} />}
 
       <SearchResults
         searchTerm={searchTerm}

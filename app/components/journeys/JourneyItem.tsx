@@ -1,13 +1,21 @@
 import React, { useMemo } from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { CategoryItemProps } from '@/app/types/categories';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import { Journey } from '@/app/types/journeys';
 
-export default function CategoryItem({ category, onPress }: CategoryItemProps) {
+interface JourneyItemProps {
+  journey: Journey;
+  onPress: (journey: Journey) => void;
+}
+
+export default function JourneyItem({ journey, onPress }: JourneyItemProps) {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
+
+  // Use pre-fetched courses count
+  const coursesCount = journey.courses?.length || 0;
 
   const themedStyles = useMemo(
     () =>
@@ -49,13 +57,15 @@ export default function CategoryItem({ category, onPress }: CategoryItemProps) {
   );
 
   return (
-    <TouchableOpacity style={themedStyles.categoryItem} onPress={() => onPress(category)}>
+    <TouchableOpacity style={themedStyles.categoryItem} onPress={() => onPress(journey)}>
       <View style={themedStyles.iconContainer}>
-        <Ionicons name={category.icon as any} size={24} color={colors.primary} />
+        <Ionicons name="map-outline" size={24} color={colors.primary} />
       </View>
       <View style={themedStyles.categoryInfo}>
-        <Text style={themedStyles.categoryName}>{category.name}</Text>
-        <Text style={themedStyles.coursesCount}>{category.courses} Cursos</Text>
+        <Text style={themedStyles.categoryName}>{journey.name}</Text>
+        <Text style={themedStyles.coursesCount}>
+          {coursesCount > 1 ? `${coursesCount} Cursos` : `${coursesCount} Curso`}
+        </Text>
       </View>
       <Ionicons name="chevron-forward" size={24} color={colors.iconColor} />
     </TouchableOpacity>

@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 
 // const baseUrl = 'https://maza-strapi-backend.onrender.com/api';
 // production: const baseUrl = 'https://strapi.mazas.org/api';
-/* stage:*/ const baseUrl = ' https://strapi.mazas.org/api';
+/* stage:*/ const baseUrl = `https://maza-backend-api.onrender.com/api`;
 
 const api = axios.create({
   baseURL: baseUrl,

@@ -12,7 +12,7 @@ export function navigateToCourse(course: Course) {
 
 export function navigateToCategories(type: string, name: string, id: number) {
   router.push({
-    pathname: '/categories/[id]',
+    pathname: '/journeys/[id]',
     params: {
       type,
       name,
