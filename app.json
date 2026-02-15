@@ -54,7 +54,8 @@
       ],
       "expo-web-browser",
       "expo-localization",
-      "expo-video"
+      "expo-video",
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -13,6 +13,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 import { baseUrl } from '@/services/api';
 import YoutubePlayerModal from '@/components/YoutubePlayerModal';
+import AudioPlayerModal from '@/components/AudioPlayerModal';
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -108,6 +109,8 @@ export default function CourseScreen() {
   const moduleData = JSON.parse(module as string) as ExtendedModuleData;
   const [playing, setPlaying] = React.useState(false);
   const [selectedContent, setSelectedContent] = React.useState<ExtendedContent | undefined>(undefined);
+  const [showAudioPlayer, setShowAudioPlayer] = React.useState(false);
+  const [selectedAudioContent, setSelectedAudioContent] = React.useState<ExtendedContent | undefined>(undefined);
   const [showFullDescription, setShowFullDescription] = React.useState(false);
 
   // Theme
@@ -333,6 +336,11 @@ export default function CourseScreen() {
         },
       });
       return;
+    } else if (content.format === 'Audio') {
+      setSelectedAudioContent(content);
+      setShowAudioPlayer(true);
+      markContentAsCompleted(content);
+      return;
     } else {
       // Check if it's a video content (either youtubeID or file/url)
       const isVideo =
@@ -349,6 +357,17 @@ export default function CourseScreen() {
   const handleVideoEnd = () => {
     setPlaying(false);
     setSelectedContent(undefined);
+  };
+
+  const handleAudioEnd = () => {
+    // Optional: Auto-close or just stop playing
+    // setShowAudioPlayer(false);
+    // setSelectedAudioContent(undefined);
+  };
+
+  const closeAudioPlayer = () => {
+    setShowAudioPlayer(false);
+    setSelectedAudioContent(undefined);
   };
 
   const handleQuizPress = (quiz: Quiz) => {
@@ -384,6 +403,14 @@ export default function CourseScreen() {
         />
       )}
       {showYoutubeVideo && <YoutubePlayerModal youtubeId={selectedContent?.youtubeID || ''} onClose={handleVideoEnd} />}
+      {showAudioPlayer && selectedAudioContent && (
+        <AudioPlayerModal
+          audioUrl={getFullMediaUrl(selectedAudioContent.file?.url || selectedAudioContent.url)}
+          title={selectedAudioContent.title}
+          onClose={closeAudioPlayer}
+          onAudioEnd={handleAudioEnd}
+        />
+      )}
       <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
         <ScrollView style={themedStyles.content}>
           {/* Header */}
