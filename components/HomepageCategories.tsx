@@ -11,9 +11,13 @@ export default function HomepageCategories() {
   const colors = Colors[theme];
   const { data: journeys } = useGetJourneys();
 
+  const randomJourney = React.useMemo(() => {
+    return journeys?.data ? [...journeys.data].sort(() => Math.random() - 0.5).slice(0, 3) : [];
+  }, [journeys]);
+
   return (
     <View style={[styles.listContainer, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
-      {journeys?.data.map((journey) => (
+      {randomJourney?.map((journey) => (
         <TouchableOpacity
           key={journey.id}
           style={styles.listItem}

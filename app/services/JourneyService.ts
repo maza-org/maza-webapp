@@ -4,7 +4,7 @@ import { Root } from '@/app/types/journeys';
 class JourneyService {
   static async getJourneys() {
     try {
-      const { data } = await api.get<Root>('/journeys?populate=categories');
+      const { data } = await api.get<Root>('/journeys?populate[0]=categories&populate[1]=courses');
 
       return data;
     } catch (error) {
@@ -14,7 +14,7 @@ class JourneyService {
 
   static async getJourneyById(id: string) {
     try {
-      const { data } = await api.get<{ data: Root['data'][0] }>(`/journeys/${id}?populate=categories`);
+      const { data } = await api.get<{ data: Root['data'][0] }>(`/journeys/${id}?populate[0]=categories`);
       return data;
     } catch (error) {
       throw error;

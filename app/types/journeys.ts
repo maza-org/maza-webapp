@@ -8,8 +8,8 @@ export interface Journey {
   documentId: string;
   name: string;
   categories: any[];
+  courses: any[];
   icon?: string;
-  courses?: any[];
 }
 
 export interface Meta {

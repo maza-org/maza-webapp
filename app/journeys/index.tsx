@@ -10,6 +10,7 @@ import ErrorState from '@/app/components/categories/ErrorState';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 import { useGetJourneys } from '../hooks/useJourneyQueries';
+import EmptyState from '@/app/components/categories/EmptyState';
 
 export default function JourneySelection() {
   const { data: journeys, isLoading, error, refetch } = useGetJourneys();
@@ -60,10 +61,16 @@ export default function JourneySelection() {
       <Header title={'Escolha uma Jornada'} />
 
       <FlatList
-        data={journeys?.data}
+        data={journeys?.data?.filter((journey) => journey.courses && journey.courses.length > 0)}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => <JourneyItem journey={item} onPress={handleCategoryPress} />}
         contentContainerStyle={themedStyles.categoriesList}
+        ListEmptyComponent={
+          <EmptyState
+            title="Nenhuma jornada disponível"
+            message="No momento não temos jornadas com cursos disponíveis."
+          />
+        }
       />
     </SafeAreaView>
   );

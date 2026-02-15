@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 import { Journey } from '@/app/types/journeys';
-import { useGetJourneyCourses } from '@/app/hooks/useJourneyQueries';
 
 interface JourneyItemProps {
   journey: Journey;
@@ -15,9 +14,8 @@ export default function JourneyItem({ journey, onPress }: JourneyItemProps) {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  // Fetch courses count
-  const { data: courses } = useGetJourneyCourses(journey.documentId);
-  const coursesCount = courses?.length || 0;
+  // Use pre-fetched courses count
+  const coursesCount = journey.courses?.length || 0;
 
   const themedStyles = useMemo(
     () =>
@@ -65,7 +63,9 @@ export default function JourneyItem({ journey, onPress }: JourneyItemProps) {
       </View>
       <View style={themedStyles.categoryInfo}>
         <Text style={themedStyles.categoryName}>{journey.name}</Text>
-        <Text style={themedStyles.coursesCount}>{coursesCount > 1 ? `${coursesCount} Cursos` : `${coursesCount} Curso`}</Text>
+        <Text style={themedStyles.coursesCount}>
+          {coursesCount > 1 ? `${coursesCount} Cursos` : `${coursesCount} Curso`}
+        </Text>
       </View>
       <Ionicons name="chevron-forward" size={24} color={colors.iconColor} />
     </TouchableOpacity>
