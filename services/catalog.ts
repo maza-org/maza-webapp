@@ -439,7 +439,12 @@ export function useForumComments(courseId: string, token?: string) {
   return useQuery({
     queryKey: ['forum-comments', courseId],
     queryFn: async (): Promise<ForumComment[]> => {
-      const response = await api.get(`/courses/${courseId}/forum/`);
+      const response = await api.get(`/courses/${courseId}/forum/`,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       return response.data;
     },
     enabled: !!courseId,
