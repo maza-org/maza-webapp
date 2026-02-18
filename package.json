@@ -13,7 +13,27 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
-    "verify": "expo install --fix"
+    "doctor": "npx expo-doctor",
+    "update:check": "expo install --check",
+    "update:fix": "expo install --fix",
+    "prebuild": "expo prebuild",
+    "prebuild:clean": "expo prebuild --clean",
+    "prebuild:ios": "expo prebuild --platform ios",
+    "prebuild:ios:clean": "expo prebuild --platform ios --clean",
+    "prebuild:android": "expo prebuild --platform android",
+    "prebuild:android:clean": "expo prebuild --platform android --clean",
+    "build:dev:ios": "eas build --profile development --platform ios --local",
+    "build:dev:android": "eas build --profile development --platform android --local",
+    "build:dev:ios:remote": "eas build --profile development --platform ios",
+    "build:dev:android:remote": "eas build --profile development --platform android",
+    "build:preview:ios": "eas build --profile preview --platform ios --local",
+    "build:preview:android": "eas build --profile preview --platform android --local",
+    "build:preview:ios:remote": "eas build --profile preview --platform ios",
+    "build:preview:android:remote": "eas build --profile preview --platform android",
+    "build:prod:ios": "eas build --profile production --platform ios --local",
+    "build:prod:android": "eas build --profile production --platform android --local",
+    "build:prod:ios:remote": "eas build --profile production --platform ios",
+    "build:prod:android:remote": "eas build --profile production --platform android"
   },
   "jest": {
     "preset": "jest-expo"
