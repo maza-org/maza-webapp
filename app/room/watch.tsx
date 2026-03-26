@@ -325,6 +325,17 @@ export default function CourseScreen() {
         },
       });
       return;
+    } else if (content.format === 'HTML' || content.url?.endsWith('.html')) {
+      router.push({
+        pathname: '/room/html-viewer',
+        params: {
+          content: JSON.stringify(content),
+          userCourseId: userCourseId as string,
+          moduleId: moduleId as string,
+          contentId: getContentId(content).toString(),
+        },
+      });
+      return;
     } else if (content.format === 'PDF' && (content.url || content.file?.url)) {
       router.push({
         pathname: '/room/pdf-viewer',
