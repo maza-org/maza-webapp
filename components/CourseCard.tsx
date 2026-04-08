@@ -56,7 +56,7 @@ export default function CourseCard({ course, onPress, badge, showRating = true }
     >
       {course.picture ? (
         <Image
-          source={{ uri: getMediaUrl(course.picture.formats.small?.url || course.picture.url) }}
+          source={{ uri: getMediaUrl(course.picture.formats?.small?.url || course.picture.url) }}
           style={styles.courseImage}
         />
       ) : (
@@ -109,7 +109,7 @@ export default function CourseCard({ course, onPress, badge, showRating = true }
 
         <View style={styles.instructorInfo}>
           <Image
-            source={{ uri: getMediaUrl(course.picture?.formats.thumbnail?.url || course.picture?.url) }}
+            source={{ uri: getMediaUrl(course.picture?.formats?.thumbnail?.url || course.picture?.url) }}
             style={styles.instructorAvatar}
           />
           <Text style={[styles.instructorName, { color: colors.textSecondary }]}>

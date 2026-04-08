@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		09514567DAB55CD943E98C24 /* libPods-Maza.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A169CC3120DD9B7EDDA1AAF /* libPods-Maza.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		1A8F10A028D53344960AAB24 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F351C6D0307C77C43C4424A1 /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		45515182ADDF6124BE61DF81 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7088B7D4F6FA3680DCE331 /* ExpoModulesProvider.swift */; };
+		7CCCE5D5D8ACCCF2D8DA8A0C /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F64345F18F49220DDB999C4 /* ExpoModulesProvider.swift */; };
+		AA445FAF450B5FD234EB448E /* libPods-Maza.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D66F66B2EADC738BBD702C16 /* libPods-Maza.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		EF723AEE5B088EEFA892BE02 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F98685B5A3E74313A0B56085 /* PrivacyInfo.xcprivacy */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
@@ -20,16 +20,16 @@
 		13B07F961A680F5B00A75B9A /* Maza.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Maza.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Maza/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Maza/Info.plist; sourceTree = "<group>"; };
-		2A169CC3120DD9B7EDDA1AAF /* libPods-Maza.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Maza.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		30A2CECD6DA0F6312F9AC96C /* Pods-Maza.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Maza.debug.xcconfig"; path = "Target Support Files/Pods-Maza/Pods-Maza.debug.xcconfig"; sourceTree = "<group>"; };
-		4D7088B7D4F6FA3680DCE331 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Maza/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		4F64345F18F49220DDB999C4 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Maza/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		75C3DCE4E01362AF041705FF /* Pods-Maza.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Maza.release.xcconfig"; path = "Target Support Files/Pods-Maza/Pods-Maza.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Maza/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		D15EBF828B43E0221D52A87A /* Pods-Maza.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Maza.release.xcconfig"; path = "Target Support Files/Pods-Maza/Pods-Maza.release.xcconfig"; sourceTree = "<group>"; };
+		D134BFE34CE402ABA3467880 /* Pods-Maza.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Maza.debug.xcconfig"; path = "Target Support Files/Pods-Maza/Pods-Maza.debug.xcconfig"; sourceTree = "<group>"; };
+		D66F66B2EADC738BBD702C16 /* libPods-Maza.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Maza.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Maza/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Maza-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Maza-Bridging-Header.h"; path = "Maza/Maza-Bridging-Header.h"; sourceTree = "<group>"; };
-		F98685B5A3E74313A0B56085 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Maza/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		F351C6D0307C77C43C4424A1 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Maza/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,21 +37,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				09514567DAB55CD943E98C24 /* libPods-Maza.a in Frameworks */,
+				AA445FAF450B5FD234EB448E /* libPods-Maza.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0A3D3C02342ABD9D3FAB10FB /* Maza */ = {
-			isa = PBXGroup;
-			children = (
-				4D7088B7D4F6FA3680DCE331 /* ExpoModulesProvider.swift */,
-			);
-			name = Maza;
-			sourceTree = "<group>";
-		};
 		13B07FAE1A68108700A75B9A /* Maza */ = {
 			isa = PBXGroup;
 			children = (
@@ -61,7 +53,15 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				F98685B5A3E74313A0B56085 /* PrivacyInfo.xcprivacy */,
+				F351C6D0307C77C43C4424A1 /* PrivacyInfo.xcprivacy */,
+			);
+			name = Maza;
+			sourceTree = "<group>";
+		};
+		1E7EE64E266613CD43582245 /* Maza */ = {
+			isa = PBXGroup;
+			children = (
+				4F64345F18F49220DDB999C4 /* ExpoModulesProvider.swift */,
 			);
 			name = Maza;
 			sourceTree = "<group>";
@@ -70,27 +70,17 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				2A169CC3120DD9B7EDDA1AAF /* libPods-Maza.a */,
+				D66F66B2EADC738BBD702C16 /* libPods-Maza.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		6BD4B49EB17576D90774C70E /* ExpoModulesProviders */ = {
+		30A45F483D2BE311849C9204 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				0A3D3C02342ABD9D3FAB10FB /* Maza */,
+				1E7EE64E266613CD43582245 /* Maza */,
 			);
 			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
-		6D4D4F1F72852EC3A029702A /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				30A2CECD6DA0F6312F9AC96C /* Pods-Maza.debug.xcconfig */,
-				D15EBF828B43E0221D52A87A /* Pods-Maza.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -107,8 +97,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				6D4D4F1F72852EC3A029702A /* Pods */,
-				6BD4B49EB17576D90774C70E /* ExpoModulesProviders */,
+				F0645193DF705FA8CAAA64FC /* Pods */,
+				30A45F483D2BE311849C9204 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -132,6 +122,16 @@
 			path = Maza/Supporting;
 			sourceTree = "<group>";
 		};
+		F0645193DF705FA8CAAA64FC /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				D134BFE34CE402ABA3467880 /* Pods-Maza.debug.xcconfig */,
+				75C3DCE4E01362AF041705FF /* Pods-Maza.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -140,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Maza" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				52DA88D9A911EE285675C156 /* [Expo] Configure project */,
+				F254E892940F2D3A2F7016E5 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				CE4B9A3A49800BFDFDF94D4B /* [CP] Embed Pods Frameworks */,
+				C3EC9182ACB7ECDCADAC75F0 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				EF723AEE5B088EEFA892BE02 /* PrivacyInfo.xcprivacy in Resources */,
+				1A8F10A028D53344960AAB24 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -241,30 +241,6 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
-		};
-		52DA88D9A911EE285675C156 /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/.xcode.env",
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/Maza/Maza.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-Maza/expo-configure-project.sh",
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-Maza/ExpoModulesProvider.swift",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Maza/expo-configure-project.sh\"\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -314,7 +290,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Maza/Pods-Maza-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		CE4B9A3A49800BFDFDF94D4B /* [CP] Embed Pods Frameworks */ = {
+		C3EC9182ACB7ECDCADAC75F0 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -336,6 +312,30 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Maza/Pods-Maza-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		F254E892940F2D3A2F7016E5 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/Maza/Maza.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-Maza/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-Maza/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Maza/expo-configure-project.sh\"\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -344,7 +344,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				45515182ADDF6124BE61DF81 /* ExpoModulesProvider.swift in Sources */,
+				7CCCE5D5D8ACCCF2D8DA8A0C /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -353,7 +353,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 30A2CECD6DA0F6312F9AC96C /* Pods-Maza.debug.xcconfig */;
+			baseConfigurationReference = D134BFE34CE402ABA3467880 /* Pods-Maza.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -389,7 +389,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D15EBF828B43E0221D52A87A /* Pods-Maza.release.xcconfig */;
+			baseConfigurationReference = 75C3DCE4E01362AF041705FF /* Pods-Maza.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
