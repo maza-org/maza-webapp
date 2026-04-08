@@ -1,18 +1,33 @@
 import PostHog from 'posthog-react-native';
 import { User } from '@/types/user';
 
-export const posthogClient = new PostHog(process.env.EXPO_PUBLIC_POSTHOG_API_KEY!, {
-  host: 'https://us.i.posthog.com',
-  enableSessionReplay: false,
-  disabled: __DEV__,
-  captureAppLifecycleEvents: true, // Auto-capture app open/background events
-});
+let posthogClient: PostHog | null = null;
+
+try {
+  const apiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY;
+  if (apiKey) {
+    posthogClient = new PostHog(apiKey, {
+      host: 'https://us.i.posthog.com',
+      enableSessionReplay: false,
+      disabled: __DEV__,
+      captureAppLifecycleEvents: true,
+    });
+  } else {
+    console.warn('[Analytics] PostHog API key not set, analytics disabled');
+  }
+} catch (error) {
+  console.warn('[Analytics] Failed to initialize PostHog:', error);
+}
+
+export { posthogClient };
 
 export const identifyAnalyticsUser = (user: User) => {
-  if (posthogClient) {
-    posthogClient.identify(user.documentId, {
+  try {
+    posthogClient?.identify(user.documentId, {
       name: user.fullname,
       identifier: user.email || user.phone,
     });
+  } catch (error) {
+    console.warn('[Analytics] Failed to identify user:', error);
   }
 };
