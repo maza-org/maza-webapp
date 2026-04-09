@@ -120,7 +120,7 @@ export default function Customize() {
             await Promise.all(
               removedTopics.map((topic) =>
                 removeInterestMutation.mutateAsync({
-                  token: user.token,
+                  token: user.token!,
                   documentId: topic.documentId,
                 })
               )
@@ -133,7 +133,7 @@ export default function Customize() {
 
       // Update interests
       await updateInterestsMutation.mutateAsync({
-        token: user.token,
+        token: user.token!,
         interests: selectedTopics.map((topic) => topic.documentId),
       });
 
