@@ -91,7 +91,7 @@ export default function UserCoursesSection({
           >
             {userCourse.course.picture ? (
               <Image
-                source={{ uri: getMediaUrl(userCourse.course.picture.formats?.thumbnail?.url) }}
+                source={{ uri: getMediaUrl(userCourse.course.picture.formats?.thumbnail?.url || userCourse.course.picture.url) }}
                 style={styles.courseImage}
               />
             ) : (

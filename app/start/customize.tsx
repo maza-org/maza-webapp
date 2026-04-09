@@ -29,10 +29,14 @@ export default function Customize() {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const userTopics = useMemo(
-    () => (interests ? JSON.parse(interests as string) : []),
-    [interests]
-  );
+  const userTopics = useMemo(() => {
+    try {
+      return interests ? JSON.parse(interests as string) : [];
+    }
+    catch {
+      return [];
+    }
+  }, [interests]);
 
   const themedStyles = useMemo(() => StyleSheet.create({
     container: {

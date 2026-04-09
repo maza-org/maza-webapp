@@ -14,13 +14,16 @@ import Colors from '@/constants/Colors';
 
 export default function Quiz() {
   const { content, isFinalTest, courseId, userCourseId, moduleId } = useLocalSearchParams();
-  const quizData: QuizModule = JSON.parse(content as string);
+  const quizData = useMemo((): QuizModule | null => {
+    try { return content ? JSON.parse(content as string) : null; }
+    catch { return null; }
+  }, [content]);
   const isFinalTestQuiz = isFinalTest === 'true';
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
   // Calculate quiz duration in seconds based on the duration object
-  const QUIZ_DURATION = calculateDurationInSeconds(quizData.duration);
+  const QUIZ_DURATION = quizData ? calculateDurationInSeconds(quizData.duration) : 0;
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<SelectedAnswersMap>({});
@@ -264,6 +267,8 @@ export default function Quiz() {
       }
     };
   }, []);
+
+  if (!quizData) { router.back(); return null; }
 
   const handleTimeUp = async () => {
     // Set time expired flag
