@@ -1133,7 +1133,6 @@ export default function CourseDetail() {
   const celebrateImage = require('@/assets/images/celebrate.webp');
 
   function handlePlayModule(module: CourseModuleData) {
-    console.log('module', courseData?.cover.formats?.thumbnail?.url);
     // Use the original module data for navigation
     // When user is logged in, originalModule is UserCourseModule with content progress states
     router.push({

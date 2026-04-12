@@ -29,10 +29,14 @@ export default function Customize() {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const userTopics = useMemo(
-    () => (interests ? JSON.parse(interests as string) : []),
-    [interests]
-  );
+  const userTopics = useMemo(() => {
+    try {
+      return interests ? JSON.parse(interests as string) : [];
+    }
+    catch {
+      return [];
+    }
+  }, [interests]);
 
   const themedStyles = useMemo(() => StyleSheet.create({
     container: {
@@ -116,7 +120,7 @@ export default function Customize() {
             await Promise.all(
               removedTopics.map((topic) =>
                 removeInterestMutation.mutateAsync({
-                  token: user.token,
+                  token: user.token!,
                   documentId: topic.documentId,
                 })
               )
@@ -129,7 +133,7 @@ export default function Customize() {
 
       // Update interests
       await updateInterestsMutation.mutateAsync({
-        token: user.token,
+        token: user.token!,
         interests: selectedTopics.map((topic) => topic.documentId),
       });
 

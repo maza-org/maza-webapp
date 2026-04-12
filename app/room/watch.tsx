@@ -106,7 +106,14 @@ interface ExtendedModuleData {
 
 export default function CourseScreen() {
   const { module, author, title, imageUrl, userCourseId, moduleId } = useLocalSearchParams();
-  const moduleData = JSON.parse(module as string) as ExtendedModuleData;
+  const moduleData = useMemo((): ExtendedModuleData | null => {
+    try {
+      return module ? JSON.parse(module as string) : null;
+    }
+    catch {
+      return null;
+    }
+  }, [module]);
   const [playing, setPlaying] = React.useState(false);
   const [selectedContent, setSelectedContent] = React.useState<ExtendedContent | undefined>(undefined);
   const [showAudioPlayer, setShowAudioPlayer] = React.useState(false);
@@ -416,6 +423,8 @@ export default function CourseScreen() {
   // If not, we check if it is a youtube video (has youtubeID).
   // If no youtubeID, we fall back to checking .url for a direct link.
   // This prevents the 'url' field (which might contain the youtube link) from triggering showDirectVideo when we want showYoutubeVideo.
+  if (!moduleData) { router.back(); return null; }
+
   const showDirectVideo =
     playing && selectedContent && (selectedContent.file?.url || (selectedContent.url && !selectedContent.youtubeID));
   const showYoutubeVideo = playing && selectedContent && selectedContent.youtubeID && !selectedContent.file?.url;

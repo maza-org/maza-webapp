@@ -24,7 +24,7 @@ export default function ContinueCourseCard({ userCourse, onPress }: ContinueCour
       <View style={styles.courseHeader}>
         {userCourse.course.picture ? (
           <Image
-            source={{ uri: getMediaUrl(userCourse.course.picture.formats.thumbnail.url) }}
+            source={{ uri: getMediaUrl(userCourse.course.picture.formats?.thumbnail?.url || userCourse.course.picture.url) }}
             style={styles.profileImage}
           />
         ) : (
@@ -42,7 +42,7 @@ export default function ContinueCourseCard({ userCourse, onPress }: ContinueCour
       </View>
 
       <Image
-        source={{ uri: getMediaUrl(userCourse.course.cover?.formats?.thumbnail?.url) }}
+        source={{ uri: getMediaUrl(userCourse.course.cover?.formats?.thumbnail?.url || userCourse.course.cover?.url) }}
         style={styles.coverImage}
       />
 

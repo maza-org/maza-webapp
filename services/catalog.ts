@@ -246,8 +246,11 @@ export function useStartCourse() {
       const userCourseDetails = await api.get(`/user-courses/${userCourseDocumentId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const module = userCourseDetails.data.modules[0];
-      const content = module.contents[0];
+      const module = userCourseDetails.data.modules?.[0];
+      const content = module?.contents?.[0];
+      if (!module || !content) {
+        return saveResult;
+      }
       // 4) Conclude first module/content to initialize progress
       // Assumes module index 1 and content index 1 per provided spec
 
