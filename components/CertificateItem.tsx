@@ -1,13 +1,19 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Certificate } from '@/types/user';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 
+interface CertificateBase {
+  id: number;
+  documentId: string;
+  createdAt: string;
+  course: { title?: string | null; author?: string | null } | null;
+}
+
 interface CertificateItemProps {
-  certificate: Certificate;
-  onPress: (certificate: Certificate) => void;
+  certificate: CertificateBase;
+  onPress: (certificate: any) => void;
 }
 
 const CertificateItem: React.FC<CertificateItemProps> = ({ certificate, onPress }) => {
@@ -61,8 +67,8 @@ const CertificateItem: React.FC<CertificateItemProps> = ({ certificate, onPress 
         <Feather name="award" size={24} color={colors.primary} />
       </View>
       <View style={themedStyles.certificateInfo}>
-        <Text style={themedStyles.certificateTitle}>{certificate.course.title}</Text>
-        <Text style={themedStyles.certificateIssuer}>{certificate.course.author}</Text>
+        <Text style={themedStyles.certificateTitle}>{certificate.course?.title}</Text>
+        <Text style={themedStyles.certificateIssuer}>{certificate.course?.author}</Text>
         <Text style={themedStyles.certificateDate}>{new Date(certificate.createdAt).toLocaleDateString('pt-PT')}</Text>
       </View>
       <Feather name="chevron-right" size={20} color={colors.textMuted} />

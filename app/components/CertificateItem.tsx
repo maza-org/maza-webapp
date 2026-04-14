@@ -16,8 +16,8 @@ const CertificateItem: React.FC<CertificateItemProps> = ({ certificate, onPress 
           <Feather name="award" size={20} color="#1fa2df" />
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.title}>{certificate.course.title}</Text>
-          <Text style={styles.author}>{certificate.course.author}</Text>
+          <Text style={styles.title}>{certificate.course?.title}</Text>
+          <Text style={styles.author}>{certificate.course?.author}</Text>
           <Text style={styles.date}>{new Date(certificate.createdAt).toLocaleDateString('pt-PT')}</Text>
         </View>
       </View>

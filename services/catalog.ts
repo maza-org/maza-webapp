@@ -47,7 +47,7 @@ export function useUserCourses(token: string) {
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data;
+      return response.data.filter((uc: any) => uc.course != null);
     },
     enabled: !!token,
     staleTime: 2 * 60 * 1000, // 2 minutes
@@ -65,7 +65,7 @@ export function useCertificates(token?: string) {
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data;
+      return (response.data as CertificateSummary[]).filter(c => c.course != null);
     },
     enabled: !!token,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -425,7 +425,7 @@ export function useCourseStateAndCertificates(courseId: string, token: string) {
 
   // Only fetch certificates if user is logged in and course is finished
   const shouldFetchCertificates = !!token && isCourseFinished;
-  const hasCertificate = shouldFetchCertificates && certificates.some((cert) => cert.course.documentId === courseId);
+  const hasCertificate = shouldFetchCertificates && certificates.some((cert) => cert.course?.documentId === courseId);
 
   return {
     courseState,
@@ -448,7 +448,10 @@ export function useForumComments(courseId: string, token?: string) {
           'Content-Type': 'application/json',
         },
       });
-      return response.data;
+      const comments = response.data as ForumComment[];
+      return comments
+        .filter(c => c.user != null)
+        .map(c => ({ ...c, replies: (c.replies ?? []).filter(r => r.user != null) }));
     },
     enabled: !!courseId,
     staleTime: 60 * 1000, // 1 minute

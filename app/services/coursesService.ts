@@ -9,7 +9,7 @@ const coursesClient = axios.create({
 
 export interface CourseData {
   id: string;
-  course: {
+  course: null | {
     title: string;
     author: string;
     rating_avg: number;
@@ -37,7 +37,7 @@ export class CoursesService {
         },
       });
 
-      return response.data.data || [];
+      return (response.data.data || []).filter((item: CourseData) => item.course != null);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
@@ -74,7 +74,7 @@ export class CoursesService {
         },
       });
 
-      return response.data.data || [];
+      return (response.data.data || []).filter((item: CourseData) => item.course != null);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
@@ -93,7 +93,7 @@ export class CoursesService {
         },
       });
 
-      return response.data.data || [];
+      return (response.data.data || []).filter((item: CourseData) => item.course != null);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;

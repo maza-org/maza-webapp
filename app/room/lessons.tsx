@@ -811,7 +811,7 @@ export default function CourseDetail() {
 
   // Check if certificate exists for this course and no errors
   const hasCertificate =
-    !certificatesError && certificates.length > 0 && certificates.some((cert) => cert.course.documentId === documentId);
+    !certificatesError && certificates.length > 0 && certificates.some((cert) => cert.course?.documentId === documentId);
 
   // Unified check for course completion (either 100% progress OR has certificate)
   const isCourseCompleted = userCourseDetails?.progress === 100 || hasCertificate;
@@ -826,7 +826,7 @@ export default function CourseDetail() {
       case 'certificate':
         // Since we only show this option when certificate exists, we can safely find it
         // If user is at 100% but api hasn't generated certificate yet, this might need a fallback check
-        const certificate = certificates.find((cert) => cert.course.documentId === documentId);
+        const certificate = certificates.find((cert) => cert.course?.documentId === documentId);
         if (certificate) {
           router.push({
             pathname: '/user/certificate',
@@ -1396,7 +1396,7 @@ export default function CourseDetail() {
                   <View style={styles.replyPreviewLeft}>
                     <Ionicons name="arrow-undo" size={14} color={colors.primary} />
                     <Text style={themedStyles.replyPreviewLabel}>
-                      Respondendo a <Text style={styles.replyPreviewName}>{replyingTo.user.fullname}</Text>
+                      Respondendo a <Text style={styles.replyPreviewName}>{replyingTo?.user?.fullname}</Text>
                     </Text>
                   </View>
                   <TouchableOpacity onPress={cancelReply} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>

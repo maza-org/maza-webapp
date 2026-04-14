@@ -6,10 +6,10 @@ export interface Certificate {
     id: number;
     documentId: string;
     title: string;
-    author: string;
+    author: string | null;
     rating_avg: number;
     subscribed: number;
-  };
+  } | null;
 }
 
 export interface CertificatesResponse {

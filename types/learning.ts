@@ -75,10 +75,10 @@ export interface CertificateSummary {
     id: number;
     documentId: string;
     title: string;
-    author: string;
+    author: string | null;
     rating_avg: number;
     subscribed: number;
-  };
+  } | null;
   user: {
     id: number;
     documentId: string;
@@ -114,7 +114,7 @@ export interface ForumComment {
   comment: string;
   date: string;
   replies: ForumComment[];
-  user: ForumUser;
+  user: ForumUser | null;
 }
 
 export interface ReviewUser {

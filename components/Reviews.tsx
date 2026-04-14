@@ -152,7 +152,7 @@ const ReviewItem = ({ review }: { review: Review }) => {
       <View style={styles.reviewHeader}>
         <View style={styles.avatarContainer}>
           {review.user?.profile_image ? (
-            <Image source={{ uri: review.user.profile_image }} style={styles.avatarImage} resizeMode="cover" />
+            <Image source={{ uri: review.user?.profile_image ?? undefined }} style={styles.avatarImage} resizeMode="cover" />
           ) : (
             <Text style={styles.avatarText}>{userInitial}</Text>
           )}

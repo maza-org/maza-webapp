@@ -179,7 +179,7 @@ const CommentItem = ({
 
   const hasReplies = comment.replies && comment.replies.length > 0;
   const isLongComment = comment.comment.length > 200;
-  const isOwner = currentUserEmail && comment.user.email === currentUserEmail;
+  const isOwner = currentUserEmail && comment.user?.email === currentUserEmail;
   const isDeleting = deletingCommentId === comment.uuid;
 
   const displayedComment = isExpanded || !isLongComment ? comment.comment : `${comment.comment.substring(0, 200)}...`;
@@ -188,14 +188,14 @@ const CommentItem = ({
     <View style={styles.commentCard}>
       <View style={styles.commentHeader}>
         <View style={styles.avatarContainer}>
-          {comment.user.profile_image ? (
+          {comment.user?.profile_image ? (
             <Image source={{ uri: comment.user.profile_image }} style={styles.avatarImage} resizeMode="cover" />
           ) : (
-            <Text style={styles.avatarText}>{comment.user.name.charAt(0).toUpperCase()}</Text>
+            <Text style={styles.avatarText}>{(comment.user?.name ?? 'U').charAt(0).toUpperCase()}</Text>
           )}
         </View>
         <View style={styles.commentUserInfo}>
-          <Text style={styles.userName}>{comment.user.fullname}</Text>
+          <Text style={styles.userName}>{comment.user?.fullname}</Text>
           <Text style={styles.commentDate}>{formatForumDate(comment.date)}</Text>
         </View>
         {isOwner && (
@@ -236,22 +236,22 @@ const CommentItem = ({
       {showReplies && hasReplies && (
         <View style={styles.repliesContainer}>
           {comment.replies.map((reply) => {
-            const isReplyOwner = currentUserEmail && reply.user.email === currentUserEmail;
+            const isReplyOwner = currentUserEmail && reply.user?.email === currentUserEmail;
             const isReplyDeleting = deletingCommentId === reply.uuid;
             return (
               <View key={reply.id} style={styles.replyCard}>
                 <View style={styles.commentHeader}>
                   <View style={[styles.avatarContainer, styles.smallAvatar]}>
-                    {reply.user.profile_image ? (
+                    {reply.user?.profile_image ? (
                       <Image source={{ uri: reply.user.profile_image }} style={styles.avatarImage} resizeMode="cover" />
                     ) : (
                       <Text style={[styles.avatarText, styles.smallAvatarText]}>
-                        {reply.user.name.charAt(0).toUpperCase()}
+                        {(reply.user?.name ?? 'U').charAt(0).toUpperCase()}
                       </Text>
                     )}
                   </View>
                   <View style={styles.commentUserInfo}>
-                    <Text style={[styles.userName, styles.smallUserName]}>{reply.user.fullname}</Text>
+                    <Text style={[styles.userName, styles.smallUserName]}>{reply.user?.fullname}</Text>
                     <Text style={styles.commentDate}>{formatForumDate(reply.date)}</Text>
                   </View>
                   {isReplyOwner && (
