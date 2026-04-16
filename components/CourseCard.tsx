@@ -54,9 +54,9 @@ export default function CourseCard({ course, onPress, badge, showRating = true }
       style={[styles.courseCard, { backgroundColor: colors.cardBackground }]}
       onPress={() => onPress(course)}
     >
-      {course.picture ? (
+      {course?.picture ? (
         <Image
-          source={{ uri: getMediaUrl(course.picture.formats?.small?.url || course.picture.url) }}
+          source={{ uri: getMediaUrl(course.picture?.formats?.small?.url || course.picture?.url) }}
           style={styles.courseImage}
         />
       ) : (

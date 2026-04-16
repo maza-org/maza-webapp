@@ -2,7 +2,7 @@ import { Course } from './course';
 
 export interface UserCourse {
   id: number;
-  course: Course;
+  course: Course | null;
   progress: number;
   status: 'InProgress' | 'Completed' | 'NotStarted';
   updatedAt: string;

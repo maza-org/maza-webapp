@@ -105,7 +105,7 @@ export function useUserCourses(token: string) {
         return dateB.getTime() - dateA.getTime();
       });
 
-      return sortedCourses;
+      return sortedCourses.filter(uc => uc.course != null);
     },
     enabled: !!token,
     staleTime: 2 * 60 * 1000, // 2 minutes

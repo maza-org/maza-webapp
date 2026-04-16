@@ -16,7 +16,7 @@ export class ProfileService {
       },
     });
 
-    return response.data.data;
+    return (response.data.data as Certificate[]).filter(c => c.course != null);
   }
 
   static async deleteInterest(documentId: string, token: string): Promise<void> {

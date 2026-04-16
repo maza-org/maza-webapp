@@ -35,7 +35,7 @@ export interface Certificate {
   id: number;
   documentId: string;
   createdAt: string;
-  course: Course;
+  course: Course | null;
 }
 
 export interface Interest {

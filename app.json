@@ -2,7 +2,7 @@
   "expo": {
     "name": "Maza",
     "slug": "org-maza-app",
-    "version": "4.4.3",
+    "version": "4.4.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -55,7 +55,15 @@
       "expo-web-browser",
       "expo-localization",
       "expo-video",
-      "expo-audio"
+      "expo-audio",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "organization": "maza-75",
+          "project": "react-native"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

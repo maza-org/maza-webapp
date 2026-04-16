@@ -60,7 +60,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   // Handler for certificate navigation
   const handleViewCertificate = () => {
     if (hasCertificate && certificates.length > 0) {
-      const certificate = certificates.find((cert) => cert.course.documentId === courseId);
+      const certificate = certificates.find((cert) => cert.course?.documentId === courseId);
       if (certificate) {
         router.push({
           pathname: '/user/certificate',

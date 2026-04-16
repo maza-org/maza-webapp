@@ -97,7 +97,7 @@ export default function CourseCard({ course, onPress }: CourseCardProps) {
               {course.author}
             </Text>
           )}
-          <Text style={themedStyles.rating}>★ {course.rating_avg.toFixed(1)}</Text>
+          <Text style={themedStyles.rating}>★ {(course.rating_avg ?? 0).toFixed(1)}</Text>
         </View>
       </View>
     </TouchableOpacity>

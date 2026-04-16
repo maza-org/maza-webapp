@@ -8,7 +8,7 @@ export interface Course {
   id: number;
   documentId: string;
   title: string;
-  author: string;
+  author: string | null;
   rating_avg: number;
   subscribed: number;
 }
@@ -17,7 +17,7 @@ export interface Certificate {
   id: number;
   documentId: string;
   createdAt: string;
-  course: Course;
+  course: Course | null;
 }
 
 export interface ProfileImageProps {

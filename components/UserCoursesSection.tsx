@@ -83,15 +83,17 @@ export default function UserCoursesSection({
       </View>
 
       <View style={styles.coursesList}>
-        {userCourses.map((userCourse) => (
+        {userCourses.filter(uc => uc.course != null).map((userCourse) => {
+          const course = userCourse.course!;
+          return (
           <TouchableOpacity
             key={userCourse.id}
             style={[styles.courseItem, { backgroundColor: colors.cardBackground }]}
-            onPress={() => onCoursePress(userCourse.course)}
+            onPress={() => onCoursePress(course)}
           >
-            {userCourse.course.picture ? (
+            {course?.picture ? (
               <Image
-                source={{ uri: getMediaUrl(userCourse.course.picture.formats?.thumbnail?.url || userCourse.course.picture.url) }}
+                source={{ uri: getMediaUrl(course.picture?.formats?.thumbnail?.url || course.picture?.url) }}
                 style={styles.courseImage}
               />
             ) : (
@@ -100,13 +102,14 @@ export default function UserCoursesSection({
               </View>
             )}
             <View style={styles.courseInfo}>
-              <Text style={[styles.courseCategory, { color: colors.textSecondary }]}>{userCourse.course.author}</Text>
-              <Text style={[styles.courseItemTitle, { color: colors.text }]}>{userCourse.course.title}</Text>
+              <Text style={[styles.courseCategory, { color: colors.textSecondary }]}>{course.author}</Text>
+              <Text style={[styles.courseItemTitle, { color: colors.text }]}>{course.title}</Text>
               <Text style={[styles.moduleCount, { color: colors.textSecondary }]}>Progresso</Text>
             </View>
             <Text style={styles.percentageText}>{userCourse.progress}%</Text>
           </TouchableOpacity>
-        ))}
+          );
+        })}
       </View>
     </View>
   );

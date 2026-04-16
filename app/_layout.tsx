@@ -23,14 +23,14 @@ export {
 SplashScreen.preventAutoHideAsync();
 
 // Only initialize Sentry in production
-if (process.env.NODE_ENV === 'production') {
+if (!__DEV__) {
   // Construct a new integration instance. This is needed to communicate between the integration and React
-  const navigationIntegration = Sentry.reactNavigationIntegration({
-    enableTimeToInitialDisplay: !isRunningInExpoGo(),
-  });
+const navigationIntegration = Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: !isRunningInExpoGo(),
+});
 
-  Sentry.init({
-    dsn: 'https://703cf8daf0b6979b53253ad09bdf358c@o4509072021127168.ingest.de.sentry.io/4509072023617616',
+Sentry.init({
+  dsn: 'https://703cf8daf0b6979b53253ad09bdf358c@o4509072021127168.ingest.de.sentry.io/4509072023617616',
     debug: false, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
     tracesSampleRate: 1.0, // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing. Adjusting this value in production.
     integrations: [
@@ -38,7 +38,7 @@ if (process.env.NODE_ENV === 'production') {
       navigationIntegration,
     ],
     enableNativeFramesTracking: !isRunningInExpoGo(), // Tracks slow and frozen frames in the application
-  });
+});
 }
 
 const queryClient = new QueryClient({
@@ -72,7 +72,7 @@ function RootLayout() {
   return <RootLayoutNav onReady={() => SplashScreen.hideAsync()} />;
 }
 
-export default RootLayout;
+export default Sentry.wrap(RootLayout);
 
 function RootLayoutNav({ onReady }: { onReady: () => void }) {
   const router = useRouter();
@@ -107,7 +107,7 @@ function RootLayoutNav({ onReady }: { onReady: () => void }) {
   // This prevents any white screen flash
   return (
     <PostHogProvider
-      client={posthogClient}
+      client={posthogClient!}
       autocapture={{
         captureScreens: false, // We'll handle screen tracking manually for Expo Router
         captureTouches: true,

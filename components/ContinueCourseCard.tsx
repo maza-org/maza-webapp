@@ -16,15 +16,18 @@ export default function ContinueCourseCard({ userCourse, onPress }: ContinueCour
   const { theme } = useTheme();
   const colors = Colors[theme];
 
+  const course = userCourse.course;
+  if (!course) return null;
+
   return (
     <TouchableOpacity
       style={[styles.courseCard, { backgroundColor: colors.cardBackground }]}
-      onPress={() => onPress(userCourse.course)}
+      onPress={() => onPress(course)}
     >
       <View style={styles.courseHeader}>
-        {userCourse.course.picture ? (
+        {course?.picture ? (
           <Image
-            source={{ uri: getMediaUrl(userCourse.course.picture.formats?.thumbnail?.url || userCourse.course.picture.url) }}
+            source={{ uri: getMediaUrl(course.picture?.formats?.thumbnail?.url || course.picture?.url) }}
             style={styles.profileImage}
           />
         ) : (
@@ -33,20 +36,20 @@ export default function ContinueCourseCard({ userCourse, onPress }: ContinueCour
           </View>
         )}
         <View style={styles.courseHeaderInfo}>
-          <Text style={[styles.instructorName, { color: colors.textSecondary }]}>{userCourse.course.author}</Text>
+          <Text style={[styles.instructorName, { color: colors.textSecondary }]}>{course.author}</Text>
           <View style={styles.ratingContainer}>
             <Text style={styles.starIcon}>★</Text>
-            <Text style={[styles.ratingText, { color: colors.text }]}>{userCourse.course.rating_avg}</Text>
+            <Text style={[styles.ratingText, { color: colors.text }]}>{course.rating_avg}</Text>
           </View>
         </View>
       </View>
 
       <Image
-        source={{ uri: getMediaUrl(userCourse.course.cover?.formats?.thumbnail?.url || userCourse.course.cover?.url) }}
+        source={{ uri: getMediaUrl(course.cover?.formats?.thumbnail?.url || course.cover?.url) }}
         style={styles.coverImage}
       />
 
-      <Text style={[styles.courseTitle, { color: colors.text }]}>{userCourse.course.title}</Text>
+      <Text style={[styles.courseTitle, { color: colors.text }]}>{course.title}</Text>
 
       <View style={styles.progressContainer}>
         <View style={styles.progressInfo}>
