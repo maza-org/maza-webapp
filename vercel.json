@@ -8,6 +8,13 @@
     }
   },
   "framework": null,
+  "redirects": [
+    {
+      "source": "/login",
+      "destination": "https://login.mazas.org",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
