@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Platform, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -35,6 +35,9 @@ export default function ProfileScreen() {
   const profileRefreshMutation = useProfileRefresh();
 
   const colors = isDark ? Colors.dark : Colors.light;
+
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= 768;
 
   const themedStyles = useMemo(
     () =>
@@ -282,21 +285,21 @@ export default function ProfileScreen() {
         position={config.position}
         showIcon={config.showIcon}
       />
-      <ScrollView style={themedStyles.scrollView} contentContainerStyle={Platform.OS === 'web' ? { alignItems: 'center', paddingVertical: 40 } : undefined}>
+      <ScrollView style={themedStyles.scrollView} contentContainerStyle={isDesktop ? { alignItems: 'center', paddingVertical: 40 } : undefined}>
         
-        {Platform.OS !== 'web' && <ProfileHeader />}
+        {!isDesktop && <ProfileHeader />}
 
         <View style={[
-          Platform.OS === 'web' 
+          isDesktop 
             ? { maxWidth: 1200, width: '100%', flexDirection: 'row', gap: 40, paddingHorizontal: 32, alignItems: 'flex-start' } 
             : { flexDirection: 'column' }
         ]}>
 
           {/* Left Column (Web) / Top (Mobile) */}
           <View style={[
-            Platform.OS === 'web' && { width: 350, backgroundColor: colors.cardBackground, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: colors.border }
+            isDesktop && { width: 350, backgroundColor: colors.cardBackground, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: colors.border }
           ]}>
-            {Platform.OS === 'web' && (
+            {isDesktop && (
               <View style={{ position: 'absolute', top: 24, right: 24, zIndex: 10 }}>
                 <TouchableOpacity onPress={() => router.push('/user/edit')}>
                   <Feather name="edit-2" size={20} color={colors.text} />
@@ -312,7 +315,7 @@ export default function ProfileScreen() {
               documentId={user.documentId}
             />
 
-            {Platform.OS === 'web' && (
+            {isDesktop && (
               <View style={{ marginTop: 32, gap: 16 }}>
                 <ThemeSectionComponent />
                 <Button
@@ -332,7 +335,7 @@ export default function ProfileScreen() {
 
           {/* Right Column (Web) / Bottom (Mobile) */}
           <View style={[
-            Platform.OS === 'web' && { flex: 1, backgroundColor: colors.cardBackground, borderRadius: 24, padding: 32, borderWidth: 1, borderColor: colors.border }
+            isDesktop && { flex: 1, backgroundColor: colors.cardBackground, borderRadius: 24, padding: 32, borderWidth: 1, borderColor: colors.border }
           ]}>
             <View style={themedStyles.infoSection}>
               <ProfileInfoItem icon="phone" label="Número de Telemóvel" value={user.phone} />
@@ -388,7 +391,7 @@ export default function ProfileScreen() {
                 />
               )}
 
-              {Platform.OS !== 'web' && (
+              {!isDesktop && (
                 <>
                   <ThemeSectionComponent />
                   <Button
@@ -405,7 +408,7 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-      {Platform.OS !== 'web' && (
+      {!isDesktop && (
         <View style={themedStyles.footer}>
           <TouchableOpacity style={themedStyles.logoutButton} onPress={handleLogout}>
             <Feather name="log-out" size={20} color={colors.text} />

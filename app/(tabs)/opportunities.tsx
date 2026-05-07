@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/Themed';
@@ -32,6 +33,9 @@ export default function Opportunities() {
   const [isErrorBoundary, setIsErrorBoundary] = useState(false);
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
+
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= 768;
 
   const themedStyles = useMemo(() => StyleSheet.create({
     container: {
@@ -179,7 +183,7 @@ export default function Opportunities() {
       <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
         <StatusBar style={isDark ? 'light' : 'dark'} />
 
-        <View style={[themedStyles.container, Platform.OS === 'web' && { maxWidth: 1200, width: '100%', alignSelf: 'center' }]}>
+        <View style={[themedStyles.container, isDesktop && { maxWidth: 1200, width: '100%', alignSelf: 'center' }]}>
           <View style={themedStyles.header}>
             {isLoading ? <TitleSkeleton /> : <Text style={themedStyles.title}>Oportunidades</Text>}
           </View>

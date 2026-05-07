@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Platform, Alert, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Platform, Alert, Text, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useUser from '@/hooks/useUser';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -32,6 +32,8 @@ export default function Home() {
   const { data: newCourses = [], isLoading: loadingNewCourses } = useNewCourses();
   const { data: suggestedCourses = [], isLoading: loadingSuggestedCourses } = useSuggestedCourses(user?.token);
   const { data: userCourses = [], isLoading: loadingUserCourses } = useUserCourses(user?.token || '');
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= 768;
 
   const [isEditing, setIsEditing] = useState(false);
   const [deletingInterestId, setDeletingInterestId] = useState<number | null>(null);
@@ -103,10 +105,10 @@ export default function Home() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         
-        {Platform.OS === 'web' && <HeroSection onSearchPress={handleSearchPress} />}
+        {isDesktop && <HeroSection onSearchPress={handleSearchPress} />}
 
-        <View style={styles.contentContainer}>
-          {Platform.OS !== 'web' && (
+        <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop]}>
+          {!isDesktop && (
             <>
               {/* Header */}
               <HomeHeader onPress={handleHeaderPress} />
@@ -120,7 +122,7 @@ export default function Home() {
           <HomepageCategories />
 
         {/* Banner Grid Section */}
-        {Platform.OS === 'web' ? (
+        {isDesktop ? (
           <View style={{ flexDirection: 'row', gap: 24, width: '100%', marginBottom: 16 }}>
             {!user?.token ? (
               <>
@@ -195,7 +197,7 @@ export default function Home() {
         />
 
         {/* Explore Opportunities Section (Mobile only here, Web is at the top) */}
-        {Platform.OS !== 'web' && <ExploreOpportunitiesSection />}
+        {!isDesktop && <ExploreOpportunitiesSection />}
 
         {/* Interests Teaser Section */}
         {user?.token && (
@@ -274,13 +276,13 @@ const styles = StyleSheet.create({
     // Full width scroll view
   },
   contentContainer: {
-    ...(Platform.OS === 'web' ? { 
-      paddingHorizontal: 25, 
-      paddingVertical: 25,
-      maxWidth: 1200,
-      width: '100%',
-      alignSelf: 'center'
-    } : undefined),
+    paddingHorizontal: 25,
+    paddingVertical: 25,
+  },
+  contentContainerDesktop: {
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center',
   },
   courseSection: {
     marginVertical: 10,

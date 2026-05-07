@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { StyleSheet, View, Platform } from 'react-native';
+import { StyleSheet, View, Platform, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FavoriteCoursesGrid from '@/components/FavoriteCoursesGrid';
 import CoursesInProgress from '@/components/CourseInProgress';
@@ -21,6 +21,9 @@ export default function Courses() {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= 768;
+
   const themedStyles = useMemo(() => StyleSheet.create({
     container: {
       flex: 1,
@@ -39,9 +42,9 @@ export default function Courses() {
 
   return (
     <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
-      <View style={[themedStyles.contentContainer, Platform.OS === 'web' && { alignSelf: 'center', maxWidth: 1200, width: '100%', flex: 1 }]}>
+      <View style={[themedStyles.contentContainer, isDesktop && { alignSelf: 'center', maxWidth: 1200, width: '100%', flex: 1 }]}>
         <CoursesHeader />
-        <View style={Platform.OS === 'web' ? { maxWidth: 400, width: '100%', marginBottom: 16 } : undefined}>
+        <View style={isDesktop ? { maxWidth: 400, width: '100%', marginBottom: 16 } : undefined}>
           <CoursesTabs selectedFilter={selectedFilter} onFilterChange={setSelectedFilter} />
         </View>
         {selectedFilter === 'favorites' && <FavoriteCoursesGrid />}

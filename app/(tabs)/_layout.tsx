@@ -4,12 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tabStyles, tabColors } from '@/app/types/tabs';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Platform, Image } from 'react-native';
+import { Platform, Image, useWindowDimensions } from 'react-native';
 import WebNavBar from '@/components/WebNavBar';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= 768;
   const baseTabContentHeight = 65;
 
   const colors = isDark ? tabColors.dark : tabColors.light;
@@ -17,7 +19,7 @@ export default function TabLayout() {
 
   const screenOptions = {
     ...baseScreenOptions,
-    headerShown: Platform.OS !== 'web',
+    headerShown: !isDesktop,
     headerTitle: () => (
       <Image 
         source={require('@/assets/images/maza-logo.png')} 
@@ -34,14 +36,14 @@ export default function TabLayout() {
       borderBottomColor: colors.border,
     },
     sceneStyle: {
-      paddingTop: Platform.OS === 'web' ? 70 : 0,
+      paddingTop: isDesktop ? 70 : 0,
     },
   };
 
   return (
     <Tabs 
       screenOptions={screenOptions}
-      tabBar={Platform.OS === 'web' ? (props) => <WebNavBar {...props} /> : undefined}
+      tabBar={isDesktop ? (props) => <WebNavBar {...props} /> : undefined}
     >
       <Tabs.Screen
         name="index"

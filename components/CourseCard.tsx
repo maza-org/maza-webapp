@@ -90,7 +90,7 @@ export default function CourseCard({ course, onPress, badge, showRating = true }
             onPress={(e) => {
               e.stopPropagation();
               router.push({
-                pathname: '/categories/[id]',
+                pathname: '/journeys/[id]',
                 params: {
                   id: course.subjects[0].id,
                   documentId: course.subjects[0].documentId,
