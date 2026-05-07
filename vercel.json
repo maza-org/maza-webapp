@@ -1,11 +1,17 @@
 {
-  "buildCommand": "npx expo export --platform web",
-  "outputDirectory": "dist",
+  "buildCommand": "npx expo export -p web",
+  "outputDirectory": "dist/client",
+  "functions": {
+    "api/index.ts": {
+      "runtime": "@vercel/node@5.1.8",
+      "includeFiles": "dist/server/**"
+    }
+  },
   "framework": null,
   "rewrites": [
     {
-      "source": "/((?!_expo|assets|favicon.ico).*)",
-      "destination": "/index.html"
+      "source": "/(.*)",
+      "destination": "/api/index"
     }
   ]
 }

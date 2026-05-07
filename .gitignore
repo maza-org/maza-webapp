@@ -46,3 +46,4 @@ tmp/
 credentials.json
 credentials/
 android-keys.text
+.vercel
