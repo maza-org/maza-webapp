@@ -12,7 +12,13 @@
     {
       "source": "/login",
       "destination": "https://login.mazas.org",
-      "permanent": false
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "maza-webapp.vercel.app"
+        }
+      ]
     }
   ],
   "rewrites": [
