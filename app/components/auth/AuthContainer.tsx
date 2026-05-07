@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { View, StyleSheet, StyleProp, ViewStyle, Platform } from 'react-native';
 import { SafeAreaView, Edges } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
@@ -19,7 +19,28 @@ export default function AuthContainer({ children, edges = ['top', 'bottom'] }: A
       StyleSheet.create({
         container: {
           flex: 1,
-          backgroundColor: isDark ? '#1E1E1E' : colors.cardBackground,
+          backgroundColor: Platform.OS === 'web' ? colors.background : (isDark ? '#1E1E1E' : colors.cardBackground),
+          justifyContent: Platform.OS === 'web' ? 'center' : 'flex-start',
+        },
+        webCard: {
+          ...(Platform.OS === 'web'
+            ? {
+                maxWidth: 480,
+                width: '100%',
+                alignSelf: 'center',
+                backgroundColor: isDark ? '#121212' : colors.cardBackground,
+                borderRadius: 24,
+                overflow: 'hidden',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 10 },
+                shadowOpacity: 0.1,
+                shadowRadius: 20,
+                elevation: 10,
+                borderWidth: 1,
+                borderColor: colors.border,
+                marginVertical: 40,
+              }
+            : { flex: 1 }),
         },
       }),
     [colors, isDark]
@@ -27,7 +48,9 @@ export default function AuthContainer({ children, edges = ['top', 'bottom'] }: A
 
   return (
     <SafeAreaView style={themedStyles.container} edges={edges}>
-      {children}
+      <View style={themedStyles.webCard}>
+        {children}
+      </View>
     </SafeAreaView>
   );
 }

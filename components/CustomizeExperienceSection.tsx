@@ -4,12 +4,15 @@ import { router } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 
-export default function ExploreOpportunitiesSection() {
+export default function CustomizeExperienceSection() {
   const { theme } = useTheme();
   const colors = Colors[theme];
 
-  const handleExplore = () => {
-    router.push('/(tabs)/opportunities');
+  const handleCustomizeSurvey = () => {
+    router.push({
+      pathname: '/onboarding/self-assessment' as const,
+      params: { fromProfile: 'true' },
+    });
   };
 
   return (
@@ -17,7 +20,7 @@ export default function ExploreOpportunitiesSection() {
       {/* Header Image */}
       <View style={styles.imageContainer}>
         <Image
-          source={require('@/assets/images/explore-opportunities.png')}
+          source={require('@/assets/images/customize-experience.png')}
           style={styles.headerImage}
           resizeMode="cover"
         />
@@ -25,13 +28,13 @@ export default function ExploreOpportunitiesSection() {
       </View>
 
       <View style={styles.contentContainer}>
-        <Text style={[styles.title, { color: colors.text }]}>Explorar oportunidades</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Personalizar Experiência</Text>
         <Text style={[styles.description, { color: colors.textMuted }]}>
-          Encontre vagas de emprego, estágios e oportunidades de crescimento profissional na sua área.
+          Descubra o que combina com você. Responda perguntas rápidas para melhorar suas recomendações.
         </Text>
 
-        <TouchableOpacity style={styles.exploreButton} onPress={handleExplore} activeOpacity={0.8}>
-          <Text style={styles.exploreButtonText}>Ver oportunidades</Text>
+        <TouchableOpacity style={styles.exploreButton} onPress={handleCustomizeSurvey} activeOpacity={0.8}>
+          <Text style={styles.exploreButtonText}>Começar Agora</Text>
         </TouchableOpacity>
       </View>
     </View>

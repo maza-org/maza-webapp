@@ -58,6 +58,7 @@ export default function CourseCard({ course, onPress, badge, showRating = true }
         <Image
           source={{ uri: getMediaUrl(course.picture?.formats?.small?.url || course.picture?.url) }}
           style={styles.courseImage}
+          resizeMode="cover"
         />
       ) : (
         <View style={[styles.courseImage, styles.placeholderImage, { backgroundColor: colors.buttonBackground }]}>

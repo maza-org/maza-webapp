@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { Text, TouchableOpacity, View, StyleSheet, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import React from 'react';
@@ -53,13 +53,23 @@ const styles = StyleSheet.create({
   listContainer: {
     borderRadius: 12,
     marginBottom: 24,
-    borderWidth: 1,
+    borderWidth: Platform.OS === 'web' ? 0 : 1,
+    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
+    flexWrap: Platform.OS === 'web' ? 'wrap' : 'nowrap',
+    gap: Platform.OS === 'web' ? 16 : 0,
   },
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
+    ...(Platform.OS === 'web' ? {
+      minWidth: 250,
+      flex: 1,
+      borderWidth: 1,
+      borderRadius: 12,
+      borderColor: 'rgba(0,0,0,0.1)',
+    } : {}),
   },
   iconBox: {
     width: 40,
@@ -78,5 +88,6 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     marginLeft: 70,
+    display: Platform.OS === 'web' ? 'none' : 'flex',
   },
 });

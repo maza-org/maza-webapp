@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -71,6 +71,7 @@ export default function ProfileScreen() {
           fontSize: 12,
           textAlign: 'center',
           fontFamily: 'ManropeRegular',
+          marginTop: 16,
         },
         logoutButton: {
           backgroundColor: colors.logoutButton,
@@ -221,6 +222,55 @@ export default function ProfileScreen() {
     setShowRecommendationModal(true);
   }
 
+  const ThemeSectionComponent = () => (
+    <View style={themedStyles.themeSection}>
+      <View style={themedStyles.themeSectionHeader}>
+        <Feather name={isDark ? 'moon' : 'sun'} size={20} color={colors.primary} />
+        <Text style={themedStyles.themeSectionLabel}>Aparência</Text>
+      </View>
+      <View style={themedStyles.themeOptions}>
+        <TouchableOpacity
+          style={[themedStyles.themeOption, themeMode === 'light' && themedStyles.themeOptionActive]}
+          onPress={() => setThemeMode('light')}
+          activeOpacity={0.7}
+        >
+          <Feather name="sun" size={18} color={themeMode === 'light' ? colors.text : colors.textSecondary} />
+          <Text style={themeMode === 'light' ? themedStyles.themeOptionTextActive : themedStyles.themeOptionText}>
+            Claro
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[themedStyles.themeOption, themeMode === 'dark' && themedStyles.themeOptionActive]}
+          onPress={() => setThemeMode('dark')}
+          activeOpacity={0.7}
+        >
+          <Feather name="moon" size={18} color={themeMode === 'dark' ? colors.text : colors.textSecondary} />
+          <Text style={themeMode === 'dark' ? themedStyles.themeOptionTextActive : themedStyles.themeOptionText}>
+            Escuro
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[themedStyles.themeOption, themeMode === 'system' && themedStyles.themeOptionActive]}
+          onPress={() => setThemeMode('system')}
+          activeOpacity={0.7}
+        >
+          <Feather
+            name="smartphone"
+            size={18}
+            color={themeMode === 'system' ? colors.text : colors.textSecondary}
+          />
+          <Text
+            style={themeMode === 'system' ? themedStyles.themeOptionTextActive : themedStyles.themeOptionText}
+          >
+            Sistema
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
       <Toast
@@ -232,146 +282,137 @@ export default function ProfileScreen() {
         position={config.position}
         showIcon={config.showIcon}
       />
-      <ScrollView style={themedStyles.scrollView}>
-        <ProfileHeader />
+      <ScrollView style={themedStyles.scrollView} contentContainerStyle={Platform.OS === 'web' ? { alignItems: 'center', paddingVertical: 40 } : undefined}>
+        
+        {Platform.OS !== 'web' && <ProfileHeader />}
 
-        <ProfileImageSection
-          profileImage={profileImage}
-          isUploadingImage={isUploadingImage}
-          fullname={user.fullname}
-          username={user?.username}
-          documentId={user.documentId}
-        />
+        <View style={[
+          Platform.OS === 'web' 
+            ? { maxWidth: 1200, width: '100%', flexDirection: 'row', gap: 40, paddingHorizontal: 32, alignItems: 'flex-start' } 
+            : { flexDirection: 'column' }
+        ]}>
 
-        <View style={themedStyles.infoSection}>
-          <ProfileInfoItem icon="phone" label="Número de Telemóvel" value={user.phone} />
+          {/* Left Column (Web) / Top (Mobile) */}
+          <View style={[
+            Platform.OS === 'web' && { width: 350, backgroundColor: colors.cardBackground, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: colors.border }
+          ]}>
+            {Platform.OS === 'web' && (
+              <View style={{ position: 'absolute', top: 24, right: 24, zIndex: 10 }}>
+                <TouchableOpacity onPress={() => router.push('/user/edit')}>
+                  <Feather name="edit-2" size={20} color={colors.text} />
+                </TouchableOpacity>
+              </View>
+            )}
 
-          <ProfileInfoItem icon="mail" label="Email" value={user.email || 'Campo não preenchido'} />
-
-          <ProfileInfoItem icon="credit-card" label="BI Nacional" value={user.nationalID || 'Campo não preenchido'} />
-
-          <ProfileInfoItem
-            icon="calendar"
-            label="Data de Nascimento"
-            value={user.dateOfBirth ? formatDate(user?.dateOfBirth) : 'Campo não preenchido'}
-          />
-
-          <ProfileInfoItem icon="user" label="Género" value={user.gender || 'Campo não preenchido'} />
-
-          <ProfileInfoItem icon="map-pin" label="Província" value={user.province || 'Campo não preenchido'} />
-
-          <ProfileInfoItem icon="map" label="Distrito" value={user.district || 'Campo não preenchido'} />
-
-          <ProfileInfoItem icon="briefcase" label="Ocupação" value={user.occupation || 'Campo não preenchido'} />
-
-          <ProfileInfoItem
-            icon="book"
-            label="Instituição Académica"
-            value={user.academicInstitution || 'Campo não preenchido'}
-          />
-
-          <ProfileInfoItem icon="award" label="Nível Académico" value={user.academicLevel || 'Campo não preenchido'} />
-
-          <ProfileInfoItem icon="tag" label="ID Yoma" value={user.yoma_id || 'Não conectado'} />
-
-          <InterestsSection
-            interests={user.interests || []}
-            isEditing={isEditing}
-            deletingInterestId={deletingInterestId}
-            onToggleEditing={handleAddInterest}
-            onDeleteInterest={handleDeleteInterest}
-            onAddInterest={handleAddInterest}
-          />
-
-          {user.survey && user.survey.length > 0 ? (
-            <>
-              <Button
-                text="Ver Recomendação"
-                handle={handleViewRecommendation}
-                variant="outline"
-                icon={<Feather name="eye" size={20} color={colors.primary} />}
-              />
-
-              <Button
-                text="Personalizar Experiência"
-                handle={handleCustomizeSurvey}
-                variant="outline"
-                icon={<Feather name="sliders" size={20} color={colors.primary} />}
-              />
-            </>
-          ) : (
-            <Button
-              text="Personalizar Experiência"
-              handle={handleCustomizeSurvey}
-              variant="outline"
-              icon={<Feather name="sliders" size={20} color={colors.primary} />}
+            <ProfileImageSection
+              profileImage={profileImage}
+              isUploadingImage={isUploadingImage}
+              fullname={user.fullname}
+              username={user?.username}
+              documentId={user.documentId}
             />
-          )}
 
-          <View style={themedStyles.themeSection}>
-            <View style={themedStyles.themeSectionHeader}>
-              <Feather name={isDark ? 'moon' : 'sun'} size={20} color={colors.primary} />
-              <Text style={themedStyles.themeSectionLabel}>Aparência</Text>
-            </View>
-            <View style={themedStyles.themeOptions}>
-              <TouchableOpacity
-                style={[themedStyles.themeOption, themeMode === 'light' && themedStyles.themeOptionActive]}
-                onPress={() => setThemeMode('light')}
-                activeOpacity={0.7}
-              >
-                <Feather name="sun" size={18} color={themeMode === 'light' ? colors.text : colors.textSecondary} />
-                <Text style={themeMode === 'light' ? themedStyles.themeOptionTextActive : themedStyles.themeOptionText}>
-                  Claro
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[themedStyles.themeOption, themeMode === 'dark' && themedStyles.themeOptionActive]}
-                onPress={() => setThemeMode('dark')}
-                activeOpacity={0.7}
-              >
-                <Feather name="moon" size={18} color={themeMode === 'dark' ? colors.text : colors.textSecondary} />
-                <Text style={themeMode === 'dark' ? themedStyles.themeOptionTextActive : themedStyles.themeOptionText}>
-                  Escuro
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[themedStyles.themeOption, themeMode === 'system' && themedStyles.themeOptionActive]}
-                onPress={() => setThemeMode('system')}
-                activeOpacity={0.7}
-              >
-                <Feather
-                  name="smartphone"
-                  size={18}
-                  color={themeMode === 'system' ? colors.text : colors.textSecondary}
+            {Platform.OS === 'web' && (
+              <View style={{ marginTop: 32, gap: 16 }}>
+                <ThemeSectionComponent />
+                <Button
+                  text="Alterar Senha"
+                  handle={handleChangePassword}
+                  variant="outline"
+                  icon={<Feather name="lock" size={20} color={colors.primary} />}
                 />
-                <Text
-                  style={themeMode === 'system' ? themedStyles.themeOptionTextActive : themedStyles.themeOptionText}
-                >
-                  Sistema
-                </Text>
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity style={[themedStyles.logoutButton, { marginTop: 16 }]} onPress={handleLogout}>
+                  <Feather name="log-out" size={20} color={colors.text} />
+                  <Text style={themedStyles.logoutButtonText}>Terminar Sessão</Text>
+                </TouchableOpacity>
+                <Text style={themedStyles.versionLabel}>Versão {Constants.expoConfig?.version ?? '3.5.0'}</Text>
+              </View>
+            )}
           </View>
 
-          <Button
-            text="Alterar Senha"
-            handle={handleChangePassword}
-            variant="outline"
-            icon={<Feather name="lock" size={20} color={colors.primary} />}
-          />
+          {/* Right Column (Web) / Bottom (Mobile) */}
+          <View style={[
+            Platform.OS === 'web' && { flex: 1, backgroundColor: colors.cardBackground, borderRadius: 24, padding: 32, borderWidth: 1, borderColor: colors.border }
+          ]}>
+            <View style={themedStyles.infoSection}>
+              <ProfileInfoItem icon="phone" label="Número de Telemóvel" value={user.phone} />
+              <ProfileInfoItem icon="mail" label="Email" value={user.email || 'Campo não preenchido'} />
+              <ProfileInfoItem icon="credit-card" label="BI Nacional" value={user.nationalID || 'Campo não preenchido'} />
+              <ProfileInfoItem
+                icon="calendar"
+                label="Data de Nascimento"
+                value={user.dateOfBirth ? formatDate(user?.dateOfBirth) : 'Campo não preenchido'}
+              />
+              <ProfileInfoItem icon="user" label="Género" value={user.gender || 'Campo não preenchido'} />
+              <ProfileInfoItem icon="map-pin" label="Província" value={user.province || 'Campo não preenchido'} />
+              <ProfileInfoItem icon="map" label="Distrito" value={user.district || 'Campo não preenchido'} />
+              <ProfileInfoItem icon="briefcase" label="Ocupação" value={user.occupation || 'Campo não preenchido'} />
+              <ProfileInfoItem
+                icon="book"
+                label="Instituição Académica"
+                value={user.academicInstitution || 'Campo não preenchido'}
+              />
+              <ProfileInfoItem icon="award" label="Nível Académico" value={user.academicLevel || 'Campo não preenchido'} />
+              <ProfileInfoItem icon="tag" label="ID Yoma" value={user.yoma_id || 'Não conectado'} />
 
-          <Text style={themedStyles.versionLabel}>Versão {Constants.expoConfig?.version ?? '3.5.0'}</Text>
+              <InterestsSection
+                interests={user.interests || []}
+                isEditing={isEditing}
+                deletingInterestId={deletingInterestId}
+                onToggleEditing={handleAddInterest}
+                onDeleteInterest={handleDeleteInterest}
+                onAddInterest={handleAddInterest}
+              />
+
+              {user.survey && user.survey.length > 0 ? (
+                <>
+                  <Button
+                    text="Ver Recomendação"
+                    handle={handleViewRecommendation}
+                    variant="outline"
+                    icon={<Feather name="eye" size={20} color={colors.primary} />}
+                  />
+                  <Button
+                    text="Personalizar Experiência"
+                    handle={handleCustomizeSurvey}
+                    variant="outline"
+                    icon={<Feather name="sliders" size={20} color={colors.primary} />}
+                  />
+                </>
+              ) : (
+                <Button
+                  text="Personalizar Experiência"
+                  handle={handleCustomizeSurvey}
+                  variant="outline"
+                  icon={<Feather name="sliders" size={20} color={colors.primary} />}
+                />
+              )}
+
+              {Platform.OS !== 'web' && (
+                <>
+                  <ThemeSectionComponent />
+                  <Button
+                    text="Alterar Senha"
+                    handle={handleChangePassword}
+                    variant="outline"
+                    icon={<Feather name="lock" size={20} color={colors.primary} />}
+                  />
+                  <Text style={themedStyles.versionLabel}>Versão {Constants.expoConfig?.version ?? '3.5.0'}</Text>
+                </>
+              )}
+            </View>
+          </View>
         </View>
       </ScrollView>
 
-      <View style={themedStyles.footer}>
-        <TouchableOpacity style={themedStyles.logoutButton} onPress={handleLogout}>
-          <Feather name="log-out" size={20} color={colors.text} />
-          <Text style={themedStyles.logoutButtonText}>Terminar Sessão</Text>
-        </TouchableOpacity>
-      </View>
+      {Platform.OS !== 'web' && (
+        <View style={themedStyles.footer}>
+          <TouchableOpacity style={themedStyles.logoutButton} onPress={handleLogout}>
+            <Feather name="log-out" size={20} color={colors.text} />
+            <Text style={themedStyles.logoutButtonText}>Terminar Sessão</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <SurveyRecommendationModal
         visible={showRecommendationModal}

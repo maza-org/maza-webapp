@@ -12,6 +12,8 @@ import UserCoursesSection from '@/components/UserCoursesSection';
 import CourseSection from '@/components/CourseSection';
 import CreateAccountSection from '@/components/CreateAccountSection';
 import ExploreOpportunitiesSection from '@/components/ExploreOpportunitiesSection';
+import CustomizeExperienceSection from '@/components/CustomizeExperienceSection';
+import HeroSection from '@/components/HeroSection';
 import { usePopularCourses, useNewCourses, useSuggestedCourses, useUserCourses } from '@/services/home';
 import { navigateToCourse, navigateToCategories, navigateToSearch, navigateToCourses } from '@/util/navigation';
 import { router } from 'expo-router';
@@ -100,17 +102,49 @@ export default function Home() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <HomeHeader onPress={handleHeaderPress} />
+        
+        {Platform.OS === 'web' && <HeroSection onSearchPress={handleSearchPress} />}
 
-        {/* Search Bar */}
-        <SearchBar onPress={handleSearchPress} />
+        <View style={styles.contentContainer}>
+          {Platform.OS !== 'web' && (
+            <>
+              {/* Header */}
+              <HomeHeader onPress={handleHeaderPress} />
 
-        {/* Category Icons */}
-        <HomepageCategories />
+              {/* Search Bar */}
+              <SearchBar onPress={handleSearchPress} />
+            </>
+          )}
 
-        {/* Create Account Section - Only shown when user is not authenticated */}
-        {!user?.token && <CreateAccountSection />}
+          {/* Category Icons */}
+          <HomepageCategories />
+
+        {/* Banner Grid Section */}
+        {Platform.OS === 'web' ? (
+          <View style={{ flexDirection: 'row', gap: 24, width: '100%', marginBottom: 16 }}>
+            {!user?.token ? (
+              <>
+                <View style={{ flex: 1 }}>
+                  <CreateAccountSection />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <ExploreOpportunitiesSection />
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={{ flex: 1 }}>
+                  <CustomizeExperienceSection />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <ExploreOpportunitiesSection />
+                </View>
+              </>
+            )}
+          </View>
+        ) : (
+          !user?.token && <CreateAccountSection />
+        )}
 
         {/* Continue Course Section */}
         {user?.token && !loadingUserCourses && userCourses.length > 0 && (
@@ -160,8 +194,8 @@ export default function Home() {
           onCoursePress={handleCoursePress}
         />
 
-        {/* Explore Opportunities Section */}
-        <ExploreOpportunitiesSection />
+        {/* Explore Opportunities Section (Mobile only here, Web is at the top) */}
+        {Platform.OS !== 'web' && <ExploreOpportunitiesSection />}
 
         {/* Interests Teaser Section */}
         {user?.token && (
@@ -222,33 +256,8 @@ export default function Home() {
           </View>
         )}
 
-        {/* Customize Experience / Assessment Row */}
-        {user?.token && (
-          <View style={styles.sectionContainer}>
-            <View
-              style={[styles.assessmentCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
-            >
-              <View style={styles.assessmentContent}>
-                <View style={styles.assessmentHeader}>
-                  <Text style={[styles.assessmentTitle, { color: colors.text }]}>Personalizar Experiência</Text>
-                </View>
-
-                <Text style={[styles.assessmentSubtitle, { color: colors.textMuted }]}>
-                  Descubra o que combina com você. Responda perguntas rápidas para melhorar suas recomendações.
-                </Text>
-
-                <View style={styles.assessmentButtonContainer}>
-                  <Button
-                    text="Começar Agora"
-                    handle={handleCustomizeSurvey}
-                    variant="primary"
-                    style={{ marginBottom: 0 }} // Override default margin
-                  />
-                </View>
-              </View>
-            </View>
-          </View>
-        )}
+        {/* Old Assessment Block Removed to be used as banner component */}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -262,7 +271,16 @@ const styles = StyleSheet.create({
     paddingStart: 25,
   },
   scrollContainer: {
-    ...(Platform.OS === 'web' ? { paddingHorizontal: 25, paddingVertical: 25 } : undefined),
+    // Full width scroll view
+  },
+  contentContainer: {
+    ...(Platform.OS === 'web' ? { 
+      paddingHorizontal: 25, 
+      paddingVertical: 25,
+      maxWidth: 1200,
+      width: '100%',
+      alignSelf: 'center'
+    } : undefined),
   },
   courseSection: {
     marginVertical: 10,
@@ -304,10 +322,10 @@ const styles = StyleSheet.create({
   },
   interestTag: {
     paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     borderRadius: 50,
     borderWidth: 1,
-    width: '48%',
+    alignSelf: 'flex-start',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Image, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
@@ -26,7 +26,7 @@ export default function ProfileImageSection({
     profileSection: {
       alignItems: 'center',
       padding: 24,
-      marginTop: -50,
+      marginTop: Platform.OS === 'web' ? 0 : -50,
     },
     profileImageContainer: {
       marginBottom: 16,

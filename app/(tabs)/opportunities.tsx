@@ -179,54 +179,56 @@ export default function Opportunities() {
       <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
         <StatusBar style={isDark ? 'light' : 'dark'} />
 
-        <View style={themedStyles.header}>
-          {isLoading ? <TitleSkeleton /> : <Text style={themedStyles.title}>Oportunidades</Text>}
-        </View>
+        <View style={[themedStyles.container, Platform.OS === 'web' && { maxWidth: 1200, width: '100%', alignSelf: 'center' }]}>
+          <View style={themedStyles.header}>
+            {isLoading ? <TitleSkeleton /> : <Text style={themedStyles.title}>Oportunidades</Text>}
+          </View>
 
-        {isLoading ? <SearchBarSkeleton /> : <SearchBar onPress={handleSearchPress} />}
+          {isLoading ? <SearchBarSkeleton /> : <SearchBar onPress={handleSearchPress} />}
 
-        <View style={themedStyles.content}>
-          {isLoading ? (
-            <View style={themedStyles.skeletonContainer}>{renderSkeleton()}</View>
-          ) : error ? (
-            <ErrorState message={error} onRetry={fetchJobs} />
-          ) : jobs.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <ListComponent
-              testID="job-list"
-              data={jobs}
-              renderItem={renderJobItem}
-              keyExtractor={keyExtractor}
-              contentContainerStyle={themedStyles.jobList}
-              showsVerticalScrollIndicator={false}
-              estimatedItemSize={estimatedItemSize}
-              getItemType={getItemType}
-              removeClippedSubviews={true}
-              maxToRenderPerBatch={10}
-              windowSize={5}
-              initialNumToRender={8}
-              refreshControl={
-                <RefreshControl
-                  refreshing={isRefreshing}
-                  onRefresh={refreshJobs}
-                  colors={[colors.primary]}
-                  tintColor={colors.primary}
-                  progressViewOffset={20}
-                />
-              }
-              onEndReachedThreshold={0.5}
-              ListFooterComponent={
-                isRefreshing ? (
-                  <View style={themedStyles.footerLoader}>
-                    <ActivityIndicator color={colors.primary} />
-                  </View>
-                ) : null
-              }
-              accessibilityRole="list"
-              accessibilityLabel="Lista de oportunidades de emprego"
-            />
-          )}
+          <View style={themedStyles.content}>
+            {isLoading ? (
+              <View style={themedStyles.skeletonContainer}>{renderSkeleton()}</View>
+            ) : error ? (
+              <ErrorState message={error} onRetry={fetchJobs} />
+            ) : jobs.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <ListComponent
+                testID="job-list"
+                data={jobs}
+                renderItem={renderJobItem}
+                keyExtractor={keyExtractor}
+                contentContainerStyle={themedStyles.jobList}
+                showsVerticalScrollIndicator={false}
+                estimatedItemSize={estimatedItemSize}
+                getItemType={getItemType}
+                removeClippedSubviews={true}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                initialNumToRender={8}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={isRefreshing}
+                    onRefresh={refreshJobs}
+                    colors={[colors.primary]}
+                    tintColor={colors.primary}
+                    progressViewOffset={20}
+                  />
+                }
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={
+                  isRefreshing ? (
+                    <View style={themedStyles.footerLoader}>
+                      <ActivityIndicator color={colors.primary} />
+                    </View>
+                  ) : null
+                }
+                accessibilityRole="list"
+                accessibilityLabel="Lista de oportunidades de emprego"
+              />
+            )}
+          </View>
         </View>
       </SafeAreaView>
     </ErrorBoundary>

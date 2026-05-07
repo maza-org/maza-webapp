@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { UserCourse } from '@/types/home';
 import { Course } from '@/types/course';
@@ -19,38 +19,39 @@ export default function ContinueCourseCard({ userCourse, onPress }: ContinueCour
   const course = userCourse.course;
   if (!course) return null;
 
-  return (
-    <TouchableOpacity
-      style={[styles.courseCard, { backgroundColor: colors.cardBackground }]}
-      onPress={() => onPress(course)}
-    >
-      <View style={styles.courseHeader}>
-        {course?.picture ? (
-          <Image
-            source={{ uri: getMediaUrl(course.picture?.formats?.thumbnail?.url || course.picture?.url) }}
-            style={styles.profileImage}
-          />
-        ) : (
-          <View style={[styles.profileImage, styles.placeholderImage, { backgroundColor: colors.buttonBackground }]}>
-            <Feather name="user" size={20} color={colors.iconColor} />
-          </View>
-        )}
-        <View style={styles.courseHeaderInfo}>
-          <Text style={[styles.instructorName, { color: colors.textSecondary }]}>{course.author}</Text>
-          <View style={styles.ratingContainer}>
-            <Text style={styles.starIcon}>★</Text>
-            <Text style={[styles.ratingText, { color: colors.text }]}>{course.rating_avg}</Text>
-          </View>
+  const Header = () => (
+    <View style={styles.courseHeader}>
+      {course?.picture ? (
+        <Image
+          source={{ uri: getMediaUrl(course.picture?.formats?.thumbnail?.url || course.picture?.url) }}
+          style={styles.profileImage}
+        />
+      ) : (
+        <View style={[styles.profileImage, styles.placeholderImage, { backgroundColor: colors.buttonBackground }]}>
+          <Feather name="user" size={20} color={colors.iconColor} />
+        </View>
+      )}
+      <View style={styles.courseHeaderInfo}>
+        <Text style={[styles.instructorName, { color: colors.textSecondary }]}>{course.author}</Text>
+        <View style={styles.ratingContainer}>
+          <Text style={styles.starIcon}>★</Text>
+          <Text style={[styles.ratingText, { color: colors.text }]}>{course.rating_avg}</Text>
         </View>
       </View>
+    </View>
+  );
 
-      <Image
-        source={{ uri: getMediaUrl(course.cover?.formats?.thumbnail?.url || course.cover?.url) }}
-        style={styles.coverImage}
-      />
+  const CoverImage = () => (
+    <Image
+      source={{ uri: getMediaUrl(course.cover?.formats?.thumbnail?.url || course.cover?.url) }}
+      style={Platform.OS === 'web' ? styles.coverImageWeb : styles.coverImage}
+      resizeMode="cover"
+    />
+  );
 
+  const InfoAndProgress = () => (
+    <>
       <Text style={[styles.courseTitle, { color: colors.text }]}>{course.title}</Text>
-
       <View style={styles.progressContainer}>
         <View style={styles.progressInfo}>
           <Text style={[styles.progressText, { color: colors.text }]}>Progresso</Text>
@@ -60,6 +61,29 @@ export default function ContinueCourseCard({ userCourse, onPress }: ContinueCour
           <View style={[styles.progressFill, { width: `${userCourse.progress}%` }]} />
         </View>
       </View>
+    </>
+  );
+
+  return (
+    <TouchableOpacity
+      style={[styles.courseCard, { backgroundColor: colors.cardBackground }]}
+      onPress={() => onPress(course)}
+    >
+      {Platform.OS === 'web' ? (
+        <>
+          <CoverImage />
+          <View style={styles.webContentContainer}>
+            <Header />
+            <InfoAndProgress />
+          </View>
+        </>
+      ) : (
+        <>
+          <Header />
+          <CoverImage />
+          <InfoAndProgress />
+        </>
+      )}
     </TouchableOpacity>
   );
 }
@@ -67,8 +91,12 @@ export default function ContinueCourseCard({ userCourse, onPress }: ContinueCour
 const styles = StyleSheet.create({
   courseCard: {
     borderRadius: 12,
-    padding: 16,
+    padding: Platform.OS === 'web' ? 0 : 16,
     marginTop: 20,
+    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
+    overflow: 'hidden',
+    borderWidth: Platform.OS === 'web' ? 1 : 0,
+    borderColor: 'rgba(0,0,0,0.1)',
   },
   courseHeader: {
     flexDirection: 'row',
@@ -113,6 +141,16 @@ const styles = StyleSheet.create({
     height: 160,
     borderRadius: 5,
     marginBottom: 12,
+  },
+  coverImageWeb: {
+    width: 250,
+    height: '100%',
+    minHeight: 180,
+  },
+  webContentContainer: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
   },
   courseTitle: {
     fontSize: 18,

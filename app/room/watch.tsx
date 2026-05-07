@@ -135,6 +135,12 @@ export default function CourseScreen() {
           flex: 1,
           backgroundColor: colors.background,
         },
+        webContainer: Platform.OS === 'web' ? {
+          width: '100%',
+          maxWidth: 1200,
+          alignSelf: 'center',
+          flex: 1,
+        } : { flex: 1 },
         content: {
           flex: 1,
         },
@@ -447,7 +453,8 @@ export default function CourseScreen() {
         />
       )}
       <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
-        <ScrollView style={themedStyles.content}>
+        <View style={themedStyles.webContainer}>
+          <ScrollView style={themedStyles.content}>
           {/* Header */}
           <View style={themedStyles.header}>
             <TouchableOpacity style={themedStyles.backButton} onPress={() => router.back()}>
@@ -541,6 +548,7 @@ export default function CourseScreen() {
             )}
           </View>
         </ScrollView>
+        </View>
       </SafeAreaView>
     </>
   );

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -42,12 +42,12 @@ export default function AuthHeader({ showBackButton = true }: AuthHeaderProps) {
           height: isCompact ? 58 : 78,
         },
       }),
-    [isDark, isCompact, buttonSize]
+    [isDark, isCompact, buttonSize, colors.buttonBackground]
   );
 
   return (
     <View style={themedStyles.header}>
-      {showBackButton && (
+      {showBackButton && Platform.OS !== 'web' && (
         <TouchableOpacity onPress={() => router.back()} style={themedStyles.backButton}>
           <Ionicons name="chevron-back" size={iconSize} color={colors.text} />
         </TouchableOpacity>

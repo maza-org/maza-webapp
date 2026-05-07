@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { baseUrl } from '@/services/api';
+import { getMediaUrl } from '@/util/util';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 
@@ -31,6 +32,7 @@ interface Course {
       thumbnail: { url: string };
       small?: { url: string };
     };
+    url?: string;
   };
 }
 
@@ -113,7 +115,7 @@ const CoursesInProgress = () => {
       }) : {}),
     },
     cardGrid: {
-      width: cardWidth,
+      width: Platform.OS === 'web' ? 250 : cardWidth,
     },
     cardList: {
       width: '100%',
@@ -401,7 +403,7 @@ const CoursesInProgress = () => {
       <View style={[themedStyles.contentWrapper, viewMode === 'grid' ? themedStyles.gridWrapper : themedStyles.listWrapper]}>
         {courses.map((courseData) => {
           const course = courseData.course;
-          const imageUrl = course?.picture?.formats?.thumbnail?.url;
+          const imageUrl = getMediaUrl(course?.picture?.formats?.thumbnail?.url || course?.picture?.url);
           const isGrid = viewMode === 'grid';
 
           return (
@@ -414,7 +416,7 @@ const CoursesInProgress = () => {
               <View style={[themedStyles.cardMain, isGrid ? themedStyles.cardMainGrid : themedStyles.cardMainList]}>
                 {/* Image & Progress */}
                 <View style={[themedStyles.imageWrapper, isGrid ? themedStyles.imageWrapperGrid : themedStyles.imageWrapperList]}>
-                  <Image source={{ uri: imageUrl }} style={themedStyles.image} />
+                  <Image source={{ uri: imageUrl }} style={themedStyles.image} resizeMode="cover" />
                   <View style={themedStyles.progressOverlay}>
                     <View style={themedStyles.progressBar}>
                       <View style={[themedStyles.progressFill, { width: `${courseData.progress}%` }]} />

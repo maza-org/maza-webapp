@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: 'relative',
-    height: 120,
+    height: Platform.OS === 'web' ? 240 : 160,
   },
   headerImage: {
     width: '100%',

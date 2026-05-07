@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/useToast';
 import Toast from '@/components/Toast';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import { getMediaUrl } from '@/util/util';
 
 interface Course {
   id: number;
@@ -28,8 +29,8 @@ interface Course {
   title: string;
   author: string;
   rating_avg: number;
-  picture: Picture;
-  cover: Picture;
+  picture: Picture & { url?: string; formats?: any };
+  cover: Picture & { url?: string; formats?: any };
 }
 
 interface FavoriteCourse {
@@ -100,7 +101,7 @@ const FavoriteCoursesGrid = () => {
       }) : {}),
     },
     cardGrid: {
-      width: cardWidth,
+      width: Platform.OS === 'web' ? 250 : cardWidth,
     },
     cardList: {
       width: '100%',
@@ -442,7 +443,7 @@ const FavoriteCoursesGrid = () => {
 
       <View style={[themedStyles.contentWrapper, viewMode === 'grid' ? themedStyles.gridWrapper : themedStyles.listWrapper]}>
         {favorites.map((favorite: FavoriteCourse) => {
-          const imageUrl = favorite.course.picture?.formats?.thumbnail?.url || favorite.course.picture?.url;
+          const imageUrl = getMediaUrl(favorite.course.picture?.formats?.thumbnail?.url || favorite.course.picture?.url);
           const isGrid = viewMode === 'grid';
 
           return (
@@ -455,7 +456,7 @@ const FavoriteCoursesGrid = () => {
               <View style={[themedStyles.cardMain, isGrid ? themedStyles.cardMainGrid : themedStyles.cardMainList]}>
                 {/* Image Section */}
                 <View style={[themedStyles.imageWrapper, isGrid ? themedStyles.imageWrapperGrid : themedStyles.imageWrapperList]}>
-                  <Image source={{ uri: imageUrl }} style={themedStyles.image} />
+                  <Image source={{ uri: imageUrl }} style={themedStyles.image} resizeMode="cover" />
 
                   {/* Progress Overlay */}
                   <View style={themedStyles.progressOverlay}>

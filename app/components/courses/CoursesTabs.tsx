@@ -14,8 +14,8 @@ interface CoursesTabsProps {
 // Position values for each tab (3 tabs) - must match visual order: Favoritos, Em Curso, Certificados
 const positions: Record<CourseTabType, number> = {
   favorites: 0,
-  inProgress: 130,
-  certificates: 260,
+  inProgress: 1,
+  certificates: 2,
 };
 
 export default function CoursesTabs({ selectedFilter, onFilterChange }: CoursesTabsProps) {
@@ -42,7 +42,7 @@ export default function CoursesTabs({ selectedFilter, onFilterChange }: CoursesT
           left: 4,
           right: 4,
           bottom: 4,
-          width: '33%',
+          width: '33.33%',
           backgroundColor: isDark ? colors.inputBackground : colors.primary,
           borderRadius: 999,
           zIndex: 0,
@@ -66,11 +66,10 @@ export default function CoursesTabs({ selectedFilter, onFilterChange }: CoursesT
   const unselectedTextColor = isDark ? colors.textMuted : colors.textSecondary;
 
   const animatedText = (buttonIndex: number) => {
-    // Order matches visual layout: Favoritos (0), Em Curso (130), Certificados (260)
-    const positionValues = [positions.favorites, positions.inProgress, positions.certificates];
+    const positionValues = [0, 1, 2];
     const currentPos = positionValues[buttonIndex];
-    const prevPos = buttonIndex > 0 ? positionValues[buttonIndex - 1] : -65;
-    const nextPos = buttonIndex < 2 ? positionValues[buttonIndex + 1] : 325;
+    const prevPos = buttonIndex > 0 ? positionValues[buttonIndex - 1] : -0.5;
+    const nextPos = buttonIndex < 2 ? positionValues[buttonIndex + 1] : 2.5;
 
     const midBefore = (prevPos + currentPos) / 2;
     const midAfter = (currentPos + nextPos) / 2;
@@ -90,7 +89,10 @@ export default function CoursesTabs({ selectedFilter, onFilterChange }: CoursesT
           {
             transform: [
               {
-                translateX: animationValue,
+                translateX: animationValue.interpolate({
+                  inputRange: [0, 1, 2],
+                  outputRange: ['0%', '100%', '200%'],
+                }),
               },
             ],
           },

@@ -66,6 +66,12 @@ export default function CourseDetail() {
           flex: 1,
           backgroundColor: colors.background,
         },
+        webContainer: Platform.OS === 'web' ? {
+          width: '100%',
+          maxWidth: 1200,
+          alignSelf: 'center',
+          flex: 1,
+        } : { flex: 1 },
         loadingContainer: {
           flex: 1,
           justifyContent: 'center',
@@ -1006,98 +1012,100 @@ export default function CourseDetail() {
   // Shimmer loading component for course detail
   const CourseDetailShimmer = () => (
     <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
-      <ScrollView style={themedStyles.scrollView}>
-        {/* Header shimmer */}
-        <Shimmer style={themedStyles.headerShimmer}>
-          <View style={themedStyles.headerShimmerContent}>
-            <View style={themedStyles.headerActionsShimmer}>
-              <View style={themedStyles.iconButtonShimmer} />
-              <View style={themedStyles.rightActionsShimmer}>
+      <View style={themedStyles.webContainer}>
+        <ScrollView style={themedStyles.scrollView}>
+          {/* Header shimmer */}
+          <Shimmer style={themedStyles.headerShimmer}>
+            <View style={themedStyles.headerShimmerContent}>
+              <View style={themedStyles.headerActionsShimmer}>
                 <View style={themedStyles.iconButtonShimmer} />
-                <View style={themedStyles.iconButtonShimmer} />
+                <View style={themedStyles.rightActionsShimmer}>
+                  <View style={themedStyles.iconButtonShimmer} />
+                  <View style={themedStyles.iconButtonShimmer} />
+                </View>
               </View>
+              <View style={themedStyles.levelBadgeShimmer} />
             </View>
-            <View style={themedStyles.levelBadgeShimmer} />
-          </View>
-        </Shimmer>
-
-        {/* Course info shimmer */}
-        <View style={themedStyles.courseInfoShimmer}>
-          <Shimmer style={themedStyles.titleShimmer}>
-            <View style={themedStyles.shimmerBox} />
-          </Shimmer>
-          <Shimmer style={themedStyles.titleShimmerShort}>
-            <View style={themedStyles.shimmerBox} />
           </Shimmer>
 
-          <View style={themedStyles.instructorShimmer}>
-            <Shimmer style={themedStyles.instructorNameShimmer}>
+          {/* Course info shimmer */}
+          <View style={themedStyles.courseInfoShimmer}>
+            <Shimmer style={themedStyles.titleShimmer}>
               <View style={themedStyles.shimmerBox} />
             </Shimmer>
-            <Shimmer style={themedStyles.categoryShimmer}>
+            <Shimmer style={themedStyles.titleShimmerShort}>
               <View style={themedStyles.shimmerBox} />
             </Shimmer>
+
+            <View style={themedStyles.instructorShimmer}>
+              <Shimmer style={themedStyles.instructorNameShimmer}>
+                <View style={themedStyles.shimmerBox} />
+              </Shimmer>
+              <Shimmer style={themedStyles.categoryShimmer}>
+                <View style={themedStyles.shimmerBox} />
+              </Shimmer>
+            </View>
+
+            {/* Description shimmer */}
+            <View style={themedStyles.descriptionShimmerContainer}>
+              <Shimmer style={themedStyles.descriptionLineShimmer}>
+                <View style={themedStyles.shimmerBox} />
+              </Shimmer>
+              <Shimmer style={themedStyles.descriptionLineShimmer}>
+                <View style={themedStyles.shimmerBox} />
+              </Shimmer>
+              <Shimmer style={themedStyles.descriptionLineShimmerShort}>
+                <View style={themedStyles.shimmerBox} />
+              </Shimmer>
+            </View>
+
+            {/* Tabs shimmer */}
+            <View style={themedStyles.tabContainerShimmer}>
+              <Shimmer style={themedStyles.tabShimmer}>
+                <View style={themedStyles.shimmerBox} />
+              </Shimmer>
+              <Shimmer style={themedStyles.tabShimmer}>
+                <View style={themedStyles.shimmerBox} />
+              </Shimmer>
+              <Shimmer style={themedStyles.tabShimmer}>
+                <View style={themedStyles.shimmerBox} />
+              </Shimmer>
+            </View>
           </View>
 
-          {/* Description shimmer */}
-          <View style={themedStyles.descriptionShimmerContainer}>
-            <Shimmer style={themedStyles.descriptionLineShimmer}>
-              <View style={themedStyles.shimmerBox} />
-            </Shimmer>
-            <Shimmer style={themedStyles.descriptionLineShimmer}>
-              <View style={themedStyles.shimmerBox} />
-            </Shimmer>
-            <Shimmer style={themedStyles.descriptionLineShimmerShort}>
-              <View style={themedStyles.shimmerBox} />
-            </Shimmer>
-          </View>
-
-          {/* Tabs shimmer */}
-          <View style={themedStyles.tabContainerShimmer}>
-            <Shimmer style={themedStyles.tabShimmer}>
-              <View style={themedStyles.shimmerBox} />
-            </Shimmer>
-            <Shimmer style={themedStyles.tabShimmer}>
-              <View style={themedStyles.shimmerBox} />
-            </Shimmer>
-            <Shimmer style={themedStyles.tabShimmer}>
-              <View style={themedStyles.shimmerBox} />
-            </Shimmer>
-          </View>
-        </View>
-
-        {/* Modules list shimmer */}
-        <View style={themedStyles.modulesListShimmer}>
-          {[1, 2, 3, 4].map((key) => (
-            <View key={key} style={themedStyles.moduleItemShimmer}>
-              <View style={themedStyles.moduleTopRowShimmer}>
-                <View style={themedStyles.moduleInfoShimmer}>
-                  <Shimmer style={themedStyles.moduleNumberShimmer}>
-                    <View style={themedStyles.shimmerBox} />
-                  </Shimmer>
-                  <Shimmer style={themedStyles.moduleTitleShimmer}>
+          {/* Modules list shimmer */}
+          <View style={themedStyles.modulesListShimmer}>
+            {[1, 2, 3, 4].map((key) => (
+              <View key={key} style={themedStyles.moduleItemShimmer}>
+                <View style={themedStyles.moduleTopRowShimmer}>
+                  <View style={themedStyles.moduleInfoShimmer}>
+                    <Shimmer style={themedStyles.moduleNumberShimmer}>
+                      <View style={themedStyles.shimmerBox} />
+                    </Shimmer>
+                    <Shimmer style={themedStyles.moduleTitleShimmer}>
+                      <View style={themedStyles.shimmerBox} />
+                    </Shimmer>
+                  </View>
+                  <Shimmer style={themedStyles.playIconShimmer}>
                     <View style={themedStyles.shimmerBox} />
                   </Shimmer>
                 </View>
-                <Shimmer style={themedStyles.playIconShimmer}>
-                  <View style={themedStyles.shimmerBox} />
-                </Shimmer>
+                <View style={themedStyles.moduleMetaShimmer}>
+                  <Shimmer style={themedStyles.videoCountShimmer}>
+                    <View style={themedStyles.shimmerBox} />
+                  </Shimmer>
+                </View>
               </View>
-              <View style={themedStyles.moduleMetaShimmer}>
-                <Shimmer style={themedStyles.videoCountShimmer}>
-                  <View style={themedStyles.shimmerBox} />
-                </Shimmer>
-              </View>
-            </View>
-          ))}
-        </View>
-      </ScrollView>
+            ))}
+          </View>
+        </ScrollView>
 
-      {/* Footer shimmer */}
-      <View style={themedStyles.footer}>
-        <Shimmer style={themedStyles.startButtonShimmer}>
-          <View style={themedStyles.shimmerBox} />
-        </Shimmer>
+        {/* Footer shimmer */}
+        <View style={themedStyles.footer}>
+          <Shimmer style={themedStyles.startButtonShimmer}>
+            <View style={themedStyles.shimmerBox} />
+          </Shimmer>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -1195,10 +1203,11 @@ export default function CourseDetail() {
         position={config.position}
         showIcon={config.showIcon}
       />
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.scrollView}
-        stickyHeaderIndices={[1]}
+      <View style={themedStyles.webContainer}>
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.scrollView}
+          stickyHeaderIndices={[1]}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -1485,6 +1494,7 @@ export default function CourseDetail() {
             )}
           </TouchableOpacity>
         )}
+      </View>
       </View>
       <LoginBottomSheet visible={loginSheetVisible} onClose={() => setLoginSheetVisible(false)} />
     </SafeAreaView>
