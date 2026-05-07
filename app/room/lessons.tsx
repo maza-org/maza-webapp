@@ -736,16 +736,29 @@ export default function CourseDetail() {
   const getDisplayModules = (): CourseModuleData[] => {
     if (userCourseDetails?.modules) {
       // User is logged in - use userCourseDetails.modules which has progress states
-      return userCourseDetails.modules.map((userModule) => ({
-        id: userModule.id,
-        moduleId: userModule.moduleId,
-        title: userModule.title,
-        progress: userModule.progress,
-        completedContents: userModule.contents.filter((c) => c.state === 'Finished').length,
-        totalContents: userModule.contents.length,
-        isCompleted: userModule.progress === 100,
-        originalModule: userModule,
-      }));
+      return userCourseDetails.modules.map((userModule) => {
+        const courseModule = courseData?.modules?.find(m => m.id === userModule.moduleId);
+        const mergedModule = {
+          ...userModule,
+          quiz: userModule.quiz ? {
+            ...userModule.quiz,
+            questions: userModule.quiz.questions?.length > 0
+              ? userModule.quiz.questions
+              : courseModule?.quiz?.questions || []
+          } : null
+        };
+        
+        return {
+          id: userModule.id,
+          moduleId: userModule.moduleId,
+          title: userModule.title,
+          progress: userModule.progress,
+          completedContents: userModule.contents.filter((c) => c.state === 'Finished').length,
+          totalContents: userModule.contents.length,
+          isCompleted: userModule.progress === 100,
+          originalModule: mergedModule,
+        };
+      });
     }
 
     // User not logged in - use courseData.modules

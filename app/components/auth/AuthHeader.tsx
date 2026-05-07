@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Platform, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -15,6 +15,9 @@ export default function AuthHeader({ showBackButton = true }: AuthHeaderProps) {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
   const { isCompact } = useCompactMode();
+
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= 768;
 
   const buttonSize = isCompact ? 34 : 40;
   const iconSize = isCompact ? 20 : 24;
@@ -47,7 +50,7 @@ export default function AuthHeader({ showBackButton = true }: AuthHeaderProps) {
 
   return (
     <View style={themedStyles.header}>
-      {showBackButton && Platform.OS !== 'web' && (
+      {showBackButton && !isDesktop && (
         <TouchableOpacity onPress={() => router.back()} style={themedStyles.backButton}>
           <Ionicons name="chevron-back" size={iconSize} color={colors.text} />
         </TouchableOpacity>

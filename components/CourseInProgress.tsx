@@ -11,6 +11,7 @@ import {
   Animated,
   Dimensions,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
@@ -72,6 +73,9 @@ const CoursesInProgress = () => {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= 768;
+
   const themedStyles = useMemo(() => StyleSheet.create({
     container: {
       flex: 1,
@@ -115,7 +119,7 @@ const CoursesInProgress = () => {
       }) : {}),
     },
     cardGrid: {
-      width: Platform.OS === 'web' ? 250 : cardWidth,
+      width: isDesktop ? 250 : cardWidth,
     },
     cardList: {
       width: '100%',
@@ -283,7 +287,7 @@ const CoursesInProgress = () => {
       justifyContent: 'center',
       zIndex: 2,
     },
-  }), [colors, isDark]);
+  }), [colors, isDark, isDesktop, cardWidth]);
 
   useEffect(() => {
     Animated.spring(animatedValue, {

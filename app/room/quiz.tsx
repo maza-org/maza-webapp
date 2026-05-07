@@ -258,7 +258,9 @@ export default function Quiz() {
 
   useEffect(() => {
     // Start the timer when the component mounts
-    startTimer();
+    if (quizData?.questions?.length > 0) {
+      startTimer();
+    }
 
     // Cleanup on unmount
     return () => {
@@ -269,6 +271,25 @@ export default function Quiz() {
   }, []);
 
   if (!quizData) { router.back(); return null; }
+
+  if (!quizData.questions || quizData.questions.length === 0) {
+    return (
+      <SafeAreaView style={themedStyles.container} edges={['top', 'bottom']}>
+        <View style={themedStyles.header}>
+          <TouchableOpacity style={themedStyles.backButton} onPress={() => router.back()}>
+            <Feather name="chevron-left" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={themedStyles.headerTitle}>{isFinalTestQuiz ? 'Teste Final' : 'Quiz'}</Text>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          <Feather name="alert-circle" size={48} color={colors.textMuted} style={{ marginBottom: 16 }} />
+          <Text style={{ color: colors.text, fontSize: 18, textAlign: 'center', fontFamily: 'ManropeMedium' }}>
+            Este quiz ainda não tem perguntas configuradas.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const handleTimeUp = async () => {
     // Set time expired flag

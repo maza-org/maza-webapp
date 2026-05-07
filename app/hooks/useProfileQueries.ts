@@ -77,7 +77,7 @@ export function useLogout() {
       showSuccess('Sessão terminada com sucesso');
 
       // Reset PostHog identity so events are anonymous again
-      posthog.reset();
+      posthog?.reset();
 
       // Clear all cached data
       queryClient.clear();

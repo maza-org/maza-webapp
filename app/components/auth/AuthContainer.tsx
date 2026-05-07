@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, StyleProp, ViewStyle, Platform } from 'react-native';
+import { View, StyleSheet, StyleProp, ViewStyle, Platform, useWindowDimensions } from 'react-native';
 import { SafeAreaView, Edges } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
@@ -14,16 +14,19 @@ export default function AuthContainer({ children, edges = ['top', 'bottom'] }: A
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= 768;
+
   const themedStyles = useMemo(
     () =>
       StyleSheet.create({
         container: {
           flex: 1,
-          backgroundColor: Platform.OS === 'web' ? colors.background : (isDark ? '#1E1E1E' : colors.cardBackground),
-          justifyContent: Platform.OS === 'web' ? 'center' : 'flex-start',
+          backgroundColor: isDesktop ? colors.background : (isDark ? '#1E1E1E' : colors.cardBackground),
+          justifyContent: isDesktop ? 'center' : 'flex-start',
         },
         webCard: {
-          ...(Platform.OS === 'web'
+          ...(isDesktop
             ? {
                 maxWidth: 480,
                 width: '100%',
@@ -43,7 +46,7 @@ export default function AuthContainer({ children, edges = ['top', 'bottom'] }: A
             : { flex: 1 }),
         },
       }),
-    [colors, isDark]
+    [colors, isDark, isDesktop]
   );
 
   return (

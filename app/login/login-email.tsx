@@ -95,9 +95,21 @@ export default function LoginEmail() {
         const errorData = error.response.data;
 
         switch (status) {
-          case 400:
-            setError(errorData?.error?.message || 'Pedido inválido. Verifique os dados inseridos.');
+          case 400: {
+            const serverMessage = errorData?.error?.message;
+            let displayMessage = 'Pedido inválido. Verifique os dados inseridos.';
+            
+            if (serverMessage === 'Invalid identifier or password') {
+              displayMessage = 'Credenciais inválidas. Verifique o email/username e palavra-passe.';
+            } else if (serverMessage === 'No account for the provided identifier') {
+              displayMessage = 'Nenhuma conta encontrada com este email ou username.';
+            } else if (serverMessage) {
+              displayMessage = serverMessage;
+            }
+            
+            setError(displayMessage);
             break;
+          }
           case 401:
             setError(
               errorData?.error?.details?.message || 'Credenciais inválidas. Verifique o email/telefone e palavra-passe.'
