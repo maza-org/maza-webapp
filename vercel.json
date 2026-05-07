@@ -11,7 +11,7 @@
   "redirects": [
     {
       "source": "/login",
-      "destination": "https://login.mazas.org",
+      "destination": "https://web.mazas.org",
       "permanent": false,
       "has": [
         {
