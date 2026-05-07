@@ -17,8 +17,8 @@ import { useMarkContentAsCompleted } from '@/services/catalog';
 import { useAuthUser } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
-import Pdf from 'react-native-pdf';
 import { baseUrl } from '@/services/api';
+import PdfRenderer from '@/components/PdfRenderer';
 
 const { width, height } = Dimensions.get('window');
 
@@ -254,11 +254,10 @@ export default function PdfViewer() {
 
     return (
       <>
-        <Pdf
-          ref={pdfRef}
+        <PdfRenderer
+          pdfRef={pdfRef}
           source={{ uri: pdfUrl, cache: true }}
           style={themedStyles.pdf}
-          trustAllCerts={false}
           onLoadComplete={(numberOfPages) => {
             setTotalPages(numberOfPages);
             setIsLoading(false);

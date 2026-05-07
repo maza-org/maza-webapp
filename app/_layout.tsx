@@ -106,13 +106,7 @@ function RootLayoutNav({ onReady }: { onReady: () => void }) {
   // Always render the full tree - splash screen stays visible until isReady
   // This prevents any white screen flash
   return (
-    <PostHogProvider
-      client={posthogClient!}
-      autocapture={{
-        captureScreens: false, // We'll handle screen tracking manually for Expo Router
-        captureTouches: true,
-      }}
-    >
+    <AnalyticsProvider>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
@@ -120,6 +114,24 @@ function RootLayoutNav({ onReady }: { onReady: () => void }) {
           </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
+    </AnalyticsProvider>
+  );
+}
+
+function AnalyticsProvider({ children }: { children: React.ReactNode }) {
+  if (!posthogClient) {
+    return <>{children}</>;
+  }
+
+  return (
+    <PostHogProvider
+      client={posthogClient}
+      autocapture={{
+        captureScreens: false,
+        captureTouches: true,
+      }}
+    >
+      {children}
     </PostHogProvider>
   );
 }

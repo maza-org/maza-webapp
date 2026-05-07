@@ -36,6 +36,9 @@ yarn-error.*
 *.tsbuildinfo
 .idea/
 .env
+*.log
+__pycache__/
+tmp/
 
 *.ipa
 *.apk

@@ -7,9 +7,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { baseUrl } from '@/services/api';
-import Pdf from 'react-native-pdf';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import PdfRenderer from '@/components/PdfRenderer';
 
 export default function Certificate() {
   const { certificateId } = useLocalSearchParams();
@@ -177,10 +177,9 @@ export default function Certificate() {
     if (!pdfSource) return null;
 
     return (
-      <Pdf
+      <PdfRenderer
         source={pdfSource}
         style={themedStyles.pdf}
-        trustAllCerts={false}
         onLoadComplete={(numberOfPages) => {
           console.log(`Number of pages: ${numberOfPages}`);
         }}

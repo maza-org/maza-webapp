@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { Platform } from 'react-native';
 import { Job } from '@/types/job';
 import jobsApi from '@/services/jobsApi';
 
@@ -7,11 +8,35 @@ type JobWithCompatibility = Job & {
   category?: { id: number; slug: string; name: string };
 };
 
+async function getJobsResponse(path: string, params?: Record<string, string>) {
+  if (Platform.OS !== 'web') {
+    return jobsApi.get(path, { params });
+  }
+
+  const searchParams = new URLSearchParams({ path: path.replace(/^\/+/, '') });
+
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      searchParams.set(key, value);
+    }
+  }
+
+  const response = await fetch(`/api/jobs?${searchParams.toString()}`);
+
+  if (!response.ok) {
+    throw new Error(`Erro ao carregar oportunidades (${response.status})`);
+  }
+
+  return {
+    data: await response.json(),
+  };
+}
+
 export function useJobs() {
   return useQuery({
     queryKey: ['jobs'],
     queryFn: async (): Promise<JobWithCompatibility[]> => {
-      const response = await jobsApi.get('/vacancies/front');
+      const response = await getJobsResponse('/vacancies/front');
       const jobs = response.data.results || [];
 
       return jobs.map((job: any) => ({
@@ -35,7 +60,7 @@ export function useJobDetails(slug: string) {
   return useQuery({
     queryKey: ['job', slug],
     queryFn: async (): Promise<JobWithCompatibility> => {
-      const response = await jobsApi.get(`/vacancies?name=${slug}`);
+      const response = await getJobsResponse('/vacancies', { name: slug });
 
       if (!response.data.results || response.data.results.length === 0) {
         throw new Error('Vaga não encontrada');
@@ -64,7 +89,7 @@ export function useJobSearch(query: string) {
   return useQuery({
     queryKey: ['jobs', 'search', query],
     queryFn: async (): Promise<JobWithCompatibility[]> => {
-      const response = await jobsApi.get(`/search/?s=${encodeURIComponent(query)}`);
+      const response = await getJobsResponse('/search/', { s: query });
 
       if (!response.data.results) return [];
 
