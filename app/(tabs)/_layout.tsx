@@ -4,14 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tabStyles, tabColors } from '@/app/types/tabs';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Platform, Image, useWindowDimensions } from 'react-native';
+import { Image } from 'react-native';
 import WebNavBar from '@/components/WebNavBar';
+import useIsDesktopWeb from '@/hooks/useIsDesktopWeb';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
-  const { width } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && width >= 768;
+  const isDesktop = useIsDesktopWeb();
   const baseTabContentHeight = 65;
 
   const colors = isDark ? tabColors.dark : tabColors.light;

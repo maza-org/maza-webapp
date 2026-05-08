@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -19,6 +19,7 @@ import Button from '@/components/Button';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
 import SurveyRecommendationModal from '@/app/components/profile/SurveyRecommendationModal';
+import useIsDesktopWeb from '@/hooks/useIsDesktopWeb';
 
 export default function ProfileScreen() {
   const { data: user, isLoading, error } = useUser();
@@ -36,8 +37,7 @@ export default function ProfileScreen() {
 
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const { width } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && width >= 768;
+  const isDesktop = useIsDesktopWeb();
 
   const themedStyles = useMemo(
     () =>

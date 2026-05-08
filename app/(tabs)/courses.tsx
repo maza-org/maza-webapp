@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { StyleSheet, View, Platform, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FavoriteCoursesGrid from '@/components/FavoriteCoursesGrid';
 import CoursesInProgress from '@/components/CourseInProgress';
@@ -14,6 +14,7 @@ import {
 } from '@/app/components/courses';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import useIsDesktopWeb from '@/hooks/useIsDesktopWeb';
 
 export default function Courses() {
   const { data: user } = useUser();
@@ -21,8 +22,7 @@ export default function Courses() {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const { width } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && width >= 768;
+  const isDesktop = useIsDesktopWeb();
 
   const themedStyles = useMemo(() => StyleSheet.create({
     container: {

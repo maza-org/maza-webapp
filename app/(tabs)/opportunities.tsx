@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   TextInput,
   TouchableOpacity,
-  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/Themed';
@@ -25,6 +24,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Shimmer from '@/components/Shimmer';
 import { useTheme } from '@/contexts/ThemeContext';
 import Colors from '@/constants/Colors';
+import useIsDesktopWeb from '@/hooks/useIsDesktopWeb';
 
 const SKELETON_COUNT = 6;
 
@@ -34,8 +34,7 @@ export default function Opportunities() {
   const { isDark } = useTheme();
   const colors = isDark ? Colors.dark : Colors.light;
 
-  const { width } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && width >= 768;
+  const isDesktop = useIsDesktopWeb();
 
   const themedStyles = useMemo(() => StyleSheet.create({
     container: {

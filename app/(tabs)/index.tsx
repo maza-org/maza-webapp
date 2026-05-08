@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Platform, Alert, Text, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Platform, Alert, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useUser from '@/hooks/useUser';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -22,7 +22,7 @@ import { useDeleteInterest } from '@/app/hooks/useProfileQueries';
 import InterestsSection from '@/app/components/profile/InterestsSection';
 import Button from '@/components/Button';
 import { Feather } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import useIsDesktopWeb from '@/hooks/useIsDesktopWeb';
 
 export default function Home() {
   const { theme } = useTheme();
@@ -32,8 +32,7 @@ export default function Home() {
   const { data: newCourses = [], isLoading: loadingNewCourses } = useNewCourses();
   const { data: suggestedCourses = [], isLoading: loadingSuggestedCourses } = useSuggestedCourses(user?.token);
   const { data: userCourses = [], isLoading: loadingUserCourses } = useUserCourses(user?.token || '');
-  const { width } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && width >= 768;
+  const isDesktop = useIsDesktopWeb();
 
   const [isEditing, setIsEditing] = useState(false);
   const [deletingInterestId, setDeletingInterestId] = useState<number | null>(null);
