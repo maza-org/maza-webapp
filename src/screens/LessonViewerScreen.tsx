@@ -792,6 +792,8 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const [htmlContentReady, setHtmlContentReady] = useState(lessonParam.contentType !== 'HTML');
   const autoCompletedLessonRef = useRef<string | null>(null);
   const autoTranscriptStartedRef = useRef<string | null>(null);
+  const [courseOutline, setCourseOutline] = useState<any>(null);
+  const [courseProgress, setCourseProgress] = useState<any>(null);
 
   const transcriptSegments = splitTranscriptIntoSegments(
     transcript,
@@ -837,6 +839,26 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     () => shouldUseCachedVideoUri(cachedMediaUri, resolvedVideoUrl) ? cachedMediaUri : resolvedVideoUrl,
     [cachedMediaUri, resolvedVideoUrl]
   );
+  const courseLessons = useMemo(() => (
+    (courseOutline?.modules ?? []).flatMap((mod: any, moduleIndex: number) => (
+      (mod.lessons ?? []).map((lesson: any, lessonIndex: number) => ({
+        ...lesson,
+        moduleId: lesson.moduleId ?? mod.id,
+        moduleTitle: mod.title,
+        moduleIndex,
+        lessonIndex,
+      }))
+    ))
+  ), [courseOutline]);
+  const lessonCompletionMap = useMemo(() => {
+    const map = new Map<string, boolean>();
+    (courseProgress?.modules ?? []).forEach((mod: any) => {
+      (mod.lessons ?? []).forEach((lesson: any) => {
+        map.set(lesson.id, !!lesson.isCompleted);
+      });
+    });
+    return map;
+  }, [courseProgress]);
   const youtubeEmbedHtml = useMemo(() => {
     if (!ytId) return '';
     return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{margin:0;padding:0;box-sizing:border-box}html,body,#player{width:100%;height:100%;background:#000;overflow:hidden}</style></head><body><div id="player"></div><script src="https://www.youtube.com/iframe_api"></script><script>let player;let timer;function send(payload){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(JSON.stringify(payload));}function report(){if(!player||!player.getCurrentTime)return;send({type:'media-time',currentTime:player.getCurrentTime()||0,duration:player.getDuration()||0});}function onYouTubeIframeAPIReady(){player=new YT.Player('player',{width:'100%',height:'100%',videoId:'${ytId}',playerVars:{autoplay:1,playsinline:1,rel:0,modestbranding:1,controls:1},events:{onReady:function(){send({type:'media-duration',duration:player.getDuration()||0});player.playVideo();timer=setInterval(report,500);},onStateChange:report}});}window.addEventListener('beforeunload',function(){if(timer)clearInterval(timer);});</script></body></html>`;
@@ -939,6 +961,20 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     }
     return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
   }, [lessonParam.id, lessonLoading]);
+
+  useEffect(() => {
+    if (!courseId) return;
+    let active = true;
+    Promise.all([
+      getPersistentCached<any>(`/courses/${courseId}?lessonScope=unlocked`, 10 * 60 * 1000).catch(() => null),
+      getPersistentCached<any>(`/progress/course/${courseId}?lessonScope=unlocked`, 2 * 60 * 1000).catch(() => null),
+    ]).then(([courseData, progressData]) => {
+      if (!active) return;
+      if (courseData) setCourseOutline(courseData);
+      if (progressData) setCourseProgress(progressData);
+    });
+    return () => { active = false; };
+  }, [courseId]);
 
   useEffect(() => {
     if (safeActiveTranscriptIndex < 0) return;
@@ -1062,6 +1098,91 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     }
     setMarking(false);
   };
+
+  const renderCompleteButton = (compact = false) => (
+    shouldShowCompleteButton && !lessonLoading && !lessonError ? (
+      <TouchableOpacity
+        style={[
+          styles.completeBtn,
+          (isWeb || compact) && styles.completeBtnWeb,
+          compact && styles.completeBtnRail,
+          { backgroundColor: themeColors.primary, marginBottom: compact ? 0 : lessonFooterBottom },
+          completed && { backgroundColor: themeColors.success },
+          completeButtonDisabled && !completed && { backgroundColor: '#CBD5E1', shadowOpacity: 0, elevation: 0 },
+          countdownBlocksCompletion && { opacity: 0.5 },
+        ]}
+        onPress={() => markComplete()}
+        disabled={completeButtonDisabled || lessonLoading || !!lessonError}
+        accessibilityLabel={getCompleteButtonText()}
+      >
+        {marking ? <ActivityIndicator color="#fff" /> : (
+          <>
+            <CheckCircle size={isWeb || compact ? 16 : 20} color="#fff" />
+            <Text style={[styles.completeBtnText, (isWeb || compact) && styles.completeBtnTextWeb, { color: '#fff' }]}>
+              {getCompleteButtonText()}
+            </Text>
+          </>
+        )}
+      </TouchableOpacity>
+    ) : null
+  );
+
+  const renderLessonListPanel = () => {
+    if (!courseLessons.length) return null;
+
+    return (
+      <View style={[styles.lessonListPanel, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+        <View style={styles.lessonListHeader}>
+          <Text style={[styles.lessonListTitle, { color: themeColors.text }]}>Aulas</Text>
+          <Text style={[styles.lessonListCount, { color: themeColors.textMuted }]}>{courseLessons.length}</Text>
+        </View>
+        <ScrollView style={styles.lessonListScroll} contentContainerStyle={styles.lessonListContent} showsVerticalScrollIndicator>
+          {courseLessons.map((lesson: any, index: number) => {
+            const isCurrent = lesson.id === lessonParam.id;
+            const done = lessonCompletionMap.get(lesson.id);
+            return (
+              <TouchableOpacity
+                key={lesson.id}
+                style={[
+                  styles.lessonListItem,
+                  { borderColor: themeColors.border },
+                  isCurrent && { backgroundColor: `${themeColors.primary}14`, borderColor: `${themeColors.primary}55` },
+                ]}
+                onPress={() => {
+                  if (isCurrent) return;
+                  navigation.replace('LessonViewer', { lesson, lessonId: lesson.id, courseId });
+                }}
+              >
+                <View style={[styles.lessonListIndex, { backgroundColor: done ? themeColors.success : isCurrent ? themeColors.primary : '#E2E8F0' }]}>
+                  {done ? <CheckCircle size={12} color="#fff" /> : <Text style={[styles.lessonListIndexText, { color: isCurrent ? '#fff' : '#64748B' }]}>{index + 1}</Text>}
+                </View>
+                <View style={styles.lessonListMeta}>
+                  <Text style={[styles.lessonListItemTitle, { color: themeColors.text }]} numberOfLines={2}>{lesson.title}</Text>
+                  <Text style={[styles.lessonListItemType, { color: themeColors.textMuted }]} numberOfLines={1}>
+                    {CONTENT_TYPE_LABELS[lesson.contentType] ?? lesson.contentType}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+    );
+  };
+
+  const renderWebRail = () => (
+    <View style={styles.lessonRail}>
+      <View style={[styles.lessonActionPanel, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+        <Text style={[styles.lessonActionTitle, { color: themeColors.text }]}>Progresso da aula</Text>
+        <Text style={[styles.lessonActionSub, { color: themeColors.textMuted }]}>{mediaProgressLabel}</Text>
+        {renderCompleteButton(true)}
+      </View>
+      <View style={styles.transcriptRailSlot}>
+        {renderTranscriptPanel()}
+      </View>
+      {renderLessonListPanel()}
+    </View>
+  );
 
   useEffect(() => {
     const canAutoComplete =
@@ -1250,9 +1371,11 @@ export default function LessonViewerScreen({ route, navigation }: any) {
                 <NativeVideoPlayer uri={playableVideoUrl} onPlaybackTime={handleNativePlaybackTime} />
               ) : null}
             </View>
-            <View style={isWideWeb ? styles.transcriptSidebar : styles.transcriptStack}>
-              {renderTranscriptPanel()}
-            </View>
+            {isWideWeb ? renderWebRail() : (
+              <View style={styles.transcriptStack}>
+                {renderTranscriptPanel()}
+              </View>
+            )}
           </View>
         );
       }
@@ -1286,9 +1409,11 @@ export default function LessonViewerScreen({ route, navigation }: any) {
                 <Text style={[styles.placeholderText, { color: themeColors.textMuted }]}>Áudio não disponível</Text>
               </View>
             )}
-            <View style={isWideWeb ? styles.transcriptSidebar : styles.transcriptStack}>
-              {renderTranscriptPanel()}
-            </View>
+            {isWideWeb ? renderWebRail() : (
+              <View style={styles.transcriptStack}>
+                {renderTranscriptPanel()}
+              </View>
+            )}
           </View>
         );
       }
@@ -1371,30 +1496,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
         {renderContent()}
       </View>
 
-      {shouldShowCompleteButton && !lessonLoading && !lessonError && (
-        <TouchableOpacity
-          style={[
-            styles.completeBtn,
-            isWeb && styles.completeBtnWeb,
-            { backgroundColor: themeColors.primary, marginBottom: lessonFooterBottom },
-            completed && { backgroundColor: themeColors.success },
-            completeButtonDisabled && !completed && { backgroundColor: '#CBD5E1', shadowOpacity: 0, elevation: 0 },
-            countdownBlocksCompletion && { opacity: 0.5 },
-          ]}
-          onPress={() => markComplete()}
-          disabled={completeButtonDisabled || lessonLoading || !!lessonError}
-          accessibilityLabel={getCompleteButtonText()}
-        >
-          {marking ? <ActivityIndicator color="#fff" /> : (
-            <>
-              <CheckCircle size={isWeb ? 16 : 20} color="#fff" />
-              <Text style={[styles.completeBtnText, isWeb && styles.completeBtnTextWeb, { color: '#fff' }]}>
-                {getCompleteButtonText()}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-      )}
+      {!isWideWeb && renderCompleteButton()}
     </View>
   );
 }
@@ -1441,7 +1543,24 @@ const styles = StyleSheet.create({
   completeBtnText: { fontWeight: 'bold', fontSize: 16 },
   completeBtnTextWeb: { fontSize: 13 },
   transcriptStack: { flex: 1 },
-  transcriptSidebar: { width: 360, flexShrink: 0 },
+  lessonRail: { width: 390, flexShrink: 0, gap: 12 },
+  lessonActionPanel: { borderWidth: 1, borderRadius: 8, padding: 14 },
+  lessonActionTitle: { fontSize: 14, fontWeight: '800', marginBottom: 4 },
+  lessonActionSub: { fontSize: 12, fontWeight: '600', marginBottom: 12 },
+  completeBtnRail: { alignSelf: 'stretch', maxWidth: undefined, width: '100%', margin: 0 },
+  transcriptRailSlot: { minHeight: 310, flex: 1 },
+  lessonListPanel: { borderWidth: 1, borderRadius: 8, overflow: 'hidden', maxHeight: 300 },
+  lessonListHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12 },
+  lessonListTitle: { fontSize: 14, fontWeight: '800' },
+  lessonListCount: { fontSize: 12, fontWeight: '800' },
+  lessonListScroll: { flexGrow: 0 },
+  lessonListContent: { paddingHorizontal: 10, paddingBottom: 10 },
+  lessonListItem: { flexDirection: 'row', gap: 10, borderWidth: 1, borderRadius: 8, padding: 9, marginBottom: 8 },
+  lessonListIndex: { width: 24, height: 24, borderRadius: 7, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  lessonListIndexText: { fontSize: 11, fontWeight: '900' },
+  lessonListMeta: { flex: 1, minWidth: 0 },
+  lessonListItemTitle: { fontSize: 12, fontWeight: '700', lineHeight: 16 },
+  lessonListItemType: { fontSize: 10, fontWeight: '800', marginTop: 2, textTransform: 'uppercase' },
   transcriptPanel: { flex: 1, borderTopWidth: 1, paddingHorizontal: 18, paddingTop: 16 },
   transcriptPanelWeb: { borderTopWidth: 0, borderWidth: 1, borderRadius: 8, paddingBottom: 12 },
   transcriptHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },

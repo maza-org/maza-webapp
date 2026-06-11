@@ -565,6 +565,25 @@ export default function CourseDetailScreen({ route, navigation }: any) {
             <Text style={[styles.communityBtnText, { color: themeColors.primary }]}>Comunidade do Curso</Text>
           </TouchableOpacity>
           )}
+
+          {isWideWeb && (
+            <View style={[styles.webOverviewCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+              <Text style={[styles.webOverviewTitle, { color: themeColors.text }]}>Resumo do curso</Text>
+              <Text style={[styles.webOverviewText, { color: themeColors.textMuted }]}>
+                {course.description || 'Acompanhe as aulas deste curso pela lista à direita e avance no seu próprio ritmo.'}
+              </Text>
+              <View style={styles.webOverviewGrid}>
+                <View style={[styles.webOverviewMetric, { borderColor: themeColors.border }]}>
+                  <Text style={[styles.webOverviewMetricValue, { color: themeColors.text }]}>{completedLessons}/{totalLessons}</Text>
+                  <Text style={[styles.webOverviewMetricLabel, { color: themeColors.textMuted }]}>Aulas concluídas</Text>
+                </View>
+                <View style={[styles.webOverviewMetric, { borderColor: themeColors.border }]}>
+                  <Text style={[styles.webOverviewMetricValue, { color: themeColors.text }]}>{Math.round(enrollmentProgress)}%</Text>
+                  <Text style={[styles.webOverviewMetricLabel, { color: themeColors.textMuted }]}>Progresso</Text>
+                </View>
+              </View>
+            </View>
+          )}
           </View>
 
           <View style={[styles.section, isWideWeb && styles.webLessonsSidebar]}>
@@ -677,6 +696,13 @@ const styles = StyleSheet.create({
   webCourseBody: { width: '100%', maxWidth: 1180, alignSelf: 'center', flexDirection: 'row', alignItems: 'flex-start', gap: 18, padding: 18 },
   webCourseMain: { flex: 1, minWidth: 0 },
   webLessonsSidebar: { width: 390, flexShrink: 0, padding: 0 },
+  webOverviewCard: { marginHorizontal: 24, marginTop: 4, padding: 18, borderRadius: 12, borderWidth: 1 },
+  webOverviewTitle: { fontSize: 17, fontWeight: '800', marginBottom: 8 },
+  webOverviewText: { fontSize: 14, lineHeight: 21 },
+  webOverviewGrid: { flexDirection: 'row', gap: 12, marginTop: 16 },
+  webOverviewMetric: { flex: 1, borderWidth: 1, borderRadius: 8, padding: 12 },
+  webOverviewMetricValue: { fontSize: 18, fontWeight: '900', marginBottom: 4 },
+  webOverviewMetricLabel: { fontSize: 12, fontWeight: '700' },
   loadingState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   loadingText: { fontSize: 14, fontWeight: '600' },
   backBtn: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
