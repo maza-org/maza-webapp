@@ -216,21 +216,22 @@ export default function HomeScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Story Entry Button */}
-        <TouchableOpacity 
-          style={[styles.storyCard, { backgroundColor: isDark ? themeColors.card : '#1E293B' }]}
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate('HowItWorksStory')}
-        >
-          <View style={styles.storyIconWrapper}>
-            <PlayCircle color="#FFF" size={28} />
-          </View>
-          <View style={styles.storyTextContent}>
-            <Text style={styles.storyTitle}>Como o Maza Funciona?</Text>
-            <Text style={[styles.storySubtitle, { color: isDark ? themeColors.textMuted : '#94A3B8' }]}>Toque para ver a nossa story</Text>
-          </View>
-          <ChevronRight color="#CBD5E1" size={24} />
-        </TouchableOpacity>
+        {!isWeb && (
+          <TouchableOpacity
+            style={[styles.storyCard, { backgroundColor: isDark ? themeColors.card : '#1E293B' }]}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('HowItWorksStory')}
+          >
+            <View style={styles.storyIconWrapper}>
+              <PlayCircle color="#FFF" size={28} />
+            </View>
+            <View style={styles.storyTextContent}>
+              <Text style={styles.storyTitle}>Como o Maza Funciona?</Text>
+              <Text style={[styles.storySubtitle, { color: isDark ? themeColors.textMuted : '#94A3B8' }]}>Toque para ver a nossa story</Text>
+            </View>
+            <ChevronRight color="#CBD5E1" size={24} />
+          </TouchableOpacity>
+        )}
 
 
 

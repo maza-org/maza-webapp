@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Modal, ImageBackground, Alert, Dimensions, RefreshControl
+  ActivityIndicator, Modal, ImageBackground, Alert, RefreshControl, Platform, useWindowDimensions
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -91,7 +91,9 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   const didFirstLoadRef = useRef(false);
   const lastFocusRefreshRef = useRef(0);
 
-  const { width } = Dimensions.get('window');
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web';
+  const isWideWeb = isWeb && width >= 1040;
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
@@ -458,6 +460,9 @@ export default function CourseDetailScreen({ route, navigation }: any) {
             );
           })()}
 
+          <View style={isWideWeb ? styles.webCourseBody : undefined}>
+          <View style={isWideWeb ? styles.webCourseMain : undefined}>
+
           {hasLessons && progress && (
             <View style={[styles.progressContainer, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
               <View style={styles.progressRow}>
@@ -560,8 +565,9 @@ export default function CourseDetailScreen({ route, navigation }: any) {
             <Text style={[styles.communityBtnText, { color: themeColors.primary }]}>Comunidade do Curso</Text>
           </TouchableOpacity>
           )}
+          </View>
 
-          <View style={styles.section}>
+          <View style={[styles.section, isWideWeb && styles.webLessonsSidebar]}>
             <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Conteúdo do Curso</Text>
             {detailsPending && (
               <View style={styles.lessonsLoading}>
@@ -642,10 +648,12 @@ export default function CourseDetailScreen({ route, navigation }: any) {
               );
             })}
           </View>
+          </View>
 
           <TouchableOpacity
             style={[
               styles.enrollBtn,
+              isWideWeb && styles.webEnrollBtn,
               { backgroundColor: themeColors.primary, shadowColor: themeColors.primary },
               isComplete && { backgroundColor: themeColors.success, shadowColor: themeColors.success },
               ctaDisabled && { backgroundColor: themeColors.textMuted, shadowColor: themeColors.textMuted },
@@ -666,6 +674,9 @@ export default function CourseDetailScreen({ route, navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  webCourseBody: { width: '100%', maxWidth: 1180, alignSelf: 'center', flexDirection: 'row', alignItems: 'flex-start', gap: 18, padding: 18 },
+  webCourseMain: { flex: 1, minWidth: 0 },
+  webLessonsSidebar: { width: 390, flexShrink: 0, padding: 0 },
   loadingState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   loadingText: { fontSize: 14, fontWeight: '600' },
   backBtn: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
@@ -750,6 +761,7 @@ const styles = StyleSheet.create({
   showMoreLessonsBtn: { alignItems: 'center', paddingTop: 12, marginTop: 2, borderTopWidth: 1 },
   showMoreLessonsText: { fontSize: 13, fontWeight: '800' },
   enrollBtn: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginHorizontal: 24, paddingVertical: 16, borderRadius: 30, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6 },
+  webEnrollBtn: { alignSelf: 'center', minWidth: 220, marginTop: 8, paddingVertical: 11, paddingHorizontal: 18, borderRadius: 8, shadowOpacity: 0.18 },
   enrollText: { color: '#fff', fontWeight: 'bold', fontSize: 18, marginLeft: 10 },
   progressSub: { fontSize: 12, marginTop: 6 },
   error: { textAlign: 'center', marginTop: 40 },

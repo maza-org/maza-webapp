@@ -109,6 +109,10 @@ export default function HowItWorksStoryScreen({ navigation }: any) {
     navigation.navigate('Main');
   }, [navigation, user]);
 
+  useEffect(() => {
+    if (isWeb) closeStory();
+  }, [closeStory, isWeb]);
+
   useFocusEffect(
     useCallback(() => {
       if (Platform.OS === 'web') return undefined;
@@ -153,6 +157,8 @@ export default function HowItWorksStoryScreen({ navigation }: any) {
     height: Math.min(height - 48, 720),
   } : null;
   const webBackgroundPhotoStyle = isWeb ? ({ objectPosition: 'center 34%' } as any) : null;
+
+  if (isWeb) return null;
 
   return (
     <View style={[styles.container, isWeb && styles.webContainer]}>

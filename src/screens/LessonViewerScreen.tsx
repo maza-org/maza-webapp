@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Alert, ScrollView, Linking, Platform, LayoutChangeEvent
+  ActivityIndicator, Alert, ScrollView, Linking, Platform, LayoutChangeEvent, useWindowDimensions
 } from 'react-native';
 import CrossPlatformWebView from '../components/CrossPlatformWebView';
 import QuizRenderer from '../components/QuizRenderer';
@@ -759,6 +759,7 @@ const gameStyles = StyleSheet.create({
 export default function LessonViewerScreen({ route, navigation }: any) {
   useKeepAwake();
   const { colors: themeColors, isDark } = useTheme();
+  const { width } = useWindowDimensions();
   const { lesson: routeLesson, lessonId: routeLessonId, courseId } = route.params as { lesson?: Lesson; lessonId?: string; courseId: string };
   const initialLessonId = routeLessonId ?? routeLesson?.id ?? '';
   const [lessonParam, setLessonParam] = useState<Lesson>(routeLesson ?? {
@@ -821,6 +822,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const countdownBlocksCompletion = countdown > 0 && lessonParam.contentType === 'VIDEO';
   const completeButtonDisabled = completed || marking || countdownBlocksCompletion || !canCompleteVideoLesson;
   const isWeb = Platform.OS === 'web';
+  const isWideWeb = isWeb && width >= 1000;
   const androidNavigationInset = Platform.OS === 'android' ? Math.max(insets.bottom, 28) : insets.bottom;
   const lessonFooterBottom = isWeb ? 16 : Platform.OS === 'android' ? androidNavigationInset : Math.max(insets.bottom, 12);
   const mediaProgressLabel = mediaDuration > 0
@@ -1138,7 +1140,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   };
 
   const renderTranscriptPanel = () => (
-    <View style={[styles.transcriptPanel, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+    <View style={[styles.transcriptPanel, isWideWeb && styles.transcriptPanelWeb, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
       <View style={styles.transcriptHeader}>
         <Text style={[styles.transcriptTitle, { color: themeColors.text }]}>Transcrição</Text>
         {!transcript.trim() && (
@@ -1228,8 +1230,8 @@ export default function LessonViewerScreen({ route, navigation }: any) {
         }
 
         return (
-          <View style={styles.lessonMediaContent}>
-            <View style={{ backgroundColor: '#000', width: '100%', aspectRatio: 16 / 9 }}>
+          <View style={[styles.lessonMediaContent, isWideWeb && styles.lessonMediaContentWeb]}>
+            <View style={[styles.videoFrame, isWideWeb && styles.videoFrameWeb]}>
               {ytId && Platform.OS === 'web' ? (
                 <YouTubeWebPlayer
                   videoId={ytId}
@@ -1248,7 +1250,9 @@ export default function LessonViewerScreen({ route, navigation }: any) {
                 <NativeVideoPlayer uri={playableVideoUrl} onPlaybackTime={handleNativePlaybackTime} />
               ) : null}
             </View>
-            {renderTranscriptPanel()}
+            <View style={isWideWeb ? styles.transcriptSidebar : styles.transcriptStack}>
+              {renderTranscriptPanel()}
+            </View>
           </View>
         );
       }
@@ -1257,7 +1261,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
         const resolvedAudioUrl = resolveMediaUrl(lessonParam.audioUrl);
         const playableAudioUrl = cachedMediaUri || resolvedAudioUrl;
         return (
-          <View style={styles.lessonMediaContent}>
+          <View style={[styles.lessonMediaContent, isWideWeb && styles.lessonMediaContentWeb]}>
             {playableAudioUrl ? (
               Platform.OS === 'web' ? (
                 <WebAudioPlayer
@@ -1282,7 +1286,9 @@ export default function LessonViewerScreen({ route, navigation }: any) {
                 <Text style={[styles.placeholderText, { color: themeColors.textMuted }]}>Áudio não disponível</Text>
               </View>
             )}
-            {renderTranscriptPanel()}
+            <View style={isWideWeb ? styles.transcriptSidebar : styles.transcriptStack}>
+              {renderTranscriptPanel()}
+            </View>
           </View>
         );
       }
@@ -1401,6 +1407,9 @@ const styles = StyleSheet.create({
   typeBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   typeBadgeText: { fontWeight: 'bold', fontSize: 11 },
   lessonMediaContent: { flex: 1 },
+  lessonMediaContentWeb: { flexDirection: 'row', gap: 16, padding: 16, alignItems: 'stretch' },
+  videoFrame: { backgroundColor: '#000', width: '100%', aspectRatio: 16 / 9 },
+  videoFrameWeb: { flex: 1, width: undefined, alignSelf: 'flex-start', borderRadius: 8, overflow: 'hidden' },
   mediaLoadingOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' },
   mediaLoadingText: { color: '#fff', fontSize: 14, fontWeight: '700', marginTop: 10 },
   youtubeFrameWrap: { flex: 1, backgroundColor: '#000' },
@@ -1431,7 +1440,10 @@ const styles = StyleSheet.create({
   completeBtnWeb: { alignSelf: 'center', minWidth: 180, maxWidth: 280, margin: 12, paddingVertical: 9, paddingHorizontal: 16, borderRadius: 8 },
   completeBtnText: { fontWeight: 'bold', fontSize: 16 },
   completeBtnTextWeb: { fontSize: 13 },
+  transcriptStack: { flex: 1 },
+  transcriptSidebar: { width: 360, flexShrink: 0 },
   transcriptPanel: { flex: 1, borderTopWidth: 1, paddingHorizontal: 18, paddingTop: 16 },
+  transcriptPanelWeb: { borderTopWidth: 0, borderWidth: 1, borderRadius: 8, paddingBottom: 12 },
   transcriptHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   transcriptTitle: { fontSize: 16, fontWeight: '800' },
   transcriptBtn: { minWidth: 78, height: 34, borderRadius: 17, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 12 },
