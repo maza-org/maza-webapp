@@ -1466,7 +1466,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
           return <View style={styles.placeholder}><Ionicons name="game-controller-outline" size={24} color={themeColors.textMuted} style={{ marginBottom: 8 }}/><Text style={[styles.placeholderText, { color: themeColors.textMuted }]}>Sem jogo disponível</Text></View>;
         }
 
-        return (
+        return renderWithWebRail(
           <View
             style={{ flex: 1, paddingBottom: androidNavigationInset }}
           >
