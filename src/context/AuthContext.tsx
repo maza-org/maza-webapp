@@ -52,9 +52,21 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 async function readJsonResponse(response: Response) {
   const text = await response.text();
   if (!text) return null;
+
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) {
+    if (!response.ok) {
+      return { error: `Servidor respondeu ${response.status}. Tente novamente.` };
+    }
+    throw new Error('O servidor devolveu uma resposta inesperada. Tente novamente.');
+  }
+
   try {
     return JSON.parse(text);
   } catch {
+    if (!response.ok) {
+      return { error: `Servidor respondeu ${response.status}. Tente novamente.` };
+    }
     throw new Error('O servidor devolveu uma resposta inesperada. Tente novamente.');
   }
 }
@@ -109,6 +121,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const data = await readJsonResponse(response);
     if (!response.ok) throw new Error(data?.error ?? data?.message ?? 'Credenciais inválidas.');
+    if (!data?.token || !data?.user) throw new Error('O servidor devolveu uma resposta incompleta. Tente novamente.');
 
     const { token: t } = data;
     let fullUser = data.user;
@@ -139,6 +152,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const data = await readJsonResponse(response);
     if (!response.ok) throw new Error(data?.error ?? data?.message ?? 'Código inválido. Tente novamente.');
+    if (!data?.token || !data?.user) throw new Error('O servidor devolveu uma resposta incompleta. Tente novamente.');
 
     const { token: t } = data;
     let fullUser = data.user;

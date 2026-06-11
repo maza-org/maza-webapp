@@ -6,10 +6,6 @@
   },
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://backend.mazas.org/api/:path*"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
