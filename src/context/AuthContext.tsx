@@ -49,6 +49,16 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
+async function readJsonResponse(response: Response) {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error('O servidor devolveu uma resposta inesperada. Tente novamente.');
+  }
+}
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -93,12 +103,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (identifier: string, password?: string) => {
     const response = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ identifier, password }),
     });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data?.error ?? 'Login failed');
+    const data = await readJsonResponse(response);
+    if (!response.ok) throw new Error(data?.error ?? data?.message ?? 'Credenciais inválidas.');
 
     const { token: t } = data;
     let fullUser = data.user;
@@ -123,12 +133,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const verifyOtp = async (phone: string, code: string) => {
     const response = await fetch(`${API_BASE}/auth/login/otp/verify`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ phone, code }),
     });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data?.error ?? 'OTP verification failed');
+    const data = await readJsonResponse(response);
+    if (!response.ok) throw new Error(data?.error ?? data?.message ?? 'Código inválido. Tente novamente.');
 
     const { token: t } = data;
     let fullUser = data.user;

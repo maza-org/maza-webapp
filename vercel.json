@@ -6,8 +6,8 @@
   },
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://backend.mazas.org/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://backend.mazas.org/api/:path*"
     },
     {
       "source": "/(.*)",
