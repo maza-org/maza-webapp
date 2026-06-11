@@ -196,14 +196,27 @@ export default function LoginScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
-  content: { flexGrow: 1, padding: 24, paddingTop: 40 },
-  logo: { width: 160, height: 70, marginBottom: 32, alignSelf: 'flex-start' },
+  content: {
+    flexGrow: 1,
+    padding: 24,
+    paddingTop: 40,
+    width: '100%',
+    ...(Platform.OS === 'web'
+      ? {
+          maxWidth: 520,
+          alignSelf: 'center',
+          justifyContent: 'center',
+          paddingVertical: 36,
+        }
+      : null),
+  },
+  logo: { width: 150, height: 66, marginBottom: 30, alignSelf: 'flex-start' },
   back: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0F0F0', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
   backText: { color: colors.text, fontSize: 20, fontWeight: 'bold' },
   title: { maxWidth: 340, fontSize: 28, lineHeight: 36, fontWeight: 'bold', color: colors.text, marginBottom: 8 },
   inputContainer: { marginBottom: 20 },
   label: { fontSize: 13, color: colors.text, marginBottom: 8, fontWeight: '500' },
-  input: { backgroundColor: colors.white, borderRadius: 12, padding: 16, fontSize: 16 },
+  input: { backgroundColor: colors.white, borderRadius: 12, padding: 16, fontSize: 16, borderWidth: 1, borderColor: '#E6EAF0' },
   passwordInputWrap: { position: 'relative', justifyContent: 'center' },
   passwordInput: { paddingRight: 54 },
   passwordToggle: {

@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { AppState, Platform } from 'react-native';
+import { AppState, Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider } from './src/context/AuthContext';
@@ -13,10 +13,10 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 function Root() {
   const { isDark } = useTheme();
   return (
-    <>
+    <View style={styles.appRoot}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <AppNavigator />
-    </>
+    </View>
   );
 }
 
@@ -42,6 +42,9 @@ export default function App() {
         margin: 0;
         overflow-x: hidden;
       }
+      body {
+        background: #eef5fb;
+      }
       *, *::before, *::after {
         box-sizing: border-box;
       }
@@ -57,9 +60,37 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
-          <Root />
+          {Platform.OS === 'web' ? (
+            <View style={styles.webViewport}>
+              <View style={styles.webShell}>
+                <Root />
+              </View>
+            </View>
+          ) : (
+            <Root />
+          )}
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  appRoot: {
+    flex: 1,
+    minHeight: 0,
+  },
+  webViewport: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    backgroundColor: '#eef5fb',
+  },
+  webShell: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 1180,
+    minHeight: '100%',
+    backgroundColor: '#FAFAFA',
+  },
+});

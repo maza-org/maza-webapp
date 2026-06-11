@@ -2,9 +2,13 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "env": {
-    "EXPO_PUBLIC_API_BASE_URL": "https://backend.mazas.org/api"
+    "EXPO_PUBLIC_API_BASE_URL": "/api"
   },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://backend.mazas.org/api/$1"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"

@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 
 const configuredApiBase = process.env.EXPO_PUBLIC_API_BASE_URL;
 const localApiBase = 'http://127.0.0.1:4000/api';
-const productionWebApiBase = 'https://backend.mazas.org/api';
+const productionWebApiBase = '/api';
 
 // Native devices must receive EXPO_PUBLIC_API_BASE_URL from .env because
 // their localhost is the device, not this backend machine.

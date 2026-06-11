@@ -135,7 +135,20 @@ export default function OtpVerificationScreen({ route, navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
-  content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 40 },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    width: '100%',
+    ...(Platform.OS === 'web'
+      ? {
+          maxWidth: 520,
+          alignSelf: 'center',
+          justifyContent: 'center',
+          paddingVertical: 36,
+        }
+      : null),
+  },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0F0F0', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
   logo: { width: 160, height: 70, marginBottom: 32, alignSelf: 'flex-start' },
   title: { fontSize: 28, fontWeight: 'bold', color: '#1A1A2E', marginBottom: 8 },

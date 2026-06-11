@@ -2,7 +2,7 @@
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
   ActivityIndicator, Alert, ScrollView, Modal, FlatList,
-  StatusBar, Image
+  StatusBar, Image, Platform
 } from 'react-native';
 import { useEffect } from 'react';
 import { colors } from '../theme/colors';
@@ -583,7 +583,18 @@ export default function RegisterScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
-  scroll: { paddingHorizontal: 24, paddingTop: 28 },
+  scroll: {
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    width: '100%',
+    ...(Platform.OS === 'web'
+      ? {
+          maxWidth: 720,
+          alignSelf: 'center',
+          paddingVertical: 36,
+        }
+      : null),
+  },
   logo: { width: 160, height: 70, marginBottom: 32, alignSelf: 'flex-start' },
 
   header: { paddingBottom: 14 },
