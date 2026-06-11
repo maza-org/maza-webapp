@@ -875,6 +875,11 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   }, [ytId, youtubeEmbedHtml, webVideoHtml]);
 
   useEffect(() => {
+    if (!isWideWeb) return;
+    setWebPanelTab(lessonParam.contentType === 'QUIZ' || lessonParam.contentType === 'HTML' ? 'lessons' : 'transcript');
+  }, [isWideWeb, lessonParam.contentType, lessonParam.id]);
+
+  useEffect(() => {
     transcriptSegmentLayouts.current = {};
     setTranscriptLayoutVersion((version) => version + 1);
   }, [transcript, mediaDuration]);
@@ -978,6 +983,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   }, [courseId]);
 
   useEffect(() => {
+    if (webPanelTab !== 'transcript') return;
     if (safeActiveTranscriptIndex < 0) return;
     const activeLayout = transcriptSegmentLayouts.current[safeActiveTranscriptIndex];
     if (!activeLayout) return;
@@ -989,7 +995,11 @@ export default function LessonViewerScreen({ route, navigation }: any) {
       y: Math.max(0, activeLayout.y - topComfortOffset),
       animated: true,
     });
-  }, [safeActiveTranscriptIndex, transcriptViewportHeight, transcriptLayoutVersion]);
+  }, [safeActiveTranscriptIndex, transcriptViewportHeight, transcriptLayoutVersion, webPanelTab]);
+
+  useEffect(() => {
+    if (webPanelTab !== 'transcript') transcriptScrollRef.current = null;
+  }, [webPanelTab]);
 
   const handleTranscriptScrollLayout = (event: LayoutChangeEvent) => {
     setTranscriptViewportHeight(event.nativeEvent.layout.height);
@@ -1137,7 +1147,12 @@ export default function LessonViewerScreen({ route, navigation }: any) {
           <Text style={[styles.lessonListTitle, { color: themeColors.text }]}>Aulas</Text>
           <Text style={[styles.lessonListCount, { color: themeColors.textMuted }]}>{courseLessons.length}</Text>
         </View>
-        <ScrollView style={styles.lessonListScroll} contentContainerStyle={styles.lessonListContent} showsVerticalScrollIndicator>
+        <ScrollView
+          style={styles.lessonListScroll}
+          contentContainerStyle={styles.lessonListContent}
+          showsVerticalScrollIndicator
+          keyboardShouldPersistTaps="handled"
+        >
           {courseLessons.map((lesson: any, index: number) => {
             const isCurrent = lesson.id === lessonParam.id;
             const done = lessonCompletionMap.get(lesson.id);
@@ -1187,11 +1202,24 @@ export default function LessonViewerScreen({ route, navigation }: any) {
           <Text style={[styles.webPanelTabText, { color: webPanelTab === 'lessons' ? themeColors.primary : themeColors.textMuted }]}>Aulas</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.webPanelBody}>
+      <View key={webPanelTab} style={styles.webPanelBody}>
         {webPanelTab === 'transcript' ? renderTranscriptPanel() : renderLessonListPanel()}
       </View>
     </View>
   );
+
+  const renderWithWebRail = (content: React.ReactNode) => {
+    if (!isWideWeb) return content;
+
+    return (
+      <View style={[styles.lessonMediaContent, styles.lessonMediaContentWeb]}>
+        <View style={styles.lessonMainPane}>
+          {content}
+        </View>
+        {renderWebRail()}
+      </View>
+    );
+  };
 
   useEffect(() => {
     const canAutoComplete =
@@ -1473,7 +1501,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
 
       case 'QUIZ':
         if (lessonParam.quiz) {
-          return <QuizRenderer quiz={lessonParam.quiz as any} onComplete={markComplete} />;
+          return renderWithWebRail(<QuizRenderer quiz={lessonParam.quiz as any} onComplete={markComplete} />);
         }
         return <View style={styles.placeholder}><Text style={[styles.placeholderText, { color: themeColors.textMuted }]}>Quiz não disponível</Text></View>;
 
@@ -1520,6 +1548,7 @@ const styles = StyleSheet.create({
   typeBadgeText: { fontWeight: 'bold', fontSize: 11 },
   lessonMediaContent: { flex: 1 },
   lessonMediaContentWeb: { flexDirection: 'row', gap: 16, padding: 16, alignItems: 'stretch' },
+  lessonMainPane: { flex: 1, minWidth: 0, minHeight: 0 },
   videoFrame: { backgroundColor: '#000', width: '100%', aspectRatio: 16 / 9 },
   videoFrameWeb: { flex: 1, width: undefined, alignSelf: 'flex-start', borderRadius: 8, overflow: 'hidden' },
   mediaLoadingOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' },
@@ -1559,11 +1588,11 @@ const styles = StyleSheet.create({
   webPanelTabText: { fontSize: 12, fontWeight: '900' },
   webPanelBody: { flex: 1, minHeight: 0 },
   completeBtnRail: { minWidth: 160, margin: 0, marginRight: 10 },
-  lessonListPanel: { flex: 1, overflow: 'hidden' },
+  lessonListPanel: { flex: 1, minHeight: 0, overflow: 'hidden' },
   lessonListHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12 },
   lessonListTitle: { fontSize: 14, fontWeight: '800' },
   lessonListCount: { fontSize: 12, fontWeight: '800' },
-  lessonListScroll: { flexGrow: 0 },
+  lessonListScroll: { flex: 1, minHeight: 0 },
   lessonListContent: { paddingHorizontal: 10, paddingBottom: 10 },
   lessonListItem: { flexDirection: 'row', gap: 10, borderWidth: 1, borderRadius: 8, padding: 9, marginBottom: 8 },
   lessonListIndex: { width: 24, height: 24, borderRadius: 7, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
