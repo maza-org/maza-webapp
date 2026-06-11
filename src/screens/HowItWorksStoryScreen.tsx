@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Animated, StatusBar, Platform, ImageBackground, Image, BackHandler,
+  Animated, StatusBar, Platform, ImageBackground, Image, BackHandler, useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -63,7 +63,9 @@ const STORIES = [
 
 export default function HowItWorksStoryScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
   const { user } = useAuth();
+  const isWeb = Platform.OS === 'web';
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -146,14 +148,20 @@ export default function HowItWorksStoryScreen({ navigation }: any) {
     ? currentIndex < STORIES.length - 1 ? 'Próximo' : 'Fechar'
     : currentStory.ctaLabel;
   const ctaRoute = user ? null : currentStory.ctaRoute;
+  const webFrameStyle = isWeb ? {
+    width: Math.min(width - 48, 1120),
+    height: Math.min(height - 48, 720),
+  } : null;
+  const webBackgroundPhotoStyle = isWeb ? ({ objectPosition: 'center 34%' } as any) : null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isWeb && styles.webContainer]}>
+      <View style={[styles.storyFrame, isWeb && styles.webStoryFrame, webFrameStyle]}>
       {/* Full-screen background photo */}
       <ImageBackground
         source={currentStory.image}
         style={styles.backgroundLayer}
-        imageStyle={styles.backgroundPhoto}
+        imageStyle={[styles.backgroundPhoto as any, webBackgroundPhotoStyle]}
         resizeMode="cover"
       />
 
@@ -164,7 +172,7 @@ export default function HowItWorksStoryScreen({ navigation }: any) {
         style={StyleSheet.absoluteFill}
       />
 
-      <View style={[styles.safeArea, { paddingTop: Math.max(insets.top, 16) }]}>
+      <View style={[styles.safeArea, { paddingTop: isWeb ? 18 : Math.max(insets.top, 16) }]}>
         {/* Progress bars */}
         <View style={styles.progressContainer}>
           {STORIES.map((story, i) => {
@@ -211,7 +219,8 @@ export default function HowItWorksStoryScreen({ navigation }: any) {
         <View
           style={[
             styles.contentContainer,
-            { bottom: bottomSafeSpace(insets.bottom, 100) },
+            isWeb && styles.webContentContainer,
+            { bottom: isWeb ? 108 : bottomSafeSpace(insets.bottom, 100) },
           ]}
           pointerEvents="none"
         >
@@ -219,15 +228,16 @@ export default function HowItWorksStoryScreen({ navigation }: any) {
           <View style={styles.counterPill}>
             <Text style={styles.counterText}>{currentIndex + 1}/{STORIES.length}</Text>
           </View>
-          <Text style={styles.title}>{currentStory.title}</Text>
-          <Text style={styles.description}>{currentStory.text}</Text>
+          <Text style={[styles.title, isWeb && styles.webTitle]}>{currentStory.title}</Text>
+          <Text style={[styles.description, isWeb && styles.webDescription]}>{currentStory.text}</Text>
         </View>
 
         {/* CTA button — every slide — solid blue */}
         <TouchableOpacity
           style={[
             styles.ctaButton,
-            { bottom: bottomSafeSpace(insets.bottom, 20) },
+            isWeb && styles.webCtaButton,
+            { bottom: isWeb ? 28 : bottomSafeSpace(insets.bottom, 20) },
           ]}
           onPress={() => handleCta(ctaRoute)}
         >
@@ -254,12 +264,24 @@ export default function HowItWorksStoryScreen({ navigation }: any) {
           />
         </View>
       </View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, width: '100%', height: '100%', backgroundColor: '#000', overflow: 'hidden' },
+  webContainer: { backgroundColor: '#EAF2FA', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  storyFrame: { flex: 1, width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#000' },
+  webStoryFrame: {
+    flex: 0,
+    borderRadius: 18,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.18,
+    shadowRadius: 32,
+    elevation: 12,
+  },
   backgroundLayer: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%', overflow: 'hidden' },
   backgroundPhoto: { width: '100%', height: '100%' },
   safeArea: { flex: 1, width: '100%', overflow: 'hidden' },
@@ -297,6 +319,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     zIndex: 5,
   },
+  webContentContainer: {
+    left: 32,
+    right: 32,
+    maxWidth: 720,
+    paddingHorizontal: 0,
+  },
 
   // Counter pill
   counterPill: {
@@ -315,6 +343,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 6,
   },
+  webTitle: { fontSize: 30, lineHeight: 36, marginBottom: 10 },
   description: {
     color: 'rgba(255,255,255,0.85)', fontSize: 16,
     lineHeight: 25, fontWeight: '500',
@@ -322,6 +351,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
+  webDescription: { fontSize: 15, lineHeight: 22, maxWidth: 760 },
 
   touchZones: { ...StyleSheet.absoluteFillObject, flexDirection: 'row', zIndex: 1 },
   touchZoneLeft: { flex: 0.35 },
@@ -333,6 +363,15 @@ const styles = StyleSheet.create({
     paddingVertical: 16, borderRadius: 30, alignItems: 'center', zIndex: 20,
     shadowColor: '#29B6F6', shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5, shadowRadius: 16, elevation: 10,
+  },
+  webCtaButton: {
+    left: 32,
+    right: undefined,
+    width: 220,
+    paddingVertical: 11,
+    borderRadius: 8,
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
   },
   ctaText: { color: '#FFFFFF', fontSize: 17, fontWeight: 'bold', letterSpacing: 0.5 },
 });
