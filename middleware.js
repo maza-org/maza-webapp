@@ -6,15 +6,22 @@ export default async function middleware(request) {
   const targetUrl = new URL(`${BACKEND_API_BASE}/${backendPath}`);
   targetUrl.search = incomingUrl.search;
 
-  const headers = new Headers(request.headers);
-  headers.delete('host');
-  headers.delete('content-length');
+  const headers = new Headers();
+  const accept = request.headers.get('accept');
+  const contentType = request.headers.get('content-type');
+  const authorization = request.headers.get('authorization');
+
+  headers.set('accept', accept || 'application/json');
+  if (contentType) headers.set('content-type', contentType);
+  if (authorization) headers.set('authorization', authorization);
 
   try {
+    const hasBody = !['GET', 'HEAD'].includes(request.method);
+    const body = hasBody ? await request.text() : undefined;
     const upstream = await fetch(targetUrl, {
       method: request.method,
       headers,
-      body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
+      body,
       redirect: 'manual',
     });
 
