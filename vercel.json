@@ -1,30 +1,13 @@
 {
-  "buildCommand": "npx expo export -p web",
-  "outputDirectory": "dist/client",
-  "functions": {
-    "api/index.ts": {
-      "runtime": "@vercel/node@5.1.8",
-      "includeFiles": "dist/server/**"
-    }
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "env": {
+    "EXPO_PUBLIC_API_BASE_URL": "https://backend.mazas.org/api"
   },
-  "framework": null,
-  "redirects": [
-    {
-      "source": "/login",
-      "destination": "https://web.mazas.org",
-      "permanent": false,
-      "has": [
-        {
-          "type": "host",
-          "value": "maza-webapp.vercel.app"
-        }
-      ]
-    }
-  ],
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/api/index"
+      "destination": "/index.html"
     }
   ]
 }

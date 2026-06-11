@@ -1,0 +1,9 @@
+builds/
+store-assets/icons/
+store-assets/screenshots/
+.expo/
+.git-backup-before-root-import/
+expo-go.log
+expo-web.log
+*.apk
+*.aab
