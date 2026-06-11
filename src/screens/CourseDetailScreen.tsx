@@ -91,9 +91,10 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   const didFirstLoadRef = useRef(false);
   const lastFocusRefreshRef = useRef(0);
 
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
   const isWideWeb = isWeb && width >= 1040;
+  const webLessonsMaxHeight = isWideWeb ? Math.max(520, height - 172) : undefined;
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
@@ -584,6 +585,30 @@ export default function CourseDetailScreen({ route, navigation }: any) {
               </View>
             </View>
           )}
+
+          {isWideWeb && (
+            <View style={[styles.webNextStepCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+              <View>
+                <Text style={[styles.webNextStepTitle, { color: themeColors.text }]}>Próximo passo</Text>
+                <Text style={[styles.webNextStepText, { color: themeColors.textMuted }]}>
+                  Continue pela lista de aulas à direita. O seu progresso é guardado automaticamente.
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.webNextStepBtn,
+                  { backgroundColor: themeColors.primary },
+                  isComplete && { backgroundColor: themeColors.success },
+                  ctaDisabled && { backgroundColor: themeColors.textMuted },
+                ]}
+                onPress={handleCTA}
+                disabled={ctaDisabled}
+              >
+                {courseLocked ? <Lock size={16} color="#fff" /> : isComplete ? <Award size={16} color="#fff" /> : <BookOpen size={16} color="#fff" />}
+                <Text style={styles.webNextStepBtnText}>{ctaLabel}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
           </View>
 
           <View style={[styles.section, isWideWeb && styles.webLessonsSidebar]}>
@@ -597,6 +622,13 @@ export default function CourseDetailScreen({ route, navigation }: any) {
             {!hasLessons && detailLoaded && (
               <Text style={[styles.emptyLessonsText, { color: themeColors.textMuted }]}>As lições serão adicionadas em breve.</Text>
             )}
+            <ScrollView
+              scrollEnabled={isWideWeb}
+              nestedScrollEnabled
+              showsVerticalScrollIndicator={isWideWeb}
+              style={isWideWeb ? [styles.webLessonsScroller, { maxHeight: webLessonsMaxHeight }] : undefined}
+              contentContainerStyle={isWideWeb ? styles.webLessonsScrollerContent : undefined}
+            >
             {course.modules?.map((mod: any, idx: number) => {
               const modProgress = getModuleProgress(mod.id);
               const isUnlocked = !courseLocked && !baselinePending && (modProgress?.isUnlocked ?? (idx === 0));
@@ -666,13 +698,13 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                 </View>
               );
             })}
+            </ScrollView>
           </View>
           </View>
 
-          <TouchableOpacity
+          {!isWideWeb && <TouchableOpacity
             style={[
               styles.enrollBtn,
-              isWideWeb && styles.webEnrollBtn,
               { backgroundColor: themeColors.primary, shadowColor: themeColors.primary },
               isComplete && { backgroundColor: themeColors.success, shadowColor: themeColors.success },
               ctaDisabled && { backgroundColor: themeColors.textMuted, shadowColor: themeColors.textMuted },
@@ -681,7 +713,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
           >
             {courseLocked ? <Lock size={20} color="#fff" /> : isComplete ? <Award size={20} color="#fff" /> : <BookOpen size={20} color="#fff" />}
             <Text style={[styles.enrollText, { color: '#fff' }]}>{ctaLabel}</Text>
-          </TouchableOpacity>
+          </TouchableOpacity>}
           <View style={{ height: Math.max(insets.bottom, 24) }} />
         </ScrollView>
       ) : (
@@ -696,6 +728,8 @@ const styles = StyleSheet.create({
   webCourseBody: { width: '100%', maxWidth: 1180, alignSelf: 'center', flexDirection: 'row', alignItems: 'flex-start', gap: 18, padding: 18 },
   webCourseMain: { flex: 1, minWidth: 0 },
   webLessonsSidebar: { width: 390, flexShrink: 0, padding: 0 },
+  webLessonsScroller: { flexGrow: 0 },
+  webLessonsScrollerContent: { paddingBottom: 8 },
   webOverviewCard: { marginHorizontal: 24, marginTop: 4, padding: 18, borderRadius: 12, borderWidth: 1 },
   webOverviewTitle: { fontSize: 17, fontWeight: '800', marginBottom: 8 },
   webOverviewText: { fontSize: 14, lineHeight: 21 },
@@ -703,6 +737,11 @@ const styles = StyleSheet.create({
   webOverviewMetric: { flex: 1, borderWidth: 1, borderRadius: 8, padding: 12 },
   webOverviewMetricValue: { fontSize: 18, fontWeight: '900', marginBottom: 4 },
   webOverviewMetricLabel: { fontSize: 12, fontWeight: '700' },
+  webNextStepCard: { marginHorizontal: 24, marginTop: 14, padding: 18, borderRadius: 12, borderWidth: 1, gap: 16 },
+  webNextStepTitle: { fontSize: 17, fontWeight: '800', marginBottom: 6 },
+  webNextStepText: { fontSize: 14, lineHeight: 21 },
+  webNextStepBtn: { alignSelf: 'flex-start', minWidth: 180, borderRadius: 8, paddingVertical: 10, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  webNextStepBtnText: { color: '#fff', fontSize: 13, fontWeight: '800' },
   loadingState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   loadingText: { fontSize: 14, fontWeight: '600' },
   backBtn: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },

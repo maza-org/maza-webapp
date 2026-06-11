@@ -794,6 +794,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const autoTranscriptStartedRef = useRef<string | null>(null);
   const [courseOutline, setCourseOutline] = useState<any>(null);
   const [courseProgress, setCourseProgress] = useState<any>(null);
+  const [webPanelTab, setWebPanelTab] = useState<'transcript' | 'lessons'>('transcript');
 
   const transcriptSegments = splitTranscriptIntoSegments(
     transcript,
@@ -1171,16 +1172,24 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   };
 
   const renderWebRail = () => (
-    <View style={styles.lessonRail}>
-      <View style={[styles.lessonActionPanel, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-        <Text style={[styles.lessonActionTitle, { color: themeColors.text }]}>Progresso da aula</Text>
-        <Text style={[styles.lessonActionSub, { color: themeColors.textMuted }]}>{mediaProgressLabel}</Text>
-        {renderCompleteButton(true)}
+    <View style={[styles.lessonSidePanel, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+      <View style={[styles.webPanelTabs, { backgroundColor: isDark ? '#0F172A' : '#F1F5F9' }]}>
+        <TouchableOpacity
+          style={[styles.webPanelTab, webPanelTab === 'transcript' && { backgroundColor: themeColors.card }]}
+          onPress={() => setWebPanelTab('transcript')}
+        >
+          <Text style={[styles.webPanelTabText, { color: webPanelTab === 'transcript' ? themeColors.primary : themeColors.textMuted }]}>Transcrição</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.webPanelTab, webPanelTab === 'lessons' && { backgroundColor: themeColors.card }]}
+          onPress={() => setWebPanelTab('lessons')}
+        >
+          <Text style={[styles.webPanelTabText, { color: webPanelTab === 'lessons' ? themeColors.primary : themeColors.textMuted }]}>Aulas</Text>
+        </TouchableOpacity>
       </View>
-      <View style={styles.transcriptRailSlot}>
-        {renderTranscriptPanel()}
+      <View style={styles.webPanelBody}>
+        {webPanelTab === 'transcript' ? renderTranscriptPanel() : renderLessonListPanel()}
       </View>
-      {renderLessonListPanel()}
     </View>
   );
 
@@ -1480,6 +1489,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
           <ArrowLeft size={22} color={themeColors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: themeColors.text }]} numberOfLines={1}>{lessonParam.title}</Text>
+        {isWideWeb && renderCompleteButton(true)}
         {countdownBlocksCompletion ? (
           <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexDirection: 'row', alignItems: 'center' }}>
             <Ionicons name="time-outline" size={12} color="#B45309" />
@@ -1543,13 +1553,13 @@ const styles = StyleSheet.create({
   completeBtnText: { fontWeight: 'bold', fontSize: 16 },
   completeBtnTextWeb: { fontSize: 13 },
   transcriptStack: { flex: 1 },
-  lessonRail: { width: 390, flexShrink: 0, gap: 12 },
-  lessonActionPanel: { borderWidth: 1, borderRadius: 8, padding: 14 },
-  lessonActionTitle: { fontSize: 14, fontWeight: '800', marginBottom: 4 },
-  lessonActionSub: { fontSize: 12, fontWeight: '600', marginBottom: 12 },
-  completeBtnRail: { alignSelf: 'stretch', maxWidth: undefined, width: '100%', margin: 0 },
-  transcriptRailSlot: { minHeight: 310, flex: 1 },
-  lessonListPanel: { borderWidth: 1, borderRadius: 8, overflow: 'hidden', maxHeight: 300 },
+  lessonSidePanel: { width: 390, flexShrink: 0, borderWidth: 1, borderRadius: 8, overflow: 'hidden', alignSelf: 'stretch' },
+  webPanelTabs: { flexDirection: 'row', margin: 10, padding: 3, borderRadius: 8 },
+  webPanelTab: { flex: 1, minHeight: 34, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
+  webPanelTabText: { fontSize: 12, fontWeight: '900' },
+  webPanelBody: { flex: 1, minHeight: 0 },
+  completeBtnRail: { minWidth: 160, margin: 0, marginRight: 10 },
+  lessonListPanel: { flex: 1, overflow: 'hidden' },
   lessonListHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12 },
   lessonListTitle: { fontSize: 14, fontWeight: '800' },
   lessonListCount: { fontSize: 12, fontWeight: '800' },
@@ -1562,7 +1572,7 @@ const styles = StyleSheet.create({
   lessonListItemTitle: { fontSize: 12, fontWeight: '700', lineHeight: 16 },
   lessonListItemType: { fontSize: 10, fontWeight: '800', marginTop: 2, textTransform: 'uppercase' },
   transcriptPanel: { flex: 1, borderTopWidth: 1, paddingHorizontal: 18, paddingTop: 16 },
-  transcriptPanelWeb: { borderTopWidth: 0, borderWidth: 1, borderRadius: 8, paddingBottom: 12 },
+  transcriptPanelWeb: { borderTopWidth: 0, borderWidth: 0, borderRadius: 0, paddingBottom: 12 },
   transcriptHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   transcriptTitle: { fontSize: 16, fontWeight: '800' },
   transcriptBtn: { minWidth: 78, height: 34, borderRadius: 17, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 12 },
