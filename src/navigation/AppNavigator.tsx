@@ -32,6 +32,7 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
+import { useIsWideWeb } from '../utils/webViewport';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -73,9 +74,11 @@ function formatDocumentTitle(_options: any, route: any) {
 const MainTabs = () => {
   const { colors: themeColors } = useTheme();
   const isWeb = Platform.OS === 'web';
+  const useSideNav = useIsWideWeb(900);
 
   return (
     <Tab.Navigator
+      key={useSideNav ? 'desktop-tabs' : 'mobile-tabs'}
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size, focused }: { color: string; size: number; focused: boolean }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'home-outline';
@@ -91,32 +94,32 @@ const MainTabs = () => {
         tabBarActiveTintColor: themeColors.primary,
         tabBarInactiveTintColor: themeColors.textMuted,
         tabBarLabelStyle: {
-          fontSize: isWeb ? 13 : 9.5,
-          fontWeight: isWeb ? '600' : '400',
+          fontSize: useSideNav ? 13 : 9.5,
+          fontWeight: useSideNav ? '600' : '400',
         },
         tabBarStyle: {
-          width: isWeb ? 224 : undefined,
-          minWidth: isWeb ? 224 : undefined,
-          height: isWeb ? '100%' : undefined,
-          paddingTop: isWeb ? 18 : undefined,
-          paddingHorizontal: isWeb ? 10 : undefined,
-          borderTopWidth: isWeb ? 0 : 1,
-          borderRightWidth: isWeb ? 1 : 0,
+          width: useSideNav ? 224 : undefined,
+          minWidth: useSideNav ? 224 : undefined,
+          height: useSideNav ? '100%' : undefined,
+          paddingTop: useSideNav ? 18 : undefined,
+          paddingHorizontal: useSideNav ? 10 : undefined,
+          borderTopWidth: useSideNav ? 0 : 1,
+          borderRightWidth: useSideNav ? 1 : 0,
           borderTopColor: themeColors.border,
           borderRightColor: themeColors.border,
           elevation: 0,
           shadowOpacity: 0,
           backgroundColor: themeColors.card,
         },
-        tabBarItemStyle: isWeb ? {
+        tabBarItemStyle: useSideNav ? {
           height: 46,
           borderRadius: 8,
           marginVertical: 3,
           paddingHorizontal: 10,
         } : undefined,
-        tabBarIconStyle: isWeb ? { marginRight: 10 } : undefined,
-        tabBarPosition: isWeb ? 'left' : 'bottom',
-        tabBarLabelPosition: isWeb ? 'beside-icon' : 'below-icon',
+        tabBarIconStyle: useSideNav ? { marginRight: 10 } : undefined,
+        tabBarPosition: useSideNav ? 'left' : 'bottom',
+        tabBarLabelPosition: useSideNav ? 'beside-icon' : 'below-icon',
         tabBarHideOnKeyboard: !isWeb,
         headerShown: false,
       } as any)}
