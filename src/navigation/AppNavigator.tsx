@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
@@ -35,12 +36,48 @@ import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+const DOCUMENT_TITLES: Record<string, string> = {
+  Main: 'MAZA',
+  Onboarding: 'Boas-vindas',
+  HowItWorksStory: 'Como funciona',
+  Login: 'Entrar',
+  Register: 'Registar',
+  OtpVerification: 'Verificar código',
+  ForgotPassword: 'Recuperar palavra-passe',
+  ResetPassword: 'Nova palavra-passe',
+  BotAssessment: 'Avaliação',
+  CourseDetail: 'Curso',
+  ImpactAssessment: 'Avaliação de impacto',
+  LessonViewer: 'Aula',
+  JobDetail: 'Oportunidade',
+  MyCertificates: 'Certificados',
+  NotificationsInbox: 'Notificações',
+  Notificacoes: 'Preferências de notificações',
+  Configuracoes: 'Perfil',
+  EditProfile: 'Editar perfil',
+  ChangePassword: 'Alterar palavra-passe',
+  CourseForum: 'Fórum do curso',
+  Início: 'Início',
+  Cursos: 'Cursos',
+  Oportunidades: 'Oportunidades',
+  Conquistas: 'Conquistas',
+  Perfil: 'Perfil',
+};
+
+function formatDocumentTitle(_options: any, route: any) {
+  const params = route?.params ?? {};
+  const routeTitle = params.title || params.lesson?.title || DOCUMENT_TITLES[route?.name] || 'MAZA';
+  return `${routeTitle} | MAZA`;
+}
+
 const MainTabs = () => {
   const { colors: themeColors } = useTheme();
+  const isWeb = Platform.OS === 'web';
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size, focused }) => {
+        tabBarIcon: ({ color, size, focused }: { color: string; size: number; focused: boolean }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'home-outline';
           
           if (route.name === 'Início') iconName = focused ? 'home' : 'home-outline';
@@ -54,18 +91,35 @@ const MainTabs = () => {
         tabBarActiveTintColor: themeColors.primary,
         tabBarInactiveTintColor: themeColors.textMuted,
         tabBarLabelStyle: {
-          fontSize: 9.5,
-          letterSpacing: -0.3,
+          fontSize: isWeb ? 13 : 9.5,
+          fontWeight: isWeb ? '600' : '400',
         },
         tabBarStyle: {
-          borderTopWidth: 1,
+          width: isWeb ? 224 : undefined,
+          minWidth: isWeb ? 224 : undefined,
+          height: isWeb ? '100%' : undefined,
+          paddingTop: isWeb ? 18 : undefined,
+          paddingHorizontal: isWeb ? 10 : undefined,
+          borderTopWidth: isWeb ? 0 : 1,
+          borderRightWidth: isWeb ? 1 : 0,
           borderTopColor: themeColors.border,
+          borderRightColor: themeColors.border,
           elevation: 0,
           shadowOpacity: 0,
           backgroundColor: themeColors.card,
         },
+        tabBarItemStyle: isWeb ? {
+          height: 46,
+          borderRadius: 8,
+          marginVertical: 3,
+          paddingHorizontal: 10,
+        } : undefined,
+        tabBarIconStyle: isWeb ? { marginRight: 10 } : undefined,
+        tabBarPosition: isWeb ? 'left' : 'bottom',
+        tabBarLabelPosition: isWeb ? 'beside-icon' : 'below-icon',
+        tabBarHideOnKeyboard: !isWeb,
         headerShown: false,
-      })}
+      } as any)}
     >
       <Tab.Screen name="Início" component={HomeScreen} />
       <Tab.Screen name="Cursos" component={CoursesScreen} />
@@ -90,7 +144,7 @@ export default function AppNavigator() {
   const assessmentDone = user?.profile?.assessmentDone ?? false;
 
   return (
-    <NavigationContainer>
+    <NavigationContainer documentTitle={{ formatter: formatDocumentTitle }}>
       <Stack.Navigator
         key={!user ? 'guest' : 'auth'}
         initialRouteName={!user ? 'Login' : undefined}

@@ -94,6 +94,9 @@ function getHtmlWebViewSource(htmlContent: string | null | undefined) {
   const isInlineHtml = /^(<!doctype\s+html|<html|<body|<div|<section|<main|<script|<style)/i.test(content);
   if (isInlineHtml) return { html: content };
   const resolved = resolveMediaUrl(content);
+  if (resolved && /^\/api\/media\/.+\.(html|htm)(?:[?#].*)?$/i.test(resolved)) {
+    return { uri: resolved };
+  }
   if (resolved && /\/uploads\/.+\.(html|htm)(?:[?#].*)?$/i.test(resolved)) {
     const uploadPath = resolved.replace(/^https?:\/\/[^/]+\/uploads\//i, '/uploads/');
     return { uri: `${API_BASE}/api/media/html/${uploadPath.replace(/^\//, '')}` };
@@ -160,7 +163,7 @@ function hasFullLessonPayload(lesson?: Lesson | null) {
   if (lesson.contentType === 'VIDEO') return lesson.videoUrl !== undefined;
   if (lesson.contentType === 'AUDIO') return lesson.audioUrl !== undefined;
   if (lesson.contentType === 'PDF') return lesson.pdfUrl !== undefined;
-  if (lesson.contentType === 'HTML') return lesson.htmlContent !== undefined;
+  if (lesson.contentType === 'HTML') return lesson.htmlContent !== undefined || lesson.textContent !== undefined;
   if (lesson.contentType === 'TEXT') return lesson.textContent !== undefined;
   if (lesson.contentType === 'QUIZ') return lesson.quiz !== undefined;
   return true;
@@ -817,8 +820,9 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const shouldShowCompleteButton = lessonParam.contentType === 'VIDEO';
   const countdownBlocksCompletion = countdown > 0 && lessonParam.contentType === 'VIDEO';
   const completeButtonDisabled = completed || marking || countdownBlocksCompletion || !canCompleteVideoLesson;
+  const isWeb = Platform.OS === 'web';
   const androidNavigationInset = Platform.OS === 'android' ? Math.max(insets.bottom, 28) : insets.bottom;
-  const lessonFooterBottom = Platform.OS === 'android' ? androidNavigationInset : Math.max(insets.bottom, 12);
+  const lessonFooterBottom = isWeb ? 16 : Platform.OS === 'android' ? androidNavigationInset : Math.max(insets.bottom, 12);
   const mediaProgressLabel = mediaDuration > 0
     ? `${formatDuration(mediaTime)} / ${formatDuration(mediaDuration)}`
     : mediaTime > 0
@@ -1288,7 +1292,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
         return <PdfPanel uri={resolveMediaUrl(lessonParam.pdfUrl)!} colors={themeColors} />;
 
       case 'HTML': {
-        const webviewSource = getHtmlWebViewSource(lessonParam.htmlContent);
+        const webviewSource = getHtmlWebViewSource(lessonParam.htmlContent ?? lessonParam.textContent);
 
         if (!webviewSource) {
           return <View style={styles.placeholder}><Ionicons name="game-controller-outline" size={24} color={themeColors.textMuted} style={{ marginBottom: 8 }}/><Text style={[styles.placeholderText, { color: themeColors.textMuted }]}>Sem jogo disponível</Text></View>;
@@ -1365,6 +1369,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
         <TouchableOpacity
           style={[
             styles.completeBtn,
+            isWeb && styles.completeBtnWeb,
             { backgroundColor: themeColors.primary, marginBottom: lessonFooterBottom },
             completed && { backgroundColor: themeColors.success },
             completeButtonDisabled && !completed && { backgroundColor: '#CBD5E1', shadowOpacity: 0, elevation: 0 },
@@ -1376,8 +1381,8 @@ export default function LessonViewerScreen({ route, navigation }: any) {
         >
           {marking ? <ActivityIndicator color="#fff" /> : (
             <>
-              <CheckCircle size={20} color="#fff" />
-              <Text style={[styles.completeBtnText, { color: '#fff' }]}>
+              <CheckCircle size={isWeb ? 16 : 20} color="#fff" />
+              <Text style={[styles.completeBtnText, isWeb && styles.completeBtnTextWeb, { color: '#fff' }]}>
                 {getCompleteButtonText()}
               </Text>
             </>
@@ -1423,7 +1428,9 @@ const styles = StyleSheet.create({
   placeholder: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   placeholderText: { fontSize: 16, textAlign: 'center' },
   completeBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', margin: 16, paddingVertical: 14, borderRadius: 30, gap: 8 },
+  completeBtnWeb: { alignSelf: 'center', minWidth: 180, maxWidth: 280, margin: 12, paddingVertical: 9, paddingHorizontal: 16, borderRadius: 8 },
   completeBtnText: { fontWeight: 'bold', fontSize: 16 },
+  completeBtnTextWeb: { fontSize: 13 },
   transcriptPanel: { flex: 1, borderTopWidth: 1, paddingHorizontal: 18, paddingTop: 16 },
   transcriptHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   transcriptTitle: { fontSize: 16, fontWeight: '800' },

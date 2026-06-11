@@ -1,5 +1,5 @@
 ﻿import React, { useMemo, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, useWindowDimensions } from 'react-native';
+import { Platform, View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, useWindowDimensions } from 'react-native';
 import { colors } from '../theme/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Award, TrendingUp, Bell, Lock, ChevronRight, CheckCircle2, PlayCircle, Bot } from 'lucide-react-native';
@@ -116,6 +116,7 @@ export default function HomeScreen({ navigation }: any) {
   const pathwayMeta = pathway ? getPathwayMeta(pathway.name) : null;
   const pathwayCourses: any[] = pathway?.courses ?? [];
   const useCourseGrid = width >= 760;
+  const isWeb = Platform.OS === 'web';
 
   const handleCoursePress = (pc: any) => {
     if (pc.isLocked) return; // Do nothing if locked
@@ -179,7 +180,10 @@ export default function HomeScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={isWeb ? styles.webScrollContent : undefined}
+      >
         {/* Header */}
         <View style={styles.header}>
           <View>
@@ -373,6 +377,7 @@ export default function HomeScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  webScrollContent: { width: '100%', maxWidth: 1040, alignSelf: 'center', paddingVertical: 24 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 24, paddingBottom: 10 },
   greeting: { fontSize: 16, color: colors.textMuted },
   greetingBold: { fontSize: 22, color: colors.text, fontWeight: 'bold' },
@@ -427,7 +432,7 @@ const styles = StyleSheet.create({
     width: 126, minHeight: 164, backgroundColor: colors.white, borderRadius: 14, padding: 8, 
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 
   },
-  tabletCourseCard: { width: '23.5%', minWidth: 150 },
+  tabletCourseCard: { width: 220, minWidth: 180 },
   cardImg: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#F1F5F9', borderRadius: 10, marginBottom: 9, position: 'relative', overflow: 'hidden' },
   cardCat: { width: '100%', flexShrink: 1, fontSize: 10, fontWeight: 'bold', color: colors.primary, marginBottom: 4, textTransform: 'uppercase' },
   horizontalCourseTitle: { fontSize: 12, fontWeight: '700', color: colors.text, marginBottom: 4, lineHeight: 16, minHeight: 32 },
@@ -538,7 +543,7 @@ const styles = StyleSheet.create({
   botPromoContent: { flex: 1, padding: 20 },
   botPromoTitle: { fontSize: 18, fontWeight: 'bold', color: '#1E293B', marginBottom: 6 },
   botPromoText: { fontSize: 13, color: '#475569', lineHeight: 18, marginBottom: 16 },
-  botPromoBtn: { backgroundColor: '#8B5CF6', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12, alignSelf: 'flex-start' },
+  botPromoBtn: { backgroundColor: '#8B5CF6', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, alignSelf: 'flex-start' },
   botPromoBtnText: { color: colors.white, fontWeight: 'bold', fontSize: 13 },
   botPromoIconContainer: { width: 100, justifyContent: 'center', alignItems: 'center', backgroundColor: '#EDE9FE', borderTopRightRadius: 20, borderBottomRightRadius: 20 },
 });

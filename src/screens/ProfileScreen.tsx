@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator
+  ActivityIndicator, Platform
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -17,6 +17,7 @@ export default function ProfileScreen({ navigation }: any) {
   const { user, logout, updateUser } = useAuth();
   const { colors: themeColors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const isWeb = Platform.OS === 'web';
   const profile = user?.profile;
   const mazaImpact = user?.impact?.averageImpactPercent ?? 0;
 
@@ -69,8 +70,9 @@ export default function ProfileScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: bottomSafeSpace(insets.bottom, 96) }}>
-        <View style={styles.header}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: isWeb ? 32 : bottomSafeSpace(insets.bottom, 96) }}>
+        <View style={isWeb ? styles.webContent : undefined}>
+        <View style={[styles.header, isWeb && styles.webHeader]}>
           <View style={styles.avatarContainer}>
             <View style={[styles.avatar, { backgroundColor: themeColors.primary }]}><User size={40} color="#fff" /></View>
             <View style={[styles.badge, { backgroundColor: themeColors.secondary, borderColor: themeColors.background }]}><Award size={16} color="#fff" /></View>
@@ -90,7 +92,7 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
         </View>
 
-        <View style={[styles.statsContainer, { backgroundColor: themeColors.card }]}>
+        <View style={[styles.statsContainer, isWeb && styles.webStatsContainer, { backgroundColor: themeColors.card }]}>
           <View style={styles.statBox}>
             <Text style={[styles.statNumber, { color: themeColors.text }]}>{profile?.totalPoints ?? 0}</Text>
             <Text style={[styles.statLabel, { color: themeColors.textMuted }]}>Pontos</Text>
@@ -107,7 +109,7 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
         </View>
 
-        <View style={[styles.menuContainer, { backgroundColor: themeColors.card }]}>
+        <View style={[styles.menuContainer, isWeb && styles.webPanel, { backgroundColor: themeColors.card }]}>
           {MENU_ITEMS.map((item) => (
             <TouchableOpacity key={item.id} style={[styles.menuItem, { borderBottomColor: themeColors.border }]} onPress={() => navigation.navigate(item.screen)}>
               <View style={styles.menuItemLeft}>
@@ -129,7 +131,7 @@ export default function ProfileScreen({ navigation }: any) {
         </View>
 
         {/* Bot Assessment Card */}
-        <View style={[styles.botCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+        <View style={[styles.botCard, isWeb && styles.webPanel, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
           <View style={styles.botCardContent}>
             <Text style={[styles.botCardTitle, { color: themeColors.text }]}>Personalizar Experiência</Text>
             <Text style={[styles.botCardDesc, { color: themeColors.textMuted }]}>
@@ -155,6 +157,7 @@ export default function ProfileScreen({ navigation }: any) {
         </View>
 
         <View style={{ height: 8 }} />
+        </View>
       </ScrollView>
 
       {/* Logout Confirm */}
@@ -189,7 +192,9 @@ export default function ProfileScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  webContent: { width: '100%', maxWidth: 920, alignSelf: 'center', paddingVertical: 24 },
   header: { alignItems: 'center', padding: 24, paddingTop: 40 },
+  webHeader: { paddingTop: 8, paddingBottom: 12 },
   avatarContainer: { position: 'relative', marginBottom: 16, overflow: 'visible' },
   avatar: { width: 100, height: 100, borderRadius: 50, justifyContent: 'center', alignItems: 'center', shadowOpacity: 0.4, shadowRadius: 15, elevation: 8 },
   badge: { position: 'absolute', bottom: -2, right: -2, width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 3, zIndex: 10, elevation: 12 },
@@ -198,11 +203,13 @@ const styles = StyleSheet.create({
   rankBadge: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20 },
   rankText: { fontWeight: 'bold', fontSize: 13 },
   statsContainer: { flexDirection: 'row', marginHorizontal: 24, borderRadius: 20, padding: 20, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2, marginBottom: 32, marginTop: 20 },
+  webStatsContainer: { marginTop: 8, marginBottom: 20 },
   statBox: { flex: 1, alignItems: 'center' },
   statNumber: { fontSize: 20, fontWeight: 'bold', marginBottom: 4 },
   statLabel: { fontSize: 12 },
   divider: { width: 1 },
   menuContainer: { marginHorizontal: 24, borderRadius: 20, padding: 8, shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 5, elevation: 1, marginBottom: 24 },
+  webPanel: { borderRadius: 12 },
   menuItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, borderBottomWidth: 1 },
   logoutMenuItem: { borderBottomWidth: 0, marginTop: 2 },
   menuItemLeft: { flexDirection: 'row', alignItems: 'center' },
@@ -237,7 +244,7 @@ const styles = StyleSheet.create({
   botCardBtn: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: 8,
     alignSelf: 'flex-start',
   },
   botCardBtnText: {
