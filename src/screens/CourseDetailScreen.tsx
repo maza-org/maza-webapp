@@ -419,6 +419,9 @@ export default function CourseDetailScreen({ route, navigation }: any) {
       ) : course ? (
         <ScrollView 
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={16}
+          style={isWeb ? styles.webPanY : undefined}
           contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 24) + 96 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => fetchData('manual')} />}
         >
@@ -508,7 +511,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
               </View>
               {(baselinePending || endlinePending) && (
                 <TouchableOpacity
-                  style={[styles.impactActionBtn, { backgroundColor: themeColors.primary }]}
+                  style={[styles.impactActionBtn, { backgroundColor: themeColors.primary }, isWeb && styles.webPanY]}
                   onPress={handleCTA}
                 >
                   <BookOpen size={16} color="#fff" />
@@ -559,7 +562,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
 
           {hasLessons && (
           <TouchableOpacity
-            style={[styles.communityBtn, { backgroundColor: themeColors.primary + '12', borderColor: themeColors.primary + '40' }]}
+            style={[styles.communityBtn, { backgroundColor: themeColors.primary + '12', borderColor: themeColors.primary + '40' }, isWeb && styles.webPanY]}
             onPress={() => navigation.navigate('CourseForum', { courseId, courseTitle: course.title })}
           >
             <MessageCircle size={18} color={themeColors.primary} />
@@ -635,7 +638,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
               const isCompleted = modProgress?.isCompleted ?? false;
 
               return (
-                <View key={mod.id} style={[styles.moduleCard, { backgroundColor: themeColors.card }, !isUnlocked && styles.moduleCardLocked]}>
+                <View key={mod.id} style={[styles.moduleCard, { backgroundColor: themeColors.card }, isWeb && styles.webPanY, !isUnlocked && styles.moduleCardLocked]}>
                   <View style={styles.moduleHeader}>
                     <View style={[styles.moduleNum, { backgroundColor: themeColors.primary }, isCompleted && { backgroundColor: themeColors.success }, !isUnlocked && { backgroundColor: themeColors.textMuted }]}>
                       {isCompleted ? <CheckCircle size={16} color="#fff" /> :
@@ -665,7 +668,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                     return (
                       <TouchableOpacity
                         key={lesson.id}
-                        style={[styles.lessonRow, { borderTopColor: themeColors.border }, !isUnlocked && styles.lessonRowLocked]}
+                        style={[styles.lessonRow, { borderTopColor: themeColors.border }, isWeb && styles.webPanY, !isUnlocked && styles.lessonRowLocked]}
                         onPress={() => isUnlocked && navigation.navigate('LessonViewer', { lesson, lessonId: lesson.id, courseId })}
                         disabled={!isUnlocked}
                       >
@@ -684,7 +687,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                   })}
                   {(mod.lessons?.length ?? 0) > (expandedModules[mod.id] ?? LESSONS_BATCH_SIZE) && (
                     <TouchableOpacity
-                      style={[styles.showMoreLessonsBtn, { borderTopColor: themeColors.border }]}
+                      style={[styles.showMoreLessonsBtn, { borderTopColor: themeColors.border }, isWeb && styles.webPanY]}
                       onPress={() => setExpandedModules((current) => ({
                         ...current,
                         [mod.id]: (current[mod.id] ?? LESSONS_BATCH_SIZE) + LESSONS_BATCH_SIZE,
@@ -725,6 +728,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  webPanY: Platform.OS === 'web' ? ({ touchAction: 'pan-y' } as any) : {},
   webCourseBody: { width: '100%', maxWidth: 1180, alignSelf: 'center', flexDirection: 'row', alignItems: 'flex-start', gap: 18, padding: 18 },
   webCourseMain: { flex: 1, minWidth: 0 },
   webLessonsSidebar: { width: 390, flexShrink: 0, padding: 0 },
