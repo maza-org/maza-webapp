@@ -15,15 +15,20 @@ const shouldIgnoreConfiguredApiBase =
   !!configuredApiBase &&
   localApiPattern.test(configuredApiBase);
 
+// The production web app uses Vercel's same-origin /api proxy. Keeping this
+// relative also prevents a project-level env var from bypassing the proxy and
+// triggering browser CORS failures against the backend domain.
+const webApiBase = __DEV__
+  ? configuredApiBase ?? productionApiBase
+  : '/api';
+
 // In production native builds, localhost points at the phone itself. If a local
 // .env gets bundled by mistake, keep real users on the production backend.
-export const API_BASE = shouldIgnoreConfiguredApiBase
-  ? productionApiBase
-  : configuredApiBase ?? (
-    Platform.OS === 'web'
-      ? productionApiBase
-      : localApiBase
-  );
+export const API_BASE = Platform.OS === 'web'
+  ? webApiBase
+  : shouldIgnoreConfiguredApiBase
+    ? productionApiBase
+    : configuredApiBase ?? localApiBase;
 
 
 
