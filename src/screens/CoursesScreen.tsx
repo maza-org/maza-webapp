@@ -15,6 +15,7 @@ import { colors } from '../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { API_BASE as _API_BASE } from '../services/api';
 import { bottomSafeSpace } from '../utils/safeArea';
+import { useIsWideWeb } from '../utils/webViewport';
 
 type StatusFilter = 'Todos' | 'Em Progresso' | 'Concluídos' | 'Favoritos';
 const STATUS_TABS: StatusFilter[] = ['Todos', 'Em Progresso', 'Concluídos', 'Favoritos'];
@@ -101,6 +102,7 @@ function CourseCardPressable({
 export default function CoursesScreen({ navigation, route }: any) {
   const { colors: themeColors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const isWideWeb = useIsWideWeb(900);
   const [courses, setCourses] = useState<any[]>([]);
   const [pathways, setPathways] = useState<any[]>([]);
   const [pathwayCourseIds, setPathwayCourseIds] = useState<Set<string> | null>(null);
@@ -217,6 +219,7 @@ export default function CoursesScreen({ navigation, route }: any) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
+      <View style={isWideWeb ? styles.webPage : undefined}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: themeColors.text }]}>Cursos</Text>
       </View>
@@ -300,12 +303,14 @@ export default function CoursesScreen({ navigation, route }: any) {
              <Ionicons name="search-outline" size={48} color={themeColors.textMuted} />}
           </View>
           <Text style={[styles.emptyTitle, { color: themeColors.text }]}>
-            {statusTab === 'Favoritos' ? 'Sem favoritos ainda' :
+            {selectedPathway && pathwayCourseIds?.size === 0 ? 'Cursos em preparação' :
+             statusTab === 'Favoritos' ? 'Sem favoritos ainda' :
              statusTab === 'Em Progresso' ? 'Nenhum curso em progresso' :
              statusTab === 'Concluídos' ? 'Nenhum curso concluído' : 'Nenhum curso encontrado'}
           </Text>
           <Text style={[styles.emptySubtitle, { color: themeColors.textMuted }]}>
-            {statusTab === 'Favoritos' ? 'Toque no ❤️ de um curso para guardar.' :
+            {selectedPathway && pathwayCourseIds?.size === 0 ? 'Esta jornada já pode ser selecionada. Os cursos estarão disponíveis em breve.' :
+             statusTab === 'Favoritos' ? 'Toque no ❤️ de um curso para guardar.' :
              statusTab === 'Em Progresso' ? 'Comece um curso para o ver aqui.' :
              statusTab === 'Concluídos' ? 'Complete um curso para ganhar certificado.' : 'Tente outro termo ou jornada.'}
           </Text>
@@ -333,7 +338,9 @@ export default function CoursesScreen({ navigation, route }: any) {
                     styles.card,
                     { backgroundColor: themeColors.card }, 
                     isLocked && { opacity: 0.7 },
-                    viewMode === 'list' && styles.cardList
+                    viewMode === 'list' && styles.cardList,
+                    isWideWeb && viewMode === 'grid' && styles.webCard,
+                    isWideWeb && viewMode === 'list' && styles.webCardList,
                   ]}
                   disabled={isLocked}
                   onPress={() => {
@@ -417,6 +424,7 @@ export default function CoursesScreen({ navigation, route }: any) {
           </View>
         </ScrollView>
       )}
+      </View>
 
       <Modal visible={showFilterModal} transparent animationType="slide" onRequestClose={() => setShowFilterModal(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowFilterModal(false)}>
@@ -480,6 +488,7 @@ export default function CoursesScreen({ navigation, route }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  webPage: { flex: 1, width: '100%', maxWidth: 1180, alignSelf: 'center', paddingTop: 8 },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
   title: { fontSize: 26, fontWeight: 'bold' },
   searchRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 10, gap: 8 },
@@ -497,6 +506,8 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
   list: { flexDirection: 'column', flexWrap: 'nowrap', justifyContent: 'flex-start', rowGap: 12, width: '100%' },
   card: { width: '48.5%', borderRadius: 16, padding: 10, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  webCard: { width: '23.8%', minWidth: 238, maxWidth: 270, borderRadius: 8 },
+  webCardList: { borderRadius: 8, maxWidth: 880 },
   cardList: { width: '100%', maxWidth: '100%', alignSelf: 'stretch', flexDirection: 'row', padding: 10 },
   cardImg: { width: '100%', aspectRatio: 16 / 9, borderRadius: 12, marginBottom: 9, justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden' },
   cardImgList: { width: 112, height: 72, aspectRatio: undefined, marginBottom: 0, marginRight: 12, flexShrink: 0 },

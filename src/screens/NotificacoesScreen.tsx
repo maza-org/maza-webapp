@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Bell, BellOff, MessageSquare, Award, BookOpen } from 'lucide-react-native';
+import { ChevronLeft, MessageSquare, Award, BookOpen, BriefcaseBusiness, Target } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
 
@@ -9,6 +9,8 @@ const NOTIF_ITEMS = [
   { id: 'lessons', label: 'Novas lições', sub: 'Quando um novo módulo for adicionado', icon: BookOpen, defaultOn: true },
   { id: 'achievements', label: 'Conquistas', sub: 'Quando ganhar um badge ou certificado', icon: Award, defaultOn: true },
   { id: 'messages', label: 'Mensagens', sub: 'Avisos e comunicados da plataforma', icon: MessageSquare, defaultOn: false },
+  { id: 'jobs', label: 'Oportunidades recomendadas', sub: 'Vagas compatíveis com o seu perfil', icon: BriefcaseBusiness, defaultOn: true },
+  { id: 'career', label: 'Resultados profissionais', sub: 'Acompanhamentos aos 30, 90 e 180 dias', icon: Target, defaultOn: true },
 ];
 
 export default function NotificacoesScreen({ navigation }: any) {

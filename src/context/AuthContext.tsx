@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE, clearApiSession, setApiToken } from '../services/api';
+import { getStoredAuthToken, removeStoredAuthToken, storeAuthToken } from '../services/secure-storage';
 
 type UserProfile = {
   totalPoints: number;
   currentStreak: number;
-  rank: string;
   assessmentDone: boolean;
   botSessionId?: string | null;
 };
@@ -27,12 +27,26 @@ type User = {
   gender?: string | null;
   role: string;
   profile?: UserProfile | null;
+  enrollments?: {
+    courseId: string;
+    progress: number;
+    completedAt?: string | null;
+    enrolledAt?: string | null;
+  }[];
   impact?: {
     averageImpactPercent: number | null;
     averageImpactPoints: number | null;
     averageBaseline: number | null;
     averageEndline: number | null;
     completedCourses: number;
+  } | null;
+  monitoring?: {
+    totalDaysPlayed: number;
+    minutesInsideApp: number;
+    completion: number;
+    progress: number;
+    enrolledCourses: number;
+    completedCertificates: number;
   } | null;
 };
 
@@ -49,28 +63,6 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-async function readJsonResponse(response: Response) {
-  const text = await response.text();
-  if (!text) return null;
-
-  const contentType = response.headers.get('content-type') ?? '';
-  if (!contentType.includes('application/json')) {
-    if (!response.ok) {
-      return { error: `Servidor respondeu ${response.status}. Tente novamente.` };
-    }
-    throw new Error('O servidor devolveu uma resposta inesperada. Tente novamente.');
-  }
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    if (!response.ok) {
-      return { error: `Servidor respondeu ${response.status}. Tente novamente.` };
-    }
-    throw new Error('O servidor devolveu uma resposta inesperada. Tente novamente.');
-  }
-}
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -79,7 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     (async () => {
       try {
-        const storedToken = await AsyncStorage.getItem('maza_token');
+        const storedToken = await getStoredAuthToken();
         const storedUser = await AsyncStorage.getItem('maza_user');
         if (storedToken && storedUser) {
           const parsedUser = JSON.parse(storedUser);
@@ -99,7 +91,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               setUser(refreshed);
             } else {
               // Token expired — log out silently
-              await AsyncStorage.multiRemove(['maza_token', 'maza_user']);
+              await removeStoredAuthToken();
+              await AsyncStorage.removeItem('maza_user');
             }
           } catch {
             // Offline — use cached data as fallback
@@ -115,13 +108,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (identifier: string, password?: string) => {
     const response = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier, password }),
     });
 
-    const data = await readJsonResponse(response);
-    if (!response.ok) throw new Error(data?.error ?? data?.message ?? 'Credenciais inválidas.');
-    if (!data?.token || !data?.user) throw new Error('O servidor devolveu uma resposta incompleta. Tente novamente.');
+    const data = await response.json();
+    if (!response.ok) throw new Error(data?.error ?? 'Login failed');
 
     const { token: t } = data;
     let fullUser = data.user;
@@ -136,7 +128,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch { /* fallback to login data */ }
 
-    await AsyncStorage.setItem('maza_token', t);
+    await storeAuthToken(t);
     await AsyncStorage.setItem('maza_user', JSON.stringify(fullUser));
     setApiToken(t);
     setToken(t);
@@ -146,13 +138,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const verifyOtp = async (phone: string, code: string) => {
     const response = await fetch(`${API_BASE}/auth/login/otp/verify`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone, code }),
     });
 
-    const data = await readJsonResponse(response);
-    if (!response.ok) throw new Error(data?.error ?? data?.message ?? 'Código inválido. Tente novamente.');
-    if (!data?.token || !data?.user) throw new Error('O servidor devolveu uma resposta incompleta. Tente novamente.');
+    const data = await response.json();
+    if (!response.ok) throw new Error(data?.error ?? 'OTP verification failed');
 
     const { token: t } = data;
     let fullUser = data.user;
@@ -166,7 +157,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch {}
 
-    await AsyncStorage.setItem('maza_token', t);
+    await storeAuthToken(t);
     await AsyncStorage.setItem('maza_user', JSON.stringify(fullUser));
     setApiToken(t);
     setToken(t);
@@ -175,10 +166,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     try {
-      await AsyncStorage.multiRemove(['maza_token', 'maza_user']);
+      await removeStoredAuthToken();
+      await AsyncStorage.removeItem('maza_user');
     } catch (e) {
       try {
-        await AsyncStorage.multiRemove(['maza_token', 'maza_user']);
+        await removeStoredAuthToken();
+        await AsyncStorage.removeItem('maza_user');
       } catch (err) {}
     } finally {
       clearApiSession();
@@ -194,7 +187,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const setSession = async (t: string, fullUser: User) => {
-    await AsyncStorage.setItem('maza_token', t);
+    await storeAuthToken(t);
     await AsyncStorage.setItem('maza_user', JSON.stringify(fullUser));
     setApiToken(t);
     setToken(t);

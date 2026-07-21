@@ -4,12 +4,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function ChangePasswordScreen({ navigation }: any) {
   const { colors } = useTheme();
+  const { user, setSession } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState({
+    oldPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
@@ -19,7 +23,7 @@ export default function ChangePasswordScreen({ navigation }: any) {
   const handleSave = async () => {
     setErrorMsg(null);
     setSuccessMsg(null);
-    if (!form.newPassword || !form.confirmPassword) {
+    if (!form.oldPassword || !form.newPassword || !form.confirmPassword) {
       setErrorMsg('Por favor, preencha todos os campos.');
       return;
     }
@@ -27,16 +31,18 @@ export default function ChangePasswordScreen({ navigation }: any) {
       setErrorMsg('A nova palavra-passe e a confirmação não coincidem.');
       return;
     }
-    if (form.newPassword.length < 6) {
-      setErrorMsg('A nova palavra-passe deve ter pelo menos 6 caracteres.');
+    if (form.newPassword.length < 8) {
+      setErrorMsg('A nova palavra-passe deve ter pelo menos 8 caracteres.');
       return;
     }
 
     setLoading(true);
     try {
-      await api.post('/auth/change-password', {
+      const response = await api.post('/auth/change-password', {
+        oldPassword: form.oldPassword,
         newPassword: form.newPassword,
       });
+      if (response.data?.token && user) await setSession(response.data.token, user);
       setSuccessMsg('Palavra-passe alterada com sucesso!');
       setTimeout(() => {
         navigation.goBack();
@@ -68,6 +74,23 @@ export default function ChangePasswordScreen({ navigation }: any) {
         </View>
 
         <View style={styles.form}>
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: colors.text }]}>Palavra-passe Atual</Text>
+            <View style={[styles.inputWrap, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <TextInput
+                style={[styles.input, { color: colors.text, backgroundColor: 'transparent' }]}
+                secureTextEntry={!showCurrent}
+                value={form.oldPassword}
+                onChangeText={(value) => setForm({ ...form, oldPassword: value })}
+                autoComplete="current-password"
+                textContentType="password"
+              />
+              <TouchableOpacity onPress={() => setShowCurrent(!showCurrent)} style={styles.eye} activeOpacity={0.7}>
+                {showCurrent ? <EyeOff size={20} color={colors.textMuted} /> : <Eye size={20} color={colors.textMuted} />}
+              </TouchableOpacity>
+            </View>
+          </View>
+
           <View style={styles.field}>
             <Text style={[styles.label, { color: colors.text }]}>Nova Palavra-passe</Text>
             <View style={[styles.inputWrap, { backgroundColor: colors.card, borderColor: colors.border }]}>

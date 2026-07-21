@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { colors } from '../theme/colors';
 
 interface Props {
@@ -46,32 +46,18 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#fff', borderRadius: 20, padding: 24, width: '100%',
-    maxWidth: Platform.OS === 'web' ? 520 : undefined,
     shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 20, elevation: 10,
   },
   title: { fontSize: 18, fontWeight: 'bold', color: colors.text, marginBottom: 8 },
   message: { fontSize: 14, color: colors.textMuted, lineHeight: 21, marginBottom: 24 },
-  btnRow: {
-    flexDirection: 'row',
-    gap: 10,
-    justifyContent: Platform.OS === 'web' ? 'flex-end' : 'center',
-  },
+  btnRow: { flexDirection: 'row', gap: 10 },
   cancelBtn: {
-    flex: Platform.OS === 'web' ? 0 : 1,
-    minWidth: Platform.OS === 'web' ? 120 : undefined,
-    paddingVertical: Platform.OS === 'web' ? 10 : 13,
-    paddingHorizontal: Platform.OS === 'web' ? 16 : undefined,
-    borderRadius: Platform.OS === 'web' ? 8 : 30,
+    flex: 1, paddingVertical: 13, borderRadius: 30,
     backgroundColor: '#F1F5F9', alignItems: 'center',
   },
   cancelTxt: { fontWeight: '600', color: colors.textMuted, fontSize: 15 },
   confirmBtn: {
-    flex: Platform.OS === 'web' ? 0 : 1,
-    minWidth: Platform.OS === 'web' ? 120 : undefined,
-    paddingVertical: Platform.OS === 'web' ? 10 : 13,
-    paddingHorizontal: Platform.OS === 'web' ? 16 : undefined,
-    borderRadius: Platform.OS === 'web' ? 8 : 30,
-    alignItems: 'center',
+    flex: 1, paddingVertical: 13, borderRadius: 30, alignItems: 'center',
   },
   confirmTxt: { fontWeight: 'bold', color: '#fff', fontSize: 15 },
 });

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Modal, ImageBackground, Alert, RefreshControl, Platform, useWindowDimensions
+  ActivityIndicator, Modal, ImageBackground, Alert, Platform, RefreshControl, useWindowDimensions
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +14,8 @@ import { downloadCertificatePDF } from '../utils/certificateGenerator';
 import CourseBokehBg from '../components/CourseBokehBg';
 import { Ionicons } from '@expo/vector-icons';
 import CertificatePreview from '../components/CertificatePreview';
+import { useIsWideWeb } from '../utils/webViewport';
+import { downloadCourseForOffline, getOfflineCourse, removeOfflineCourse } from '../services/offlineCourses';
 
 const API_BASE = _API_BASE.replace('/api', '');
 
@@ -52,6 +54,9 @@ const CONTENT_LABELS: Record<string, string> = {
 };
 
 const LESSONS_BATCH_SIZE = 12;
+const WEB_VERTICAL_PAN_STYLE = Platform.OS === 'web'
+  ? ({ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' } as any)
+  : null;
 
 export default function CourseDetailScreen({ route, navigation }: any) {
   const { colors: themeColors, isDark } = useTheme();
@@ -88,13 +93,15 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   const [showCertificate, setShowCertificate] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [expandedModules, setExpandedModules] = useState<Record<string, number>>({});
+  const [offlineCourse, setOfflineCourse] = useState<any>(null);
+  const [offlineProgress, setOfflineProgress] = useState<{ done: number; total: number } | null>(null);
   const didFirstLoadRef = useRef(false);
   const lastFocusRefreshRef = useRef(0);
 
   const { width, height } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
-  const isWideWeb = isWeb && width >= 1040;
-  const webLessonsMaxHeight = isWideWeb ? Math.max(520, height - 172) : undefined;
+  const isWideWeb = useIsWideWeb(1024);
+  const webLessonsMaxHeight = isWideWeb ? Math.max(540, height - 188) : undefined;
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
@@ -102,6 +109,31 @@ export default function CourseDetailScreen({ route, navigation }: any) {
       return;
     }
     navigation.navigate('Main', { screen: 'Cursos' });
+  };
+
+  useEffect(() => {
+    getOfflineCourse(courseId).then(setOfflineCourse).catch(() => {});
+  }, [courseId]);
+
+  const toggleOfflineCourse = async () => {
+    if (!course || offlineProgress) return;
+    if (Platform.OS === 'web') {
+      Alert.alert('Disponível no telemóvel', 'O download offline fica disponível na aplicação Android e iOS.');
+      return;
+    }
+    try {
+      if (offlineCourse) {
+        await removeOfflineCourse(courseId);
+        setOfflineCourse(null);
+        return;
+      }
+      setOfflineProgress({ done: 0, total: 0 });
+      const manifest = await downloadCourseForOffline(course, (done, total) => setOfflineProgress({ done, total }));
+      setOfflineCourse(manifest);
+      Alert.alert('Curso disponível offline', `${manifest.availableFiles} ficheiro(s) guardado(s) neste dispositivo.`);
+    } catch {
+      Alert.alert('Download incompleto', 'Não foi possível guardar todo o conteúdo. Verifique a ligação e tente novamente.');
+    } finally { setOfflineProgress(null); }
   };
 
   const fetchData = useCallback(async (mode: 'initial' | 'manual' | 'background' = 'background') => {
@@ -338,6 +370,15 @@ export default function CourseDetailScreen({ route, navigation }: any) {
     : null;
 
   const insets = useSafeAreaInsets();
+  const LessonsContainer: any = isWideWeb ? ScrollView : View;
+  const lessonsContainerProps = isWideWeb
+    ? {
+        nestedScrollEnabled: true,
+        showsVerticalScrollIndicator: true,
+        style: [styles.webLessonsScroller, { maxHeight: webLessonsMaxHeight }],
+        contentContainerStyle: styles.webLessonsScrollerContent,
+      }
+    : {};
 
   return (
     <View style={[styles.container, { backgroundColor: themeColors.background }]}>
@@ -418,11 +459,9 @@ export default function CourseDetailScreen({ route, navigation }: any) {
         </View>
       ) : course ? (
         <ScrollView 
+          style={WEB_VERTICAL_PAN_STYLE}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          scrollEventThrottle={16}
-          style={isWeb ? styles.webPanY : undefined}
-          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 24) + 96 }}
+          contentContainerStyle={[{ paddingBottom: Math.max(insets.bottom, 24) + 96 }, WEB_VERTICAL_PAN_STYLE]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => fetchData('manual')} />}
         >
           {(() => {
@@ -465,8 +504,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
           })()}
 
           <View style={isWideWeb ? styles.webCourseBody : undefined}>
-          <View style={isWideWeb ? styles.webCourseMain : undefined}>
-
+            <View style={isWideWeb ? styles.webCourseMain : undefined}>
           {hasLessons && progress && (
             <View style={[styles.progressContainer, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
               <View style={styles.progressRow}>
@@ -492,9 +530,9 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                   <ClipboardList size={18} color={themeColors.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.impactTitle, { color: themeColors.text }]}>Impacto de aprendizagem</Text>
+                  <Text style={[styles.impactTitle, { color: themeColors.text }]}>Melhoria de aprendizagem</Text>
                   <Text style={[styles.impactSub, { color: themeColors.textMuted }]}>
-                    Baseline e endline medem a evolução neste curso.
+                    Baseline e endline medem a melhoria neste curso.
                   </Text>
                 </View>
                 {impact.result?.impactPercent !== null && impact.result?.impactPercent !== undefined ? (
@@ -511,7 +549,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
               </View>
               {(baselinePending || endlinePending) && (
                 <TouchableOpacity
-                  style={[styles.impactActionBtn, { backgroundColor: themeColors.primary }, isWeb && styles.webPanY]}
+                  style={[styles.impactActionBtn, { backgroundColor: themeColors.primary }]}
                   onPress={handleCTA}
                 >
                   <BookOpen size={16} color="#fff" />
@@ -562,7 +600,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
 
           {hasLessons && (
           <TouchableOpacity
-            style={[styles.communityBtn, { backgroundColor: themeColors.primary + '12', borderColor: themeColors.primary + '40' }, isWeb && styles.webPanY]}
+            style={[styles.communityBtn, { backgroundColor: themeColors.primary + '12', borderColor: themeColors.primary + '40' }]}
             onPress={() => navigation.navigate('CourseForum', { courseId, courseTitle: course.title })}
           >
             <MessageCircle size={18} color={themeColors.primary} />
@@ -570,36 +608,39 @@ export default function CourseDetailScreen({ route, navigation }: any) {
           </TouchableOpacity>
           )}
 
-          {isWideWeb && (
-            <View style={[styles.webOverviewCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-              <Text style={[styles.webOverviewTitle, { color: themeColors.text }]}>Resumo do curso</Text>
-              <Text style={[styles.webOverviewText, { color: themeColors.textMuted }]}>
-                {course.description || 'Acompanhe as aulas deste curso pela lista à direita e avance no seu próprio ritmo.'}
-              </Text>
-              <View style={styles.webOverviewGrid}>
-                <View style={[styles.webOverviewMetric, { borderColor: themeColors.border }]}>
-                  <Text style={[styles.webOverviewMetricValue, { color: themeColors.text }]}>{completedLessons}/{totalLessons}</Text>
-                  <Text style={[styles.webOverviewMetricLabel, { color: themeColors.textMuted }]}>Aulas concluídas</Text>
-                </View>
-                <View style={[styles.webOverviewMetric, { borderColor: themeColors.border }]}>
-                  <Text style={[styles.webOverviewMetricValue, { color: themeColors.text }]}>{Math.round(enrollmentProgress)}%</Text>
-                  <Text style={[styles.webOverviewMetricLabel, { color: themeColors.textMuted }]}>Progresso</Text>
-                </View>
+          {hasLessons && (
+            <TouchableOpacity
+              style={[styles.offlineCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+              onPress={toggleOfflineCourse}
+              disabled={!!offlineProgress}
+            >
+              <View style={[styles.offlineIcon, { backgroundColor: themeColors.primary + '15' }]}>
+                {offlineProgress ? <ActivityIndicator size="small" color={themeColors.primary} /> : <Download size={19} color={themeColors.primary} />}
               </View>
-            </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.offlineTitle, { color: themeColors.text }]}>
+                  {offlineCourse ? 'Disponível offline' : 'Guardar para usar offline'}
+                </Text>
+                <Text style={[styles.offlineText, { color: themeColors.textMuted }]}>
+                  {offlineProgress
+                    ? `A guardar ${offlineProgress.done} de ${offlineProgress.total} ficheiros...`
+                    : offlineCourse
+                      ? `${offlineCourse.availableFiles} ficheiro(s) neste dispositivo · toque para remover`
+                      : Platform.OS === 'web' ? 'Disponível na aplicação Android e iOS' : 'Vídeos, áudios e PDFs deste curso'}
+                </Text>
+              </View>
+            </TouchableOpacity>
           )}
 
           {isWideWeb && (
-            <View style={[styles.webNextStepCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-              <View>
-                <Text style={[styles.webNextStepTitle, { color: themeColors.text }]}>Próximo passo</Text>
-                <Text style={[styles.webNextStepText, { color: themeColors.textMuted }]}>
-                  Continue pela lista de aulas à direita. O seu progresso é guardado automaticamente.
-                </Text>
-              </View>
+            <View style={[styles.webNextCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+              <Text style={[styles.webNextTitle, { color: themeColors.text }]}>Próximo passo</Text>
+              <Text style={[styles.webNextText, { color: themeColors.textMuted }]}>
+                Continue a partir da próxima lição desbloqueada ou reveja o seu progresso.
+              </Text>
               <TouchableOpacity
                 style={[
-                  styles.webNextStepBtn,
+                  styles.webNextButton,
                   { backgroundColor: themeColors.primary },
                   isComplete && { backgroundColor: themeColors.success },
                   ctaDisabled && { backgroundColor: themeColors.textMuted },
@@ -608,11 +649,11 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                 disabled={ctaDisabled}
               >
                 {courseLocked ? <Lock size={16} color="#fff" /> : isComplete ? <Award size={16} color="#fff" /> : <BookOpen size={16} color="#fff" />}
-                <Text style={styles.webNextStepBtnText}>{ctaLabel}</Text>
+                <Text style={styles.webNextButtonText}>{ctaLabel}</Text>
               </TouchableOpacity>
             </View>
           )}
-          </View>
+            </View>
 
           <View style={[styles.section, isWideWeb && styles.webLessonsSidebar]}>
             <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Conteúdo do Curso</Text>
@@ -625,20 +666,14 @@ export default function CourseDetailScreen({ route, navigation }: any) {
             {!hasLessons && detailLoaded && (
               <Text style={[styles.emptyLessonsText, { color: themeColors.textMuted }]}>As lições serão adicionadas em breve.</Text>
             )}
-            <ScrollView
-              scrollEnabled={isWideWeb}
-              nestedScrollEnabled
-              showsVerticalScrollIndicator={isWideWeb}
-              style={isWideWeb ? [styles.webLessonsScroller, { maxHeight: webLessonsMaxHeight }] : undefined}
-              contentContainerStyle={isWideWeb ? styles.webLessonsScrollerContent : undefined}
-            >
+            <LessonsContainer {...lessonsContainerProps}>
             {course.modules?.map((mod: any, idx: number) => {
               const modProgress = getModuleProgress(mod.id);
               const isUnlocked = !courseLocked && !baselinePending && (modProgress?.isUnlocked ?? (idx === 0));
               const isCompleted = modProgress?.isCompleted ?? false;
 
               return (
-                <View key={mod.id} style={[styles.moduleCard, { backgroundColor: themeColors.card }, isWeb && styles.webPanY, !isUnlocked && styles.moduleCardLocked]}>
+                <View key={mod.id} style={[styles.moduleCard, { backgroundColor: themeColors.card }, !isUnlocked && styles.moduleCardLocked]}>
                   <View style={styles.moduleHeader}>
                     <View style={[styles.moduleNum, { backgroundColor: themeColors.primary }, isCompleted && { backgroundColor: themeColors.success }, !isUnlocked && { backgroundColor: themeColors.textMuted }]}>
                       {isCompleted ? <CheckCircle size={16} color="#fff" /> :
@@ -668,7 +703,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                     return (
                       <TouchableOpacity
                         key={lesson.id}
-                        style={[styles.lessonRow, { borderTopColor: themeColors.border }, isWeb && styles.webPanY, !isUnlocked && styles.lessonRowLocked]}
+                        style={[styles.lessonRow, WEB_VERTICAL_PAN_STYLE, { borderTopColor: themeColors.border }, !isUnlocked && styles.lessonRowLocked]}
                         onPress={() => isUnlocked && navigation.navigate('LessonViewer', { lesson, lessonId: lesson.id, courseId })}
                         disabled={!isUnlocked}
                       >
@@ -687,7 +722,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                   })}
                   {(mod.lessons?.length ?? 0) > (expandedModules[mod.id] ?? LESSONS_BATCH_SIZE) && (
                     <TouchableOpacity
-                      style={[styles.showMoreLessonsBtn, { borderTopColor: themeColors.border }, isWeb && styles.webPanY]}
+                      style={[styles.showMoreLessonsBtn, { borderTopColor: themeColors.border }]}
                       onPress={() => setExpandedModules((current) => ({
                         ...current,
                         [mod.id]: (current[mod.id] ?? LESSONS_BATCH_SIZE) + LESSONS_BATCH_SIZE,
@@ -701,13 +736,14 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                 </View>
               );
             })}
-            </ScrollView>
+            </LessonsContainer>
           </View>
           </View>
 
-          {!isWideWeb && <TouchableOpacity
+          <TouchableOpacity
             style={[
               styles.enrollBtn,
+              isWideWeb && styles.webHidden,
               { backgroundColor: themeColors.primary, shadowColor: themeColors.primary },
               isComplete && { backgroundColor: themeColors.success, shadowColor: themeColors.success },
               ctaDisabled && { backgroundColor: themeColors.textMuted, shadowColor: themeColors.textMuted },
@@ -716,7 +752,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
           >
             {courseLocked ? <Lock size={20} color="#fff" /> : isComplete ? <Award size={20} color="#fff" /> : <BookOpen size={20} color="#fff" />}
             <Text style={[styles.enrollText, { color: '#fff' }]}>{ctaLabel}</Text>
-          </TouchableOpacity>}
+          </TouchableOpacity>
           <View style={{ height: Math.max(insets.bottom, 24) }} />
         </ScrollView>
       ) : (
@@ -728,24 +764,6 @@ export default function CourseDetailScreen({ route, navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  webPanY: Platform.OS === 'web' ? ({ touchAction: 'pan-y' } as any) : {},
-  webCourseBody: { width: '100%', maxWidth: 1180, alignSelf: 'center', flexDirection: 'row', alignItems: 'flex-start', gap: 18, padding: 18 },
-  webCourseMain: { flex: 1, minWidth: 0 },
-  webLessonsSidebar: { width: 390, flexShrink: 0, padding: 0 },
-  webLessonsScroller: { flexGrow: 0 },
-  webLessonsScrollerContent: { paddingBottom: 8 },
-  webOverviewCard: { marginHorizontal: 24, marginTop: 4, padding: 18, borderRadius: 12, borderWidth: 1 },
-  webOverviewTitle: { fontSize: 17, fontWeight: '800', marginBottom: 8 },
-  webOverviewText: { fontSize: 14, lineHeight: 21 },
-  webOverviewGrid: { flexDirection: 'row', gap: 12, marginTop: 16 },
-  webOverviewMetric: { flex: 1, borderWidth: 1, borderRadius: 8, padding: 12 },
-  webOverviewMetricValue: { fontSize: 18, fontWeight: '900', marginBottom: 4 },
-  webOverviewMetricLabel: { fontSize: 12, fontWeight: '700' },
-  webNextStepCard: { marginHorizontal: 24, marginTop: 14, padding: 18, borderRadius: 12, borderWidth: 1, gap: 16 },
-  webNextStepTitle: { fontSize: 17, fontWeight: '800', marginBottom: 6 },
-  webNextStepText: { fontSize: 14, lineHeight: 21 },
-  webNextStepBtn: { alignSelf: 'flex-start', minWidth: 180, borderRadius: 8, paddingVertical: 10, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  webNextStepBtnText: { color: '#fff', fontSize: 13, fontWeight: '800' },
   loadingState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   loadingText: { fontSize: 14, fontWeight: '600' },
   backBtn: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
@@ -759,6 +777,10 @@ const styles = StyleSheet.create({
   instructor: { color: 'rgba(255,255,255,0.85)', fontSize: 14, marginBottom: 12, paddingHorizontal: 24 },
   description: { color: 'rgba(255,255,255,0.75)', fontSize: 14, lineHeight: 22, paddingHorizontal: 24 },
   progressContainer: { padding: 20, borderBottomWidth: 1 },
+  offlineCard: { marginHorizontal: 18, marginTop: 14, borderWidth: 1, borderRadius: 14, padding: 13, flexDirection: 'row', alignItems: 'center', gap: 11 },
+  offlineIcon: { width: 40, height: 40, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  offlineTitle: { fontSize: 14, fontWeight: '700', marginBottom: 3 },
+  offlineText: { fontSize: 11.5, lineHeight: 16 },
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
   progressLabel: { fontSize: 14, fontWeight: '600' },
   progressPercent: { fontSize: 14, fontWeight: 'bold' },
@@ -830,10 +852,70 @@ const styles = StyleSheet.create({
   showMoreLessonsBtn: { alignItems: 'center', paddingTop: 12, marginTop: 2, borderTopWidth: 1 },
   showMoreLessonsText: { fontSize: 13, fontWeight: '800' },
   enrollBtn: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginHorizontal: 24, paddingVertical: 16, borderRadius: 30, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6 },
-  webEnrollBtn: { alignSelf: 'center', minWidth: 220, marginTop: 8, paddingVertical: 11, paddingHorizontal: 18, borderRadius: 8, shadowOpacity: 0.18 },
   enrollText: { color: '#fff', fontWeight: 'bold', fontSize: 18, marginLeft: 10 },
   progressSub: { fontSize: 12, marginTop: 6 },
   error: { textAlign: 'center', marginTop: 40 },
+  webCourseBody: {
+    width: '100%',
+    maxWidth: 1180,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 18,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+  },
+  webCourseMain: {
+    flex: 1,
+    minWidth: 0,
+    gap: 12,
+  },
+  webLessonsSidebar: {
+    width: 410,
+    flexShrink: 0,
+    padding: 14,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.45)',
+  },
+  webLessonsScroller: {
+    width: '100%',
+  },
+  webLessonsScrollerContent: {
+    paddingBottom: 6,
+  },
+  webNextCard: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 16,
+    marginHorizontal: 20,
+  },
+  webNextTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  webNextText: {
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: 14,
+  },
+  webNextButton: {
+    alignSelf: 'flex-start',
+    minHeight: 40,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  webNextButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  webHidden: {
+    display: 'none',
+  },
   certOverlay: { flex: 1, backgroundColor: 'rgba(30, 41, 59, 0.95)', justifyContent: 'center', alignItems: 'center', padding: 20 },
   certLegacyHidden: { display: 'none' },
   certCardLandscape: { width: '100%', maxWidth: 800, aspectRatio: 1.414, backgroundColor: '#fff', padding: 4, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 30, elevation: 20, marginBottom: 24 },

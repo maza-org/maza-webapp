@@ -31,6 +31,7 @@ interface Props {
 function WebImpl({ source, style, onMessage, onLoadEnd, injectedJavaScript, injectedJavaScriptBeforeContentLoaded }: Props) {
   const flatStyle = StyleSheet.flatten(style) ?? {};
   const messageIdRef = React.useRef(`cpwv-${Math.random().toString(36).slice(2)}`);
+  const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
   const htmlSource = 'html' in source ? source.html : null;
   const isVideoHtml = !!htmlSource?.includes('<video');
   const isAudioHtml = !!htmlSource?.includes('<audio');
@@ -57,6 +58,7 @@ function WebImpl({ source, style, onMessage, onLoadEnd, injectedJavaScript, inje
   React.useEffect(() => {
     if (!onMessage) return;
     const listener = (event: any) => {
+      if (event.source !== iframeRef.current?.contentWindow) return;
       if (event?.data?.__mazaLesson) {
         onMessage({ nativeEvent: { data: JSON.stringify({ type: event.data.type }) } });
         return;
@@ -150,6 +152,7 @@ function WebImpl({ source, style, onMessage, onLoadEnd, injectedJavaScript, inje
       <View style={[{ flex: 1 }, style]}>
         {/* @ts-ignore — iframe is valid on web via react-native-web */}
         <iframe
+          ref={iframeRef}
           src={blobUrl}
           style={{
             width: '100%',
@@ -159,7 +162,7 @@ function WebImpl({ source, style, onMessage, onLoadEnd, injectedJavaScript, inje
             minHeight: flatStyle.minHeight ?? 400,
             touchAction: 'manipulation',
           }}
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"
+          sandbox="allow-scripts allow-forms allow-pointer-lock"
           allow="autoplay; fullscreen"
           onLoad={onLoadEnd}
         />
@@ -172,6 +175,7 @@ function WebImpl({ source, style, onMessage, onLoadEnd, injectedJavaScript, inje
       <View style={[{ flex: 1 }, style]}>
         {/* @ts-ignore */}
         <iframe
+          ref={iframeRef}
           src={source.uri}
           style={{
             width: '100%',
@@ -181,6 +185,7 @@ function WebImpl({ source, style, onMessage, onLoadEnd, injectedJavaScript, inje
             minHeight: flatStyle.minHeight ?? 400,
           }}
           allow="autoplay; fullscreen; encrypted-media"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-downloads"
           allowFullScreen
           onLoad={onLoadEnd}
         />
@@ -207,12 +212,12 @@ function NativeImpl({ source, style, allowsFullscreenVideo, javaScriptEnabled, d
       ref={webViewRef}
       source={source}
       style={[{ flex: 1 }, style]}
-      originWhitelist={['*']}
+      originWhitelist={['about:blank', 'data:*', 'file://*', 'http://localhost:*', 'http://127.0.0.1:*', 'https://*.mazas.org', 'https://*.digitaloceanspaces.com', 'https://*.r2.dev', 'https://*.youtube.com', 'https://*.youtube-nocookie.com']}
       allowsFullscreenVideo={allowsFullscreenVideo}
       javaScriptEnabled={javaScriptEnabled ?? true}
       domStorageEnabled={domStorageEnabled ?? true}
       cacheEnabled
-      mixedContentMode="always"
+      mixedContentMode="never"
       androidLayerType="hardware"
       allowsInlineMediaPlayback={true}
       allowsAirPlayForMediaPlayback={true}
@@ -225,7 +230,7 @@ function NativeImpl({ source, style, allowsFullscreenVideo, javaScriptEnabled, d
       onLoadEnd={onLoadEnd}
       injectedJavaScript={injectedJavaScript}
       injectedJavaScriptBeforeContentLoaded={injectedJavaScriptBeforeContentLoaded}
-      javaScriptCanOpenWindowsAutomatically
+      javaScriptCanOpenWindowsAutomatically={false}
       setSupportMultipleWindows={false}
     />
   );

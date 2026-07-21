@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { Platform } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
@@ -8,79 +7,62 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
-import OnboardingScreen from '../screens/OnboardingScreen';
 import LoginScreen from '../screens/LoginScreen';
-import RegisterScreen from '../screens/RegisterScreen';
-import OtpVerificationScreen from '../screens/OtpVerificationScreen';
-import BotAssessmentScreen from '../screens/BotAssessmentScreen';
-import HomeScreen from '../screens/HomeScreen';
-import CoursesScreen from '../screens/CoursesScreen';
-import CourseDetailScreen from '../screens/CourseDetailScreen';
-import LessonViewerScreen from '../screens/LessonViewerScreen';
-import ImpactAssessmentScreen from '../screens/ImpactAssessmentScreen';
-import JobsScreen from '../screens/JobsScreen';
-import JobDetailScreen from '../screens/JobDetailScreen';
-import BadgesScreen from '../screens/BadgesScreen';
-import ProfileScreen from '../screens/ProfileScreen';
-import MyCertificatesScreen from '../screens/MyCertificatesScreen';
-import NotificationsInboxScreen from '../screens/NotificationsInboxScreen';
-import NotificacoesScreen from '../screens/NotificacoesScreen';
-import ConfiguracoesScreen from '../screens/ConfiguracoesScreen';
-import CourseForumScreen from '../screens/CourseForumScreen';
-import HowItWorksStoryScreen from '../screens/HowItWorksStoryScreen';
-import EditProfileScreen from '../screens/EditProfileScreen';
-import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
+import ScreenLoader from '../components/ScreenLoader';
 import { useIsWideWeb } from '../utils/webViewport';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const DOCUMENT_TITLES: Record<string, string> = {
-  Main: 'MAZA',
-  Onboarding: 'Boas-vindas',
-  HowItWorksStory: 'Como funciona',
-  Login: 'Entrar',
-  Register: 'Registar',
-  OtpVerification: 'Verificar código',
-  ForgotPassword: 'Recuperar palavra-passe',
-  ResetPassword: 'Nova palavra-passe',
-  BotAssessment: 'Avaliação',
-  CourseDetail: 'Curso',
-  ImpactAssessment: 'Avaliação de impacto',
-  LessonViewer: 'Aula',
-  JobDetail: 'Oportunidade',
-  MyCertificates: 'Certificados',
-  NotificationsInbox: 'Notificações',
-  Notificacoes: 'Preferências de notificações',
-  Configuracoes: 'Perfil',
-  EditProfile: 'Editar perfil',
-  ChangePassword: 'Alterar palavra-passe',
-  CourseForum: 'Fórum do curso',
-  Início: 'Início',
-  Cursos: 'Cursos',
-  Oportunidades: 'Oportunidades',
-  Conquistas: 'Conquistas',
-  Perfil: 'Perfil',
+const lazyScreen = <T extends React.ComponentType<any>>(
+  loader: () => Promise<{ default: T }>
+) => {
+  const LazyComponent = React.lazy(loader);
+
+  return function LazyScreen(props: React.ComponentProps<T>) {
+    return (
+      <React.Suspense fallback={<ScreenLoader label="A carregar..." />}>
+        <LazyComponent {...props} />
+      </React.Suspense>
+    );
+  };
 };
 
-function formatDocumentTitle(_options: any, route: any) {
-  const params = route?.params ?? {};
-  const routeTitle = params.title || params.lesson?.title || DOCUMENT_TITLES[route?.name] || 'MAZA';
-  return `${routeTitle} | MAZA`;
-}
+const OnboardingScreen = lazyScreen(() => import('../screens/OnboardingScreen'));
+const RegisterScreen = lazyScreen(() => import('../screens/RegisterScreen'));
+const OtpVerificationScreen = lazyScreen(() => import('../screens/OtpVerificationScreen'));
+const BotAssessmentScreen = lazyScreen(() => import('../screens/BotAssessmentScreen'));
+const HomeScreen = lazyScreen(() => import('../screens/HomeScreen'));
+const CoursesScreen = lazyScreen(() => import('../screens/CoursesScreen'));
+const CourseDetailScreen = lazyScreen(() => import('../screens/CourseDetailScreen'));
+const LessonViewerScreen = lazyScreen(() => import('../screens/LessonViewerScreen'));
+const ImpactAssessmentScreen = lazyScreen(() => import('../screens/ImpactAssessmentScreen'));
+const JobsScreen = lazyScreen(() => import('../screens/JobsScreen'));
+const JobDetailScreen = lazyScreen(() => import('../screens/JobDetailScreen'));
+const BadgesScreen = lazyScreen(() => import('../screens/BadgesScreen'));
+const ProfileScreen = lazyScreen(() => import('../screens/ProfileScreen'));
+const MyCertificatesScreen = lazyScreen(() => import('../screens/MyCertificatesScreen'));
+const NotificationsInboxScreen = lazyScreen(() => import('../screens/NotificationsInboxScreen'));
+const NotificacoesScreen = lazyScreen(() => import('../screens/NotificacoesScreen'));
+const ConfiguracoesScreen = lazyScreen(() => import('../screens/ConfiguracoesScreen'));
+const CourseForumScreen = lazyScreen(() => import('../screens/CourseForumScreen'));
+const HowItWorksStoryScreen = lazyScreen(() => import('../screens/HowItWorksStoryScreen'));
+const EditProfileScreen = lazyScreen(() => import('../screens/EditProfileScreen'));
+const ChangePasswordScreen = lazyScreen(() => import('../screens/ChangePasswordScreen'));
+const CareerOutcomesScreen = lazyScreen(() => import('../screens/CareerOutcomesScreen'));
 
 const MainTabs = () => {
   const { colors: themeColors } = useTheme();
-  const isWeb = Platform.OS === 'web';
   const useSideNav = useIsWideWeb(900);
-
   return (
     <Tab.Navigator
       key={useSideNav ? 'desktop-tabs' : 'mobile-tabs'}
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size, focused }: { color: string; size: number; focused: boolean }) => {
+        tabBarPosition: useSideNav ? 'left' : 'bottom',
+        tabBarLabelPosition: useSideNav ? 'beside-icon' : undefined,
+        tabBarIcon: ({ color, size, focused }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'home-outline';
           
           if (route.name === 'Início') iconName = focused ? 'home' : 'home-outline';
@@ -91,18 +73,15 @@ const MainTabs = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: themeColors.primary,
+        tabBarActiveTintColor: useSideNav ? '#FFFFFF' : themeColors.primary,
         tabBarInactiveTintColor: themeColors.textMuted,
-        tabBarLabelStyle: {
-          fontSize: useSideNav ? 13 : 9.5,
-          fontWeight: useSideNav ? '600' : '400',
-        },
+        tabBarActiveBackgroundColor: useSideNav ? themeColors.primary : 'transparent',
+        tabBarInactiveBackgroundColor: 'transparent',
+        tabBarLabelStyle: useSideNav
+          ? { fontSize: 12, letterSpacing: 0, fontWeight: '700' }
+          : { fontSize: 9.5, letterSpacing: -0.3 },
         tabBarStyle: {
-          width: useSideNav ? 224 : undefined,
-          minWidth: useSideNav ? 224 : undefined,
-          height: useSideNav ? '100%' : undefined,
-          paddingTop: useSideNav ? 18 : undefined,
-          paddingHorizontal: useSideNav ? 10 : undefined,
+          width: useSideNav ? 164 : undefined,
           borderTopWidth: useSideNav ? 0 : 1,
           borderRightWidth: useSideNav ? 1 : 0,
           borderTopColor: themeColors.border,
@@ -110,19 +89,14 @@ const MainTabs = () => {
           elevation: 0,
           shadowOpacity: 0,
           backgroundColor: themeColors.card,
+          paddingTop: useSideNav ? 18 : undefined,
+          paddingBottom: useSideNav ? 18 : undefined,
         },
-        tabBarItemStyle: useSideNav ? {
-          height: 46,
-          borderRadius: 8,
-          marginVertical: 3,
-          paddingHorizontal: 10,
-        } : undefined,
-        tabBarIconStyle: useSideNav ? { marginRight: 10 } : undefined,
-        tabBarPosition: useSideNav ? 'left' : 'bottom',
-        tabBarLabelPosition: useSideNav ? 'beside-icon' : 'below-icon',
-        tabBarHideOnKeyboard: !isWeb,
+        tabBarItemStyle: useSideNav
+          ? { paddingVertical: 10, minHeight: 58, marginHorizontal: 12, marginVertical: 5, borderRadius: 12 }
+          : undefined,
         headerShown: false,
-      } as any)}
+      })}
     >
       <Tab.Screen name="Início" component={HomeScreen} />
       <Tab.Screen name="Cursos" component={CoursesScreen} />
@@ -141,13 +115,13 @@ export default function AppNavigator() {
   }, [loading]);
 
   if (loading) {
-    return null;
+    return <ScreenLoader label="A abrir..." />;
   }
 
   const assessmentDone = user?.profile?.assessmentDone ?? false;
 
   return (
-    <NavigationContainer documentTitle={{ formatter: formatDocumentTitle }}>
+    <NavigationContainer>
       <Stack.Navigator
         key={!user ? 'guest' : 'auth'}
         initialRouteName={!user ? 'Login' : undefined}
@@ -189,6 +163,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Configuracoes" component={ConfiguracoesScreen} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+            <Stack.Screen name="CareerOutcomes" component={CareerOutcomesScreen} />
             <Stack.Screen name="CourseForum" component={CourseForumScreen} options={{ headerShown: false }} />
             <Stack.Screen name="HowItWorksStory" component={HowItWorksStoryScreen} options={{ presentation: 'fullScreenModal', headerShown: false }} />
             <Stack.Screen name="BotAssessment" component={BotAssessmentScreen} />

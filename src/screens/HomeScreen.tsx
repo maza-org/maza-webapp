@@ -1,8 +1,9 @@
-﻿import React, { useMemo, useState, useCallback } from 'react';
-import { Platform, View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, useWindowDimensions } from 'react-native';
+﻿import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, useWindowDimensions } from 'react-native';
 import { colors } from '../theme/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Award, TrendingUp, Bell, Lock, ChevronRight, CheckCircle2, PlayCircle, Bot } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Award, TrendingUp, Bell, Lock, ChevronRight, CheckCircle2, Bot, CalendarDays, Clock3, BookOpen, Trophy, BriefcaseBusiness } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import api, { getPersistentCached } from '../services/api';
@@ -11,6 +12,8 @@ import { useTheme } from '../context/ThemeContext';
 import CourseBokehBg from '../components/CourseBokehBg';
 import CourseThumbnailImage from '../components/CourseThumbnailImage';
 import { API_BASE as _API_BASE } from '../services/api';
+import { useIsWideWeb } from '../utils/webViewport';
+import { flushOfflineQueue } from '../services/offlineQueue';
 
 const API_BASE = _API_BASE.replace('/api', '');
 
@@ -60,6 +63,21 @@ function getPathwayMeta(name?: string | null) {
   };
 }
 
+function formatMetricNumber(value: unknown) {
+  return Number(value ?? 0).toLocaleString('pt-MZ', {
+    maximumFractionDigits: 1,
+  });
+}
+
+function formatMinutesPerDay(minutes: number) {
+  if (!Number.isFinite(minutes) || minutes <= 0) return '0 min';
+  if (minutes < 60) return `${Math.round(minutes)} min`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = Math.round(minutes % 60);
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+}
+
 export default function HomeScreen({ navigation }: any) {
   const { width } = useWindowDimensions();
   const { user, updateUser, logout } = useAuth();
@@ -67,9 +85,28 @@ export default function HomeScreen({ navigation }: any) {
   const [pathway, setPathway] = useState<any>(null);
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [careerDueMilestone, setCareerDueMilestone] = useState<number | null>(null);
+  const storyCheckStarted = useRef(false);
+
+  useEffect(() => {
+    if (!user?.id || storyCheckStarted.current) return;
+    storyCheckStarted.current = true;
+
+    const openStoryOnFirstAccess = async () => {
+      const storageKey = `maza_how_it_works_seen:${user.id}`;
+      const alreadySeen = await AsyncStorage.getItem(storageKey);
+      if (alreadySeen) return;
+
+      await AsyncStorage.setItem(storageKey, 'true');
+      navigation.navigate('HowItWorksStory');
+    };
+
+    openStoryOnFirstAccess().catch(() => {});
+  }, [navigation, user?.id]);
 
   const fetchHomeData = useCallback(async () => {
     try {
+      await flushOfflineQueue().catch(() => {});
       const meRes = await api.get('/auth/me').catch((error) => error?.response ?? null);
       if (meRes?.status === 401 || meRes?.status === 404) {
         await logout();
@@ -79,12 +116,13 @@ export default function HomeScreen({ navigation }: any) {
         updateUser(meRes.data);
       }
 
-      const [myRes, coursesRes] = await Promise.all([
+      const [myRes, coursesRes, careerRes] = await Promise.all([
         api.get('/pathways/my').catch(() => null),
         getPersistentCached('/courses', 2 * 60 * 1000, (staleCourses) => {
           setCourses(visiblePublishedCourses(staleCourses));
           setLoading(false);
         }).catch(() => null),
+        api.get('/career-outcomes/me').catch(() => null),
       ]);
 
       getPersistentCached('/jobs', 10 * 60 * 1000).catch(() => {});
@@ -98,6 +136,7 @@ export default function HomeScreen({ navigation }: any) {
       if (Array.isArray(coursesRes)) {
         setCourses(visiblePublishedCourses(coursesRes));
       }
+      setCareerDueMilestone(careerRes?.data?.dueMilestone ?? null);
     } catch (e) {
       console.error(e);
     }
@@ -113,10 +152,63 @@ export default function HomeScreen({ navigation }: any) {
 
   const profile = user?.profile;
   const mazaImpact = user?.impact?.averageImpactPercent ?? 0;
+  const enrolledProgress = user?.enrollments?.length
+    ? user.enrollments.reduce((sum, enrollment) => sum + Number(enrollment.progress ?? 0), 0) / user.enrollments.length
+    : 0;
+  const monitoring = user?.monitoring;
+  const totalDaysPlayed = Number(monitoring?.totalDaysPlayed ?? 0);
+  const minutesInsideApp = Number(monitoring?.minutesInsideApp ?? 0);
+  const minutesPerActiveDay = totalDaysPlayed > 0 ? minutesInsideApp / totalDaysPlayed : 0;
+  const completionCount = Number(monitoring?.completion ?? monitoring?.completedCertificates ?? 0);
+  const progressAverage = Number(monitoring?.progress ?? enrolledProgress);
+  const userMetricCards = [
+    {
+      label: 'Melhoria',
+      value: `${Math.round(Number(mazaImpact ?? 0))}%`,
+      icon: TrendingUp,
+      color: themeColors.success,
+      bg: isDark ? '#064E3B' : '#DCFCE7',
+    },
+    {
+      label: 'Pontos',
+      value: formatMetricNumber(profile?.totalPoints ?? 0),
+      icon: Trophy,
+      color: themeColors.secondary,
+      bg: isDark ? '#713F12' : '#FEF3C7',
+    },
+    {
+      label: totalDaysPlayed === 1 ? 'Dia ativo' : 'Dias ativos',
+      value: formatMetricNumber(totalDaysPlayed),
+      icon: CalendarDays,
+      color: '#2563EB',
+      bg: isDark ? '#1E3A8A' : '#DBEAFE',
+    },
+    {
+      label: 'Min./dia',
+      value: formatMinutesPerDay(minutesPerActiveDay),
+      icon: Clock3,
+      color: '#0EA5E9',
+      bg: isDark ? '#164E63' : '#E0F2FE',
+    },
+    {
+      label: completionCount === 1 ? 'Certificado' : 'Certificados',
+      value: formatMetricNumber(completionCount),
+      icon: Award,
+      color: '#D97706',
+      bg: isDark ? '#78350F' : '#FEF3C7',
+    },
+    {
+      label: 'Progresso',
+      value: `${Math.round(progressAverage)}%`,
+      icon: BookOpen,
+      color: '#7C3AED',
+      bg: isDark ? '#4C1D95' : '#EDE9FE',
+    },
+  ];
   const pathwayMeta = pathway ? getPathwayMeta(pathway.name) : null;
   const pathwayCourses: any[] = pathway?.courses ?? [];
-  const useCourseGrid = width >= 760;
-  const isWeb = Platform.OS === 'web';
+  const useWebShell = useIsWideWeb(900);
+  const useCourseGrid = useWebShell || width >= 760;
 
   const handleCoursePress = (pc: any) => {
     if (pc.isLocked) return; // Do nothing if locked
@@ -180,10 +272,8 @@ export default function HomeScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={isWeb ? styles.webScrollContent : undefined}
-      >
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={useWebShell ? styles.webPage : undefined}>
         {/* Header */}
         <View style={styles.header}>
           <View>
@@ -198,42 +288,41 @@ export default function HomeScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        {/* Gamification stats */}
-        <View style={styles.gamificationRow}>
-          <View style={[styles.streakCard, { backgroundColor: themeColors.card }]}>
-            <TrendingUp color={themeColors.success} size={28} />
-            <View style={{ marginLeft: 12 }}>
-              <Text style={[styles.statValue, { color: themeColors.text }]}>{mazaImpact}%</Text>
-              <Text style={[styles.statLabel, { color: themeColors.textMuted }]}>Impactado</Text>
+        {/* User metrics */}
+        <View style={styles.metricsGrid}>
+          {userMetricCards.map(({ label, value, icon: Icon, color, bg }) => (
+            <View key={label} style={[styles.metricCard, useWebShell && styles.webMetricCard, { backgroundColor: themeColors.card }]}>
+              <View style={[styles.metricIconWrap, { backgroundColor: bg }]}>
+                <Icon color={color} size={20} />
+              </View>
+              <View style={styles.metricText}>
+                <Text style={[styles.statValue, { color: themeColors.text }]} numberOfLines={1} adjustsFontSizeToFit>
+                  {value}
+                </Text>
+                <Text style={[styles.statLabel, { color: themeColors.textMuted }]} numberOfLines={1}>
+                  {label}
+                </Text>
+              </View>
             </View>
-          </View>
-          <View style={[styles.pointsCard, { backgroundColor: themeColors.card }]}>
-            <Award color={themeColors.secondary} size={28} />
-            <View style={{ marginLeft: 12 }}>
-              <Text style={[styles.statValue, { color: themeColors.text }]}>{profile?.totalPoints ?? 0}</Text>
-              <Text style={[styles.statLabel, { color: themeColors.textMuted }]}>Pontos</Text>
-            </View>
-          </View>
+          ))}
         </View>
 
-        {!isWeb && (
+        {careerDueMilestone ? (
           <TouchableOpacity
-            style={[styles.storyCard, { backgroundColor: isDark ? themeColors.card : '#1E293B' }]}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('HowItWorksStory')}
+            style={[styles.careerBanner, { backgroundColor: themeColors.card, borderColor: themeColors.primary }]}
+            onPress={() => navigation.navigate('CareerOutcomes')}
+            activeOpacity={0.82}
           >
-            <View style={styles.storyIconWrapper}>
-              <PlayCircle color="#FFF" size={28} />
+            <View style={[styles.careerBannerIcon, { backgroundColor: themeColors.primary + '15' }]}>
+              <BriefcaseBusiness size={20} color={themeColors.primary} />
             </View>
-            <View style={styles.storyTextContent}>
-              <Text style={styles.storyTitle}>Como o Maza Funciona?</Text>
-              <Text style={[styles.storySubtitle, { color: isDark ? themeColors.textMuted : '#94A3B8' }]}>Toque para ver a nossa story</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.careerBannerTitle, { color: themeColors.text }]}>Como evoluiu profissionalmente?</Text>
+              <Text style={[styles.careerBannerText, { color: themeColors.textMuted }]}>Acompanhamento de {careerDueMilestone} dias · leva menos de 1 minuto</Text>
             </View>
-            <ChevronRight color="#CBD5E1" size={24} />
+            <ChevronRight size={18} color={themeColors.primary} />
           </TouchableOpacity>
-        )}
-
-
+        ) : null}
 
         {loading ? (
           <ActivityIndicator color={themeColors.primary} style={{ marginTop: 40 }} />
@@ -311,7 +400,7 @@ export default function HomeScreen({ navigation }: any) {
                     {completed && (
                       <Text style={styles.completedHint}>
                         <Ionicons name="checkmark-circle" size={11} color="#22C55E" /> Concluído
-                        {impactPercent !== null ? ` • ${impactPercent}% impacto` : ''}
+                        {impactPercent !== null ? ` • ${impactPercent}% melhoria` : ''}
                       </Text>
                     )}
                     {!locked && !completed && progress > 0 && (
@@ -371,6 +460,7 @@ export default function HomeScreen({ navigation }: any) {
         </View>
 
         <View style={{ height: 40 }} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -378,14 +468,40 @@ export default function HomeScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  webScrollContent: { width: '100%', maxWidth: 1040, alignSelf: 'center', paddingVertical: 24 },
+  webPage: { width: '100%', maxWidth: 1100, alignSelf: 'center', paddingTop: 8 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 24, paddingBottom: 10 },
   greeting: { fontSize: 16, color: colors.textMuted },
   greetingBold: { fontSize: 22, color: colors.text, fontWeight: 'bold' },
   notificationBtn: { backgroundColor: colors.white, padding: 12, borderRadius: 20, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
-  gamificationRow: { flexDirection: 'row', paddingHorizontal: 24, gap: 16, marginBottom: 24, marginTop: 12 },
-  streakCard: { flex: 1, backgroundColor: colors.white, borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
-  pointsCard: { flex: 1, backgroundColor: colors.white, borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
+  careerBanner: { marginHorizontal: 20, marginBottom: 16, borderWidth: 1, borderRadius: 14, padding: 13, flexDirection: 'row', alignItems: 'center', gap: 11 },
+  careerBannerIcon: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  careerBannerTitle: { fontSize: 14, fontWeight: '700', marginBottom: 3 },
+  careerBannerText: { fontSize: 11.5, lineHeight: 16 },
+  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 24, gap: 12, marginBottom: 24, marginTop: 12 },
+  metricCard: {
+    flexGrow: 1,
+    flexBasis: '47%',
+    minWidth: 138,
+    backgroundColor: colors.white,
+    borderRadius: 18,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  webMetricCard: { flexBasis: '30%' },
+  metricIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  metricText: { flex: 1, minWidth: 0, marginLeft: 10 },
   statValue: { fontSize: 16, fontWeight: 'bold', color: colors.text },
   statLabel: { fontSize: 12, color: colors.textMuted },
 
@@ -433,50 +549,11 @@ const styles = StyleSheet.create({
     width: 126, minHeight: 164, backgroundColor: colors.white, borderRadius: 14, padding: 8, 
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 
   },
-  tabletCourseCard: { width: 220, minWidth: 180 },
+  tabletCourseCard: { width: '23.5%', minWidth: 150 },
   cardImg: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#F1F5F9', borderRadius: 10, marginBottom: 9, position: 'relative', overflow: 'hidden' },
   cardCat: { width: '100%', flexShrink: 1, fontSize: 10, fontWeight: 'bold', color: colors.primary, marginBottom: 4, textTransform: 'uppercase' },
   horizontalCourseTitle: { fontSize: 12, fontWeight: '700', color: colors.text, marginBottom: 4, lineHeight: 16, minHeight: 32 },
   instructorText: { fontSize: 11, color: colors.textMuted },
-
-  storyCard: {
-    backgroundColor: '#1E293B',
-    marginHorizontal: 20,
-    marginBottom: 20,
-    padding: 16,
-    borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  storyIconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-    borderWidth: 2,
-    borderColor: '#3B82F6',
-  },
-  storyTextContent: {
-    flex: 1,
-  },
-  storyTitle: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  storySubtitle: {
-    color: '#94A3B8',
-    fontSize: 13,
-  },
 
   // Jobs Promo Card
   jobsPromoCard: {
@@ -544,7 +621,7 @@ const styles = StyleSheet.create({
   botPromoContent: { flex: 1, padding: 20 },
   botPromoTitle: { fontSize: 18, fontWeight: 'bold', color: '#1E293B', marginBottom: 6 },
   botPromoText: { fontSize: 13, color: '#475569', lineHeight: 18, marginBottom: 16 },
-  botPromoBtn: { backgroundColor: '#8B5CF6', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, alignSelf: 'flex-start' },
+  botPromoBtn: { backgroundColor: '#8B5CF6', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12, alignSelf: 'flex-start' },
   botPromoBtnText: { color: colors.white, fontWeight: 'bold', fontSize: 13 },
   botPromoIconContainer: { width: 100, justifyContent: 'center', alignItems: 'center', backgroundColor: '#EDE9FE', borderTopRightRadius: 20, borderBottomRightRadius: 20 },
 });

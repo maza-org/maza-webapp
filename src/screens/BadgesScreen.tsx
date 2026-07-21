@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Award, TrendingUp, Trophy, Lock, BookOpen, FileText } from 'lucide-react-native';
+import { Award, TrendingUp, Trophy, Lock, BookOpen, FileText, CalendarDays, Clock3, BriefcaseBusiness, ChevronRight } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 import { colors } from '../theme/colors';
 import CertificatePreview from '../components/CertificatePreview';
+import { useIsWideWeb } from '../utils/webViewport';
 
 // ── Palette of rich, dark card backgrounds (one per pathway) ─────────────────
 const CARD_PALETTE = [
@@ -45,9 +46,25 @@ function getPathwayCardColors(pathwayId: string, pathwayColor?: string | null) {
   };
 }
 
+function formatMetricNumber(value: unknown) {
+  return Number(value ?? 0).toLocaleString('pt-MZ', {
+    maximumFractionDigits: 1,
+  });
+}
+
+function formatMinutesPerDay(minutes: number) {
+  if (!Number.isFinite(minutes) || minutes <= 0) return '0 min';
+  if (minutes < 60) return `${Math.round(minutes)} min`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = Math.round(minutes % 60);
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+}
+
 export default function BadgesScreen({ navigation }: any) {
   const { colors: themeColors, isDark } = useTheme();
   const { user, updateUser } = useAuth();
+  const isWideWeb = useIsWideWeb(900);
   const [pathway, setPathway] = useState<any>(null);
   const [allPathways, setAllPathways] = useState<any[]>([]);
   const [completedPathways, setCompletedPathways] = useState<any[]>([]);
@@ -58,24 +75,31 @@ export default function BadgesScreen({ navigation }: any) {
   const [startingAssessment, setStartingAssessment] = useState(false);
   const [certificates, setCertificates] = useState<any[]>([]);
   const [selectedCertificate, setSelectedCertificate] = useState<any | null>(null);
+  const [careerSummary, setCareerSummary] = useState<any>(null);
 
   const fetchPathwayData = useCallback(async () => {
     try {
-      const [myRes, allRes, completedRes, certificatesRes] = await Promise.all([
+      const [meRes, myRes, allRes, completedRes, certificatesRes, careerRes] = await Promise.all([
+        api.get('/auth/me').catch(() => null),
         api.get('/pathways/my').catch(() => ({ data: { pathway: null } })),
         api.get('/pathways'),
         api.get('/pathways/completed').catch(() => ({ data: [] })),
         api.get('/certificates/my').catch(() => ({ data: [] })),
+        api.get('/career-outcomes/me').catch(() => ({ data: null })),
       ]);
+      if (meRes?.data && updateUser) {
+        await updateUser(meRes.data);
+      }
       setPathway(myRes.data?.pathway);
       setAllPathways(allRes.data || []);
       setCompletedPathways(completedRes.data || []);
       setCertificates(certificatesRes.data || []);
+      setCareerSummary(careerRes.data ?? null);
     } catch (e) {
       console.log('Error fetching pathway in Gamification:', e);
     }
     setLoading(false);
-  }, []);
+  }, [updateUser]);
 
   useFocusEffect(
     useCallback(() => {
@@ -84,14 +108,71 @@ export default function BadgesScreen({ navigation }: any) {
   );
 
   const profile = user?.profile;
-  const mazaImpact = user?.impact?.averageImpactPercent ?? 0;
+  const mazaImpact = Math.round(Number(user?.impact?.averageImpactPercent ?? 0));
   const points = profile?.totalPoints ?? 0;
   const courses = pathway?.courses ?? [];
   const isCurrentCompleted = courses.length > 0 && courses.every((pc: any) => pc.isCompleted && pc.progress >= 100);
+  const progressFallback = user?.enrollments?.length
+    ? user.enrollments.reduce((sum, enrollment) => sum + Number(enrollment.progress ?? 0), 0) / user.enrollments.length
+    : courses.length
+    ? courses.reduce((sum: number, pc: any) => sum + Number(pc.progress ?? 0), 0) / courses.length
+    : 0;
+  const totalDaysPlayed = Number(user?.monitoring?.totalDaysPlayed ?? 0);
+  const minutesInsideApp = Number(user?.monitoring?.minutesInsideApp ?? 0);
+  const minutesPerActiveDay = totalDaysPlayed > 0 ? minutesInsideApp / totalDaysPlayed : 0;
+  const completionCount = Number(user?.monitoring?.completion ?? user?.monitoring?.completedCertificates ?? certificates.length ?? 0);
+  const progressAverage = Number(user?.monitoring?.progress ?? progressFallback);
+  const careerOutcomes = careerSummary?.outcomes ?? [];
+  const careerCounts = {
+    internships: careerOutcomes.filter((item: any) => item.type === 'INTERNSHIP').length,
+    employment: careerOutcomes.filter((item: any) => item.type === 'EMPLOYMENT').length,
+    selfEmployment: careerOutcomes.filter((item: any) => item.type === 'SELF_EMPLOYMENT').length,
+  };
 
-  const numCompleted = completedPathways.length + (isCurrentCompleted ? 1 : 0);
-  const ranking = numCompleted >= 2 ? 'Colosso' : numCompleted === 1 ? 'Maza' : 'Calouro';
-  const rankingColor = numCompleted >= 2 ? '#F59E0B' : numCompleted === 1 ? '#94A3B8' : '#D97706'; 
+  const achievementStats = [
+    {
+      label: 'Melhoria',
+      value: `${mazaImpact}%`,
+      icon: TrendingUp,
+      color: themeColors.success,
+      bg: isDark ? '#064E3B' : '#DCFCE7',
+    },
+    {
+      label: 'Pontos',
+      value: formatMetricNumber(points),
+      icon: Trophy,
+      color: themeColors.secondary,
+      bg: isDark ? '#713F12' : '#FEF3C7',
+    },
+    {
+      label: totalDaysPlayed === 1 ? 'Dia ativo' : 'Dias ativos',
+      value: formatMetricNumber(totalDaysPlayed),
+      icon: CalendarDays,
+      color: '#2563EB',
+      bg: isDark ? '#1E3A8A' : '#DBEAFE',
+    },
+    {
+      label: 'Min./dia',
+      value: formatMinutesPerDay(minutesPerActiveDay),
+      icon: Clock3,
+      color: '#0EA5E9',
+      bg: isDark ? '#164E63' : '#E0F2FE',
+    },
+    {
+      label: completionCount === 1 ? 'Certificado' : 'Certificados',
+      value: formatMetricNumber(completionCount),
+      icon: Award,
+      color: '#D97706',
+      bg: isDark ? '#78350F' : '#FEF3C7',
+    },
+    {
+      label: 'Progresso',
+      value: `${Math.round(progressAverage)}%`,
+      icon: BookOpen,
+      color: '#7C3AED',
+      bg: isDark ? '#4C1D95' : '#EDE9FE',
+    },
+  ];
 
   const availablePathways = allPathways.filter((p) => 
     p.id !== pathway?.id && !completedPathways.some(cp => cp.id === p.id)
@@ -116,29 +197,25 @@ export default function BadgesScreen({ navigation }: any) {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={isWideWeb ? styles.webPage : undefined}>
         {/* Header Hero */}
         <View style={[styles.header, { backgroundColor: themeColors.primary }]}>
           <Text style={[styles.headerTitle, { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit>As Suas Conquistas e Jornadas</Text>
-          <Text style={[styles.headerSub, { color: 'rgba(255,255,255,0.8)' }]} numberOfLines={1} adjustsFontSizeToFit>Acompanhe o seu progresso e alcance novos níveis!</Text>
+          <Text style={[styles.headerSub, { color: 'rgba(255,255,255,0.8)' }]} numberOfLines={1} adjustsFontSizeToFit>Acompanhe o progresso das suas jornadas.</Text>
           
           <View style={[styles.statsCard, { backgroundColor: themeColors.card }]}>
-            <View style={styles.statCol}>
-              <TrendingUp color={themeColors.success} size={32} />
-              <Text style={[styles.statValue, { color: themeColors.text }]}>{mazaImpact}%</Text>
-              <Text style={[styles.statLabel, { color: themeColors.textMuted }]}>Impactado</Text>
-            </View>
-            <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
-            <View style={styles.statCol}>
-              <Award color={themeColors.secondary} size={32} />
-              <Text style={[styles.statValue, { color: themeColors.text }]}>{points}</Text>
-              <Text style={[styles.statLabel, { color: themeColors.textMuted }]}>Pontos</Text>
-            </View>
-            <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
-            <View style={styles.statCol}>
-              <Trophy color={rankingColor} size={32} />
-              <Text style={[styles.statValue, { color: themeColors.text }]}>{ranking}</Text>
-              <Text style={[styles.statLabel, { color: themeColors.textMuted }]}>Nível</Text>
-            </View>
+            {achievementStats.map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <View key={stat.label} style={styles.statCol}>
+                  <View style={[styles.statIcon, { backgroundColor: stat.bg }]}>
+                    <Icon color={stat.color} size={18} />
+                  </View>
+                  <Text style={[styles.statValue, { color: themeColors.text }]} numberOfLines={1} adjustsFontSizeToFit>{stat.value}</Text>
+                  <Text style={[styles.statLabel, { color: themeColors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>{stat.label}</Text>
+                </View>
+              );
+            })}
           </View>
         </View>
 
@@ -165,11 +242,13 @@ export default function BadgesScreen({ navigation }: any) {
                     <View style={[styles.completedCardAccent, { backgroundColor: isCurrentCompleted ? '#22C55E' : cardColors.accent }]} />
 
                     {/* Header row */}
-                    <View style={styles.completedCardHeader}>
+                    <View style={[styles.completedCardHeader, courses.length === 0 && styles.completedCardHeaderEmpty]}>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.completedCardTitle} numberOfLines={2}>{pathway.name}</Text>
                         <Text style={styles.completedCardMeta}>
-                          {completedCount}/{courses.length} curso{courses.length !== 1 ? 's' : ''} concluído{completedCount !== 1 ? 's' : ''}
+                          {courses.length > 0
+                            ? `${completedCount}/${courses.length} curso${courses.length !== 1 ? 's' : ''} concluído${completedCount !== 1 ? 's' : ''}`
+                            : 'Cursos em preparação'}
                         </Text>
                       </View>
                       {isCurrentCompleted ? (
@@ -178,7 +257,7 @@ export default function BadgesScreen({ navigation }: any) {
                         </View>
                       ) : (
                         <View style={[styles.completedBadge, { backgroundColor: cardColors.accent }]}>
-                          <Text style={styles.completedBadgeText}>Em curso</Text>
+                          <Text style={styles.completedBadgeText}>{courses.length > 0 ? 'Em curso' : 'Por iniciar'}</Text>
                         </View>
                       )}
                     </View>
@@ -197,8 +276,10 @@ export default function BadgesScreen({ navigation }: any) {
                       </TouchableOpacity>
                     )}
 
+                    {courses.length > 0 && (
+                      <>
                     {/* Node progress map */}
-                    <View style={[styles.pathMap, { marginVertical: 16 }]}>
+                    <View style={[styles.pathMap, { marginVertical: 14 }]}>
                       {courses.slice(0, 5).map((pc: any, idx: number, arr: any[]) => {
                         const isCompleted = pc.isCompleted && pc.progress >= 100;
                         const isLocked = pc.isLocked;
@@ -257,13 +338,15 @@ export default function BadgesScreen({ navigation }: any) {
                               {pc.course?.title || 'Curso'}
                             </Text>
                             {courseImpact !== null && courseImpact !== undefined && (
-                              <Text style={styles.courseImpactBadge}>{courseImpact}% impacto</Text>
+                              <Text style={styles.courseImpactBadge}>{courseImpact}% melhoria</Text>
                             )}
                             {!isLocked && <Text style={styles.completedCourseArrow}>›</Text>}
                           </TouchableOpacity>
                         );
                       })}
                     </View>
+                      </>
+                    )}
                   </View>
                 );
               })()}
@@ -360,7 +443,7 @@ export default function BadgesScreen({ navigation }: any) {
                           {pc.course?.title || 'Curso'}
                         </Text>
                         {courseImpact !== null && courseImpact !== undefined && (
-                          <Text style={styles.courseImpactBadge}>{courseImpact}% impacto</Text>
+                          <Text style={styles.courseImpactBadge}>{courseImpact}% melhoria</Text>
                         )}
                         <Text style={styles.completedCourseArrow}>›</Text>
                       </TouchableOpacity>
@@ -405,6 +488,56 @@ export default function BadgesScreen({ navigation }: any) {
           </View>
         )}
 
+        <View style={styles.section}>
+          <View style={styles.careerSectionHeader}>
+            <Text style={[styles.sectionTitle, styles.careerSectionTitle, { color: themeColors.text }]}>Resultados Profissionais</Text>
+            <TouchableOpacity style={styles.careerHeaderAction} onPress={() => navigation.navigate('CareerOutcomes')}>
+              <Text style={[styles.careerHeaderActionText, { color: themeColors.primary }]}>Gerir</Text>
+              <ChevronRight size={15} color={themeColors.primary} />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.careerCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('CareerOutcomes')}
+          >
+            <View style={styles.careerCardHeader}>
+              <View style={[styles.careerIcon, { backgroundColor: `${themeColors.primary}18` }]}>
+                <BriefcaseBusiness size={22} color={themeColors.primary} />
+              </View>
+              <View style={styles.careerCardCopy}>
+                <Text style={[styles.careerCardTitle, { color: themeColors.text }]}>
+                  {careerOutcomes.length > 0
+                    ? `${careerOutcomes.length} resultado${careerOutcomes.length === 1 ? '' : 's'} registado${careerOutcomes.length === 1 ? '' : 's'}`
+                    : 'Acompanhe a sua evolução profissional'}
+                </Text>
+                <Text style={[styles.careerCardSubtitle, { color: themeColors.textMuted }]}>
+                  {careerSummary?.dueMilestone
+                    ? `Acompanhamento de ${careerSummary.dueMilestone} dias disponível`
+                    : careerOutcomes.length > 0
+                      ? 'Resultados alcançados depois da formação MAZA'
+                      : 'Registe um estágio, emprego ou trabalho por conta própria.'}
+                </Text>
+              </View>
+              <ChevronRight size={19} color={themeColors.textMuted} />
+            </View>
+
+            <View style={[styles.careerMetrics, { borderTopColor: themeColors.border }]}>
+              {[
+                { label: careerCounts.internships === 1 ? 'Estágio' : 'Estágios', value: careerCounts.internships },
+                { label: careerCounts.employment === 1 ? 'Emprego' : 'Empregos', value: careerCounts.employment },
+                { label: 'Conta própria', value: careerCounts.selfEmployment },
+              ].map((item, index) => (
+                <View key={item.label} style={[styles.careerMetric, index > 0 && { borderLeftColor: themeColors.border, borderLeftWidth: 1 }]}>
+                  <Text style={[styles.careerMetricValue, { color: themeColors.text }]}>{item.value}</Text>
+                  <Text style={[styles.careerMetricLabel, { color: themeColors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>{item.label}</Text>
+                </View>
+              ))}
+            </View>
+          </TouchableOpacity>
+        </View>
+
         {/* Other Pathways */}
         {availablePathways.length > 0 && (
           <View style={styles.section}>
@@ -431,6 +564,7 @@ export default function BadgesScreen({ navigation }: any) {
         )}
         
         <View style={{ height: 40 }} />
+        </View>
       </ScrollView>
 
       {/* Custom Unlock Modal */}
@@ -510,21 +644,36 @@ export default function BadgesScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { padding: 24, paddingTop: 60, paddingBottom: 90 },
-  headerTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 6 },
-  headerSub: { fontSize: 14, marginBottom: 24 },
-  statsCard: { borderRadius: 20, padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 20, elevation: 10, position: 'absolute', bottom: -40, left: 24, right: 24 },
-  statCol: { alignItems: 'center', flex: 1 },
-  statValue: { fontSize: 18, fontWeight: 'bold', marginTop: 8 },
-  statLabel: { fontSize: 12, marginTop: 4 },
-  divider: { width: 1, height: 40 },
-  section: { padding: 24, paddingTop: 20 },
-  firstSection: { padding: 24, paddingTop: 60 },
-  sectionTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
+  webPage: { width: '100%', maxWidth: 1040, alignSelf: 'center', paddingTop: 8 },
+  header: { paddingHorizontal: 24, paddingTop: 44, paddingBottom: 20 },
+  headerTitle: { fontSize: 21, fontWeight: '700', marginBottom: 5 },
+  headerSub: { fontSize: 13, lineHeight: 18 },
+  statsCard: {
+    borderRadius: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'stretch',
+    gap: 8,
+    marginTop: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  statCol: { alignItems: 'center', justifyContent: 'center', width: '30%', minHeight: 64, paddingVertical: 2 },
+  statIcon: { width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  statValue: { fontSize: 15, fontWeight: '700', maxWidth: '100%' },
+  statLabel: { fontSize: 10, fontWeight: '400', marginTop: 2, maxWidth: '100%' },
+  section: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 4 },
+  firstSection: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 8 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', marginBottom: 12 },
   emptyPathwaySection: {
     paddingHorizontal: 24,
-    paddingTop: 76,
-    paddingBottom: 18,
+    paddingTop: 20,
+    paddingBottom: 8,
   },
   emptyPathwayCard: {
     borderRadius: 20,
@@ -570,15 +719,14 @@ const styles = StyleSheet.create({
   },
   certificatesGrid: { gap: 12 },
   certificateCard: {
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 14,
+    padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
   certificateIconWrap: {
     width: 52,
@@ -590,10 +738,24 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   certificateBody: { flex: 1, marginRight: 8 },
-  certificateTitle: { fontSize: 14, fontWeight: 'bold', marginBottom: 4 },
+  certificateTitle: { fontSize: 14, fontWeight: '600', marginBottom: 4 },
   certificateMeta: { fontSize: 12, marginBottom: 2 },
   certificateId: { fontSize: 11, fontFamily: 'monospace' },
   certificateArrow: { fontSize: 22, fontWeight: '300' },
+  careerSectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  careerSectionTitle: { marginBottom: 0 },
+  careerHeaderAction: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: 32, paddingLeft: 10 },
+  careerHeaderActionText: { fontSize: 12, fontWeight: '700' },
+  careerCard: { borderWidth: 1, borderRadius: 16, overflow: 'hidden' },
+  careerCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
+  careerIcon: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  careerCardCopy: { flex: 1, minWidth: 0 },
+  careerCardTitle: { fontSize: 14, lineHeight: 19, fontWeight: '700' },
+  careerCardSubtitle: { fontSize: 11, lineHeight: 16, marginTop: 3 },
+  careerMetrics: { flexDirection: 'row', borderTopWidth: 1, paddingVertical: 11 },
+  careerMetric: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
+  careerMetricValue: { fontSize: 16, fontWeight: '700' },
+  careerMetricLabel: { fontSize: 10, fontWeight: '400', marginTop: 2, maxWidth: '100%' },
   pathCard: { borderRadius: 20, padding: 24 },
   pathTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 24, textAlign: 'center' },
   pathMap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
@@ -616,7 +778,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 4,
     alignSelf: 'flex-start',
   },
-  completedBadgeText: { color: '#fff', fontSize: 11, fontWeight: '800', letterSpacing: 0.3 },
+  completedBadgeText: { color: '#fff', fontSize: 11, fontWeight: '700', letterSpacing: 0 },
   continueJourneyBtn: {
     marginHorizontal: 20,
     marginTop: 14,
@@ -628,19 +790,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  continueJourneyText: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  continueJourneyText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 
   // ── Completed pathway card (premium redesign) ──
   completedPathCard: {
-    borderRadius: 20,
+    borderRadius: 16,
     backgroundColor: '#111827',
-    marginBottom: 16,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
   },
   cardWatermark: {
     position: 'absolute',
@@ -659,11 +820,12 @@ const styles = StyleSheet.create({
   completedCardHeader: {
     flexDirection: 'row', alignItems: 'flex-start',
     justifyContent: 'space-between',
-    padding: 20, paddingBottom: 0, gap: 12,
+    padding: 16, paddingBottom: 0, gap: 12,
   },
+  completedCardHeaderEmpty: { paddingBottom: 16 },
   completedCardTitle: {
-    fontSize: 17, fontWeight: '800', color: '#FFFFFF',
-    lineHeight: 24, marginBottom: 4, flex: 1,
+    fontSize: 16, fontWeight: '700', color: '#FFFFFF',
+    lineHeight: 22, marginBottom: 3, flex: 1,
   },
   completedCardMeta: {
     fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: '500',

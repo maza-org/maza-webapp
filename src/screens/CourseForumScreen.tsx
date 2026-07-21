@@ -44,6 +44,7 @@ export default function CourseForumScreen({ route, navigation }: any) {
   const [text, setText] = useState('');
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const sendingRef = useRef(false);
 
   // Rating state
   const [myRating, setMyRating] = useState<number | null>(null);
@@ -90,21 +91,25 @@ export default function CourseForumScreen({ route, navigation }: any) {
 
   const handleSend = async () => {
     if (!text.trim()) return;
+    if (sendingRef.current) return;
+    sendingRef.current = true;
     setSending(true);
+    const content = text.trim();
     try {
       if (editingPostId) {
-        const res = await api.put(`/forum/posts/${editingPostId}`, { content: text.trim() });
+        const res = await api.put(`/forum/posts/${editingPostId}`, { content });
         setPosts(prev => prev.map(p => p.id === editingPostId ? res.data : p));
         setEditingPostId(null);
       } else {
-        const res = await api.post(`/forum/courses/${courseId}/posts`, { content: text.trim() });
-        setPosts(prev => [...prev, res.data]);
+        const res = await api.post(`/forum/courses/${courseId}/posts`, { content });
+        setPosts(prev => prev.some(p => p.id === res.data.id) ? prev : [...prev, res.data]);
         setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 200);
       }
       setText('');
     } catch {
       Alert.alert('Erro', 'Não foi possível guardar a mensagem.');
     }
+    sendingRef.current = false;
     setSending(false);
   };
 
@@ -131,14 +136,16 @@ export default function CourseForumScreen({ route, navigation }: any) {
 
   const handleRate = async (star: number) => {
     if (submittingRating) return;
+    const previousRating = myRating;
     setMyRating(star); // optimistic update
     setSubmittingRating(true);
     try {
       const res = await api.post(`/forum/courses/${courseId}/rating`, { rating: Number(star) });
-      setAvgRating(res.data.newAverage ?? star);
-      await loadRating(); // sync with server
+      setAvgRating(res.data.average ?? res.data.newAverage ?? star);
+      setRatingCount(res.data.count ?? ratingCount);
+      setMyRating(res.data.myRating ?? star);
     } catch {
-      setMyRating(null); // revert on error
+      setMyRating(previousRating); // revert on error
       Alert.alert('Erro', 'Não foi possível enviar a avaliação. Tente de novo.');
     }
     setSubmittingRating(false);

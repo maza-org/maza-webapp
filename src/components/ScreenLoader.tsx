@@ -28,27 +28,18 @@ export default function ScreenLoader({ color, label }: Props) {
     }).start();
   }, []);
 
-  // Subtle pulse on the ring behind the spinner
-  const scale = useRef(new Animated.Value(1)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(scale, { toValue: 1.18, duration: 900, useNativeDriver: true }),
-        Animated.timing(scale, { toValue: 1,    duration: 900, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-
   return (
-    <Animated.View style={[styles.root, { opacity }]}>
-      {/* Pulsing halo */}
-      <Animated.View
+    <Animated.View
+      style={[styles.root, { backgroundColor: themeColors.background, opacity }]}
+    >
+      <View
         style={[
-          styles.halo,
-          { borderColor: spinnerColor, transform: [{ scale }] },
+          styles.spinnerContainer,
+          { backgroundColor: themeColors.card, borderColor: themeColors.border },
         ]}
-      />
-      <ActivityIndicator size="large" color={spinnerColor} />
+      >
+        <ActivityIndicator size="large" color={spinnerColor} />
+      </View>
       {!!label && (
         <Text style={[styles.label, { color: themeColors.textMuted }]}>{label}</Text>
       )}
@@ -63,18 +54,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: 240,
   },
-  halo: {
-    position: 'absolute',
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 1.5,
-    opacity: 0.2,
+  spinnerContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   label: {
-    marginTop: 16,
+    marginTop: 12,
     fontSize: 14,
-    fontWeight: '500',
-    letterSpacing: 0.3,
+    fontWeight: '600',
+    letterSpacing: 0,
+    lineHeight: 20,
   },
 });

@@ -1,6 +1,6 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { MAZA_LOGO_B64, UNICEF_LOGO_B64 } from '../assets/certificateAssets';
 import { MAZA_HORIZONTAL_LOGO_B64 } from '../assets/certificateExtraAssets';
 
@@ -53,8 +53,8 @@ export function buildCertificateHTML(data: CertificateData): string {
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html, body {
-    width: 1123px;
-    height: 794px;
+    width: 297mm;
+    height: 210mm;
     overflow: hidden;
     background: #fff;
     font-family: Arial, Helvetica, sans-serif;
@@ -68,8 +68,8 @@ export function buildCertificateHTML(data: CertificateData): string {
 
   .certificate {
     position: relative;
-    width: 1123px;
-    height: 794px;
+    width: 297mm;
+    height: 210mm;
     background: #fff;
     border: 12px solid #5b9bd5;
     overflow: hidden;
@@ -196,6 +196,19 @@ export function buildCertificateHTML(data: CertificateData): string {
     text-transform: uppercase;
   }
 
+  @media print {
+    html, body, .certificate {
+      width: 297mm !important;
+      height: 210mm !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .certificate {
+      position: fixed;
+      inset: 0;
+    }
+  }
+
   @media screen and (max-width: 900px) {
     body:not(.preview-mode) { width: 100vw; height: calc(100vw * 0.707); padding: 0; background: #fff; }
     body:not(.preview-mode) .certificate {
@@ -240,12 +253,20 @@ export function buildCertificateHTML(data: CertificateData): string {
 
 export async function downloadCertificatePDF(data: CertificateData): Promise<void> {
   try {
+    if (Platform.OS === 'web') {
+      const webGenerator = await import('./certificateGenerator.web');
+      await webGenerator.downloadCertificatePDF(data);
+      return;
+    }
+
     const html = buildCertificateHTML(data);
 
     const { uri } = await Print.printToFileAsync({
       html,
-      width: 1123,
-      height: 794,
+      // expo-print expects physical page dimensions in points (72 dpi), not CSS pixels.
+      // A4 landscape is 297 × 210 mm = approximately 842 × 595 points.
+      width: 842,
+      height: 595,
       base64: false,
     });
 

@@ -2,13 +2,13 @@
   "expo": {
     "name": "MAZA",
     "slug": "maza",
-    "version": "4.4.7",
+    "version": "4.4.8",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/maza-splash-logo.png",
+      "image": "./assets/maza-splash-android-safe-wordmark.png",
       "resizeMode": "contain",
       "backgroundColor": "#1EAAF1"
     },
@@ -17,16 +17,24 @@
       "bundleIdentifier": "org.maza.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "buildNumber": "4.4.13"
     },
     "android": {
       "package": "org.maza.app",
+      "versionCode": 91,
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#29B6F6"
       },
       "edgeToEdgeEnabled": true,
-      "softwareKeyboardLayoutMode": "resize",
+      "softwareKeyboardLayoutMode": "pan",
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -36,13 +44,14 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/maza-splash-logo.png",
-          "imageWidth": 260,
+          "image": "./assets/maza-splash-android-safe-wordmark.png",
+          "imageWidth": 176,
           "resizeMode": "contain",
           "backgroundColor": "#1EAAF1"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {

@@ -2,14 +2,14 @@ import React from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 
-const APP_VERSION = '4.4.6';
+const APP_VERSION = '4.4.8';
 
 export default function SplashLoadingScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.center}>
         <Image
-          source={require('../../assets/maza-splash-logo.png')}
+          source={require('../../assets/maza-splash-vertical-wordmark.png')}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -33,8 +33,8 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -24 }],
   },
   logo: {
-    width: 178,
-    height: 238,
+    width: 206,
+    height: 206,
   },
   version: {
     marginTop: 18,

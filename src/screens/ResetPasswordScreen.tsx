@@ -6,7 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import api, { mapAuthError } from '../services/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme/colors';
 
 export default function ResetPasswordScreen() {
@@ -36,8 +35,8 @@ export default function ResetPasswordScreen() {
       setErrorMsg('Introduza a nova senha.');
       return;
     }
-    if (password.length < 6) {
-      setErrorMsg('A senha deve ter pelo menos 6 caracteres.');
+    if (password.length < 8) {
+      setErrorMsg('A senha deve ter pelo menos 8 caracteres.');
       return;
     }
     if (password !== passwordConfirmation) {
@@ -160,28 +159,15 @@ export default function ResetPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 24,
-    paddingTop: 40,
-    width: '100%',
-    ...(Platform.OS === 'web'
-      ? {
-          maxWidth: 520,
-          alignSelf: 'center',
-          justifyContent: 'center',
-          paddingVertical: 36,
-        }
-      : null),
-  },
+  container: { flexGrow: 1, padding: 24, paddingTop: 40 },
   back: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0F0F0', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
   logo: { width: 160, height: 70, marginBottom: 32, alignSelf: 'flex-start' },
   title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8 },
   subtitle: { fontSize: 14, marginBottom: 32, lineHeight: 22 },
   inputContainer: { marginBottom: 20 },
   label: { fontSize: 13, marginBottom: 8, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5 },
-  input: { borderRadius: 12, padding: 16, fontSize: 16, borderWidth: 1, borderColor: '#E6EAF0' },
-  inputWrapper: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, paddingRight: 5, borderWidth: 1, borderColor: '#E6EAF0' },
+  input: { borderRadius: 12, padding: 16, fontSize: 16 },
+  inputWrapper: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, paddingRight: 5 },
   inputInner: { flex: 1, padding: 16, fontSize: 16 },
   button: {
     backgroundColor: colors.primary,

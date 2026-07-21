@@ -2,7 +2,7 @@
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
   ActivityIndicator, Alert, ScrollView, Modal, FlatList,
-  StatusBar, Image, Platform
+  StatusBar, Image
 } from 'react-native';
 import { useEffect } from 'react';
 import { colors } from '../theme/colors';
@@ -14,6 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { bottomSafeSpace } from '../utils/safeArea';
 import { MOZAMBIQUE_BI_MESSAGE, isValidMozambiqueBI, normalizeMozambiqueBI } from '../utils/mozambiqueBi';
 import { MOZAMBIQUE_DISTRICTS_BY_PROVINCE } from '../data/mozambiqueDistricts';
+import { useIsWideWeb } from '../utils/webViewport';
 
 const OCCUPATIONS = [
   'Empregado Doméstico', 'Funcionário Público', 'Contador', 'Engenheiro', 'Advogado',
@@ -127,6 +128,7 @@ const Select = ({ label, value, required, onPress, disabled, error }: SelectProp
 
 export default function RegisterScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
+  const isWideWeb = useIsWideWeb(900);
   const [form, setForm] = useState({
     username: '', email: '', phone: '', password: '', name: '',
     idDocument: '', dob: '', gender: '', province: '', district: '',
@@ -436,7 +438,7 @@ export default function RegisterScreen({ navigation }: any) {
       <StatusBar barStyle="dark-content" backgroundColor="#F5F6FA" />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scroll, { paddingBottom: bottomSafeSpace(insets.bottom, 20) }]}
+        contentContainerStyle={[styles.scroll, isWideWeb && styles.webScroll, { paddingBottom: bottomSafeSpace(insets.bottom, 20) }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
@@ -456,7 +458,7 @@ export default function RegisterScreen({ navigation }: any) {
         </View>
 
         {/* Registration fields */}
-        <View style={styles.card}>
+        <View style={[styles.card, isWideWeb && styles.webCard]}>
           <Field label="Nome Completo" value={form.name} onChangeText={set('name')} onBlur={() => touchAndValidate('name')} error={fieldErrors.name} required />
           <Field label="Nome de utilizador" value={form.username} onChangeText={setUsername} onBlur={() => touchAndValidate('username')} error={fieldErrors.username} required />
           {usernameHelper ? <Text style={[styles.fieldHint, { color: usernameHelper.color }]}>{usernameHelper.text}</Text> : null}
@@ -495,7 +497,7 @@ export default function RegisterScreen({ navigation }: any) {
         ) : null}
 
         <TouchableOpacity
-          style={[styles.registerBtn, loading && { opacity: 0.7 }]}
+          style={[styles.registerBtn, isWideWeb && styles.webRegisterBtn, loading && { opacity: 0.7 }]}
           onPress={handleRegister}
           disabled={loading}
           activeOpacity={0.85}
@@ -583,18 +585,8 @@ export default function RegisterScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
-  scroll: {
-    paddingHorizontal: 24,
-    paddingTop: 28,
-    width: '100%',
-    ...(Platform.OS === 'web'
-      ? {
-          maxWidth: 720,
-          alignSelf: 'center',
-          paddingVertical: 36,
-        }
-      : null),
-  },
+  scroll: { paddingHorizontal: 24, paddingTop: 28 },
+  webScroll: { width: '100%', maxWidth: 760, alignSelf: 'center', paddingTop: 40 },
   logo: { width: 160, height: 70, marginBottom: 32, alignSelf: 'flex-start' },
 
   header: { paddingBottom: 14 },
@@ -607,6 +599,7 @@ const styles = StyleSheet.create({
   formIntro: { marginTop: 4, marginBottom: 2, fontSize: 14, lineHeight: 20, color: '#8A8A9A', fontWeight: '500' },
 
   card: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, paddingTop: 16, marginBottom: 14, borderWidth: 1, borderColor: '#F0F1F5' },
+  webCard: { borderRadius: 8, padding: 22 },
   cardHint: { fontSize: 12, color: '#A0A0B0', marginBottom: 12, marginTop: -4 },
 
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 18 },
@@ -637,6 +630,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary, paddingVertical: 17, borderRadius: 16, alignItems: 'center', marginTop: 8,
     shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 16, elevation: 8,
   },
+  webRegisterBtn: { borderRadius: 8, paddingVertical: 14, shadowOpacity: 0.18 },
   registerBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
   feedbackOverlay: {
     flex: 1,

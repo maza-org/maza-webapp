@@ -3,18 +3,21 @@
 ## Production Backend
 
 - API base URL: `https://backend.mazas.org/api`
-- Railway backend health: `https://backend.mazas.org/health`
-- Data source: Railway SQLite volume at `/data/dev.db`
+- Hetzner backend health: `https://backend.mazas.org/health`
+- Data source: Hetzner production backend/database
 
 ## Expo/EAS
 
-- Expo project: `@jkedsevene/maza`
-- EAS project ID: `3e6789ad-3ae3-434d-b809-66bb93251a3b`
+- Expo project: `@mazaapp4/maza`
+- EAS project ID: `09ce1481-f9c9-46fd-b8f6-80a03a7e7c26`
+- App Store Connect app ID: `6748351782`
 - Android package: `org.maza.app`
 - iOS bundle identifier: `org.maza.app`
-- App version: `4.4.6`
-- EAS remote iOS build number: `5`
-- EAS remote Android version code: `85`
+- App version: `4.4.8`
+- Latest Google Play Android production: `4.4.8 (versionCode 88)`
+- Next Android build configured locally: `4.4.8 (versionCode 89)`
+- Latest App Store Connect/TestFlight iOS build: `4.4.7 (4.4.9)`
+- Next iOS build configured locally: `4.4.8 (4.4.10)`
 
 ## QA Before Store Submission
 
@@ -22,11 +25,12 @@
 - Create account on iPhone/TestFlight.
 - Login with email/username and password.
 - Logout and confirm old sessions are cleared.
-- Confirm courses load from Railway.
+- Confirm courses load from Hetzner.
 - Confirm course details, modules, lessons, videos, audio, transcripts and completion.
 - Confirm the bot assessment recommends a pathway.
-- Confirm jobs/opportunities load from Railway.
+- Confirm jobs/opportunities load from Hetzner.
 - Confirm profile edit and password change.
+- Confirm minutes-inside-app tracking: stay logged in on the new build for at least 2 minutes, then confirm the dashboard increases after refresh.
 - Confirm push/email/SMS integrations that have production keys configured.
 
 ## Build Commands
@@ -40,15 +44,13 @@ npx eas-cli build --profile production --platform ios
 
 ## Latest Production Builds
 
-- Android AAB, versionCode 3: `https://expo.dev/artifacts/eas/bophpdbGxHW7bXf2mymE1p.aab`
-- iOS IPA, buildNumber 4: `https://expo.dev/artifacts/eas/azEvKby4bULXBB96MLfEG3.ipa`
-- Android build logs: `https://expo.dev/accounts/olexmaza/projects/maza/builds/541c1919-e7f8-40c8-98cf-02e124595d4f`
-- iOS build logs: `https://expo.dev/accounts/olexmaza/projects/maza/builds/4d9586d7-b0d7-4222-9539-80703507f6ba`
+- Build fresh Android and iOS artifacts for `4.4.8`; do not reuse Android `versionCode 88` or the listed iOS `4.4.7` artifacts if the release must include July activity/minutes tracking.
 
 ## Submit Blockers
 
 - Google Play upload needs a Google Service Account Key configured in EAS Submit or an interactive `eas submit` run.
-- App Store Connect upload needs `ascAppId` in `eas.json` or an interactive `eas submit` run.
+- Google Play already has Android `versionCode 88`, so the next Android upload must use `89` or higher.
+- App Store Connect upload may still need an interactive Apple session or API key, but `ascAppId` is configured in `eas.json`.
 
 ## Submit Commands
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, ActivityIndicator, Alert,
@@ -24,34 +24,35 @@ export default function QuizRenderer({
 }) {
   const insets = useSafeAreaInsets();
   const total = quiz.questions.length;
+  const initialTimeLeft = useMemo(
+    () => (quiz.timeLimit && quiz.timeLimit > 0 ? quiz.timeLimit : 15) * 60,
+    [quiz.timeLimit]
+  );
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [confirmed, setConfirmed] = useState<Record<string, boolean>>({});
   // Overall Quiz Timer
-  const [timeLeft, setTimeLeft] = useState((quiz.timeLimit && quiz.timeLimit > 0 ? quiz.timeLimit : 15) * 60);
+  const [timeLeft, setTimeLeft] = useState(initialTimeLeft);
   const [phase, setPhase] = useState<'quiz' | 'submitting' | 'done'>('quiz');
   const [result, setResult] = useState<any>(null);
   const timerRef = useRef<any>(null);
+  const answersRef = useRef<Record<string, string>>({});
+  const submittingRef = useRef(false);
   const currentQ = total > 0 ? quiz.questions[idx] : null;
 
   useEffect(() => {
-    if (phase !== 'quiz') {
-      clearInterval(timerRef.current);
-      return;
-    }
-    clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setTimeLeft((p) => {
-        if (p <= 1) { 
-          clearInterval(timerRef.current); 
-          submit(); // Time's up! Submit quiz
-          return 0; 
-        }
-        return p - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timerRef.current);
-  }, [phase]);
+    answersRef.current = answers;
+  }, [answers]);
+
+  useEffect(() => {
+    setIdx(0);
+    setAnswers({});
+    setConfirmed({});
+    setTimeLeft(initialTimeLeft);
+    setPhase('quiz');
+    setResult(null);
+    submittingRef.current = false;
+  }, [quiz.id, initialTimeLeft]);
 
   const shuffledOptions = React.useMemo(() => {
     if (!currentQ || currentQ.questionType !== 'ORDERING') return [];
@@ -79,11 +80,13 @@ export default function QuizRenderer({
     setConfirmed((p) => ({ ...p, [currentQ.id]: false }));
   };
 
-  const submit = async () => {
+  const submit = useCallback(async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     clearInterval(timerRef.current);
     setPhase('submitting');
     try {
-      const final: Record<string, string> = { ...answers };
+      const final: Record<string, string> = { ...answersRef.current };
       quiz.questions.forEach((q) => { if (!final[q.id]) final[q.id] = ''; });
       const res = await api.post(submitEndpoint ?? `/quizzes/${quiz.id}/submit`, {
         answers: quiz.questions.map((q) => ({ questionId: q.id, answerData: final[q.id] })),
@@ -98,9 +101,30 @@ export default function QuizRenderer({
           ? 'Não foi possível guardar a avaliação. Tente novamente.'
           : 'Não foi possível submeter o quiz.')
       );
+      submittingRef.current = false;
+      setTimeLeft((p) => (p <= 0 ? initialTimeLeft : p));
       setPhase('quiz');
     }
-  };
+  }, [initialTimeLeft, mode, quiz.id, quiz.questions, submitEndpoint]);
+
+  useEffect(() => {
+    if (phase !== 'quiz') {
+      clearInterval(timerRef.current);
+      return;
+    }
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setTimeLeft((p) => {
+        if (p <= 1) {
+          clearInterval(timerRef.current);
+          submit(); // Time's up! Submit quiz
+          return 0;
+        }
+        return p - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [phase, submit]);
 
   if (total === 0) return (
     <View style={s.center}><Text style={s.muted}>Quiz sem perguntas ainda.</Text></View>
@@ -130,7 +154,7 @@ export default function QuizRenderer({
             </Text>
             {impactValue !== null && impactValue !== undefined ? (
               <Text style={[s.scorePts, { marginTop: 10, color: '#047857', fontWeight: '800' }]}>
-                Impacto de aprendizagem: {impactValue}%
+                Melhoria de aprendizagem: {impactValue}%
               </Text>
             ) : null}
           </View>
@@ -186,7 +210,7 @@ export default function QuizRenderer({
         {result.passed
           ? <TouchableOpacity style={s.bigBtn} onPress={() => onComplete(result)}><Text style={s.bigBtnTxt}>Continuar</Text></TouchableOpacity>
           : <TouchableOpacity style={[s.bigBtn, { backgroundColor: '#64748B' }]} onPress={() => {
-              setIdx(0); setAnswers({}); setConfirmed({}); setPhase('quiz'); setResult(null);
+              setIdx(0); setAnswers({}); setConfirmed({}); setTimeLeft(initialTimeLeft); setPhase('quiz'); setResult(null); submittingRef.current = false;
             }}><Text style={s.bigBtnTxt}>Tentar Novamente</Text></TouchableOpacity>
         }
       </ScrollView>

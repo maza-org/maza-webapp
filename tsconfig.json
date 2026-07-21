@@ -4,8 +4,8 @@
     "strict": true
   },
   "exclude": [
-    "node_modules",
     "dist",
-    "web-build"
+    "web-build",
+    "node_modules"
   ]
 }

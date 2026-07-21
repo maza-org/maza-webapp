@@ -183,28 +183,31 @@ export default function BotAssessmentScreen({ navigation }: any) {
       } catch {}
       const safeUser = updatedUser ?? user;
 
+      if (safeUser) {
+        try {
+          await updateUser({
+            ...safeUser,
+            profile: {
+              totalPoints: safeUser.profile?.totalPoints ?? 0,
+              currentStreak: safeUser.profile?.currentStreak ?? 0,
+              assessmentDone: true,
+              botSessionId: sessionId ?? safeUser.profile?.botSessionId ?? null,
+            },
+          });
+        } catch (syncErr: any) {
+          console.warn('[BotComplete] Could not refresh local user after assignment', syncErr?.message ?? syncErr);
+        }
+      }
+
       navigation.reset({
         index: firstOpenCourse?.courseId ? 1 : 0,
         routes: [
-          { name: 'Main', params: { screen: 'Cursos' } },
+          { name: 'Main', params: { screen: firstOpenCourse?.courseId ? 'Cursos' : 'Conquistas' } },
           ...(firstOpenCourse?.courseId
             ? [{ name: 'CourseDetail', params: { courseId: firstOpenCourse.courseId, title: firstOpenCourse.course?.title, course: firstOpenCourse.course } }]
             : []),
         ],
       });
-
-      if (safeUser) {
-        await updateUser({
-          ...safeUser,
-          profile: {
-            totalPoints: safeUser.profile?.totalPoints ?? 0,
-            currentStreak: safeUser.profile?.currentStreak ?? 0,
-            rank: safeUser.profile?.rank ?? 'Calouro',
-            assessmentDone: true,
-            botSessionId: sessionId ?? safeUser.profile?.botSessionId ?? null,
-          },
-        });
-      }
     } catch (err: any) {
       console.error('[BotComplete]', err?.response?.data ?? err.message);
       addMessage('bot', 'Não consegui iniciar a jornada agora. Tente novamente.');

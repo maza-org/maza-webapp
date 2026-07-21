@@ -13,12 +13,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { CheckCircle, ArrowLeft } from 'lucide-react-native';
 import { Ionicons } from '@expo/vector-icons';
-import api, { API_BASE as _API_BASE, getPersistentCached } from '../services/api';
+import api, { API_BASE as _API_BASE, getPersistentCached, refreshPersistentCached } from '../services/api';
 import { cacheMediaInBackground, getCachedMediaUri } from '../utils/mediaCache';
 import NativePdf from '../components/NativePdf';
+import { useIsWideWeb } from '../utils/webViewport';
+import { queueOfflineRequest } from '../services/offlineQueue';
 
 const API_BASE = _API_BASE.replace('/api', '');
-const TRANSCRIPT_HIGHLIGHT_LEAD_SECONDS = 0.8;
+const TRANSCRIPT_HIGHLIGHT_OFFSET_SECONDS = 0;
+const PLAYBACK_RESET_GUARD_SECONDS = 8;
+const WEB_VERTICAL_PAN_STYLE = Platform.OS === 'web'
+  ? ({ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' } as any)
+  : null;
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
   VIDEO: 'Vídeo',
@@ -94,9 +100,6 @@ function getHtmlWebViewSource(htmlContent: string | null | undefined) {
   const isInlineHtml = /^(<!doctype\s+html|<html|<body|<div|<section|<main|<script|<style)/i.test(content);
   if (isInlineHtml) return { html: content };
   const resolved = resolveMediaUrl(content);
-  if (resolved && /^\/api\/media\/.+\.(html|htm)(?:[?#].*)?$/i.test(resolved)) {
-    return { uri: resolved };
-  }
   if (resolved && /\/uploads\/.+\.(html|htm)(?:[?#].*)?$/i.test(resolved)) {
     const uploadPath = resolved.replace(/^https?:\/\/[^/]+\/uploads\//i, '/uploads/');
     return { uri: `${API_BASE}/api/media/html/${uploadPath.replace(/^\//, '')}` };
@@ -145,6 +148,9 @@ type Lesson = {
   htmlContent?: string | null;
   textContent?: string | null;
   transcriptSourceUrl?: string | null;
+  transcriptSegments?: string | TranscriptSegment[] | null;
+  transcriptStatus?: 'NOT_REQUIRED' | 'PENDING' | 'PROCESSING' | 'READY' | 'FAILED';
+  transcriptError?: string | null;
   duration?: number | null;
   minDuration?: number | null;
   points?: number;
@@ -160,10 +166,9 @@ type TranscriptSegment = {
 
 function hasFullLessonPayload(lesson?: Lesson | null) {
   if (!lesson) return false;
-  if (lesson.contentType === 'VIDEO') return lesson.videoUrl !== undefined;
-  if (lesson.contentType === 'AUDIO') return lesson.audioUrl !== undefined;
+  if (lesson.contentType === 'VIDEO' || lesson.contentType === 'AUDIO') return false;
   if (lesson.contentType === 'PDF') return lesson.pdfUrl !== undefined;
-  if (lesson.contentType === 'HTML') return lesson.htmlContent !== undefined || lesson.textContent !== undefined;
+  if (lesson.contentType === 'HTML') return lesson.htmlContent !== undefined;
   if (lesson.contentType === 'TEXT') return lesson.textContent !== undefined;
   if (lesson.contentType === 'QUIZ') return lesson.quiz !== undefined;
   return true;
@@ -195,11 +200,99 @@ function cleanTranscriptText(text: string | null | undefined) {
   return cleaned;
 }
 
-function splitTranscriptIntoSegments(text: string, totalDuration: number): TranscriptSegment[] {
-  const cleanText = text.replace(/\s+/g, ' ').trim();
+function parseTranscriptTimestamp(value: string) {
+  const normalized = value.trim().replace(',', '.');
+  const parts = normalized.split(':').map((part) => Number(part));
+  if (parts.some((part) => !Number.isFinite(part))) return null;
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return null;
+}
+
+function parseTimestampedTranscript(text: string): TranscriptSegment[] {
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const cues: TranscriptSegment[] = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const rangeMatch = line.match(/^(\d{1,2}:\d{2}(?::\d{2})?(?:[,.]\d{1,3})?)\s*--?>\s*(\d{1,2}:\d{2}(?::\d{2})?(?:[,.]\d{1,3})?)$/);
+    if (rangeMatch) {
+      const start = parseTranscriptTimestamp(rangeMatch[1]);
+      const end = parseTranscriptTimestamp(rangeMatch[2]);
+      const textLines: string[] = [];
+      while (index + 1 < lines.length && !/^\d+$/.test(lines[index + 1]) && !/--?>/.test(lines[index + 1])) {
+        index += 1;
+        textLines.push(lines[index]);
+      }
+      if (start !== null && end !== null && end > start && textLines.length > 0) {
+        cues.push({ id: `cue-${cues.length}-${start.toFixed(2)}`, text: textLines.join(' '), start, end });
+      }
+      continue;
+    }
+
+    const inlineMatch = line.match(/^\[?(\d{1,2}:\d{2}(?::\d{2})?(?:[,.]\d{1,3})?)\]?\s*(.+)$/);
+    if (inlineMatch) {
+      const start = parseTranscriptTimestamp(inlineMatch[1]);
+      if (start !== null) {
+        cues.push({ id: `cue-${cues.length}-${start.toFixed(2)}`, text: inlineMatch[2].trim(), start, end: start + 4 });
+      }
+    }
+  }
+
+  if (cues.length === 0) return [];
+  return cues.map((cue, index) => ({
+    ...cue,
+    end: cues[index + 1] && cues[index + 1].start > cue.start
+      ? cues[index + 1].start
+      : cue.end,
+  }));
+}
+
+function parseStoredTranscriptSegments(value: Lesson['transcriptSegments']): TranscriptSegment[] {
+  let rawSegments: unknown = value;
+  if (typeof value === 'string') {
+    try {
+      rawSegments = JSON.parse(value);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(rawSegments)) return [];
+
+  return rawSegments
+    .map((segment, index) => {
+      if (!segment || typeof segment !== 'object') return null;
+      const source = segment as Record<string, unknown>;
+      const start = Number(source.start);
+      const end = Number(source.end);
+      const text = cleanTranscriptText(String(source.text ?? ''));
+      if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start || !text) return null;
+      return {
+        id: String(source.id ?? `stored-${index}-${start.toFixed(2)}`),
+        text,
+        start,
+        end,
+      };
+    })
+    .filter((segment): segment is TranscriptSegment => Boolean(segment));
+}
+
+function splitTranscriptIntoSegments(text: string, totalDuration: number, syncedSegments: TranscriptSegment[] = []): TranscriptSegment[] {
+  if (syncedSegments.length > 0) return syncedSegments;
+
+  const timestampedSegments = parseTimestampedTranscript(text);
+  if (timestampedSegments.length > 0) return timestampedSegments;
+
+  const cleanText = text.trim();
   if (!cleanText) return [];
 
-  const rawParts = cleanText.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [cleanText];
+  const paragraphs = cleanText
+    .split(/\n+/)
+    .map((part) => part.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+  const normalizedText = cleanText.replace(/\s+/g, ' ').trim();
+  const sentenceParts = normalizedText.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [normalizedText];
+  const rawParts = paragraphs.length > 1 ? paragraphs : sentenceParts;
   const chunks: string[] = [];
   let current = '';
 
@@ -214,12 +307,13 @@ function splitTranscriptIntoSegments(text: string, totalDuration: number): Trans
   });
   if (current) chunks.push(current);
 
-  const safeDuration = Math.max(totalDuration || 0, chunks.length * 3, 20);
-  const totalChars = chunks.reduce((sum, chunk) => sum + chunk.length, 0) || 1;
+  const safeDuration = Math.max(totalDuration || 0, chunks.length * 3.5, 20);
+  const weights = chunks.map((chunk) => Math.sqrt(Math.max(16, chunk.length)));
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0) || 1;
   let cursor = 0;
 
   return chunks.map((chunk, index) => {
-    const segmentDuration = Math.max(1.5, (chunk.length / totalChars) * safeDuration);
+    const segmentDuration = Math.max(1.8, (weights[index] / totalWeight) * safeDuration);
     const start = cursor;
     const end = index === chunks.length - 1 ? safeDuration : cursor + segmentDuration;
     cursor = end;
@@ -340,13 +434,20 @@ function NativeVideoPlayer({
 }) {
   const videoRef = useRef<Video | null>(null);
   const autoplayStartedRef = useRef(false);
+  const autoplayAttemptsRef = useRef(0);
   const [isReady, setIsReady] = useState(false);
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
 
   const forceAudiblePlayback = async () => {
+    if (autoplayStartedRef.current || autoplayAttemptsRef.current >= 3) return false;
+    autoplayAttemptsRef.current += 1;
     await configureMediaAudioMode();
     const status = await videoRef.current?.getStatusAsync();
     if (!status?.isLoaded) return false;
+    if ((status.positionMillis ?? 0) > 1500) {
+      autoplayStartedRef.current = true;
+      return true;
+    }
 
     await videoRef.current?.setStatusAsync({
       shouldPlay: true,
@@ -363,33 +464,25 @@ function NativeVideoPlayer({
 
   useEffect(() => {
     let mounted = true;
-    let attempts = 0;
-    let retryTimer: ReturnType<typeof setInterval> | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     autoplayStartedRef.current = false;
+    autoplayAttemptsRef.current = 0;
     setIsReady(false);
     setHasPlaybackError(false);
 
     configureMediaAudioMode()
       .then(() => {
         if (!mounted) return;
-        retryTimer = setInterval(() => {
-          attempts += 1;
-          forceAudiblePlayback()
-            .then((started) => {
-              if ((started || attempts >= 10) && retryTimer) {
-                clearInterval(retryTimer);
-                retryTimer = null;
-              }
-            })
-            .catch(() => {});
+        retryTimer = setTimeout(() => {
+          forceAudiblePlayback().catch(() => {});
         }, 500);
       })
       .catch(() => {});
 
     return () => {
       mounted = false;
-      if (retryTimer) clearInterval(retryTimer);
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [uri]);
 
@@ -423,7 +516,7 @@ function NativeVideoPlayer({
         }}
         onPlaybackStatusUpdate={(status: any) => {
           if (!status?.isLoaded) return;
-          if (!autoplayStartedRef.current && !status.isPlaying) {
+          if (!autoplayStartedRef.current && !status.isPlaying && (status.positionMillis ?? 0) < 1500) {
             forceAudiblePlayback().catch(() => {});
           }
           onPlaybackTime((status.positionMillis ?? 0) / 1000, (status.durationMillis ?? 0) / 1000);
@@ -759,7 +852,6 @@ const gameStyles = StyleSheet.create({
 export default function LessonViewerScreen({ route, navigation }: any) {
   useKeepAwake();
   const { colors: themeColors, isDark } = useTheme();
-  const { width } = useWindowDimensions();
   const { lesson: routeLesson, lessonId: routeLessonId, courseId } = route.params as { lesson?: Lesson; lessonId?: string; courseId: string };
   const initialLessonId = routeLessonId ?? routeLesson?.id ?? '';
   const [lessonParam, setLessonParam] = useState<Lesson>(routeLesson ?? {
@@ -771,17 +863,36 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const [lessonLoading, setLessonLoading] = useState(!hasFullLessonPayload(routeLesson));
   const [lessonError, setLessonError] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web';
+  const isWideWeb = useIsWideWeb(1040);
+  const webRailHeight = isWideWeb ? Math.max(520, height - insets.top - 74) : undefined;
+  const [webPanelTab, setWebPanelTab] = useState<'transcript' | 'lessons'>('transcript');
+  const [courseOutline, setCourseOutline] = useState<any>(null);
+  const [courseProgress, setCourseProgress] = useState<any>(null);
   const [completed, setCompleted] = useState(false);
   const [marking, setMarking] = useState(false);
   const lessonMediaUrl = lessonParam.contentType === 'AUDIO' ? lessonParam.audioUrl : lessonParam.videoUrl;
-  const initialTranscript = lessonParam.contentType === 'VIDEO' || lessonParam.contentType === 'AUDIO'
-    ? isSameMediaSource(lessonParam.transcriptSourceUrl, lessonMediaUrl) ? cleanTranscriptText(lessonParam.textContent) : ''
-    : cleanTranscriptText(lessonParam.textContent);
+  const transcriptMatchesLessonMedia = lessonParam.transcriptStatus === 'READY'
+    || (!lessonParam.transcriptStatus && isSameMediaSource(lessonParam.transcriptSourceUrl, lessonMediaUrl));
+  const initialTranscript = useMemo(() => (
+    lessonParam.contentType === 'VIDEO' || lessonParam.contentType === 'AUDIO'
+      ? transcriptMatchesLessonMedia ? cleanTranscriptText(lessonParam.textContent) : ''
+      : cleanTranscriptText(lessonParam.textContent)
+  ), [lessonParam.contentType, lessonParam.textContent, transcriptMatchesLessonMedia]);
+  const initialSyncedTranscriptSegments = useMemo(() => (
+    (lessonParam.contentType === 'VIDEO' || lessonParam.contentType === 'AUDIO')
+      && transcriptMatchesLessonMedia
+      ? parseStoredTranscriptSegments(lessonParam.transcriptSegments)
+      : []
+  ), [lessonParam.contentType, lessonParam.transcriptSegments, transcriptMatchesLessonMedia]);
   const [transcript, setTranscript] = useState(initialTranscript);
-  const [transcribing, setTranscribing] = useState(false);
+  const [syncedTranscriptSegments, setSyncedTranscriptSegments] = useState<TranscriptSegment[]>(initialSyncedTranscriptSegments);
   const [mediaTime, setMediaTime] = useState(0);
   const [mediaDuration, setMediaDuration] = useState(lessonParam.duration ?? 0);
   const [cachedMediaUri, setCachedMediaUri] = useState<string | null>(null);
+  const [playbackVideoUrl, setPlaybackVideoUrl] = useState<string | null>(null);
+  const playbackTimeRef = useRef(0);
   const transcriptScrollRef = useRef<ScrollView | null>(null);
   const transcriptSegmentLayouts = useRef<Record<number, { y: number; height: number }>>({});
   const [transcriptViewportHeight, setTranscriptViewportHeight] = useState(0);
@@ -791,18 +902,15 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const countdownRef = useRef<any>(null);
   const [htmlContentReady, setHtmlContentReady] = useState(lessonParam.contentType !== 'HTML');
   const autoCompletedLessonRef = useRef<string | null>(null);
-  const autoTranscriptStartedRef = useRef<string | null>(null);
-  const [courseOutline, setCourseOutline] = useState<any>(null);
-  const [courseProgress, setCourseProgress] = useState<any>(null);
-  const [webPanelTab, setWebPanelTab] = useState<'transcript' | 'lessons'>('transcript');
 
   const transcriptSegments = splitTranscriptIntoSegments(
     transcript,
-    mediaDuration || lessonParam.duration || lessonParam.minDuration || 0
+    mediaDuration || lessonParam.duration || lessonParam.minDuration || 0,
+    syncedTranscriptSegments
   );
   const transcriptHighlightTime = Math.min(
     mediaDuration || lessonParam.duration || Number.MAX_SAFE_INTEGER,
-    mediaTime + TRANSCRIPT_HIGHLIGHT_LEAD_SECONDS
+    Math.max(0, mediaTime + TRANSCRIPT_HIGHLIGHT_OFFSET_SECONDS)
   );
   const activeTranscriptIndex = transcriptSegments.findIndex((segment) => (
     transcriptHighlightTime >= segment.start && transcriptHighlightTime < segment.end
@@ -824,10 +932,8 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const shouldShowCompleteButton = lessonParam.contentType === 'VIDEO';
   const countdownBlocksCompletion = countdown > 0 && lessonParam.contentType === 'VIDEO';
   const completeButtonDisabled = completed || marking || countdownBlocksCompletion || !canCompleteVideoLesson;
-  const isWeb = Platform.OS === 'web';
-  const isWideWeb = isWeb && width >= 1000;
   const androidNavigationInset = Platform.OS === 'android' ? Math.max(insets.bottom, 28) : insets.bottom;
-  const lessonFooterBottom = isWeb ? 16 : Platform.OS === 'android' ? androidNavigationInset : Math.max(insets.bottom, 12);
+  const lessonFooterBottom = Platform.OS === 'android' ? androidNavigationInset : Math.max(insets.bottom, 12);
   const mediaProgressLabel = mediaDuration > 0
     ? `${formatDuration(mediaTime)} / ${formatDuration(mediaDuration)}`
     : mediaTime > 0
@@ -836,53 +942,56 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const currentVideoUrl = lessonParam.contentType === 'VIDEO' ? lessonParam.videoUrl : null;
   const ytId = useMemo(() => extractYouTubeId(currentVideoUrl), [currentVideoUrl]);
   const resolvedVideoUrl = useMemo(() => resolveMediaUrl(currentVideoUrl), [currentVideoUrl]);
-  const playableVideoUrl = useMemo(
+  const preferredVideoUrl = useMemo(
     () => shouldUseCachedVideoUri(cachedMediaUri, resolvedVideoUrl) ? cachedMediaUri : resolvedVideoUrl,
     [cachedMediaUri, resolvedVideoUrl]
   );
+  const youtubeEmbedHtml = useMemo(() => {
+    if (!ytId) return '';
+    return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{margin:0;padding:0;box-sizing:border-box}html,body,#player{width:100%;height:100%;background:#000;overflow:hidden}</style></head><body><div id="player"></div><script src="https://www.youtube.com/iframe_api"></script><script>let player;let timer;function send(payload){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(JSON.stringify(payload));}function report(){if(!player||!player.getCurrentTime)return;send({type:'media-time',currentTime:player.getCurrentTime()||0,duration:player.getDuration()||0});}function onYouTubeIframeAPIReady(){player=new YT.Player('player',{width:'100%',height:'100%',videoId:'${ytId}',playerVars:{autoplay:1,playsinline:1,rel:0,modestbranding:1,controls:1},events:{onReady:function(){send({type:'media-duration',duration:player.getDuration()||0});player.playVideo();timer=setInterval(report,500);},onStateChange:report}});}window.addEventListener('beforeunload',function(){if(timer)clearInterval(timer);});</script></body></html>`;
+  }, [ytId]);
+  const webVideoHtml = useMemo(() => {
+    if (!playbackVideoUrl) return '';
+    return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;display:flex;align-items:center;justify-content:center;height:100vh;width:100vw}video{width:100%;max-height:100%;outline:none}</style></head><body><video id="media" controls autoplay playsinline preload="metadata"><source src="${playbackVideoUrl}"></video><script>const media=document.getElementById('media');function send(payload){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(JSON.stringify(payload));}function report(){send({type:'media-time',currentTime:media.currentTime||0,duration:media.duration||0});}media.addEventListener('loadedmetadata',()=>send({type:'media-duration',duration:media.duration||0}));media.addEventListener('timeupdate',report);media.addEventListener('seeked',report);media.addEventListener('pause',report);media.addEventListener('play',report);media.addEventListener('ended',report);const timer=setInterval(report,500);window.addEventListener('beforeunload',()=>clearInterval(timer));media.play().catch(()=>{});</script></body></html>`;
+  }, [playbackVideoUrl]);
+  const videoWebViewSource = useMemo(() => {
+    if (ytId && youtubeEmbedHtml) return { html: youtubeEmbedHtml };
+    if (webVideoHtml) return { html: webVideoHtml };
+    return { html: '<!DOCTYPE html><html><body style="margin:0;background:#000"></body></html>' };
+  }, [ytId, youtubeEmbedHtml, webVideoHtml]);
   const courseLessons = useMemo(() => (
-    (courseOutline?.modules ?? []).flatMap((mod: any, moduleIndex: number) => (
-      (mod.lessons ?? []).map((lesson: any, lessonIndex: number) => ({
+    (courseOutline?.modules ?? []).flatMap((mod: any) => (
+      (mod.lessons ?? []).map((lesson: any) => ({
         ...lesson,
-        moduleId: lesson.moduleId ?? mod.id,
         moduleTitle: mod.title,
-        moduleIndex,
-        lessonIndex,
+        moduleId: lesson.moduleId ?? mod.id,
       }))
     ))
   ), [courseOutline]);
   const lessonCompletionMap = useMemo(() => {
     const map = new Map<string, boolean>();
     (courseProgress?.modules ?? []).forEach((mod: any) => {
-      (mod.lessons ?? []).forEach((lesson: any) => {
-        map.set(lesson.id, !!lesson.isCompleted);
-      });
+      (mod.lessons ?? []).forEach((lesson: any) => map.set(lesson.id, !!lesson.isCompleted));
     });
     return map;
   }, [courseProgress]);
-  const youtubeEmbedHtml = useMemo(() => {
-    if (!ytId) return '';
-    return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{margin:0;padding:0;box-sizing:border-box}html,body,#player{width:100%;height:100%;background:#000;overflow:hidden}</style></head><body><div id="player"></div><script src="https://www.youtube.com/iframe_api"></script><script>let player;let timer;function send(payload){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(JSON.stringify(payload));}function report(){if(!player||!player.getCurrentTime)return;send({type:'media-time',currentTime:player.getCurrentTime()||0,duration:player.getDuration()||0});}function onYouTubeIframeAPIReady(){player=new YT.Player('player',{width:'100%',height:'100%',videoId:'${ytId}',playerVars:{autoplay:1,playsinline:1,rel:0,modestbranding:1,controls:1},events:{onReady:function(){send({type:'media-duration',duration:player.getDuration()||0});player.playVideo();timer=setInterval(report,500);},onStateChange:report}});}window.addEventListener('beforeunload',function(){if(timer)clearInterval(timer);});</script></body></html>`;
-  }, [ytId]);
-  const webVideoHtml = useMemo(() => {
-    if (!resolvedVideoUrl) return '';
-    return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;display:flex;align-items:center;justify-content:center;height:100vh;width:100vw}video{width:100%;max-height:100%;outline:none}</style></head><body><video id="media" controls autoplay playsinline preload="metadata"><source src="${resolvedVideoUrl}"></video><script>const media=document.getElementById('media');function send(payload){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(JSON.stringify(payload));}function report(){send({type:'media-time',currentTime:media.currentTime||0,duration:media.duration||0});}media.addEventListener('loadedmetadata',()=>send({type:'media-duration',duration:media.duration||0}));media.addEventListener('timeupdate',report);media.addEventListener('seeked',report);media.addEventListener('pause',report);media.addEventListener('play',report);media.addEventListener('ended',report);const timer=setInterval(report,500);window.addEventListener('beforeunload',()=>clearInterval(timer));media.play().catch(()=>{});</script></body></html>`;
-  }, [resolvedVideoUrl]);
-  const videoWebViewSource = useMemo(() => {
-    if (ytId && youtubeEmbedHtml) return { html: youtubeEmbedHtml };
-    if (webVideoHtml) return { html: webVideoHtml };
-    return { html: '<!DOCTYPE html><html><body style="margin:0;background:#000"></body></html>' };
-  }, [ytId, youtubeEmbedHtml, webVideoHtml]);
 
   useEffect(() => {
-    if (!isWideWeb) return;
-    setWebPanelTab(lessonParam.contentType === 'QUIZ' || lessonParam.contentType === 'HTML' ? 'lessons' : 'transcript');
-  }, [isWideWeb, lessonParam.contentType, lessonParam.id]);
+    if (!isWeb || !courseId) return;
+    let active = true;
+    getPersistentCached<any>(`/courses/${courseId}?lessonScope=unlocked`, 10 * 60 * 1000)
+      .then((data) => { if (active) setCourseOutline(data); })
+      .catch(() => {});
+    getPersistentCached<any>(`/progress/course/${courseId}?lessonScope=unlocked`, 2 * 60 * 1000)
+      .then((data) => { if (active) setCourseProgress(data); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [courseId, isWeb]);
 
   useEffect(() => {
     transcriptSegmentLayouts.current = {};
     setTranscriptLayoutVersion((version) => version + 1);
-  }, [transcript, mediaDuration]);
+  }, [transcript, mediaDuration, syncedTranscriptSegments]);
 
   useEffect(() => {
     const id = routeLessonId ?? routeLesson?.id;
@@ -903,7 +1012,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
 
     setLessonLoading(true);
     setLessonError(null);
-    getPersistentCached<Lesson>(`/courses/lessons/${id}`, 30 * 60 * 1000)
+    refreshPersistentCached<Lesson>(`/courses/lessons/${id}`, 30 * 60 * 1000)
       .then((lesson) => {
         if (!active) return;
         setLessonParam(lesson);
@@ -921,18 +1030,41 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   }, [routeLessonId, routeLesson?.id]);
 
   useEffect(() => {
+    if (!['PENDING', 'PROCESSING'].includes(lessonParam.transcriptStatus ?? '')) return;
+    const timer = setInterval(() => {
+      api.get(`/courses/lessons/${lessonParam.id}`)
+        .then((response) => setLessonParam(response.data))
+        .catch(() => undefined);
+    }, 15000);
+    return () => clearInterval(timer);
+  }, [lessonParam.id, lessonParam.transcriptStatus]);
+
+  useEffect(() => {
     setTranscript(initialTranscript);
+    setSyncedTranscriptSegments(initialSyncedTranscriptSegments);
     setMediaDuration(lessonParam.duration ?? 0);
     setMediaTime(0);
+    playbackTimeRef.current = 0;
     setCountdown(getRequiredLessonSeconds(lessonParam));
     setCompleted(false);
     setHtmlContentReady(lessonParam.contentType !== 'HTML');
-  }, [lessonParam.id, initialTranscript]);
+  }, [lessonParam.id, initialTranscript, initialSyncedTranscriptSegments]);
+
+  useEffect(() => {
+    setPlaybackVideoUrl(lessonParam.contentType === 'VIDEO' ? resolvedVideoUrl : null);
+  }, [lessonParam.id, lessonParam.contentType, resolvedVideoUrl]);
+
+  useEffect(() => {
+    if (!playbackVideoUrl && lessonParam.contentType === 'VIDEO' && preferredVideoUrl) {
+      setPlaybackVideoUrl(preferredVideoUrl);
+    }
+  }, [lessonParam.contentType, playbackVideoUrl, preferredVideoUrl]);
 
   useEffect(() => {
     const resolved = resolveMediaUrl(lessonMediaUrl);
     let active = true;
     setMediaTime(0);
+    playbackTimeRef.current = 0;
     setCachedMediaUri(null);
     if (lessonLoading || !resolved || (lessonParam.contentType !== 'VIDEO' && lessonParam.contentType !== 'AUDIO')) return;
 
@@ -969,21 +1101,6 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   }, [lessonParam.id, lessonLoading]);
 
   useEffect(() => {
-    if (!courseId) return;
-    let active = true;
-    Promise.all([
-      getPersistentCached<any>(`/courses/${courseId}?lessonScope=unlocked`, 10 * 60 * 1000).catch(() => null),
-      getPersistentCached<any>(`/progress/course/${courseId}?lessonScope=unlocked`, 2 * 60 * 1000).catch(() => null),
-    ]).then(([courseData, progressData]) => {
-      if (!active) return;
-      if (courseData) setCourseOutline(courseData);
-      if (progressData) setCourseProgress(progressData);
-    });
-    return () => { active = false; };
-  }, [courseId]);
-
-  useEffect(() => {
-    if (webPanelTab !== 'transcript') return;
     if (safeActiveTranscriptIndex < 0) return;
     const activeLayout = transcriptSegmentLayouts.current[safeActiveTranscriptIndex];
     if (!activeLayout) return;
@@ -995,11 +1112,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
       y: Math.max(0, activeLayout.y - topComfortOffset),
       animated: true,
     });
-  }, [safeActiveTranscriptIndex, transcriptViewportHeight, transcriptLayoutVersion, webPanelTab]);
-
-  useEffect(() => {
-    if (webPanelTab !== 'transcript') transcriptScrollRef.current = null;
-  }, [webPanelTab]);
+  }, [safeActiveTranscriptIndex, transcriptViewportHeight, transcriptLayoutVersion]);
 
   const handleTranscriptScrollLayout = (event: LayoutChangeEvent) => {
     setTranscriptViewportHeight(event.nativeEvent.layout.height);
@@ -1014,12 +1127,32 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     setTranscriptLayoutVersion((version) => version + 1);
   };
 
+  const applyPlaybackTime = useCallback((currentTime: number, duration: number) => {
+    const safeCurrentTime = Number.isFinite(currentTime) ? Math.max(0, currentTime) : null;
+    const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
+
+    if (safeCurrentTime !== null) {
+      const previousTime = playbackTimeRef.current;
+      const looksLikeSourceReset = safeCurrentTime < 1.25
+        && previousTime >= PLAYBACK_RESET_GUARD_SECONDS
+        && (!safeDuration || previousTime < safeDuration - 2);
+
+      if (!looksLikeSourceReset) {
+        playbackTimeRef.current = safeCurrentTime;
+        setMediaTime(safeCurrentTime);
+      }
+    }
+
+    if (safeDuration > 0) {
+      setMediaDuration(safeDuration);
+    }
+  }, []);
+
   const handleMediaMessage = (event: any) => {
     try {
       const data = JSON.parse(event?.nativeEvent?.data ?? '{}');
       if (data.type === 'media-time') {
-        if (Number.isFinite(data.currentTime)) setMediaTime(data.currentTime);
-        if (Number.isFinite(data.duration) && data.duration > 0) setMediaDuration(data.duration);
+        applyPlaybackTime(data.currentTime, data.duration);
       }
       if (data.type === 'media-duration' && Number.isFinite(data.duration) && data.duration > 0) {
         setMediaDuration(data.duration);
@@ -1028,8 +1161,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   };
 
   const handleNativePlaybackTime = (currentTime: number, duration: number) => {
-    if (Number.isFinite(currentTime)) setMediaTime(currentTime);
-    if (Number.isFinite(duration) && duration > 0) setMediaDuration(duration);
+    applyPlaybackTime(currentTime, duration);
   };
 
   const findNextUnlockedLesson = (courseData: any, progressData: any, currentLessonId: string) => {
@@ -1103,122 +1235,27 @@ export default function LessonViewerScreen({ route, navigation }: any) {
       const data = err?.response?.data;
       if (data?.error === 'anti_cheat') {
         if (!silent) Alert.alert('Demasiado rápido!', data.message ?? 'Passa mais tempo na lição antes de concluir.');
+      } else if (!err?.response) {
+        await queueOfflineRequest({
+          method: 'post',
+          url: `/progress/lesson/${lessonParam.id}/complete`,
+          data: {
+            proof: {
+              contentType: lessonParam.contentType,
+              currentTime: mediaTime,
+              duration: mediaDuration || lessonParam.duration || 0,
+              watchedToEnd: canCompleteVideoLesson,
+            },
+          },
+        });
+        setCompleted(true);
+        if (!silent) Alert.alert('Guardado no dispositivo', 'O progresso será sincronizado quando voltar a ter internet.');
+        if (navigateAfter) await openNextLessonOrReturn();
       } else if (!silent) {
         navigation.goBack();
       }
     }
     setMarking(false);
-  };
-
-  const renderCompleteButton = (compact = false) => (
-    shouldShowCompleteButton && !lessonLoading && !lessonError ? (
-      <TouchableOpacity
-        style={[
-          styles.completeBtn,
-          (isWeb || compact) && styles.completeBtnWeb,
-          compact && styles.completeBtnRail,
-          { backgroundColor: themeColors.primary, marginBottom: compact ? 0 : lessonFooterBottom },
-          completed && { backgroundColor: themeColors.success },
-          completeButtonDisabled && !completed && { backgroundColor: '#CBD5E1', shadowOpacity: 0, elevation: 0 },
-          countdownBlocksCompletion && { opacity: 0.5 },
-        ]}
-        onPress={() => markComplete()}
-        disabled={completeButtonDisabled || lessonLoading || !!lessonError}
-        accessibilityLabel={getCompleteButtonText()}
-      >
-        {marking ? <ActivityIndicator color="#fff" /> : (
-          <>
-            <CheckCircle size={isWeb || compact ? 16 : 20} color="#fff" />
-            <Text style={[styles.completeBtnText, (isWeb || compact) && styles.completeBtnTextWeb, { color: '#fff' }]}>
-              {getCompleteButtonText()}
-            </Text>
-          </>
-        )}
-      </TouchableOpacity>
-    ) : null
-  );
-
-  const renderLessonListPanel = () => {
-    if (!courseLessons.length) return null;
-
-    return (
-      <View style={[styles.lessonListPanel, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-        <View style={styles.lessonListHeader}>
-          <Text style={[styles.lessonListTitle, { color: themeColors.text }]}>Aulas</Text>
-          <Text style={[styles.lessonListCount, { color: themeColors.textMuted }]}>{courseLessons.length}</Text>
-        </View>
-        <ScrollView
-          style={styles.lessonListScroll}
-          contentContainerStyle={styles.lessonListContent}
-          showsVerticalScrollIndicator
-          keyboardShouldPersistTaps="handled"
-        >
-          {courseLessons.map((lesson: any, index: number) => {
-            const isCurrent = lesson.id === lessonParam.id;
-            const done = lessonCompletionMap.get(lesson.id);
-            return (
-              <TouchableOpacity
-                key={lesson.id}
-                style={[
-                  styles.lessonListItem,
-                  { borderColor: themeColors.border },
-                  isCurrent && { backgroundColor: `${themeColors.primary}14`, borderColor: `${themeColors.primary}55` },
-                ]}
-                onPress={() => {
-                  if (isCurrent) return;
-                  navigation.replace('LessonViewer', { lesson, lessonId: lesson.id, courseId });
-                }}
-              >
-                <View style={[styles.lessonListIndex, { backgroundColor: done ? themeColors.success : isCurrent ? themeColors.primary : '#E2E8F0' }]}>
-                  {done ? <CheckCircle size={12} color="#fff" /> : <Text style={[styles.lessonListIndexText, { color: isCurrent ? '#fff' : '#64748B' }]}>{index + 1}</Text>}
-                </View>
-                <View style={styles.lessonListMeta}>
-                  <Text style={[styles.lessonListItemTitle, { color: themeColors.text }]} numberOfLines={2}>{lesson.title}</Text>
-                  <Text style={[styles.lessonListItemType, { color: themeColors.textMuted }]} numberOfLines={1}>
-                    {CONTENT_TYPE_LABELS[lesson.contentType] ?? lesson.contentType}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-    );
-  };
-
-  const renderWebRail = () => (
-    <View style={[styles.lessonSidePanel, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-      <View style={[styles.webPanelTabs, { backgroundColor: isDark ? '#0F172A' : '#F1F5F9' }]}>
-        <TouchableOpacity
-          style={[styles.webPanelTab, webPanelTab === 'transcript' && { backgroundColor: themeColors.card }]}
-          onPress={() => setWebPanelTab('transcript')}
-        >
-          <Text style={[styles.webPanelTabText, { color: webPanelTab === 'transcript' ? themeColors.primary : themeColors.textMuted }]}>Transcrição</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.webPanelTab, webPanelTab === 'lessons' && { backgroundColor: themeColors.card }]}
-          onPress={() => setWebPanelTab('lessons')}
-        >
-          <Text style={[styles.webPanelTabText, { color: webPanelTab === 'lessons' ? themeColors.primary : themeColors.textMuted }]}>Aulas</Text>
-        </TouchableOpacity>
-      </View>
-      <View key={webPanelTab} style={styles.webPanelBody}>
-        {webPanelTab === 'transcript' ? renderTranscriptPanel() : renderLessonListPanel()}
-      </View>
-    </View>
-  );
-
-  const renderWithWebRail = (content: React.ReactNode) => {
-    if (!isWideWeb) return content;
-
-    return (
-      <View style={[styles.lessonMediaContent, styles.lessonMediaContentWeb]}>
-        <View style={styles.lessonMainPane}>
-          {content}
-        </View>
-        {renderWebRail()}
-      </View>
-    );
   };
 
   useEffect(() => {
@@ -1236,96 +1273,16 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     markComplete({ navigateAfter: false, silent: true });
   }, [lessonParam.id, lessonParam.contentType, lessonLoading, lessonError, htmlContentReady, completed, marking]);
 
-  const runTranscriptGeneration = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
-    if (transcribing || lessonLoading || lessonError) return;
-    setTranscribing(true);
-    try {
-      const res = await api.post(`/courses/lessons/${lessonParam.id}/transcribe`, {}, { timeout: 120000 });
-      const nextTranscript = cleanTranscriptText(res.data.transcript);
-      if (!nextTranscript && !silent) {
-        Alert.alert('Transcrição', 'Não foi possível gerar texto útil para esta aula.');
-      }
-      setTranscript(nextTranscript);
-    } catch (err: any) {
-      if (!silent) {
-        Alert.alert('Transcrição', err?.response?.data?.error ?? 'Não foi possível gerar a transcrição.');
-      }
-    }
-    setTranscribing(false);
-  }, [lessonError, lessonLoading, lessonParam.id, transcribing]);
-
-  useEffect(() => {
-    const shouldAutoGenerate =
-      lessonParam.contentType === 'VIDEO' &&
-      !!lessonParam.id &&
-      !lessonLoading &&
-      !lessonError &&
-      !transcribing &&
-      !transcript.trim() &&
-      autoTranscriptStartedRef.current !== lessonParam.id;
-
-    if (!shouldAutoGenerate) return;
-    autoTranscriptStartedRef.current = lessonParam.id;
-    runTranscriptGeneration({ silent: true });
-  }, [lessonParam.contentType, lessonParam.id, lessonLoading, lessonError, runTranscriptGeneration, transcript, transcribing]);
-
-  const generateTranscript = async () => {
-    if (transcribing || lessonLoading || lessonError) return;
-    Alert.alert(
-      'Gerar transcrição?',
-      'A transcrição automática pode demorar até 2 minutos. Gere apenas se precisar dela agora.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Gerar',
-          onPress: async () => {
-            setTranscribing(true);
-            try {
-              const res = await api.post(`/courses/lessons/${lessonParam.id}/transcribe`, {}, { timeout: 120000 });
-              const nextTranscript = cleanTranscriptText(res.data.transcript);
-              if (!nextTranscript) {
-                Alert.alert('Transcrição', 'Não foi possível gerar texto útil para esta aula.');
-              }
-              setTranscript(nextTranscript);
-            } catch (err: any) {
-              Alert.alert('Transcrição', err?.response?.data?.error ?? 'Não foi possível gerar a transcrição.');
-            }
-            setTranscribing(false);
-          },
-        },
-      ]
-    );
-  };
-
   const renderTranscriptPanel = () => (
-    <View style={[styles.transcriptPanel, isWideWeb && styles.transcriptPanelWeb, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+    <View style={[styles.transcriptPanel, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
       <View style={styles.transcriptHeader}>
         <Text style={[styles.transcriptTitle, { color: themeColors.text }]}>Transcrição</Text>
-        {!transcript.trim() && (
-          <TouchableOpacity
-            style={[styles.transcriptBtn, { backgroundColor: themeColors.primary }, transcribing && { opacity: 0.7 }]}
-            onPress={generateTranscript}
-            disabled={transcribing}
-          >
-            {transcribing ? (
-              <>
-                <ActivityIndicator size="small" color="#fff" />
-                <Text style={styles.transcriptBtnText}>A gerar</Text>
-              </>
-            ) : (
-              <>
-                <Ionicons name="sparkles-outline" size={14} color="#fff" />
-                <Text style={styles.transcriptBtnText}>Gerar</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        )}
       </View>
       {transcript.trim() ? (
         <ScrollView
           ref={transcriptScrollRef}
-          style={styles.transcriptScroll}
-          contentContainerStyle={styles.transcriptScrollContent}
+          style={[styles.transcriptScroll, WEB_VERTICAL_PAN_STYLE]}
+          contentContainerStyle={[styles.transcriptScrollContent, WEB_VERTICAL_PAN_STYLE]}
           showsVerticalScrollIndicator
           onLayout={handleTranscriptScrollLayout}
         >
@@ -1351,9 +1308,118 @@ export default function LessonViewerScreen({ route, navigation }: any) {
         </ScrollView>
       ) : (
         <Text style={[styles.transcriptEmpty, { color: themeColors.textMuted }]}>
-          {transcribing ? 'A gerar transcrição automática. Isto pode demorar um pouco em vídeos maiores.' : 'Gere uma transcrição automática desta aula para aparecer aqui.'}
+          {lessonParam.transcriptStatus === 'PROCESSING'
+            ? 'A transcrição está a ser preparada e aparecerá aqui automaticamente.'
+            : lessonParam.transcriptStatus === 'PENDING'
+              ? 'Esta aula está na fila de transcrição automática.'
+              : 'Esta aula ainda não tem uma transcrição publicada.'}
         </Text>
       )}
+    </View>
+  );
+
+  const renderCompleteButton = (compact = false) => {
+    if (!shouldShowCompleteButton || lessonLoading || lessonError) return null;
+    return (
+      <TouchableOpacity
+        style={[
+          compact ? styles.completeBtnCompact : styles.completeBtn,
+          { backgroundColor: themeColors.primary, marginBottom: compact ? 0 : lessonFooterBottom },
+          completed && { backgroundColor: themeColors.success },
+          completeButtonDisabled && !completed && { backgroundColor: '#CBD5E1', shadowOpacity: 0, elevation: 0 },
+          countdownBlocksCompletion && { opacity: 0.5 },
+        ]}
+        onPress={() => markComplete()}
+        disabled={completeButtonDisabled || lessonLoading || !!lessonError}
+        accessibilityLabel={getCompleteButtonText()}
+      >
+        {marking ? <ActivityIndicator color="#fff" /> : (
+          <>
+            <CheckCircle size={compact ? 16 : 20} color="#fff" />
+            <Text style={[compact ? styles.completeBtnCompactText : styles.completeBtnText, { color: '#fff' }]}>
+              {getCompleteButtonText()}
+            </Text>
+          </>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
+  const renderLessonListPanel = () => (
+    <View style={styles.lessonListPanel}>
+      <View style={styles.lessonListHeader}>
+        <Text style={[styles.lessonListCount, { color: themeColors.textMuted }]}>
+          {courseLessons.length} aula{courseLessons.length === 1 ? '' : 's'}
+        </Text>
+      </View>
+      <ScrollView
+        style={WEB_VERTICAL_PAN_STYLE}
+        showsVerticalScrollIndicator
+        contentContainerStyle={[styles.lessonListContent, WEB_VERTICAL_PAN_STYLE]}
+      >
+        {courseLessons.map((lesson: any, index: number) => {
+          const current = lesson.id === lessonParam.id;
+          const done = lessonCompletionMap.get(lesson.id) || (current && completed);
+          return (
+            <TouchableOpacity
+              key={lesson.id}
+              style={[
+                styles.lessonListItem,
+                WEB_VERTICAL_PAN_STYLE,
+                { borderColor: themeColors.border, backgroundColor: current ? `${themeColors.primary}12` : themeColors.card },
+              ]}
+              onPress={() => navigation.replace('LessonViewer', { lesson, lessonId: lesson.id, courseId })}
+              activeOpacity={0.82}
+            >
+              <View style={[
+                styles.lessonListIndex,
+                { backgroundColor: done ? themeColors.success : current ? themeColors.primary : '#E2E8F0' },
+              ]}>
+                {done ? (
+                  <CheckCircle size={13} color="#fff" />
+                ) : (
+                  <Text style={[styles.lessonListIndexText, { color: current ? '#fff' : '#64748B' }]}>{index + 1}</Text>
+                )}
+              </View>
+              <View style={styles.lessonListText}>
+                <Text style={[styles.lessonListTitle, { color: themeColors.text }]} numberOfLines={2}>
+                  {lesson.title}
+                </Text>
+                <Text style={[styles.lessonListMeta, { color: current ? themeColors.primary : themeColors.textMuted }]} numberOfLines={1}>
+                  {CONTENT_TYPE_LABELS[lesson.contentType] ?? lesson.contentType}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+
+  const renderWebRail = () => (
+    <View style={[styles.webRail, { backgroundColor: themeColors.card, borderColor: themeColors.border, maxHeight: webRailHeight }]}>
+      <View style={[styles.webPanelTabs, { borderBottomColor: themeColors.border }]}>
+        {[
+          { id: 'transcript' as const, label: 'Transcrição' },
+          { id: 'lessons' as const, label: 'Aulas' },
+        ].map((tab) => {
+          const active = webPanelTab === tab.id;
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              style={[styles.webPanelTab, WEB_VERTICAL_PAN_STYLE, active && { borderBottomColor: themeColors.primary }]}
+              onPress={() => setWebPanelTab(tab.id)}
+            >
+              <Text style={[styles.webPanelTabText, { color: active ? themeColors.primary : themeColors.textMuted }]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      <View style={styles.webPanelBody}>
+        {webPanelTab === 'transcript' ? renderTranscriptPanel() : renderLessonListPanel()}
+      </View>
     </View>
   );
 
@@ -1404,15 +1470,11 @@ export default function LessonViewerScreen({ route, navigation }: any) {
                   javaScriptEnabled
                   onMessage={handleMediaMessage}
                 />
-              ) : playableVideoUrl ? (
-                <NativeVideoPlayer uri={playableVideoUrl} onPlaybackTime={handleNativePlaybackTime} />
+              ) : playbackVideoUrl ? (
+                <NativeVideoPlayer uri={playbackVideoUrl} onPlaybackTime={handleNativePlaybackTime} />
               ) : null}
             </View>
-            {isWideWeb ? renderWebRail() : (
-              <View style={styles.transcriptStack}>
-                {renderTranscriptPanel()}
-              </View>
-            )}
+            {isWideWeb ? renderWebRail() : renderTranscriptPanel()}
           </View>
         );
       }
@@ -1446,11 +1508,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
                 <Text style={[styles.placeholderText, { color: themeColors.textMuted }]}>Áudio não disponível</Text>
               </View>
             )}
-            {isWideWeb ? renderWebRail() : (
-              <View style={styles.transcriptStack}>
-                {renderTranscriptPanel()}
-              </View>
-            )}
+            {isWideWeb ? renderWebRail() : renderTranscriptPanel()}
           </View>
         );
       }
@@ -1460,13 +1518,13 @@ export default function LessonViewerScreen({ route, navigation }: any) {
         return <PdfPanel uri={resolveMediaUrl(lessonParam.pdfUrl)!} colors={themeColors} />;
 
       case 'HTML': {
-        const webviewSource = getHtmlWebViewSource(lessonParam.htmlContent ?? lessonParam.textContent);
+        const webviewSource = getHtmlWebViewSource(lessonParam.htmlContent);
 
         if (!webviewSource) {
           return <View style={styles.placeholder}><Ionicons name="game-controller-outline" size={24} color={themeColors.textMuted} style={{ marginBottom: 8 }}/><Text style={[styles.placeholderText, { color: themeColors.textMuted }]}>Sem jogo disponível</Text></View>;
         }
 
-        return renderWithWebRail(
+        return (
           <View
             style={{ flex: 1, paddingBottom: androidNavigationInset }}
           >
@@ -1501,7 +1559,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
 
       case 'QUIZ':
         if (lessonParam.quiz) {
-          return renderWithWebRail(<QuizRenderer quiz={lessonParam.quiz as any} onComplete={markComplete} />);
+          return <QuizRenderer quiz={lessonParam.quiz as any} onComplete={markComplete} />;
         }
         return <View style={styles.placeholder}><Text style={[styles.placeholderText, { color: themeColors.textMuted }]}>Quiz não disponível</Text></View>;
 
@@ -1534,7 +1592,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
         {renderContent()}
       </View>
 
-      {!isWideWeb && renderCompleteButton()}
+      {!isWideWeb && renderCompleteButton(false)}
     </View>
   );
 }
@@ -1548,9 +1606,8 @@ const styles = StyleSheet.create({
   typeBadgeText: { fontWeight: 'bold', fontSize: 11 },
   lessonMediaContent: { flex: 1 },
   lessonMediaContentWeb: { flexDirection: 'row', gap: 16, padding: 16, alignItems: 'stretch' },
-  lessonMainPane: { flex: 1, minWidth: 0, minHeight: 0 },
   videoFrame: { backgroundColor: '#000', width: '100%', aspectRatio: 16 / 9 },
-  videoFrameWeb: { flex: 1, width: undefined, alignSelf: 'flex-start', borderRadius: 8, overflow: 'hidden' },
+  videoFrameWeb: { flex: 1, width: undefined, minWidth: 0, borderRadius: 8, overflow: 'hidden', alignSelf: 'flex-start' },
   mediaLoadingOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' },
   mediaLoadingText: { color: '#fff', fontSize: 14, fontWeight: '700', marginTop: 10 },
   youtubeFrameWrap: { flex: 1, backgroundColor: '#000' },
@@ -1578,34 +1635,12 @@ const styles = StyleSheet.create({
   placeholder: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   placeholderText: { fontSize: 16, textAlign: 'center' },
   completeBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', margin: 16, paddingVertical: 14, borderRadius: 30, gap: 8 },
-  completeBtnWeb: { alignSelf: 'center', minWidth: 180, maxWidth: 280, margin: 12, paddingVertical: 9, paddingHorizontal: 16, borderRadius: 8 },
   completeBtnText: { fontWeight: 'bold', fontSize: 16 },
-  completeBtnTextWeb: { fontSize: 13 },
-  transcriptStack: { flex: 1 },
-  lessonSidePanel: { width: 390, flexShrink: 0, borderWidth: 1, borderRadius: 8, overflow: 'hidden', alignSelf: 'stretch' },
-  webPanelTabs: { flexDirection: 'row', margin: 10, padding: 3, borderRadius: 8 },
-  webPanelTab: { flex: 1, minHeight: 34, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
-  webPanelTabText: { fontSize: 12, fontWeight: '900' },
-  webPanelBody: { flex: 1, minHeight: 0 },
-  completeBtnRail: { minWidth: 160, margin: 0, marginRight: 10 },
-  lessonListPanel: { flex: 1, minHeight: 0, overflow: 'hidden' },
-  lessonListHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12 },
-  lessonListTitle: { fontSize: 14, fontWeight: '800' },
-  lessonListCount: { fontSize: 12, fontWeight: '800' },
-  lessonListScroll: { flex: 1, minHeight: 0 },
-  lessonListContent: { paddingHorizontal: 10, paddingBottom: 10 },
-  lessonListItem: { flexDirection: 'row', gap: 10, borderWidth: 1, borderRadius: 8, padding: 9, marginBottom: 8 },
-  lessonListIndex: { width: 24, height: 24, borderRadius: 7, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  lessonListIndexText: { fontSize: 11, fontWeight: '900' },
-  lessonListMeta: { flex: 1, minWidth: 0 },
-  lessonListItemTitle: { fontSize: 12, fontWeight: '700', lineHeight: 16 },
-  lessonListItemType: { fontSize: 10, fontWeight: '800', marginTop: 2, textTransform: 'uppercase' },
+  completeBtnCompact: { minHeight: 38, borderRadius: 8, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginRight: 10 },
+  completeBtnCompactText: { fontWeight: '800', fontSize: 13 },
   transcriptPanel: { flex: 1, borderTopWidth: 1, paddingHorizontal: 18, paddingTop: 16 },
-  transcriptPanelWeb: { borderTopWidth: 0, borderWidth: 0, borderRadius: 0, paddingBottom: 12 },
   transcriptHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   transcriptTitle: { fontSize: 16, fontWeight: '800' },
-  transcriptBtn: { minWidth: 78, height: 34, borderRadius: 17, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 12 },
-  transcriptBtnText: { color: '#fff', fontWeight: '800', fontSize: 13 },
   transcriptScroll: { flex: 1 },
   transcriptScrollContent: { paddingBottom: 16 },
   transcriptSegment: { fontSize: 14, lineHeight: 21, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10, marginBottom: 4 },
@@ -1613,4 +1648,19 @@ const styles = StyleSheet.create({
   transcriptEmpty: { fontSize: 14, lineHeight: 21 },
   mediaProgressPanel: { borderTopWidth: 1, paddingHorizontal: 18, paddingVertical: 10 },
   mediaProgressText: { fontSize: 12, fontWeight: '700', lineHeight: 18 },
+  webRail: { width: 360, flexShrink: 0, borderWidth: 1, borderRadius: 8, overflow: 'hidden' },
+  webPanelTabs: { flexDirection: 'row', borderBottomWidth: 1 },
+  webPanelTab: { flex: 1, alignItems: 'center', paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  webPanelTabText: { fontSize: 13, fontWeight: '800' },
+  webPanelBody: { flex: 1, minHeight: 0 },
+  lessonListPanel: { flex: 1, padding: 12 },
+  lessonListHeader: { marginBottom: 8 },
+  lessonListCount: { fontSize: 12, fontWeight: '800' },
+  lessonListContent: { gap: 8, paddingBottom: 12 },
+  lessonListItem: { flexDirection: 'row', gap: 10, borderWidth: 1, borderRadius: 8, padding: 10 },
+  lessonListIndex: { width: 26, height: 26, borderRadius: 7, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  lessonListIndexText: { fontSize: 11, fontWeight: '900' },
+  lessonListText: { flex: 1, minWidth: 0 },
+  lessonListTitle: { fontSize: 13, fontWeight: '800', lineHeight: 17 },
+  lessonListMeta: { fontSize: 11, fontWeight: '800', marginTop: 3, textTransform: 'uppercase' },
 });

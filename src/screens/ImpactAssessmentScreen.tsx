@@ -45,7 +45,7 @@ export default function ImpactAssessmentScreen({ route, navigation }: any) {
   const finish = (result?: any) => {
     const impact = result?.impact;
     const message = impact?.impactPercent !== null && impact?.impactPercent !== undefined
-      ? `Impacto calculado: ${impact.impactPercent}%`
+      ? `Melhoria de aprendizagem calculada: ${impact.impactPercent}%`
       : impactType === 'BASELINE'
         ? 'Avaliação inicial guardada. Pode começar o curso.'
         : 'Avaliação final guardada.';
@@ -82,7 +82,7 @@ export default function ImpactAssessmentScreen({ route, navigation }: any) {
             {impactType === 'BASELINE' ? 'Avaliação Inicial' : 'Avaliação Final'}
           </Text>
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-            {impactType === 'BASELINE' ? 'Obrigatória antes de começar' : 'Obrigatória para medir o impacto'}
+            {impactType === 'BASELINE' ? 'Obrigatória antes de começar' : 'Obrigatória para medir a melhoria'}
           </Text>
         </View>
       </View>
@@ -91,7 +91,7 @@ export default function ImpactAssessmentScreen({ route, navigation }: any) {
         <Text style={[styles.infoText, { color: colors.textMuted }]}>
           {impactType === 'BASELINE'
             ? 'Esta avaliação não é para passar ou chumbar. Serve para perceber o seu ponto de partida antes de começar a aprender.'
-            : 'Esta avaliação mede a sua evolução depois do curso. Não é para castigar; ajuda a medir o impacto real da aprendizagem.'}
+            : 'Esta avaliação mede a sua evolução depois do curso. Não é para castigar; ajuda a medir a melhoria real da aprendizagem.'}
         </Text>
       </View>
       <QuizRenderer

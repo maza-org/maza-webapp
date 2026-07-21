@@ -10,6 +10,14 @@ import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 
+function getOtpErrorMessage(err: any, fallback: string) {
+  const message = String(err?.message ?? '');
+  if (/network request failed|failed to fetch|networkerror/i.test(message)) {
+    return 'Não foi possível contactar o servidor. Verifique a sua ligação à internet e tente novamente.';
+  }
+  return message || fallback;
+}
+
 export default function OtpVerificationScreen({ route, navigation }: any) {
   const { phone } = route.params;
   const { verifyOtp } = useAuth();
@@ -34,7 +42,7 @@ export default function OtpVerificationScreen({ route, navigation }: any) {
     try {
       await verifyOtp(phone, otpCode);
     } catch (err: any) {
-      Alert.alert('Erro', err.message || 'Código inválido. Tente novamente.');
+      Alert.alert('Erro', getOtpErrorMessage(err, 'C�digo inv�lido. Tente novamente.'));
     } finally {
       setLoading(false);
     }
@@ -54,7 +62,7 @@ export default function OtpVerificationScreen({ route, navigation }: any) {
       inputRef.current?.focus();
       Alert.alert('Código enviado', 'Um novo código foi enviado para o seu número.');
     } catch (err: any) {
-      Alert.alert('Erro', err.message);
+      Alert.alert('Erro', getOtpErrorMessage(err, 'N�o foi poss�vel reenviar o c�digo.'));
     } finally {
       setResending(false);
     }
@@ -135,20 +143,7 @@ export default function OtpVerificationScreen({ route, navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
-  content: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
-    width: '100%',
-    ...(Platform.OS === 'web'
-      ? {
-          maxWidth: 520,
-          alignSelf: 'center',
-          justifyContent: 'center',
-          paddingVertical: 36,
-        }
-      : null),
-  },
+  content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 40 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0F0F0', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
   logo: { width: 160, height: 70, marginBottom: 32, alignSelf: 'flex-start' },
   title: { fontSize: 28, fontWeight: 'bold', color: '#1A1A2E', marginBottom: 8 },

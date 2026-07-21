@@ -3,11 +3,12 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Activi
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
-import { Search, MapPin, Briefcase, ExternalLink, Clock, ChevronRight, SlidersHorizontal, X } from 'lucide-react-native';
+import { Search, MapPin, Briefcase, ExternalLink, Clock, ChevronRight, SlidersHorizontal, X, Sparkles } from 'lucide-react-native';
 import api from '../services/api';
 import { colors } from '../theme/colors';
 import { decodeHtmlEntities } from '../utils/text';
 import { bottomSafeSpace } from '../utils/safeArea';
+import { useIsWideWeb } from '../utils/webViewport';
 
 const TABS = ['Todos', 'EMPLOYMENT', 'INTERNSHIP', 'CHALLENGE'];
 const TAB_LABELS: Record<string, string> = { Todos: 'Todos', EMPLOYMENT: 'Vagas', INTERNSHIP: 'Estágios', CHALLENGE: 'Desafios' };
@@ -40,6 +41,7 @@ function normalizeJob(job: any) {
 export default function JobsScreen({ navigation }: any) {
   const { colors: themeColors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const isWideWeb = useIsWideWeb(900);
   const [jobs, setJobs] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('Todos');
   const [search, setSearch] = useState('');
@@ -52,7 +54,7 @@ export default function JobsScreen({ navigation }: any) {
       let isActive = true;
       (async () => {
         try {
-          const { data } = await api.get<any[]>('/jobs', {
+          const { data } = await api.get<any[]>('/jobs?personalized=true', {
             headers: { 'Cache-Control': 'no-cache' },
           });
           if (isActive) {
@@ -93,6 +95,7 @@ export default function JobsScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
+      <View style={isWideWeb ? styles.webPage : undefined}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: themeColors.text }]}>Oportunidades</Text>
       </View>
@@ -161,6 +164,12 @@ export default function JobsScreen({ navigation }: any) {
           ListFooterComponent={<View style={{ height: bottomSafeSpace(insets.bottom, 20) }} />}
           renderItem={({ item: job }) => (
             <TouchableOpacity key={job.id} style={[styles.jobCard, { backgroundColor: themeColors.card }]} onPress={() => openJobDetail(job)}>
+              {job.matchScore >= 20 && (
+                <View style={[styles.recommendedRow, { backgroundColor: themeColors.primary + '12' }]}>
+                  <Sparkles size={13} color={themeColors.primary} />
+                  <Text style={[styles.recommendedText, { color: themeColors.primary }]}>Recomendado para si · {job.matchScore}% compatível</Text>
+                </View>
+              )}
               <View style={styles.jobHeader}>
                 <View style={[styles.companyLogo, { backgroundColor: isDark ? '#334155' : '#E0E7FF' }]}>
                   <Text style={[styles.logoText, { color: themeColors.primary }]}>{job.company.charAt(0)}</Text>
@@ -170,6 +179,7 @@ export default function JobsScreen({ navigation }: any) {
                   <Text style={[styles.companyName, { color: themeColors.textMuted }]} numberOfLines={1}>{job.company}</Text>
                 </View>
               </View>
+              {job.matchReasons?.[0] ? <Text style={[styles.matchReason, { color: themeColors.textMuted }]}>{job.matchReasons[0]}</Text> : null}
               <View style={styles.detailsRow}>
                 {job.location && (
                   <View style={[styles.badge, { backgroundColor: isDark ? '#1e293b' : themeColors.background }]}>
@@ -202,6 +212,7 @@ export default function JobsScreen({ navigation }: any) {
           )}
         />
       )}
+      </View>
 
       <Modal visible={showProvinceModal} transparent animationType="slide" onRequestClose={() => setShowProvinceModal(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowProvinceModal(false)}>
@@ -263,6 +274,7 @@ export default function JobsScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  webPage: { flex: 1, width: '100%', maxWidth: 1000, alignSelf: 'center', paddingTop: 8 },
   header: { padding: 24, paddingBottom: 12 },
   title: { fontSize: 28, fontWeight: 'bold' },
   searchRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 24, marginBottom: 14, gap: 10 },
@@ -275,6 +287,9 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 24 },
   empty: { textAlign: 'center', marginTop: 40, fontSize: 16 },
   jobCard: { borderRadius: 16, padding: 20, marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
+  recommendedRow: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5, marginBottom: 12 },
+  recommendedText: { fontSize: 11, fontWeight: '700' },
+  matchReason: { fontSize: 12, marginTop: -4, marginBottom: 12 },
   jobHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
   companyLogo: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
   logoText: { fontSize: 20, fontWeight: 'bold' },
