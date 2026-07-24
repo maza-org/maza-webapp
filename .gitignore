@@ -6,8 +6,11 @@ node_modules/
 # Expo
 .expo/
 dist/
+dist-*/
 web-build/
 expo-env.d.ts
+.runtime/
+.git-backup-before-root-import/
 
 # Native
 .kotlin/
@@ -17,6 +20,10 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+*.apk
+*.aab
+*.ipa
+android-keys.*
 
 # Metro
 .metro-health-check*
@@ -25,10 +32,14 @@ expo-env.d.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+*.log
+*.err.log
+*.out.log
 
 # macOS
 .DS_Store
 *.pem
+.vscode/
 
 # local env files
 .env
@@ -51,3 +62,4 @@ store-assets/screenshots/
 
 .vercel
 .env*
+!.env.example
