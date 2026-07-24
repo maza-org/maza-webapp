@@ -48,3 +48,6 @@ store-assets/screenshots/
 # generated native folders
 /ios
 /android
+
+.vercel
+.env*

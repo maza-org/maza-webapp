@@ -5,9 +5,12 @@ import {
 } from 'react-native';
 import CrossPlatformWebView from '../components/CrossPlatformWebView';
 import QuizRenderer from '../components/QuizRenderer';
-import { Audio, InterruptionModeAndroid, InterruptionModeIOS, ResizeMode, Video } from 'expo-av';
+import { useEventListener } from 'expo';
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useKeepAwake } from 'expo-keep-awake';
 import * as Sharing from 'expo-sharing';
+import * as Network from 'expo-network';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
@@ -18,6 +21,7 @@ import { cacheMediaInBackground, getCachedMediaUri } from '../utils/mediaCache';
 import NativePdf from '../components/NativePdf';
 import { useIsWideWeb } from '../utils/webViewport';
 import { queueOfflineRequest } from '../services/offlineQueue';
+import { getOfflineCourseSnapshot, getOfflineLesson, markOfflineLessonCompleted } from '../services/offlineCourses';
 
 const API_BASE = _API_BASE.replace('/api', '');
 const TRANSCRIPT_HIGHLIGHT_OFFSET_SECONDS = 0;
@@ -37,7 +41,8 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
 
 function resolveMediaUrl(url: string | null | undefined) {
   if (!url) return null;
-  return url.startsWith('http') ? url : `${API_BASE}${url}`;
+  if (/^(https?:|file:|content:|data:|blob:)/i.test(url)) return url;
+  return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
 function normalizeMediaSource(url: string | null | undefined) {
@@ -97,6 +102,8 @@ function extractYouTubeId(url: string | null | undefined) {
 function getHtmlWebViewSource(htmlContent: string | null | undefined) {
   const content = htmlContent?.trim();
   if (!content) return null;
+  const localFileMatch = content.match(/^file(?::)?\/{2,}(.*)$/i);
+  if (localFileMatch) return { uri: `file:///${localFileMatch[1]}` };
   const isInlineHtml = /^(<!doctype\s+html|<html|<body|<div|<section|<main|<script|<style)/i.test(content);
   if (isInlineHtml) return { html: content };
   const resolved = resolveMediaUrl(content);
@@ -104,7 +111,7 @@ function getHtmlWebViewSource(htmlContent: string | null | undefined) {
     const uploadPath = resolved.replace(/^https?:\/\/[^/]+\/uploads\//i, '/uploads/');
     return { uri: `${API_BASE}/api/media/html/${uploadPath.replace(/^\//, '')}` };
   }
-  return resolved?.startsWith('http') ? { uri: resolved } : resolved ? { html: resolved } : null;
+  return resolved && /^(https?:|file:)/i.test(resolved) ? { uri: resolved } : resolved ? { html: resolved } : null;
 }
 
 function shouldUseCachedVideoUri(cachedUri: string | null, remoteUri: string | null) {
@@ -154,6 +161,8 @@ type Lesson = {
   duration?: number | null;
   minDuration?: number | null;
   points?: number;
+  offlineToken?: string;
+  isCompleted?: boolean;
   quiz?: { id: string; questions: Question[] } | null;
 };
 
@@ -413,14 +422,6 @@ function GameWebView({
         onLoadEnd={markReady}
         style={{ flex: 1, opacity: ready ? 1 : 0 }}
       />
-      {!ready && (
-        <View style={[gameStyles.loadingOverlay, { backgroundColor: themeColors.background }]}>
-          <View style={[gameStyles.loadingCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
-            <ActivityIndicator size="small" color={themeColors.primary} />
-            <Text style={[gameStyles.loadingTitle, { color: themeColors.text }]}>A preparar aula...</Text>
-          </View>
-        </View>
-      )}
     </View>
   );
 }
@@ -432,94 +433,80 @@ function NativeVideoPlayer({
   uri: string;
   onPlaybackTime: (currentTime: number, duration: number) => void;
 }) {
-  const videoRef = useRef<Video | null>(null);
-  const autoplayStartedRef = useRef(false);
-  const autoplayAttemptsRef = useRef(0);
   const [isReady, setIsReady] = useState(false);
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
+  const autoplayStartedRef = useRef(false);
+  const onPlaybackTimeRef = useRef(onPlaybackTime);
+  const player = useVideoPlayer({ uri }, (createdPlayer) => {
+    createdPlayer.muted = false;
+    createdPlayer.volume = 1;
+    createdPlayer.timeUpdateEventInterval = 0.35;
+  });
 
-  const forceAudiblePlayback = async () => {
-    if (autoplayStartedRef.current || autoplayAttemptsRef.current >= 3) return false;
-    autoplayAttemptsRef.current += 1;
-    await configureMediaAudioMode();
-    const status = await videoRef.current?.getStatusAsync();
-    if (!status?.isLoaded) return false;
-    if ((status.positionMillis ?? 0) > 1500) {
-      autoplayStartedRef.current = true;
-      return true;
-    }
-
-    await videoRef.current?.setStatusAsync({
-      shouldPlay: true,
-      isMuted: false,
-      volume: 1,
-      progressUpdateIntervalMillis: 350,
-    });
-    if (!status.isPlaying) {
-      await videoRef.current?.playAsync();
-    }
-    autoplayStartedRef.current = true;
-    return true;
-  };
+  useEffect(() => {
+    onPlaybackTimeRef.current = onPlaybackTime;
+  }, [onPlaybackTime]);
 
   useEffect(() => {
     let mounted = true;
-    let retryTimer: ReturnType<typeof setTimeout> | null = null;
-
     autoplayStartedRef.current = false;
-    autoplayAttemptsRef.current = 0;
     setIsReady(false);
     setHasPlaybackError(false);
 
     configureMediaAudioMode()
       .then(() => {
         if (!mounted) return;
-        retryTimer = setTimeout(() => {
-          forceAudiblePlayback().catch(() => {});
-        }, 500);
+        player.muted = false;
+        player.volume = 1;
+        player.play();
+        autoplayStartedRef.current = true;
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!mounted) return;
+        player.play();
+        autoplayStartedRef.current = true;
+      });
 
     return () => {
       mounted = false;
-      if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [uri]);
+  }, [player, uri]);
+
+  useEventListener(player, 'statusChange', ({ status }) => {
+    if (status === 'readyToPlay') {
+      setHasPlaybackError(false);
+      if (!autoplayStartedRef.current) {
+        player.play();
+        autoplayStartedRef.current = true;
+      }
+    }
+    if (status === 'error') {
+      setHasPlaybackError(true);
+      setIsReady(true);
+    }
+  });
+
+  useEventListener(player, 'timeUpdate', ({ currentTime }) => {
+    onPlaybackTimeRef.current(currentTime, player.duration || 0);
+  });
+
+  useEventListener(player, 'playToEnd', () => {
+    const duration = player.duration || 0;
+    onPlaybackTimeRef.current(duration, duration);
+  });
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
-      <Video
-        ref={videoRef}
-        source={{ uri }}
+      <VideoView
+        player={player}
         style={{ flex: 1, backgroundColor: '#000' }}
-        useNativeControls
-        shouldPlay
-        isMuted={false}
-        volume={1}
-        resizeMode={ResizeMode.CONTAIN}
-        progressUpdateIntervalMillis={350}
-        onLoadStart={() => {
-          setIsReady(false);
+        nativeControls
+        contentFit="contain"
+        fullscreenOptions={{ enable: true }}
+        surfaceType="surfaceView"
+        onFirstFrameRender={() => {
+          setIsReady(true);
           setHasPlaybackError(false);
-        }}
-        onLoad={() => {
-          setIsReady(true);
-          forceAudiblePlayback().catch(() => {});
-        }}
-        onReadyForDisplay={() => {
-          setIsReady(true);
-          forceAudiblePlayback().catch(() => {});
-        }}
-        onError={() => {
-          setHasPlaybackError(true);
-          setIsReady(true);
-        }}
-        onPlaybackStatusUpdate={(status: any) => {
-          if (!status?.isLoaded) return;
-          if (!autoplayStartedRef.current && !status.isPlaying && (status.positionMillis ?? 0) < 1500) {
-            forceAudiblePlayback().catch(() => {});
-          }
-          onPlaybackTime((status.positionMillis ?? 0) / 1000, (status.durationMillis ?? 0) / 1000);
         }}
       />
       {!isReady && (
@@ -830,20 +817,7 @@ const gameStyles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
   },
-  loadingCard: {
-    minWidth: 170,
-    borderWidth: 1,
-    borderRadius: 18,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    alignItems: 'center',
-    gap: 10,
-    shadowColor: '#0F172A',
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
-    elevation: 2,
-  },
-  loadingTitle: { fontSize: 14, fontWeight: '800' },
+  loadingTitle: { marginTop: 12, fontSize: 14, fontWeight: '700' },
 });
 
 // ------------------------------------------------------------
@@ -872,7 +846,18 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const [courseProgress, setCourseProgress] = useState<any>(null);
   const [completed, setCompleted] = useState(false);
   const [marking, setMarking] = useState(false);
-  const lessonMediaUrl = lessonParam.contentType === 'AUDIO' ? lessonParam.audioUrl : lessonParam.videoUrl;
+  const htmlMediaUrl = lessonParam.contentType === 'HTML'
+    && typeof lessonParam.htmlContent === 'string'
+    && /^(https?:|file:|\/)/i.test(lessonParam.htmlContent)
+      ? lessonParam.htmlContent
+      : null;
+  const lessonMediaUrl = lessonParam.contentType === 'AUDIO'
+    ? lessonParam.audioUrl
+    : lessonParam.contentType === 'PDF'
+      ? lessonParam.pdfUrl
+      : lessonParam.contentType === 'HTML'
+        ? htmlMediaUrl
+      : lessonParam.videoUrl;
   const transcriptMatchesLessonMedia = lessonParam.transcriptStatus === 'READY'
     || (!lessonParam.transcriptStatus && isSameMediaSource(lessonParam.transcriptSourceUrl, lessonMediaUrl));
   const initialTranscript = useMemo(() => (
@@ -891,8 +876,11 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const [mediaTime, setMediaTime] = useState(0);
   const [mediaDuration, setMediaDuration] = useState(lessonParam.duration ?? 0);
   const [cachedMediaUri, setCachedMediaUri] = useState<string | null>(null);
+  const [mediaSourceReady, setMediaSourceReady] = useState(false);
   const [playbackVideoUrl, setPlaybackVideoUrl] = useState<string | null>(null);
   const playbackTimeRef = useRef(0);
+  const reportedDurationRef = useRef<number | null>(null);
+  const lessonOpenedAtRef = useRef(new Date().toISOString());
   const transcriptScrollRef = useRef<ScrollView | null>(null);
   const transcriptSegmentLayouts = useRef<Record<number, { y: number; height: number }>>({});
   const [transcriptViewportHeight, setTranscriptViewportHeight] = useState(0);
@@ -946,6 +934,10 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     () => shouldUseCachedVideoUri(cachedMediaUri, resolvedVideoUrl) ? cachedMediaUri : resolvedVideoUrl,
     [cachedMediaUri, resolvedVideoUrl]
   );
+  const htmlWebViewSource = useMemo(() => {
+    if (lessonParam.contentType !== 'HTML' || !mediaSourceReady) return null;
+    return getHtmlWebViewSource(cachedMediaUri || lessonParam.htmlContent);
+  }, [cachedMediaUri, lessonParam.contentType, lessonParam.htmlContent, mediaSourceReady]);
   const youtubeEmbedHtml = useMemo(() => {
     if (!ytId) return '';
     return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{margin:0;padding:0;box-sizing:border-box}html,body,#player{width:100%;height:100%;background:#000;overflow:hidden}</style></head><body><div id="player"></div><script src="https://www.youtube.com/iframe_api"></script><script>let player;let timer;function send(payload){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(JSON.stringify(payload));}function report(){if(!player||!player.getCurrentTime)return;send({type:'media-time',currentTime:player.getCurrentTime()||0,duration:player.getDuration()||0});}function onYouTubeIframeAPIReady(){player=new YT.Player('player',{width:'100%',height:'100%',videoId:'${ytId}',playerVars:{autoplay:1,playsinline:1,rel:0,modestbranding:1,controls:1},events:{onReady:function(){send({type:'media-duration',duration:player.getDuration()||0});player.playVideo();timer=setInterval(report,500);},onStateChange:report}});}window.addEventListener('beforeunload',function(){if(timer)clearInterval(timer);});</script></body></html>`;
@@ -1012,28 +1004,48 @@ export default function LessonViewerScreen({ route, navigation }: any) {
 
     setLessonLoading(true);
     setLessonError(null);
-    refreshPersistentCached<Lesson>(`/courses/lessons/${id}`, 30 * 60 * 1000)
-      .then((lesson) => {
-        if (!active) return;
-        setLessonParam(lesson);
+    void (async () => {
+      const offlineLesson = await getOfflineLesson(courseId, id).catch(() => null);
+      if (offlineLesson && active) {
+        setLessonParam(offlineLesson);
+        setLessonLoading(false);
         setLessonError(null);
-      })
-      .catch(() => {
+      }
+
+      try {
+        const freshLesson = await refreshPersistentCached<Lesson>(`/courses/lessons/${id}`, 30 * 60 * 1000);
         if (!active) return;
-        setLessonError('Não foi possível carregar esta lição. Verifique a ligação e tente novamente.');
-      })
-      .finally(() => {
+        setLessonParam((current) => ({
+          ...freshLesson,
+          offlineToken: current.id === freshLesson.id ? current.offlineToken : freshLesson.offlineToken,
+        }));
+        setLessonError(null);
+      } catch {
+        if (offlineLesson || !active) return;
+        try {
+          const cachedLesson = await getPersistentCached<Lesson>(`/courses/lessons/${id}`, 30 * 60 * 1000);
+          if (!active) return;
+          setLessonParam(cachedLesson);
+          setLessonError(null);
+        } catch {
+          if (active) setLessonError('Esta aula não está guardada neste dispositivo. Ligue-se à internet e tente novamente.');
+        }
+      } finally {
         if (active) setLessonLoading(false);
-      });
+      }
+    })();
 
     return () => { active = false; };
-  }, [routeLessonId, routeLesson?.id]);
+  }, [courseId, routeLessonId, routeLesson?.id]);
 
   useEffect(() => {
     if (!['PENDING', 'PROCESSING'].includes(lessonParam.transcriptStatus ?? '')) return;
     const timer = setInterval(() => {
       api.get(`/courses/lessons/${lessonParam.id}`)
-        .then((response) => setLessonParam(response.data))
+        .then((response) => setLessonParam((current) => ({
+          ...response.data,
+          offlineToken: current.offlineToken,
+        })))
         .catch(() => undefined);
     }, 15000);
     return () => clearInterval(timer);
@@ -1045,20 +1057,18 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     setMediaDuration(lessonParam.duration ?? 0);
     setMediaTime(0);
     playbackTimeRef.current = 0;
+    reportedDurationRef.current = null;
+    lessonOpenedAtRef.current = new Date().toISOString();
     setCountdown(getRequiredLessonSeconds(lessonParam));
     setCompleted(false);
     setHtmlContentReady(lessonParam.contentType !== 'HTML');
   }, [lessonParam.id, initialTranscript, initialSyncedTranscriptSegments]);
 
   useEffect(() => {
-    setPlaybackVideoUrl(lessonParam.contentType === 'VIDEO' ? resolvedVideoUrl : null);
-  }, [lessonParam.id, lessonParam.contentType, resolvedVideoUrl]);
-
-  useEffect(() => {
-    if (!playbackVideoUrl && lessonParam.contentType === 'VIDEO' && preferredVideoUrl) {
-      setPlaybackVideoUrl(preferredVideoUrl);
-    }
-  }, [lessonParam.contentType, playbackVideoUrl, preferredVideoUrl]);
+    setPlaybackVideoUrl(
+      lessonParam.contentType === 'VIDEO' && mediaSourceReady ? preferredVideoUrl : null
+    );
+  }, [lessonParam.id, lessonParam.contentType, mediaSourceReady, preferredVideoUrl]);
 
   useEffect(() => {
     const resolved = resolveMediaUrl(lessonMediaUrl);
@@ -1066,15 +1076,26 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     setMediaTime(0);
     playbackTimeRef.current = 0;
     setCachedMediaUri(null);
-    if (lessonLoading || !resolved || (lessonParam.contentType !== 'VIDEO' && lessonParam.contentType !== 'AUDIO')) return;
+    setMediaSourceReady(false);
+    if (lessonLoading) return;
+    if (!resolved || !['VIDEO', 'AUDIO', 'PDF', 'HTML'].includes(lessonParam.contentType)) {
+      setMediaSourceReady(true);
+      return;
+    }
 
-    getCachedMediaUri(resolved).then((local) => {
-      if (active && local) setCachedMediaUri(local);
-      if (local || !active) return;
-      cacheMediaInBackground(resolved).then((downloaded) => {
-        if (active && downloaded) setCachedMediaUri(downloaded);
-      });
-    });
+    void (async () => {
+      const local = await getCachedMediaUri(resolved);
+      if (!active) return;
+
+      // Keep one source for the current session. Swapping a remote URL for a
+      // freshly downloaded file would restart videos and HTML activities.
+      setCachedMediaUri(local);
+      setMediaSourceReady(true);
+
+      if (!local) {
+        void cacheMediaInBackground(resolved);
+      }
+    })();
     return () => { active = false; };
   }, [lessonParam.id, lessonMediaUrl, lessonParam.contentType, lessonLoading]);
 
@@ -1145,8 +1166,17 @@ export default function LessonViewerScreen({ route, navigation }: any) {
 
     if (safeDuration > 0) {
       setMediaDuration(safeDuration);
+
+      const roundedDuration = Math.round(safeDuration);
+      if (
+        lessonParam.contentType === 'VIDEO'
+        && reportedDurationRef.current !== roundedDuration
+      ) {
+        reportedDurationRef.current = roundedDuration;
+        api.post(`/progress/lesson/${lessonParam.id}/duration`, { duration: roundedDuration }).catch(() => {});
+      }
     }
-  }, []);
+  }, [lessonParam.contentType, lessonParam.id]);
 
   const handleMediaMessage = (event: any) => {
     try {
@@ -1183,22 +1213,37 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     return nextLesson;
   };
 
-  const openNextLessonOrReturn = async () => {
-    try {
-      const [courseRes, progressRes] = await Promise.all([
-        api.get(`/courses/${courseId}?lessonScope=unlocked`),
-        api.get(`/progress/course/${courseId}?lessonScope=unlocked`),
-      ]);
-      const nextLesson = findNextUnlockedLesson(courseRes.data, progressRes.data, lessonParam.id);
-      if (nextLesson?.id) {
-        navigation.replace('LessonViewer', {
-          lesson: nextLesson,
-          lessonId: nextLesson.id,
-          courseId,
-        });
-        return;
-      }
-    } catch {}
+  const openNextLessonOrReturn = async (offlineOnly = false) => {
+    if (!offlineOnly) {
+      try {
+        const [courseRes, progressRes] = await Promise.all([
+          api.get(`/courses/${courseId}?lessonScope=unlocked`),
+          api.get(`/progress/course/${courseId}?lessonScope=unlocked`),
+        ]);
+        const nextLesson = findNextUnlockedLesson(courseRes.data, progressRes.data, lessonParam.id);
+        if (nextLesson?.id) {
+          navigation.replace('LessonViewer', {
+            lesson: nextLesson,
+            lessonId: nextLesson.id,
+            courseId,
+          });
+          return;
+        }
+      } catch {}
+    }
+
+    const offlineCourse = await getOfflineCourseSnapshot(courseId).catch(() => null);
+    const nextLesson = offlineCourse
+      ? findNextUnlockedLesson(offlineCourse, { modules: offlineCourse.modules }, lessonParam.id)
+      : null;
+    if (nextLesson?.id) {
+      navigation.replace('LessonViewer', {
+        lesson: nextLesson,
+        lessonId: nextLesson.id,
+        courseId,
+      });
+      return;
+    }
     navigation.goBack();
   };
 
@@ -1220,7 +1265,37 @@ export default function LessonViewerScreen({ route, navigation }: any) {
       return;
     }
     setMarking(true);
+    const saveOfflineCompletion = async () => {
+      const completedAt = new Date().toISOString();
+      await queueOfflineRequest({
+        method: 'post',
+        url: `/progress/lesson/${lessonParam.id}/complete`,
+        data: {
+          proof: {
+            contentType: lessonParam.contentType,
+            currentTime: mediaTime,
+            duration: mediaDuration || lessonParam.duration || 0,
+            watchedToEnd: canCompleteVideoLesson,
+            offline: true,
+            startedAt: lessonOpenedAtRef.current,
+            completedAt,
+          },
+          offlineToken: lessonParam.offlineToken,
+        },
+      });
+      await markOfflineLessonCompleted(courseId, lessonParam.id);
+      setCompleted(true);
+      if (!silent) Alert.alert('Guardado no dispositivo', 'O progresso será sincronizado quando voltar a ter internet.');
+      if (navigateAfter) await openNextLessonOrReturn(true);
+    };
+
     try {
+      const networkState = await Network.getNetworkStateAsync().catch(() => null);
+      const offlineNow = networkState?.isConnected === false || networkState?.isInternetReachable === false;
+      if (offlineNow) {
+        await saveOfflineCompletion();
+        return;
+      }
       await api.post(`/progress/lesson/${lessonParam.id}/complete`, {
         proof: {
           contentType: lessonParam.contentType,
@@ -1229,6 +1304,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
           watchedToEnd: canCompleteVideoLesson,
         },
       });
+      await markOfflineLessonCompleted(courseId, lessonParam.id);
       setCompleted(true);
       if (navigateAfter) await openNextLessonOrReturn();
     } catch (err: any) {
@@ -1236,26 +1312,13 @@ export default function LessonViewerScreen({ route, navigation }: any) {
       if (data?.error === 'anti_cheat') {
         if (!silent) Alert.alert('Demasiado rápido!', data.message ?? 'Passa mais tempo na lição antes de concluir.');
       } else if (!err?.response) {
-        await queueOfflineRequest({
-          method: 'post',
-          url: `/progress/lesson/${lessonParam.id}/complete`,
-          data: {
-            proof: {
-              contentType: lessonParam.contentType,
-              currentTime: mediaTime,
-              duration: mediaDuration || lessonParam.duration || 0,
-              watchedToEnd: canCompleteVideoLesson,
-            },
-          },
-        });
-        setCompleted(true);
-        if (!silent) Alert.alert('Guardado no dispositivo', 'O progresso será sincronizado quando voltar a ter internet.');
-        if (navigateAfter) await openNextLessonOrReturn();
+        await saveOfflineCompletion();
       } else if (!silent) {
         navigation.goBack();
       }
+    } finally {
+      setMarking(false);
     }
-    setMarking(false);
   };
 
   useEffect(() => {
@@ -1428,7 +1491,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
       return (
         <View style={styles.placeholder}>
           <ActivityIndicator color={themeColors.primary} size="large" />
-          <Text style={[styles.placeholderText, { color: themeColors.textMuted, marginTop: 12 }]}>A carregar lição...</Text>
+          <Text style={[styles.placeholderText, { color: themeColors.textMuted, marginTop: 12 }]}>A preparar aula...</Text>
         </View>
       );
     }
@@ -1515,23 +1578,29 @@ export default function LessonViewerScreen({ route, navigation }: any) {
 
       case 'PDF':
         if (!lessonParam.pdfUrl) return <View style={styles.placeholder}><Ionicons name="document-text-outline" size={24} color={themeColors.textMuted} style={{ marginBottom: 8 }}/><Text style={[styles.placeholderText, { color: themeColors.textMuted }]}>Sem PDF disponível</Text></View>;
-        return <PdfPanel uri={resolveMediaUrl(lessonParam.pdfUrl)!} colors={themeColors} />;
+        return <PdfPanel uri={cachedMediaUri || resolveMediaUrl(lessonParam.pdfUrl)!} colors={themeColors} />;
 
       case 'HTML': {
-        const webviewSource = getHtmlWebViewSource(lessonParam.htmlContent);
-
-        if (!webviewSource) {
+        if (mediaSourceReady && !htmlWebViewSource) {
           return <View style={styles.placeholder}><Ionicons name="game-controller-outline" size={24} color={themeColors.textMuted} style={{ marginBottom: 8 }}/><Text style={[styles.placeholderText, { color: themeColors.textMuted }]}>Sem jogo disponível</Text></View>;
         }
 
         return (
           <View
             style={{ flex: 1, paddingBottom: androidNavigationInset }}
-          >
-            <GameWebView
-              source={webviewSource}
-              onReady={() => setHtmlContentReady(true)}
-            />
+            >
+            {htmlWebViewSource ? (
+              <GameWebView
+                source={htmlWebViewSource}
+                onReady={() => setHtmlContentReady(true)}
+              />
+            ) : null}
+            {!htmlContentReady ? (
+              <View style={[gameStyles.loadingOverlay, { backgroundColor: themeColors.background }]}>
+                <ActivityIndicator size="large" color={themeColors.primary} />
+                <Text style={[gameStyles.loadingTitle, { color: themeColors.textMuted }]}>A preparar aula...</Text>
+              </View>
+            ) : null}
           </View>
         );
       }

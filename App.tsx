@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { startAppUsageTracking } from './src/services/analytics';
+import OfflineDownloadBanner from './src/components/OfflineDownloadBanner';
+import { initializeOfflineDownloads } from './src/services/offlineCourses';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -19,10 +21,16 @@ function Root() {
     return startAppUsageTracking();
   }, [loading, token]);
 
+  useEffect(() => {
+    if (loading || !token || Platform.OS === 'web') return;
+    void initializeOfflineDownloads();
+  }, [loading, token]);
+
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <AppNavigator />
+      {token ? <OfflineDownloadBanner /> : null}
     </>
   );
 }

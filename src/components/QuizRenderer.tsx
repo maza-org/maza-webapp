@@ -7,17 +7,47 @@ import { colors } from '../theme/colors';
 import api from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Network from 'expo-network';
 import { bottomSafeSpace } from '../utils/safeArea';
+import { queueOfflineRequest } from '../services/offlineQueue';
 
 type Question = {
   id: string; questionType: string; text: string;
   options: string; explanation?: string | null; points: number;
+  offlineAnswer?: string | null;
 };
+
+function gradeOfflineAnswer(question: Question, answerData: string) {
+  try {
+    switch (question.questionType) {
+      case 'MULTIPLE_CHOICE':
+      case 'TRUE_FALSE':
+        return answerData === question.offlineAnswer;
+      case 'FILL_IN_THE_BLANK':
+      case 'SHORT_ANSWER':
+        return !!question.offlineAnswer
+          && answerData.trim().toLowerCase() === question.offlineAnswer.trim().toLowerCase();
+      case 'ORDERING':
+        return JSON.stringify(JSON.parse(answerData)) === JSON.stringify(JSON.parse(question.offlineAnswer ?? '[]'));
+      case 'MATCHING': {
+        const userPairs: Array<{ left: string; right: string }> = JSON.parse(answerData);
+        const correctPairs: Array<{ left: string; right: string }> = JSON.parse(question.options);
+        return userPairs.length === correctPairs.length && correctPairs.every((correct) =>
+          userPairs.some((item) => item.left === correct.left && item.right === correct.right)
+        );
+      }
+      default:
+        return false;
+    }
+  } catch {
+    return false;
+  }
+}
 
 export default function QuizRenderer({
   quiz, onComplete, submitEndpoint, mode = 'quiz',
 }: {
-  quiz: { id: string; timeLimit?: number; questions: Question[] };
+  quiz: { id: string; timeLimit?: number; minScore?: number; questions: Question[] };
   onComplete: (result?: any) => void;
   submitEndpoint?: string;
   mode?: 'quiz' | 'impact';
@@ -88,12 +118,40 @@ export default function QuizRenderer({
     try {
       const final: Record<string, string> = { ...answersRef.current };
       quiz.questions.forEach((q) => { if (!final[q.id]) final[q.id] = ''; });
-      const res = await api.post(submitEndpoint ?? `/quizzes/${quiz.id}/submit`, {
+      const endpoint = submitEndpoint ?? `/quizzes/${quiz.id}/submit`;
+      const submission = {
         answers: quiz.questions.map((q) => ({ questionId: q.id, answerData: final[q.id] })),
-      });
+      };
+      const networkState = await Network.getNetworkStateAsync().catch(() => null);
+      if (networkState?.isConnected === false || networkState?.isInternetReachable === false) {
+        throw new Error('offline');
+      }
+      const res = await api.post(endpoint, submission);
       setResult(res.data);
       setPhase('done');
     } catch (err: any) {
+      if (!err?.response && mode === 'quiz' && quiz.questions.every((question) => (
+        question.questionType === 'MATCHING' || question.offlineAnswer !== undefined
+      ))) {
+        const final: Record<string, string> = { ...answersRef.current };
+        quiz.questions.forEach((question) => { if (!final[question.id]) final[question.id] = ''; });
+        const results = quiz.questions.map((question, order) => {
+          const isCorrect = gradeOfflineAnswer(question, final[question.id]);
+          return { questionId: question.id, isCorrect, earnedPoints: isCorrect ? question.points : 0, order };
+        });
+        const totalPoints = quiz.questions.reduce((sum, question) => sum + question.points, 0);
+        const earnedPoints = results.reduce((sum, item) => sum + item.earnedPoints, 0);
+        const percentage = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
+        const minScore = Number(quiz.minScore ?? 70);
+        await queueOfflineRequest({
+          method: 'post',
+          url: submitEndpoint ?? `/quizzes/${quiz.id}/submit`,
+          data: { answers: quiz.questions.map((question) => ({ questionId: question.id, answerData: final[question.id] })) },
+        });
+        setResult({ passed: percentage >= minScore, percentage, earnedPoints, totalPoints, results, offline: true });
+        setPhase('done');
+        return;
+      }
       const detail = err?.response?.data?.message || err?.response?.data?.error;
       Alert.alert(
         'Erro',
@@ -184,6 +242,7 @@ export default function QuizRenderer({
           </Text>
           <Text style={s.scorePct}>{result.percentage}%</Text>
           <Text style={s.scorePts}>+{result.earnedPoints} pontos ganhos</Text>
+          {result.offline ? <Text style={s.offlineNote}>Será sincronizado quando voltar a ter internet.</Text> : null}
         </View>
 
         <Text style={s.reviewTitle}>Revisão das Respostas</Text>
@@ -418,6 +477,7 @@ const s = StyleSheet.create({
   scoreTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 8, textAlign: 'center' },
   scorePct: { fontSize: 52, fontWeight: '900', color: '#1E293B', marginBottom: 4 },
   scorePts: { fontSize: 16, color: '#64748B' },
+  offlineNote: { marginTop: 10, fontSize: 12, lineHeight: 17, color: '#475569', textAlign: 'center' },
   reviewTitle: { fontSize: 15, fontWeight: 'bold', color: '#1E293B', marginBottom: 10 },
   reviewCard: { backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 8, borderLeftWidth: 4, elevation: 1 },
   reviewQ: { fontSize: 14, color: '#1E293B', fontWeight: '600', lineHeight: 20, marginTop: 2 },

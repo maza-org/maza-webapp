@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { colors } from '../theme/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Award, TrendingUp, Bell, Lock, ChevronRight, CheckCircle2, Bot, CalendarDays, Clock3, BookOpen, Trophy, BriefcaseBusiness } from 'lucide-react-native';
+import { Award, Bell, Lock, ChevronRight, CheckCircle2, Bot, CalendarDays, Clock3, BriefcaseBusiness } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Circle } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 import api, { getPersistentCached } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -150,8 +152,6 @@ export default function HomeScreen({ navigation }: any) {
     }, [fetchHomeData])
   );
 
-  const profile = user?.profile;
-  const mazaImpact = user?.impact?.averageImpactPercent ?? 0;
   const enrolledProgress = user?.enrollments?.length
     ? user.enrollments.reduce((sum, enrollment) => sum + Number(enrollment.progress ?? 0), 0) / user.enrollments.length
     : 0;
@@ -161,50 +161,7 @@ export default function HomeScreen({ navigation }: any) {
   const minutesPerActiveDay = totalDaysPlayed > 0 ? minutesInsideApp / totalDaysPlayed : 0;
   const completionCount = Number(monitoring?.completion ?? monitoring?.completedCertificates ?? 0);
   const progressAverage = Number(monitoring?.progress ?? enrolledProgress);
-  const userMetricCards = [
-    {
-      label: 'Melhoria',
-      value: `${Math.round(Number(mazaImpact ?? 0))}%`,
-      icon: TrendingUp,
-      color: themeColors.success,
-      bg: isDark ? '#064E3B' : '#DCFCE7',
-    },
-    {
-      label: 'Pontos',
-      value: formatMetricNumber(profile?.totalPoints ?? 0),
-      icon: Trophy,
-      color: themeColors.secondary,
-      bg: isDark ? '#713F12' : '#FEF3C7',
-    },
-    {
-      label: totalDaysPlayed === 1 ? 'Dia ativo' : 'Dias ativos',
-      value: formatMetricNumber(totalDaysPlayed),
-      icon: CalendarDays,
-      color: '#2563EB',
-      bg: isDark ? '#1E3A8A' : '#DBEAFE',
-    },
-    {
-      label: 'Min./dia',
-      value: formatMinutesPerDay(minutesPerActiveDay),
-      icon: Clock3,
-      color: '#0EA5E9',
-      bg: isDark ? '#164E63' : '#E0F2FE',
-    },
-    {
-      label: completionCount === 1 ? 'Certificado' : 'Certificados',
-      value: formatMetricNumber(completionCount),
-      icon: Award,
-      color: '#D97706',
-      bg: isDark ? '#78350F' : '#FEF3C7',
-    },
-    {
-      label: 'Progresso',
-      value: `${Math.round(progressAverage)}%`,
-      icon: BookOpen,
-      color: '#7C3AED',
-      bg: isDark ? '#4C1D95' : '#EDE9FE',
-    },
-  ];
+  const progressPercent = Math.max(0, Math.min(100, Math.round(progressAverage)));
   const pathwayMeta = pathway ? getPathwayMeta(pathway.name) : null;
   const pathwayCourses: any[] = pathway?.courses ?? [];
   const useWebShell = useIsWideWeb(900);
@@ -288,24 +245,75 @@ export default function HomeScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        {/* User metrics */}
-        <View style={styles.metricsGrid}>
-          {userMetricCards.map(({ label, value, icon: Icon, color, bg }) => (
-            <View key={label} style={[styles.metricCard, useWebShell && styles.webMetricCard, { backgroundColor: themeColors.card }]}>
-              <View style={[styles.metricIconWrap, { backgroundColor: bg }]}>
-                <Icon color={color} size={20} />
-              </View>
-              <View style={styles.metricText}>
-                <Text style={[styles.statValue, { color: themeColors.text }]} numberOfLines={1} adjustsFontSizeToFit>
-                  {value}
-                </Text>
-                <Text style={[styles.statLabel, { color: themeColors.textMuted }]} numberOfLines={1}>
-                  {label}
-                </Text>
+        {/* User evolution */}
+        <LinearGradient
+          colors={isDark
+            ? [themeColors.card, themeColors.card, '#0C4A6E']
+            : [themeColors.card, themeColors.card, '#E0F2FE']}
+          locations={[0, 0.64, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.evolutionCard, useWebShell && styles.webEvolutionCard, { borderColor: themeColors.border }]}
+        >
+          <Image
+            source={require('../../assets/maza-icon-branco.png')}
+            style={styles.evolutionWatermark}
+            resizeMode="contain"
+          />
+          <View style={styles.evolutionMain}>
+            <View style={styles.progressRingWrap} accessibilityLabel={`Progresso geral: ${progressPercent}%`}>
+              <Svg width={108} height={108} viewBox="0 0 108 108">
+                <Circle cx="54" cy="54" r="43" fill="none" stroke={isDark ? '#334155' : '#E2E8F0'} strokeWidth="9" />
+                <Circle
+                  cx="54"
+                  cy="54"
+                  r="43"
+                  fill="none"
+                  stroke={themeColors.primary}
+                  strokeWidth="9"
+                  strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 43} ${2 * Math.PI * 43}`}
+                  strokeDashoffset={2 * Math.PI * 43 * (1 - progressPercent / 100)}
+                  transform="rotate(-90 54 54)"
+                />
+              </Svg>
+              <View style={styles.progressRingCenter} pointerEvents="none">
+                <Text style={[styles.progressRingValue, { color: themeColors.text }]}>{progressPercent}%</Text>
+                <Text style={[styles.progressRingLabel, { color: themeColors.textMuted }]}>Progresso{`\n`}Geral</Text>
               </View>
             </View>
-          ))}
-        </View>
+
+            <View style={[styles.rhythmStats, { borderLeftColor: isDark ? 'rgba(125,211,252,0.35)' : 'rgba(14,165,233,0.22)' }]}>
+              <View style={styles.rhythmRow}>
+                <View style={styles.rhythmIcon}>
+                  <CalendarDays size={19} color="#2563EB" />
+                </View>
+                <View style={styles.rhythmText}>
+                  <Text style={[styles.rhythmValue, { color: themeColors.text }]}>{formatMetricNumber(totalDaysPlayed)}</Text>
+                  <Text style={[styles.rhythmLabel, { color: themeColors.textMuted }]}>{totalDaysPlayed === 1 ? 'Dia ativo' : 'Dias ativos'}</Text>
+                </View>
+              </View>
+              <View style={styles.rhythmRow}>
+                <View style={styles.rhythmIcon}>
+                  <Clock3 size={19} color="#0284C7" />
+                </View>
+                <View style={styles.rhythmText}>
+                  <Text style={[styles.rhythmValue, { color: themeColors.text }]}>{formatMinutesPerDay(minutesPerActiveDay)}</Text>
+                  <Text style={[styles.rhythmLabel, { color: themeColors.textMuted }]}>Média diária</Text>
+                </View>
+              </View>
+              <View style={styles.rhythmRow}>
+                <View style={styles.rhythmIcon}>
+                  <Award size={19} color="#0369A1" />
+                </View>
+                <View style={styles.rhythmText}>
+                  <Text style={[styles.rhythmValue, { color: themeColors.text }]}>{formatMetricNumber(completionCount)}</Text>
+                  <Text style={[styles.rhythmLabel, { color: themeColors.textMuted }]}>{completionCount === 1 ? 'Certificado' : 'Certificados'}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </LinearGradient>
 
         {careerDueMilestone ? (
           <TouchableOpacity
@@ -477,33 +485,41 @@ const styles = StyleSheet.create({
   careerBannerIcon: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   careerBannerTitle: { fontSize: 14, fontWeight: '700', marginBottom: 3 },
   careerBannerText: { fontSize: 11.5, lineHeight: 16 },
-  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 24, gap: 12, marginBottom: 24, marginTop: 12 },
-  metricCard: {
-    flexGrow: 1,
-    flexBasis: '47%',
-    minWidth: 138,
-    backgroundColor: colors.white,
-    borderRadius: 18,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
+  evolutionCard: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+    shadowColor: '#0369A1',
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
     elevation: 2,
   },
-  webMetricCard: { flexBasis: '30%' },
-  metricIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+  webEvolutionCard: { width: '65%', minWidth: 600, maxWidth: 720, alignSelf: 'center' },
+  evolutionWatermark: {
+    position: 'absolute',
+    right: -34,
+    bottom: -46,
+    width: 176,
+    height: 176,
+    opacity: 0.08,
+    tintColor: '#0284C7',
+    transform: [{ rotate: '-10deg' }],
   },
-  metricText: { flex: 1, minWidth: 0, marginLeft: 10 },
-  statValue: { fontSize: 16, fontWeight: 'bold', color: colors.text },
-  statLabel: { fontSize: 12, color: colors.textMuted },
+  evolutionMain: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 14 },
+  progressRingWrap: { width: 124, alignItems: 'center', justifyContent: 'center' },
+  progressRingCenter: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  progressRingValue: { color: '#FFFFFF', fontSize: 24, lineHeight: 27, fontWeight: '700' },
+  progressRingLabel: { width: 78, color: 'rgba(255,255,255,0.82)', textAlign: 'center', fontSize: 11, lineHeight: 13, fontWeight: '600', marginTop: 1 },
+  rhythmStats: { flex: 1, minWidth: 0, marginLeft: 8, paddingLeft: 16, borderLeftWidth: 1, borderLeftColor: 'rgba(255,255,255,0.32)', gap: 9 },
+  rhythmRow: { flexDirection: 'row', alignItems: 'center' },
+  rhythmIcon: { width: 24, height: 32, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  rhythmText: { flex: 1, minWidth: 0, marginLeft: 10 },
+  rhythmValue: { color: '#FFFFFF', fontSize: 15, lineHeight: 18, fontWeight: '700' },
+  rhythmLabel: { color: 'rgba(255,255,255,0.78)', fontSize: 11, marginTop: 1 },
 
   section: { paddingHorizontal: 20, marginTop: 4 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },

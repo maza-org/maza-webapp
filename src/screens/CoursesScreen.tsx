@@ -114,7 +114,7 @@ export default function CoursesScreen({ navigation, route }: any) {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
   const loadFavorites = async () => {
     try {

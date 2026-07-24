@@ -9,6 +9,7 @@ import api from '../services/api';
 import { colors } from '../theme/colors';
 import CertificatePreview from '../components/CertificatePreview';
 import { useIsWideWeb } from '../utils/webViewport';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // ── Palette of rich, dark card backgrounds (one per pathway) ─────────────────
 const CARD_PALETTE = [
@@ -66,12 +67,8 @@ export default function BadgesScreen({ navigation }: any) {
   const { user, updateUser } = useAuth();
   const isWideWeb = useIsWideWeb(900);
   const [pathway, setPathway] = useState<any>(null);
-  const [allPathways, setAllPathways] = useState<any[]>([]);
   const [completedPathways, setCompletedPathways] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [unlockModalVisible, setUnlockModalVisible] = useState(false);
-  const [selectedPathway, setSelectedPathway] = useState<any>(null);
-  const [unlocking, setUnlocking] = useState(false);
   const [startingAssessment, setStartingAssessment] = useState(false);
   const [certificates, setCertificates] = useState<any[]>([]);
   const [selectedCertificate, setSelectedCertificate] = useState<any | null>(null);
@@ -79,10 +76,9 @@ export default function BadgesScreen({ navigation }: any) {
 
   const fetchPathwayData = useCallback(async () => {
     try {
-      const [meRes, myRes, allRes, completedRes, certificatesRes, careerRes] = await Promise.all([
+      const [meRes, myRes, completedRes, certificatesRes, careerRes] = await Promise.all([
         api.get('/auth/me').catch(() => null),
         api.get('/pathways/my').catch(() => ({ data: { pathway: null } })),
-        api.get('/pathways'),
         api.get('/pathways/completed').catch(() => ({ data: [] })),
         api.get('/certificates/my').catch(() => ({ data: [] })),
         api.get('/career-outcomes/me').catch(() => ({ data: null })),
@@ -91,7 +87,6 @@ export default function BadgesScreen({ navigation }: any) {
         await updateUser(meRes.data);
       }
       setPathway(myRes.data?.pathway);
-      setAllPathways(allRes.data || []);
       setCompletedPathways(completedRes.data || []);
       setCertificates(certificatesRes.data || []);
       setCareerSummary(careerRes.data ?? null);
@@ -128,6 +123,11 @@ export default function BadgesScreen({ navigation }: any) {
     employment: careerOutcomes.filter((item: any) => item.type === 'EMPLOYMENT').length,
     selfEmployment: careerOutcomes.filter((item: any) => item.type === 'SELF_EMPLOYMENT').length,
   };
+  const careerResultSummary = [
+    careerCounts.internships > 0 ? `${careerCounts.internships} estágio${careerCounts.internships === 1 ? '' : 's'}` : null,
+    careerCounts.employment > 0 ? `${careerCounts.employment} emprego${careerCounts.employment === 1 ? '' : 's'}` : null,
+    careerCounts.selfEmployment > 0 ? `${careerCounts.selfEmployment} por conta própria` : null,
+  ].filter(Boolean).join(' · ');
 
   const achievementStats = [
     {
@@ -166,17 +166,13 @@ export default function BadgesScreen({ navigation }: any) {
       bg: isDark ? '#78350F' : '#FEF3C7',
     },
     {
-      label: 'Progresso',
+      label: 'Progresso Geral',
       value: `${Math.round(progressAverage)}%`,
       icon: BookOpen,
       color: '#7C3AED',
       bg: isDark ? '#4C1D95' : '#EDE9FE',
     },
   ];
-
-  const availablePathways = allPathways.filter((p) => 
-    p.id !== pathway?.id && !completedPathways.some(cp => cp.id === p.id)
-  );
 
   const startSelfAssessment = async () => {
     setStartingAssessment(true);
@@ -199,25 +195,38 @@ export default function BadgesScreen({ navigation }: any) {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={isWideWeb ? styles.webPage : undefined}>
         {/* Header Hero */}
-        <View style={[styles.header, { backgroundColor: themeColors.primary }]}>
+        <LinearGradient
+          colors={[themeColors.primary, '#0284C7', '#E0F2FE']}
+          locations={[0, 0.76, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <Image
+            source={require('../../assets/maza-icon-branco.png')}
+            style={styles.headerWatermark}
+            resizeMode="contain"
+          />
           <Text style={[styles.headerTitle, { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit>As Suas Conquistas e Jornadas</Text>
           <Text style={[styles.headerSub, { color: 'rgba(255,255,255,0.8)' }]} numberOfLines={1} adjustsFontSizeToFit>Acompanhe o progresso das suas jornadas.</Text>
           
-          <View style={[styles.statsCard, { backgroundColor: themeColors.card }]}>
+          <View style={styles.statsCard}>
             {achievementStats.map((stat) => {
               const Icon = stat.icon;
               return (
                 <View key={stat.label} style={styles.statCol}>
-                  <View style={[styles.statIcon, { backgroundColor: stat.bg }]}>
-                    <Icon color={stat.color} size={18} />
+                  <View style={styles.statTopRow}>
+                    <View style={styles.statIcon}>
+                      <Icon color="#FFFFFF" size={17} />
+                    </View>
+                    <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{stat.value}</Text>
                   </View>
-                  <Text style={[styles.statValue, { color: themeColors.text }]} numberOfLines={1} adjustsFontSizeToFit>{stat.value}</Text>
-                  <Text style={[styles.statLabel, { color: themeColors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>{stat.label}</Text>
+                  <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit>{stat.label}</Text>
                 </View>
               );
             })}
           </View>
-        </View>
+        </LinearGradient>
 
         {loading ? (
           <ActivityIndicator color={themeColors.primary} style={{ marginTop: 40 }} />
@@ -262,47 +271,50 @@ export default function BadgesScreen({ navigation }: any) {
                       )}
                     </View>
 
-                    {!isCurrentCompleted && nextCourse && (
-                      <TouchableOpacity
-                        style={[styles.continueJourneyBtn, { backgroundColor: cardColors.accent }]}
-                        onPress={() => navigation.navigate('CourseDetail', {
-                          courseId: nextCourse.courseId || nextCourse.id,
-                          title: nextCourse.course?.title ?? nextCourse.title,
-                          course: nextCourse.course ?? nextCourse,
-                        })}
-                      >
-                        <BookOpen size={14} color="#fff" />
-                        <Text style={styles.continueJourneyText}>Continuar jornada</Text>
-                      </TouchableOpacity>
-                    )}
-
                     {courses.length > 0 && (
                       <>
-                    {/* Node progress map */}
-                    <View style={[styles.pathMap, { marginVertical: 14 }]}>
-                      {courses.slice(0, 5).map((pc: any, idx: number, arr: any[]) => {
-                        const isCompleted = pc.isCompleted && pc.progress >= 100;
-                        const isLocked = pc.isLocked;
-                        const courseImpact = pc.impact?.impactPercent;
-                        const isCurrent = !isLocked && !isCompleted;
-                        return (
-                          <React.Fragment key={pc.id || idx}>
-                            {isCompleted ? (
-                              <View style={[styles.nodeCompleted, { backgroundColor: '#22C55E' }]}><Text style={styles.nodeText}>✓</Text></View>
-                            ) : isCurrent ? (
-                              <View style={[styles.nodeCurrent, { backgroundColor: themeColors.secondary }]}><Award size={18} color="#fff" /></View>
-                            ) : (
-                              <View style={[styles.nodeLocked, { backgroundColor: 'rgba(255,255,255,0.1)' }]}><Lock size={14} color="rgba(255,255,255,0.4)" /></View>
-                            )}
-                            {idx < arr.length - 1 && (
-                              isCompleted
-                                ? <View style={[styles.lineCompleted, { backgroundColor: '#22C55E', flex: 1, maxWidth: 32 }]} />
-                                : <View style={[styles.lineLocked, { backgroundColor: 'rgba(255,255,255,0.2)', flex: 1, maxWidth: 32 }]} />
-                            )}
-                          </React.Fragment>
-                        );
-                      })}
-                    </View>
+                    {!isCurrentCompleted && nextCourse ? (
+                      <View style={styles.journeyControlsRow}>
+                        <TouchableOpacity
+                          style={[styles.continueJourneyBtn, styles.continueJourneyBtnInline, { backgroundColor: cardColors.accent }]}
+                          onPress={() => navigation.navigate('CourseDetail', {
+                            courseId: nextCourse.courseId || nextCourse.id,
+                            title: nextCourse.course?.title ?? nextCourse.title,
+                            course: nextCourse.course ?? nextCourse,
+                          })}
+                        >
+                          <BookOpen size={14} color="#fff" />
+                          <Text style={styles.continueJourneyText} numberOfLines={1}>Continuar jornada</Text>
+                        </TouchableOpacity>
+                        <View style={[styles.nodeCurrent, styles.journeyCurrentNode, { backgroundColor: themeColors.secondary }]}>
+                          <Award size={18} color="#fff" />
+                        </View>
+                      </View>
+                    ) : (
+                      <View style={[styles.pathMap, { marginVertical: 14 }]}>
+                        {courses.slice(0, 5).map((pc: any, idx: number, arr: any[]) => {
+                          const isCompleted = pc.isCompleted && pc.progress >= 100;
+                          const isLocked = pc.isLocked;
+                          const isCurrent = !isLocked && !isCompleted;
+                          return (
+                            <React.Fragment key={pc.id || idx}>
+                              {isCompleted ? (
+                                <View style={[styles.nodeCompleted, { backgroundColor: '#22C55E' }]}><Text style={styles.nodeText}>✓</Text></View>
+                              ) : isCurrent ? (
+                                <View style={[styles.nodeCurrent, { backgroundColor: themeColors.secondary }]}><Award size={18} color="#fff" /></View>
+                              ) : (
+                                <View style={[styles.nodeLocked, { backgroundColor: 'rgba(255,255,255,0.1)' }]}><Lock size={14} color="rgba(255,255,255,0.4)" /></View>
+                              )}
+                              {idx < arr.length - 1 && (
+                                isCompleted
+                                  ? <View style={[styles.lineCompleted, { backgroundColor: '#22C55E', flex: 1, maxWidth: 32 }]} />
+                                  : <View style={[styles.lineLocked, { backgroundColor: 'rgba(255,255,255,0.2)', flex: 1, maxWidth: 32 }]} />
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                      </View>
+                    )}
 
                     {/* Course list inside the card */}
                     <View style={styles.completedCourseList}>
@@ -509,112 +521,25 @@ export default function BadgesScreen({ navigation }: any) {
               <View style={styles.careerCardCopy}>
                 <Text style={[styles.careerCardTitle, { color: themeColors.text }]}>
                   {careerOutcomes.length > 0
-                    ? `${careerOutcomes.length} resultado${careerOutcomes.length === 1 ? '' : 's'} registado${careerOutcomes.length === 1 ? '' : 's'}`
+                    ? `${careerOutcomes.length} Resultado${careerOutcomes.length === 1 ? '' : 's'} Registado${careerOutcomes.length === 1 ? '' : 's'}`
                     : 'Acompanhe a sua evolução profissional'}
                 </Text>
-                <Text style={[styles.careerCardSubtitle, { color: themeColors.textMuted }]}>
-                  {careerSummary?.dueMilestone
-                    ? `Acompanhamento de ${careerSummary.dueMilestone} dias disponível`
-                    : careerOutcomes.length > 0
-                      ? 'Resultados alcançados depois da formação MAZA'
-                      : 'Registe um estágio, emprego ou trabalho por conta própria.'}
+                <Text style={[styles.careerCardSubtitle, { color: themeColors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>
+                  {careerOutcomes.length > 0
+                    ? careerResultSummary
+                    : careerSummary?.dueMilestone
+                      ? `Acompanhamento de ${careerSummary.dueMilestone} dias disponível`
+                      : 'Registe a sua evolução profissional.'}
                 </Text>
               </View>
               <ChevronRight size={19} color={themeColors.textMuted} />
             </View>
-
-            <View style={[styles.careerMetrics, { borderTopColor: themeColors.border }]}>
-              {[
-                { label: careerCounts.internships === 1 ? 'Estágio' : 'Estágios', value: careerCounts.internships },
-                { label: careerCounts.employment === 1 ? 'Emprego' : 'Empregos', value: careerCounts.employment },
-                { label: 'Conta própria', value: careerCounts.selfEmployment },
-              ].map((item, index) => (
-                <View key={item.label} style={[styles.careerMetric, index > 0 && { borderLeftColor: themeColors.border, borderLeftWidth: 1 }]}>
-                  <Text style={[styles.careerMetricValue, { color: themeColors.text }]}>{item.value}</Text>
-                  <Text style={[styles.careerMetricLabel, { color: themeColors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>{item.label}</Text>
-                </View>
-              ))}
-            </View>
           </TouchableOpacity>
         </View>
 
-        {/* Other Pathways */}
-        {availablePathways.length > 0 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Outras Jornadas Disponíveis</Text>
-            {availablePathways.map((p) => (
-              <TouchableOpacity 
-                key={p.id}
-                style={[styles.challengeCard, { backgroundColor: isDark ? '#1e293b' : themeColors.background, borderColor: themeColors.border, borderWidth: 1 }]}
-                onPress={() => {
-                  setSelectedPathway(p);
-                  setUnlockModalVisible(true);
-                }}
-              >
-                <View style={[styles.challengeIconBg, { backgroundColor: isDark ? '#334155' : '#F1F5F9' }]}>
-                  <Lock color={themeColors.textMuted} />
-                </View>
-                <View style={styles.challengeInfo}>
-                  <Text style={[styles.cTitle, { color: themeColors.textMuted }]} numberOfLines={2}>{p.name}</Text>
-                  <Text style={[styles.cPoints, { color: themeColors.textMuted }]}>Toque para desbloquear</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-        
         <View style={{ height: 40 }} />
         </View>
       </ScrollView>
-
-      {/* Custom Unlock Modal */}
-      <Modal visible={unlockModalVisible} animationType="fade" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: themeColors.card }]}>
-            <View style={[styles.modalIconBg, { backgroundColor: isDark ? '#334155' : '#F1F5F9' }]}>
-              <Lock color={themeColors.primary} size={32} />
-            </View>
-            <Text style={[styles.modalTitle, { color: themeColors.text }]}>Desbloquear Jornada</Text>
-            <Text style={[styles.modalMessage, { color: themeColors.textMuted }]}>
-              Deseja explorar a jornada "{selectedPathway?.name}"? Ao desbloquear uma nova jornada, será encaminhado para atualizar o seu perfil.
-            </Text>
-            
-            <View style={styles.modalActions}>
-              <TouchableOpacity 
-                style={[styles.modalConfirmBtn, { backgroundColor: themeColors.primary }, unlocking && { opacity: 0.7 }]}
-                disabled={unlocking}
-                onPress={async () => {
-                  setUnlocking(true);
-                  try {
-                    // Reset the current assessment
-                    const res = await api.post('/bot/reset');
-                    if (res.data.user && updateUser) {
-                      await updateUser(res.data.user);
-                    }
-                    setUnlockModalVisible(false);
-                    // Navigate to bot assessment
-                    navigation.navigate('BotAssessment');
-                  } catch (e) {
-                    console.error('Failed to reset assessment:', e);
-                  } finally {
-                    setUnlocking(false);
-                  }
-                }}
-              >
-                {unlocking ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.modalConfirmText}>Sim, ir para avaliação</Text>
-                )}
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setUnlockModalVisible(false)}>
-                <Text style={styles.modalCancelText}>Cancelar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       <Modal visible={!!selectedCertificate} animationType="slide" transparent>
         <View style={styles.previewOverlay}>
@@ -645,28 +570,32 @@ export default function BadgesScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   webPage: { width: '100%', maxWidth: 1040, alignSelf: 'center', paddingTop: 8 },
-  header: { paddingHorizontal: 24, paddingTop: 44, paddingBottom: 20 },
+  header: { paddingHorizontal: 24, paddingTop: 44, paddingBottom: 20, overflow: 'hidden' },
+  headerWatermark: {
+    position: 'absolute',
+    right: -42,
+    bottom: -55,
+    width: 210,
+    height: 210,
+    opacity: 0.1,
+    transform: [{ rotate: '-10deg' }],
+  },
   headerTitle: { fontSize: 21, fontWeight: '700', marginBottom: 5 },
   headerSub: { fontSize: 13, lineHeight: 18 },
   statsCard: {
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
+    paddingVertical: 4,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'stretch',
-    gap: 8,
+    gap: 6,
     marginTop: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
   },
-  statCol: { alignItems: 'center', justifyContent: 'center', width: '30%', minHeight: 64, paddingVertical: 2 },
-  statIcon: { width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  statValue: { fontSize: 15, fontWeight: '700', maxWidth: '100%' },
-  statLabel: { fontSize: 10, fontWeight: '400', marginTop: 2, maxWidth: '100%' },
+  statCol: { alignItems: 'center', justifyContent: 'center', width: '30%', minHeight: 46, paddingVertical: 1 },
+  statTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, maxWidth: '100%' },
+  statIcon: { width: 19, height: 19, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  statValue: { color: '#FFFFFF', fontSize: 15, lineHeight: 18, fontWeight: '700', maxWidth: '72%' },
+  statLabel: { color: 'rgba(255,255,255,0.78)', fontSize: 10, lineHeight: 13, fontWeight: '400', marginTop: 2, maxWidth: '100%' },
   section: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 4 },
   firstSection: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 8 },
   sectionTitle: { fontSize: 18, fontWeight: '700', marginBottom: 12 },
@@ -747,15 +676,11 @@ const styles = StyleSheet.create({
   careerHeaderAction: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: 32, paddingLeft: 10 },
   careerHeaderActionText: { fontSize: 12, fontWeight: '700' },
   careerCard: { borderWidth: 1, borderRadius: 16, overflow: 'hidden' },
-  careerCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
-  careerIcon: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  careerCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 11, padding: 12 },
+  careerIcon: { width: 40, height: 40, borderRadius: 11, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   careerCardCopy: { flex: 1, minWidth: 0 },
   careerCardTitle: { fontSize: 14, lineHeight: 19, fontWeight: '700' },
   careerCardSubtitle: { fontSize: 11, lineHeight: 16, marginTop: 3 },
-  careerMetrics: { flexDirection: 'row', borderTopWidth: 1, paddingVertical: 11 },
-  careerMetric: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
-  careerMetricValue: { fontSize: 16, fontWeight: '700' },
-  careerMetricLabel: { fontSize: 10, fontWeight: '400', marginTop: 2, maxWidth: '100%' },
   pathCard: { borderRadius: 20, padding: 24 },
   pathTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 24, textAlign: 'center' },
   pathMap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
@@ -765,13 +690,6 @@ const styles = StyleSheet.create({
   nodeCurrent: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', borderWidth: 4, borderColor: 'rgba(255,255,255,0.3)' },
   lineLocked: { flex: 1, maxWidth: 40, height: 4 },
   nodeLocked: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  challengeCard: { borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 5, elevation: 1 },
-  challengeLocked: { opacity: 0.7, borderWidth: 1 },
-  challengeIconBg: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  challengeInfo: { flex: 1 },
-  cTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
-  cPoints: { fontSize: 14, fontWeight: 'bold' },
-
   // ── Completed badge (shared between current and completed pathway cards) ──
   completedBadge: {
     backgroundColor: '#22C55E', borderRadius: 12,
@@ -779,6 +697,13 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   completedBadgeText: { color: '#fff', fontSize: 11, fontWeight: '700', letterSpacing: 0 },
+  journeyControlsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: 16,
+    marginVertical: 14,
+  },
   continueJourneyBtn: {
     marginHorizontal: 20,
     marginTop: 14,
@@ -790,6 +715,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
+  continueJourneyBtnInline: { flex: 1, minWidth: 0, marginHorizontal: 0, marginTop: 0 },
+  journeyCurrentNode: { width: 48, height: 48, borderRadius: 24, flexShrink: 0 },
   continueJourneyText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 
   // ── Completed pathway card (premium redesign) ──
@@ -866,17 +793,6 @@ const styles = StyleSheet.create({
     fontSize: 18, color: 'rgba(255,255,255,0.3)', fontWeight: '300',
   },
 
-  // Modal Styles
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 24 },
-  modalCard: { width: '100%', maxWidth: 400, borderRadius: 24, padding: 32, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 20, elevation: 12 },
-  modalIconBg: { width: 64, height: 64, borderRadius: 32, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  modalTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 12, textAlign: 'center' },
-  modalMessage: { fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
-  modalActions: { flexDirection: 'column', gap: 12, width: '100%', marginTop: 8 },
-  modalConfirmBtn: { width: '100%', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
-  modalConfirmText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  modalCancelBtn: { width: '100%', paddingVertical: 14, borderRadius: 12, backgroundColor: 'transparent', alignItems: 'center' },
-  modalCancelText: { color: '#64748B', fontWeight: 'bold', fontSize: 15 },
   previewOverlay: { flex: 1, backgroundColor: 'rgba(30, 41, 59, 0.95)', justifyContent: 'center', alignItems: 'center', padding: 20 },
   previewCertificate: { width: '100%', maxWidth: 800, marginBottom: 24, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 30, elevation: 20 },
   previewActions: { flexDirection: 'row', gap: 12, alignItems: 'center' },

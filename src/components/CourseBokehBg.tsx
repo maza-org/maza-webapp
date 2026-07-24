@@ -30,14 +30,15 @@ interface Props {
   height?: number | string; 
   style?: any; 
   children?: React.ReactNode; 
+  contentSized?: boolean;
 }
 
-export default function CourseBokehBg({ courseId, title, width = '100%', height = '100%', style, children }: Props) {
+export default function CourseBokehBg({ courseId, title, width = '100%', height = '100%', style, children, contentSized = false }: Props) {
   const gradientColors = useMemo(() => getCourseGradientColors(courseId), [courseId]);
 
 
   return (
-    <View style={[{ width, height, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }, style]}>
+    <View style={[{ width, ...(contentSized ? {} : { height }), overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }, style]}>
       <LinearGradient
         colors={gradientColors}
         start={{ x: 0, y: 0 }}
@@ -48,11 +49,12 @@ export default function CourseBokehBg({ courseId, title, width = '100%', height 
       {/* MAZA round logo watermark — same semi-transparent tone as the old initials */}
       <Image
         source={require('../../assets/maza-icon-branco.png')}
+        resizeMode="contain"
         style={{
+          position: 'absolute',
           width: '55%',
           height: '55%',
           opacity: 0.22,
-          resizeMode: 'contain',
         }}
       />
 
@@ -60,7 +62,7 @@ export default function CourseBokehBg({ courseId, title, width = '100%', height 
       <View style={{ position: 'absolute', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.08)' }} />
 
       {children ? (
-        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <View style={contentSized ? { width: '100%' } : { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
           {children}
         </View>
       ) : null}

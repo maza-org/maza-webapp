@@ -217,6 +217,9 @@ function NativeImpl({ source, style, allowsFullscreenVideo, javaScriptEnabled, d
       javaScriptEnabled={javaScriptEnabled ?? true}
       domStorageEnabled={domStorageEnabled ?? true}
       cacheEnabled
+      allowFileAccess
+      allowFileAccessFromFileURLs
+      allowUniversalAccessFromFileURLs={false}
       mixedContentMode="never"
       androidLayerType="hardware"
       allowsInlineMediaPlayback={true}

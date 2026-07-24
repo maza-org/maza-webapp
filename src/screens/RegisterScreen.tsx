@@ -31,6 +31,13 @@ const GENDERS = ['Masculino', 'Feminino'];
 const EDUCATION_LEVELS = ['Ensino Primário', 'Ensino Secundário', 'Ensino Técnico/Profissional', 'Ensino Superior', 'Nenhum'];
 const USERNAME_PATTERN = /^[A-Za-z0-9._-]{3,30}$/;
 
+type CommunityOption = {
+  id: string;
+  name: string;
+  province: string;
+  district: string;
+};
+
 function sanitizeUsername(value: string) {
   return value.replace(/\s+/g, '').replace(/[^A-Za-z0-9._-]/g, '');
 }
@@ -131,7 +138,7 @@ export default function RegisterScreen({ navigation }: any) {
   const isWideWeb = useIsWideWeb(900);
   const [form, setForm] = useState({
     username: '', email: '', phone: '', password: '', name: '',
-    idDocument: '', dob: '', gender: '', province: '', district: '',
+    idDocument: '', dob: '', gender: '', province: '', district: '', community: '',
     occupation: '', school: '', educationLevel: ''
   });
   type FormKey = keyof typeof form;
@@ -147,6 +154,8 @@ export default function RegisterScreen({ navigation }: any) {
   const generatedUsernameRef = useRef('');
   const [customOccupation, setCustomOccupation] = useState('');
   const [successVisible, setSuccessVisible] = useState(false);
+  const [communityOptions, setCommunityOptions] = useState<CommunityOption[]>([]);
+  const [communitiesLoading, setCommunitiesLoading] = useState(false);
   const [modalConfig, setModalConfig] = useState<{
     visible: boolean; title: string; field: string; options: string[];
   }>({ visible: false, title: '', field: '', options: [] });
@@ -160,12 +169,41 @@ export default function RegisterScreen({ navigation }: any) {
     setForm(f => ({
       ...f,
       [key]: value,
-      ...(key === 'province' && f.province !== value ? { district: '' } : {}),
+      ...(key === 'province' && f.province !== value ? { district: '', community: '' } : {}),
+      ...(key === 'district' && f.district !== value ? { community: '' } : {}),
     }));
     if (touchedFields[key]) validateField(key, value);
   };
   const hasFormInput = Object.values(form).some((value) => value.trim().length > 0);
   const districtOptions = MOZAMBIQUE_DISTRICTS_BY_PROVINCE[form.province] ?? [];
+
+  useEffect(() => {
+    let active = true;
+    if (!form.district) {
+      setCommunityOptions([]);
+      setCommunitiesLoading(false);
+      return () => { active = false; };
+    }
+
+    setCommunitiesLoading(true);
+    api.get('/communities', { params: { province: form.province, district: form.district } })
+      .then((response) => {
+        if (!active) return;
+        const options = Array.isArray(response.data) ? response.data : [];
+        setCommunityOptions(options);
+        if (form.community && !options.some((item: CommunityOption) => item.name === form.community)) {
+          setForm((current) => ({ ...current, community: '' }));
+        }
+      })
+      .catch(() => {
+        if (active) setCommunityOptions([]);
+      })
+      .finally(() => {
+        if (active) setCommunitiesLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [form.province, form.district]);
 
   const setUsername = (value: string) => {
     setUsernameEdited(true);
@@ -378,14 +416,16 @@ export default function RegisterScreen({ navigation }: any) {
         const parts = form.dob.split('/');
         if (parts.length === 3) formattedDob = `${parts[2]}-${parts[1]}-${parts[0]}`;
       }
+      const { community: _community, ...registrationForm } = form;
       await api.post('/auth/register', {
-        ...form,
+        ...registrationForm,
         username,
         email,
         phone: phone ? `+258${phone}` : '',
         name,
         idDocument,
         district: form.district.trim(),
+        communityId: communityOptions.find((item) => item.name === form.community)?.id ?? null,
         occupation,
         dob: formattedDob
       });
@@ -409,7 +449,8 @@ export default function RegisterScreen({ navigation }: any) {
     setForm(f => ({
       ...f,
       [key]: item,
-      ...(key === 'province' && f.province !== item ? { district: '' } : {}),
+      ...(key === 'province' && f.province !== item ? { district: '', community: '' } : {}),
+      ...(key === 'district' && f.district !== item ? { community: '' } : {}),
     }));
     setTouchedFields((prev) => ({ ...prev, [key]: true, ...(key === 'province' ? { district: true } : {}) }));
     validateField(key, item);
@@ -484,6 +525,19 @@ export default function RegisterScreen({ navigation }: any) {
           <Select label="Género" value={form.gender} required error={fieldErrors.gender} onPress={() => openModal('Género', 'gender', GENDERS)} />
           <Select label="Província" value={form.province} required error={fieldErrors.province} onPress={() => openModal('Província', 'province', PROVINCES)} />
           <Select label="Distrito" value={form.district} required error={fieldErrors.district} disabled={!form.province} onPress={() => openModal('Distrito', 'district', districtOptions)} />
+          {form.district ? (
+            <>
+              <Select
+                label="Comunidade (opcional)"
+                value={form.community}
+                disabled={communitiesLoading || communityOptions.length === 0}
+                onPress={() => openModal('Comunidade', 'community', communityOptions.map((item) => item.name))}
+              />
+              {!communitiesLoading && communityOptions.length === 0 ? (
+                <Text style={styles.fieldHintNeutral}>Ainda não existem comunidades cadastradas neste distrito.</Text>
+              ) : null}
+            </>
+          ) : null}
           <Field label="Bilhete de Identidade (BI)" value={form.idDocument} onChangeText={set('idDocument')} onBlur={() => touchAndValidate('idDocument')} error={fieldErrors.idDocument} autoCapitalize="characters" maxLength={15} />
           <Select label="Ocupação" value={form.occupation} error={fieldErrors.occupation} onPress={() => openModal('Ocupação', 'occupation', OCCUPATIONS)} />
           <Select label="Nível Académico" value={form.educationLevel} onPress={() => openModal('Nível Académico', 'educationLevel', EDUCATION_LEVELS)} />
@@ -615,6 +669,7 @@ const styles = StyleSheet.create({
   eyeBtn: { position: 'absolute', right: 14, top: 0, bottom: 0, justifyContent: 'center' },
   fieldError: { color: '#EF4444', fontSize: 12, fontWeight: '600', marginTop: 6 },
   fieldHint: { fontSize: 12, fontWeight: '700', marginTop: -10, marginBottom: 12 },
+  fieldHintNeutral: { color: '#7C8494', fontSize: 12, lineHeight: 17, marginTop: -10, marginBottom: 14 },
   suggestionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: -6, marginBottom: 14 },
   suggestionChip: { borderRadius: 999, backgroundColor: '#EAF6FF', paddingHorizontal: 12, paddingVertical: 7 },
   suggestionText: { color: colors.primary, fontSize: 12, fontWeight: '800' },
