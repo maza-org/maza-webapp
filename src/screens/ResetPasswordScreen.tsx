@@ -7,6 +7,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import api, { mapAuthError } from '../services/api';
 import { colors } from '../theme/colors';
+import { useIsWideWeb } from '../utils/webViewport';
 
 export default function ResetPasswordScreen() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -20,6 +21,7 @@ export default function ResetPasswordScreen() {
   const route = useRoute<any>();
   const { isDark } = useTheme();
   const { setSession } = useAuth();
+  const isWideWeb = useIsWideWeb(760);
 
   const identifier = route.params?.identifier || '';
 
@@ -63,36 +65,36 @@ export default function ResetPasswordScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? colors.background : '#FAFAFA' }}>
+    <SafeAreaView style={[{ flex: 1, backgroundColor: isDark ? colors.background : '#FAFAFA' }, isWideWeb && styles.webPage]}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={styles.container}
+          contentContainerStyle={[styles.container, isWideWeb && styles.webContainer]}
           bounces={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
         >
-            <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+            <TouchableOpacity style={[styles.back, isWideWeb && styles.webBack]} onPress={() => navigation.goBack()}>
               <Ionicons name="arrow-back" size={24} color={colors.text} />
             </TouchableOpacity>
 
             <Image
               source={isDark ? require('../../assets/maza-logo-branco.png') : require('../../assets/maza-logo-azul.png')}
-              style={styles.logo}
+              style={[styles.logo, isWideWeb && styles.webLogo]}
               resizeMode="contain"
             />
 
             <Text style={[styles.title, { color: isDark ? colors.white : colors.text }]}>Nova Senha</Text>
-            <Text style={[styles.subtitle, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
+            <Text style={[styles.subtitle, isWideWeb && styles.webSubtitle, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
               Introduza o código de 6 dígitos enviado para o seu contacto e crie uma nova senha.
             </Text>
 
             <View style={styles.inputContainer}>
               <Text style={[styles.label, { color: isDark ? colors.white : colors.text }]}>CÓDIGO DE 6 DÍGITOS</Text>
               <TextInput
-                style={[styles.input, { backgroundColor: isDark ? '#1e293b' : colors.white, color: isDark ? colors.white : colors.text, textAlign: 'center', letterSpacing: 8, fontSize: 24, fontWeight: 'bold' }]}
+                style={[styles.input, isWideWeb && styles.webInput, { backgroundColor: isDark ? '#1e293b' : colors.white, color: isDark ? colors.white : colors.text, textAlign: 'center', letterSpacing: 8, fontSize: 24, fontWeight: 'bold' }]}
                 placeholder=""
                 placeholderTextColor={isDark ? '#94a3b8' : '#9ca3af'}
                 value={code}
@@ -104,7 +106,7 @@ export default function ResetPasswordScreen() {
 
             <View style={styles.inputContainer}>
               <Text style={[styles.label, { color: isDark ? colors.white : colors.text }]}>NOVA SENHA</Text>
-              <View style={[styles.inputWrapper, { backgroundColor: isDark ? '#1e293b' : colors.white }]}>
+              <View style={[styles.inputWrapper, isWideWeb && styles.webInput, { backgroundColor: isDark ? '#1e293b' : colors.white }]}>
                 <TextInput
                   style={[styles.inputInner, { color: isDark ? colors.white : colors.text }]}
                   placeholder=""
@@ -121,7 +123,7 @@ export default function ResetPasswordScreen() {
 
             <View style={styles.inputContainer}>
               <Text style={[styles.label, { color: isDark ? colors.white : colors.text }]}>CONFIRMAR SENHA</Text>
-              <View style={[styles.inputWrapper, { backgroundColor: isDark ? '#1e293b' : colors.white }]}>
+              <View style={[styles.inputWrapper, isWideWeb && styles.webInput, { backgroundColor: isDark ? '#1e293b' : colors.white }]}>
                 <TextInput
                   style={[styles.inputInner, { color: isDark ? colors.white : colors.text }]}
                   placeholder=""
@@ -140,7 +142,7 @@ export default function ResetPasswordScreen() {
             ) : null}
 
             <TouchableOpacity 
-              style={[styles.button, { opacity: isLoading ? 0.7 : 1 }]} 
+              style={[styles.button, isWideWeb && styles.webButton, { opacity: isLoading ? 0.7 : 1 }]}
               onPress={handleResetPassword}
               disabled={isLoading}
             >
@@ -182,4 +184,26 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
+  webPage: { backgroundColor: '#F3F8FB' },
+  webContainer: {
+    flexGrow: 0,
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
+    marginVertical: 24,
+    padding: 36,
+    borderWidth: 1,
+    borderColor: '#DCEAF2',
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#0F3550',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.1,
+    shadowRadius: 36,
+  },
+  webBack: { backgroundColor: '#EDF7FC', marginBottom: 18 },
+  webLogo: { width: 140, height: 56, marginBottom: 20 },
+  webSubtitle: { marginBottom: 24 },
+  webInput: { borderWidth: 1, borderColor: '#CFE0EA' },
+  webButton: { borderRadius: 12, shadowOpacity: 0.2, shadowRadius: 12 },
 });

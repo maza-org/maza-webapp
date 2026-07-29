@@ -341,6 +341,7 @@ export default function CoursesScreen({ navigation, route }: any) {
                     viewMode === 'list' && styles.cardList,
                     isWideWeb && viewMode === 'grid' && styles.webCard,
                     isWideWeb && viewMode === 'list' && styles.webCardList,
+                    isWideWeb && viewMode === 'list' && { borderColor: themeColors.border },
                   ]}
                   disabled={isLocked}
                   onPress={() => {
@@ -354,7 +355,8 @@ export default function CoursesScreen({ navigation, route }: any) {
                   <View style={[
                     styles.cardImg, 
                     { backgroundColor: isDark ? '#1e293b' : '#EEF2FF' },
-                    viewMode === 'list' && styles.cardImgList
+                    viewMode === 'list' && styles.cardImgList,
+                    isWideWeb && viewMode === 'list' && styles.webCardImgList,
                   ]}>
                     <CourseThumbnailImage
                         courseId={course.id}
@@ -373,17 +375,40 @@ export default function CoursesScreen({ navigation, route }: any) {
                     )}
                   </View>
 
-                  <View style={{ flex: 1, justifyContent: 'space-between' }}>
+                  <View style={[styles.cardBody, isWideWeb && viewMode === 'list' && styles.webCardBodyList]}>
                     <View>
                       <Text
-                        style={[styles.cardCat, { color: isDark ? '#a78bfa' : '#8B5CF6' }]}
+                        style={[
+                          styles.cardCat,
+                          { color: isDark ? '#a78bfa' : '#8B5CF6' },
+                          isWideWeb && viewMode === 'list' && styles.webListCategory,
+                        ]}
                         numberOfLines={1}
                         ellipsizeMode="tail"
                       >
                         {getCourseCategoryLabel(course)}
                       </Text>
-                      <Text style={[styles.cardTitle, { color: themeColors.text }, viewMode === 'list' && { minHeight: 0 }]} numberOfLines={2}>{course.title}</Text>
-                      <Text style={[styles.cardInstructor, { color: themeColors.textMuted }]} numberOfLines={1}><Ionicons name="person-outline" size={10} color={themeColors.textMuted} /> {course.instructor}</Text>
+                      <Text
+                        style={[
+                          styles.cardTitle,
+                          { color: themeColors.text },
+                          viewMode === 'list' && { minHeight: 0 },
+                          isWideWeb && viewMode === 'list' && styles.webListTitle,
+                        ]}
+                        numberOfLines={2}
+                      >
+                        {course.title}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.cardInstructor,
+                          { color: themeColors.textMuted },
+                          isWideWeb && viewMode === 'list' && styles.webListInstructor,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        <Ionicons name="person-outline" size={isWideWeb && viewMode === 'list' ? 12 : 10} color={themeColors.textMuted} /> {course.instructor}
+                      </Text>
 
                       {isLocked && (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, marginBottom: 7 }}>
@@ -395,26 +420,51 @@ export default function CoursesScreen({ navigation, route }: any) {
                       )}
 
                       {!isLocked && progress !== undefined && (
-                        <View style={[styles.progressWrap, viewMode === 'list' && { marginBottom: 4 }]}>
-                          <View style={[styles.progressTrack, { backgroundColor: isDark ? '#334155' : '#E2E8F0' }]}>
+                        <View style={[
+                          styles.progressWrap,
+                          viewMode === 'list' && { marginBottom: 4 },
+                          isWideWeb && viewMode === 'list' && styles.webListProgressWrap,
+                        ]}>
+                          <View style={[
+                            styles.progressTrack,
+                            { backgroundColor: isDark ? '#334155' : '#E2E8F0' },
+                            isWideWeb && viewMode === 'list' && styles.webListProgressTrack,
+                          ]}>
                             <View style={[styles.progressBar, { width: `${Math.min(progress, 100)}%`, backgroundColor: progress >= 100 ? themeColors.success : themeColors.primary }]} />
                           </View>
-                          <Text style={[styles.progressLabel, { color: progress >= 100 ? themeColors.success : themeColors.primary }]}>
-                            {progress >= 100 ? <Ionicons name="checkmark-circle" size={9} color={themeColors.success} /> : `${Math.round(progress)}%`}
+                          <Text style={[
+                            styles.progressLabel,
+                            { color: progress >= 100 ? themeColors.success : themeColors.primary },
+                            isWideWeb && viewMode === 'list' && styles.webListProgressLabel,
+                          ]}>
+                            {progress >= 100 ? <Ionicons name="checkmark-circle" size={isWideWeb && viewMode === 'list' ? 12 : 9} color={themeColors.success} /> : `${Math.round(progress)}%`}
                           </Text>
                         </View>
                       )}
                     </View>
 
-                    <View style={[styles.cardFooter, { borderTopColor: themeColors.border }, viewMode === 'list' && { borderTopWidth: 0, paddingTop: 2 }]}>
-                      <Text style={[styles.modules, { color: themeColors.textMuted }]} numberOfLines={1}>
-                        <Ionicons name="cube-outline" size={10} color={themeColors.textMuted} /> {course._count?.modules ?? 0} {(course._count?.modules ?? 0) === 1 ? 'Módulo' : 'Módulos'}
+                    <View style={[
+                      styles.cardFooter,
+                      { borderTopColor: themeColors.border },
+                      viewMode === 'list' && { borderTopWidth: 0, paddingTop: 2 },
+                      isWideWeb && viewMode === 'list' && styles.webListFooter,
+                    ]}>
+                      <Text style={[
+                        styles.modules,
+                        { color: themeColors.textMuted },
+                        isWideWeb && viewMode === 'list' && styles.webListModules,
+                      ]} numberOfLines={1}>
+                        <Ionicons name="cube-outline" size={isWideWeb && viewMode === 'list' ? 12 : 10} color={themeColors.textMuted} /> {course._count?.modules ?? 0} {(course._count?.modules ?? 0) === 1 ? 'Módulo' : 'Módulos'}
                         {'  '}
-                        <Ionicons name="document-text-outline" size={10} color={themeColors.textMuted} /> {course._count?.lessons ?? 0} {(course._count?.lessons ?? 0) === 1 ? 'Aula' : 'Aulas'}
+                        <Ionicons name="document-text-outline" size={isWideWeb && viewMode === 'list' ? 12 : 10} color={themeColors.textMuted} /> {course._count?.lessons ?? 0} {(course._count?.lessons ?? 0) === 1 ? 'Aula' : 'Aulas'}
                       </Text>
                       <View style={styles.ratingRow}>
-                        <Star color={themeColors.secondary} fill={themeColors.secondary} size={11} />
-                        <Text style={[styles.rating, { color: themeColors.text }]}>{course.rating}</Text>
+                        <Star color={themeColors.secondary} fill={themeColors.secondary} size={isWideWeb && viewMode === 'list' ? 13 : 11} />
+                        <Text style={[
+                          styles.rating,
+                          { color: themeColors.text },
+                          isWideWeb && viewMode === 'list' && styles.webListRating,
+                        ]}>{course.rating}</Text>
                       </View>
                     </View>
                   </View>
@@ -488,7 +538,7 @@ export default function CoursesScreen({ navigation, route }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  webPage: { flex: 1, width: '100%', maxWidth: 1180, alignSelf: 'center', paddingTop: 8 },
+  webPage: { flex: 1, width: '100%', maxWidth: 1200, alignSelf: 'center', paddingTop: 20 },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
   title: { fontSize: 26, fontWeight: 'bold' },
   searchRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 10, gap: 8 },
@@ -506,23 +556,35 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
   list: { flexDirection: 'column', flexWrap: 'nowrap', justifyContent: 'flex-start', rowGap: 12, width: '100%' },
   card: { width: '48.5%', borderRadius: 16, padding: 10, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  webCard: { width: '23.8%', minWidth: 238, maxWidth: 270, borderRadius: 8 },
-  webCardList: { borderRadius: 8, maxWidth: 880 },
+  webCard: { width: '23.8%', minWidth: 238, maxWidth: 276, borderRadius: 18, padding: 12, shadowOpacity: 0.07, shadowRadius: 14 },
+  webCardList: { borderRadius: 18, padding: 14, minHeight: 144, borderWidth: 1, shadowOpacity: 0.06, shadowRadius: 16 },
   cardList: { width: '100%', maxWidth: '100%', alignSelf: 'stretch', flexDirection: 'row', padding: 10 },
   cardImg: { width: '100%', aspectRatio: 16 / 9, borderRadius: 12, marginBottom: 9, justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden' },
   cardImgList: { width: 112, height: 72, aspectRatio: undefined, marginBottom: 0, marginRight: 12, flexShrink: 0 },
+  webCardImgList: { width: 184, height: 116, borderRadius: 14, marginRight: 18 },
   favBtn: { position: 'absolute', top: 6, right: 6, borderRadius: 12, padding: 5, elevation: 4, zIndex: 5 },
+  cardBody: { flex: 1, justifyContent: 'space-between' },
+  webCardBodyList: { minWidth: 0, paddingVertical: 1 },
   cardCat: { width: '100%', flexShrink: 1, fontSize: 10, fontWeight: 'bold', marginBottom: 3 },
+  webListCategory: { fontSize: 11, lineHeight: 15, marginBottom: 4 },
   cardTitle: { fontSize: 12, fontWeight: 'bold', marginBottom: 4, minHeight: 32 },
+  webListTitle: { fontSize: 16, lineHeight: 21, marginBottom: 5 },
   cardInstructor: { fontSize: 10, marginBottom: 7 },
+  webListInstructor: { fontSize: 12, lineHeight: 16, marginBottom: 8 },
   progressWrap: { marginBottom: 7 },
+  webListProgressWrap: { marginTop: 2, marginBottom: 6 },
   progressTrack: { height: 3, borderRadius: 2, overflow: 'hidden', marginBottom: 2 },
+  webListProgressTrack: { height: 5, borderRadius: 3, marginBottom: 4 },
   progressBar: { height: '100%', borderRadius: 2 },
   progressLabel: { fontSize: 9, fontWeight: 'bold' },
+  webListProgressLabel: { fontSize: 11, lineHeight: 14 },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, paddingTop: 7 },
+  webListFooter: { minHeight: 20, paddingTop: 4 },
   modules: { fontSize: 10 },
+  webListModules: { fontSize: 12, lineHeight: 16 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   rating: { fontSize: 10, fontWeight: 'bold' },
+  webListRating: { fontSize: 12 },
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   emptyEmoji: { marginBottom: 12 },
   emptyTitle: { fontSize: 17, fontWeight: 'bold', marginBottom: 6, textAlign: 'center' },

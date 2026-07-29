@@ -476,7 +476,7 @@ export default function HomeScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  webPage: { width: '100%', maxWidth: 1100, alignSelf: 'center', paddingTop: 8 },
+  webPage: { width: '100%', maxWidth: 1180, alignSelf: 'center', paddingTop: 20, paddingBottom: 24 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 24, paddingBottom: 10 },
   greeting: { fontSize: 16, color: colors.textMuted },
   greetingBold: { fontSize: 22, color: colors.text, fontWeight: 'bold' },
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 2,
   },
-  webEvolutionCard: { width: '65%', minWidth: 600, maxWidth: 720, alignSelf: 'center' },
+  webEvolutionCard: { width: undefined, minWidth: 0, maxWidth: undefined, borderRadius: 24 },
   evolutionWatermark: {
     position: 'absolute',
     right: -34,

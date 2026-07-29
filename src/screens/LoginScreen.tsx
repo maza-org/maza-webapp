@@ -82,7 +82,7 @@ export default function LoginScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isWideWeb && styles.webPage]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
@@ -96,7 +96,7 @@ export default function LoginScreen({ navigation }: any) {
 
       <Image
         source={require('../../assets/maza-logo-azul.png')}
-        style={styles.logo}
+        style={[styles.logo, isWideWeb && styles.webLogo]}
         resizeMode="contain"
       />
 
@@ -120,7 +120,7 @@ export default function LoginScreen({ navigation }: any) {
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email ou nome de utilizador</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, isWideWeb && styles.webInput]}
                 value={identifier}
                 onChangeText={updateIdentifier}
                 autoCapitalize="none"
@@ -131,7 +131,7 @@ export default function LoginScreen({ navigation }: any) {
               <Text style={styles.label}>Palavra-passe</Text>
               <View style={styles.passwordInputWrap}>
                 <TextInput
-                  style={[styles.input, styles.passwordInput]}
+                  style={[styles.input, styles.passwordInput, isWideWeb && styles.webInput]}
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
@@ -199,7 +199,23 @@ export default function LoginScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
   content: { flexGrow: 1, padding: 24, paddingTop: 40 },
-  webContent: { width: '100%', maxWidth: 560, alignSelf: 'center', justifyContent: 'center', paddingTop: 44, paddingBottom: 44 },
+  webPage: { backgroundColor: '#F3F8FB' },
+  webContent: {
+    flexGrow: 0,
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+    marginVertical: 32,
+    padding: 40,
+    borderWidth: 1,
+    borderColor: '#DCEAF2',
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#0F3550',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.1,
+    shadowRadius: 36,
+  },
   logo: { width: 160, height: 70, marginBottom: 32, alignSelf: 'flex-start' },
   back: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0F0F0', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
   backText: { color: colors.text, fontSize: 20, fontWeight: 'bold' },
@@ -209,6 +225,7 @@ const styles = StyleSheet.create({
   input: { backgroundColor: colors.white, borderRadius: 12, padding: 16, fontSize: 16 },
   passwordInputWrap: { position: 'relative', justifyContent: 'center' },
   passwordInput: { paddingRight: 54 },
+  webInput: { borderWidth: 1, borderColor: '#CFE0EA' },
   passwordToggle: {
     position: 'absolute',
     right: 12,
@@ -230,7 +247,8 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
   },
-  webButton: { borderRadius: 8, paddingVertical: 14, shadowOpacity: 0.18 },
+  webLogo: { width: 140, height: 58, marginBottom: 24 },
+  webButton: { borderRadius: 12, paddingVertical: 14, shadowOpacity: 0.18 },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
   registerLink: { alignItems: 'flex-start' },
   registerText: { color: '#8A8A8E', fontSize: 14 },

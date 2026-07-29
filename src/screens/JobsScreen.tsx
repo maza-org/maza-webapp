@@ -152,8 +152,11 @@ export default function JobsScreen({ navigation }: any) {
         <ActivityIndicator color={themeColors.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
+          key={isWideWeb ? 'jobs-grid' : 'jobs-list'}
           data={filtered}
           keyExtractor={(job) => String(job.id)}
+          numColumns={isWideWeb ? 2 : 1}
+          columnWrapperStyle={isWideWeb ? styles.webJobRow : undefined}
           showsVerticalScrollIndicator={false}
           style={styles.list}
           initialNumToRender={8}
@@ -163,7 +166,7 @@ export default function JobsScreen({ navigation }: any) {
           ListEmptyComponent={<Text style={[styles.empty, { color: themeColors.textMuted }]}>Nenhuma oportunidade encontrada</Text>}
           ListFooterComponent={<View style={{ height: bottomSafeSpace(insets.bottom, 20) }} />}
           renderItem={({ item: job }) => (
-            <TouchableOpacity key={job.id} style={[styles.jobCard, { backgroundColor: themeColors.card }]} onPress={() => openJobDetail(job)}>
+            <TouchableOpacity key={job.id} style={[styles.jobCard, isWideWeb && styles.webJobCard, { backgroundColor: themeColors.card }]} onPress={() => openJobDetail(job)}>
               {job.matchScore >= 20 && (
                 <View style={[styles.recommendedRow, { backgroundColor: themeColors.primary + '12' }]}>
                   <Sparkles size={13} color={themeColors.primary} />
@@ -274,7 +277,7 @@ export default function JobsScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  webPage: { flex: 1, width: '100%', maxWidth: 1000, alignSelf: 'center', paddingTop: 8 },
+  webPage: { flex: 1, width: '100%', maxWidth: 1180, alignSelf: 'center', paddingTop: 20 },
   header: { padding: 24, paddingBottom: 12 },
   title: { fontSize: 28, fontWeight: 'bold' },
   searchRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 24, marginBottom: 14, gap: 10 },
@@ -287,6 +290,8 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 24 },
   empty: { textAlign: 'center', marginTop: 40, fontSize: 16 },
   jobCard: { borderRadius: 16, padding: 20, marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
+  webJobRow: { gap: 16 },
+  webJobCard: { flex: 1, minWidth: 0, maxWidth: '49.3%', borderRadius: 20, shadowOpacity: 0.07, shadowRadius: 14 },
   recommendedRow: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5, marginBottom: 12 },
   recommendedText: { fontSize: 11, fontWeight: '700' },
   matchReason: { fontSize: 12, marginTop: -4, marginBottom: 12 },

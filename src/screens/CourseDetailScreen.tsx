@@ -63,6 +63,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   const { colors: themeColors, isDark } = useTheme();
   const { courseId } = route.params;
   const { user } = useAuth();
+  const isAuthenticated = !!user;
   const initialCourse = useMemo(() => {
     const passedCourse = route.params?.course;
     const source = passedCourse?.course ?? passedCourse ?? {};
@@ -97,10 +98,12 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   const didFirstLoadRef = useRef(false);
   const lastFocusRefreshRef = useRef(0);
 
-  const { width, height } = useWindowDimensions();
-  const isWeb = Platform.OS === 'web';
+  const { width } = useWindowDimensions();
   const isWideWeb = useIsWideWeb(1024);
-  const webLessonsMaxHeight = isWideWeb ? Math.max(540, height - 188) : undefined;
+
+  useEffect(() => {
+    if (course?.title) navigation.setOptions({ title: course.title });
+  }, [course?.title, navigation]);
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
@@ -138,13 +141,15 @@ export default function CourseDetailScreen({ route, navigation }: any) {
           } catch {}
         });
 
-      const progressPromise = api.get(progressUrl)
-        .then((progressRes) => {
-          setProgress(progressRes.data);
-        })
-        .catch(() => {
-          if (mode !== 'background') setProgress(null);
-        });
+      const progressPromise = isAuthenticated
+        ? api.get(progressUrl)
+            .then((progressRes) => {
+              setProgress(progressRes.data);
+            })
+            .catch(() => {
+              if (mode !== 'background') setProgress(null);
+            })
+        : Promise.resolve().then(() => setProgress(null));
 
       if (showSpinner) {
         await coursePromise;
@@ -158,7 +163,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
     setDetailLoaded(true);
     setLoading(false);
     setRefreshing(false);
-  }, [courseId]);
+  }, [courseId, isAuthenticated]);
 
   useEffect(() => {
     didFirstLoadRef.current = false;
@@ -170,8 +175,8 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   }, [courseId, initialCourse]);
 
   useEffect(() => {
-    if (courseId) trackActivity({ type: 'COURSE_OPEN', courseId });
-  }, [courseId]);
+    if (isAuthenticated && courseId) trackActivity({ type: 'COURSE_OPEN', courseId });
+  }, [courseId, isAuthenticated]);
 
   useFocusEffect(useCallback(() => {
     const firstLoad = !didFirstLoadRef.current;
@@ -236,7 +241,8 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   const courseLocked = prerequisite ? !!(prerequisite.required && !prerequisite.completed) : !!course?.isLocked || !!course?.prerequisiteCourseId;
   const hasLessons = totalLessons > 0;
   const detailsPending = !detailLoaded && !hasLessons;
-  const ctaDisabled = courseLocked || detailsPending || !hasLessons;
+  const requiresLogin = !isAuthenticated;
+  const ctaDisabled = !requiresLogin && (courseLocked || detailsPending || !hasLessons);
   const baselinePending = !courseLocked && (impact
     ? !!impact.baselineRequired && !impact.baselineCompleted
     : course?.offlineAccess?.baselineCompleted === false);
@@ -288,11 +294,15 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   }, [baselinePending, course, progress]);
 
   useEffect(() => {
-    if (!prefetchLessonId) return;
+    if (!isAuthenticated || !prefetchLessonId) return;
     getPersistentCached(`/courses/lessons/${prefetchLessonId}`, 30 * 60 * 1000).catch(() => {});
-  }, [prefetchLessonId]);
+  }, [isAuthenticated, prefetchLessonId]);
 
   const handleCTA = async () => {
+    if (requiresLogin) {
+      navigation.navigate('Login');
+      return;
+    }
     if (courseLocked) {
       Alert.alert('Curso bloqueado', `Complete ${prerequisiteTitle} para desbloquear este curso.`);
       return;
@@ -361,8 +371,30 @@ export default function CourseDetailScreen({ route, navigation }: any) {
 
   const handleShare = async () => {
     if (Platform.OS === 'web') {
-      const url = globalThis.location?.href;
-      if (url) await globalThis.navigator?.clipboard?.writeText(url).catch(() => {});
+      const origin = globalThis.location?.origin ?? 'https://web.mazas.org';
+      const url = `${origin}/curso/${encodeURIComponent(String(courseId))}`;
+      const webNavigator = globalThis.navigator as any;
+      const shareData = {
+        title: course?.title ?? 'Curso MAZA',
+        text: `Veja o curso ${course?.title ?? ''} no Maza.`,
+        url,
+      };
+
+      if (typeof webNavigator?.share === 'function') {
+        try {
+          await webNavigator.share(shareData);
+          return;
+        } catch (error: any) {
+          if (error?.name === 'AbortError') return;
+        }
+      }
+
+      let copied = false;
+      try {
+        await webNavigator?.clipboard?.writeText(url);
+        copied = true;
+      } catch {}
+      Alert.alert(copied ? 'Link copiado' : 'Link do curso', copied ? 'O link deste curso foi copiado.' : url);
       return;
     }
     await Share.share({
@@ -371,8 +403,10 @@ export default function CourseDetailScreen({ route, navigation }: any) {
     }).catch(() => {});
   };
 
-  const ctaLabel = courseLocked
-    ? 'Curso bloqueado'
+  const ctaLabel = requiresLogin
+    ? 'Entrar para estudar'
+    : courseLocked
+      ? 'Curso bloqueado'
     : detailsPending
       ? 'A carregar lições...'
     : !hasLessons
@@ -392,16 +426,6 @@ export default function CourseDetailScreen({ route, navigation }: any) {
     : null;
 
   const insets = useSafeAreaInsets();
-  const LessonsContainer: any = isWideWeb ? ScrollView : View;
-  const lessonsContainerProps = isWideWeb
-    ? {
-        nestedScrollEnabled: true,
-        showsVerticalScrollIndicator: true,
-        style: [styles.webLessonsScroller, { maxHeight: webLessonsMaxHeight }],
-        contentContainerStyle: styles.webLessonsScrollerContent,
-      }
-    : {};
-
   return (
     <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <Modal visible={showCertificate} animationType="slide" transparent>
@@ -486,10 +510,11 @@ export default function CourseDetailScreen({ route, navigation }: any) {
           contentContainerStyle={[{ paddingBottom: Math.max(insets.bottom, 24) + 96 }, WEB_VERTICAL_PAN_STYLE]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => fetchData('manual')} />}
         >
+          <View style={isWideWeb ? styles.webHeroFrame : undefined}>
           {(() => {
             const thumbUri = resolveThumbnail(course.thumbnail);
             const heroContent = (
-              <View style={[styles.heroOverlay, { paddingTop: insets.top }]}>
+              <View style={[styles.heroOverlay, isWideWeb && styles.webHeroOverlay, { paddingTop: insets.top }]}>
                 <View style={styles.heroActions}>
                   <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={handleBack} style={styles.heroIconButton}>
                     <Ionicons name="arrow-back" size={21} color="#fff" />
@@ -508,7 +533,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                     ))}
                   </View>
                 )}
-                <Text style={styles.heroTitle}>{course.title}</Text>
+                <Text style={[styles.heroTitle, isWideWeb && styles.webHeroTitle]}>{course.title}</Text>
                 <Text style={styles.instructor}>
                   <Ionicons name="person-outline" size={14} color="rgba(255,255,255,0.85)" /> {course.instructor}
                   {hasLessons ? `  ·  ${totalLessons} ${totalLessons === 1 ? 'lição' : 'lições'}${durationLabel !== '—' ? `  ·  ${durationLabel}` : ''}  ·  ${course.rating > 0 ? `${course.rating.toFixed(1)} ★` : 'Sem avaliação'}` : ''}
@@ -521,7 +546,8 @@ export default function CourseDetailScreen({ route, navigation }: any) {
               return (
                 <ImageBackground
                   source={{ uri: thumbUri }}
-                  style={styles.hero}
+                  style={[styles.hero, isWideWeb && styles.webHero]}
+                  imageStyle={isWideWeb ? styles.webHeroImage : undefined}
                   resizeMode="cover"
                 >
                   {heroContent}
@@ -529,16 +555,23 @@ export default function CourseDetailScreen({ route, navigation }: any) {
               );
             }
             return (
-              <CourseBokehBg courseId={course.id} title={course.title} width={width} contentSized style={{ width: '100%' }}>
+              <CourseBokehBg
+                courseId={course.id}
+                title={course.title}
+                width={width}
+                contentSized
+                style={[{ width: '100%' }, isWideWeb && styles.webHero]}
+              >
                 {heroContent}
               </CourseBokehBg>
             );
           })()}
+          </View>
 
           <View style={isWideWeb ? styles.webCourseBody : undefined}>
             <View style={isWideWeb ? styles.webCourseMain : undefined}>
           {hasLessons && (
-            <View style={[styles.progressContainer, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <View style={[styles.progressContainer, isWideWeb && styles.webPanel, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
               <View style={styles.progressRow}>
                 <Text style={[styles.progressLabel, { color: themeColors.text }]}>Progresso do Curso</Text>
                 <Text style={[styles.progressPercent, { color: themeColors.primary }, isComplete && { color: themeColors.success }]}>
@@ -552,6 +585,37 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                 ]} />
               </View>
               <Text style={[styles.progressSub, { color: themeColors.textMuted }]}>{completedLessons} de {totalLessons} lições concluídas</Text>
+            </View>
+          )}
+
+          {isWideWeb && hasLessons && (
+            <View style={[styles.webNextCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+              <Text style={[styles.webNextTitle, { color: themeColors.text }]}>
+                {requiresLogin ? 'Pronto para começar?' : isComplete ? 'Curso concluído' : hasStarted ? 'Continue a aprender' : 'Comece este curso'}
+              </Text>
+              <Text style={[styles.webNextText, { color: themeColors.textMuted }]}>
+                {requiresLogin
+                  ? 'Inicie sessão para guardar o seu progresso e aceder às aulas.'
+                  : isComplete
+                    ? 'Parabéns! O seu certificado está pronto para consultar.'
+                    : hasStarted
+                      ? 'Retome a próxima aula disponível e continue o seu progresso.'
+                      : 'Avance ao seu ritmo e acompanhe o progresso de cada módulo.'}
+              </Text>
+              <TouchableOpacity
+                accessibilityRole="button"
+                style={[
+                  styles.webNextButton,
+                  { backgroundColor: themeColors.primary },
+                  isComplete && { backgroundColor: themeColors.success },
+                  ctaDisabled && { backgroundColor: themeColors.textMuted },
+                ]}
+                onPress={handleCTA}
+                disabled={ctaDisabled}
+              >
+                {courseLocked ? <Lock size={16} color="#fff" /> : isComplete ? <Award size={16} color="#fff" /> : <Play size={16} color="#fff" fill="#fff" />}
+                <Text style={styles.webNextButtonText}>{ctaLabel}</Text>
+              </TouchableOpacity>
             </View>
           )}
 
@@ -612,14 +676,8 @@ export default function CourseDetailScreen({ route, navigation }: any) {
           )}
 
           {hasLessons && (
-            <View style={[styles.courseUtilityRow, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+            <View style={[styles.courseUtilityRow, isWideWeb && styles.webUtilityRow, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
               {Platform.OS !== 'web' && <CourseOfflineDownloadCard course={course} variant="action" />}
-              {Platform.OS === 'web' && (
-                <View style={[styles.courseUtilityItem, styles.courseUtilityDivider, { borderColor: themeColors.border }]}>
-                  <Download size={17} color={themeColors.primary} />
-                  <Text style={[styles.courseUtilityText, { color: themeColors.text }]}>Usar sem internet</Text>
-                </View>
-              )}
               <TouchableOpacity
                 accessibilityRole="button"
                 accessibilityLabel="Abrir comunidade do curso"
@@ -634,10 +692,14 @@ export default function CourseDetailScreen({ route, navigation }: any) {
           )}
             </View>
 
-          <View style={[styles.section, isWideWeb && styles.webLessonsSidebar]}>
+          <View style={[
+            styles.section,
+            isWideWeb && styles.webLessonsSidebar,
+            isWideWeb && { backgroundColor: themeColors.card, borderColor: themeColors.border },
+          ]}>
             <View style={styles.sectionHeaderRow}>
               <Text style={[styles.sectionTitle, { color: themeColors.text }]} numberOfLines={1}>Conteúdo do Curso</Text>
-              <TouchableOpacity
+              {!isWideWeb && <TouchableOpacity
                 accessibilityRole="button"
                 style={[
                   styles.sectionCourseAction,
@@ -650,7 +712,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
               >
                 {courseLocked ? <Lock size={15} color="#fff" /> : isComplete ? <Award size={15} color="#fff" /> : <Play size={15} color="#fff" fill="#fff" />}
                 <Text style={styles.sectionCourseActionText} numberOfLines={1}>{ctaLabel}</Text>
-              </TouchableOpacity>
+              </TouchableOpacity>}
             </View>
             {detailsPending && (
               <View style={styles.lessonsLoading}>
@@ -661,14 +723,14 @@ export default function CourseDetailScreen({ route, navigation }: any) {
             {!hasLessons && detailLoaded && (
               <Text style={[styles.emptyLessonsText, { color: themeColors.textMuted }]}>As lições serão adicionadas em breve.</Text>
             )}
-            <LessonsContainer {...lessonsContainerProps}>
+            <View>
             {course.modules?.map((mod: any, idx: number) => {
               const modProgress = getModuleProgress(mod.id);
               const isUnlocked = !courseLocked && !baselinePending && (modProgress?.isUnlocked ?? mod.isUnlocked ?? (idx === 0));
               const isCompleted = modProgress?.isCompleted ?? mod.isCompleted ?? false;
 
               return (
-                <View key={mod.id} style={[styles.moduleCard, { backgroundColor: themeColors.card }, !isUnlocked && styles.moduleCardLocked]}>
+                <View key={mod.id} style={[styles.moduleCard, isWideWeb && styles.webModuleCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }, !isUnlocked && styles.moduleCardLocked]}>
                   <View style={styles.moduleHeader}>
                     <View style={[styles.moduleNum, { backgroundColor: themeColors.primary }, isCompleted && { backgroundColor: themeColors.success }, !isUnlocked && { backgroundColor: themeColors.textMuted }]}>
                       {isCompleted ? <CheckCircle size={16} color="#fff" /> :
@@ -679,7 +741,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                       <Text style={[styles.moduleTitle, { color: themeColors.text }, !isUnlocked && { color: themeColors.textMuted }]}>
                         {mod.title === '__FINAL_EXAM__' ? <><Ionicons name="school-outline" size={16} color={themeColors.text} /> Prova Final</> : mod.title}
                       </Text>
-                      {mod.description && <Text style={[styles.moduleSub, { color: themeColors.textMuted }]}>{mod.description}</Text>}
+                      {!!mod.description && <Text style={[styles.moduleSub, { color: themeColors.textMuted }]}>{mod.description}</Text>}
                       {!isUnlocked && <Text style={[styles.lockHint, { color: themeColors.textMuted }]}><Ionicons name="lock-closed-outline" size={11} color={themeColors.textMuted}/> Complete o módulo anterior para desbloquear</Text>}
                     </View>
                   </View>
@@ -731,7 +793,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                 </View>
               );
             })}
-            </LessonsContainer>
+            </View>
           </View>
           </View>
 
@@ -750,6 +812,11 @@ const styles = StyleSheet.create({
   loadingText: { fontSize: 14, fontWeight: '600' },
   hero: { width: '100%' },
   heroOverlay: { backgroundColor: 'rgba(5,12,24,0.58)' },
+  webHeroFrame: { width: '100%', maxWidth: 1220, alignSelf: 'center', paddingHorizontal: 20, paddingTop: 18 },
+  webHero: { minHeight: 292, borderRadius: 24, overflow: 'hidden' },
+  webHeroImage: { borderRadius: 24 },
+  webHeroOverlay: { minHeight: 292, justifyContent: 'space-between', borderRadius: 24 },
+  webHeroTitle: { maxWidth: 760, fontSize: 38, lineHeight: 45, marginBottom: 10 },
   heroActions: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 10 },
   heroIconButton: {
     width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
@@ -783,7 +850,6 @@ const styles = StyleSheet.create({
     gap: 7,
     paddingHorizontal: 10,
   },
-  courseUtilityDivider: { borderRightWidth: 1 },
   courseUtilityText: { fontSize: 12.5, fontWeight: '700' },
   lockNotice: {
     flexDirection: 'row',
@@ -863,33 +929,40 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 18,
+    gap: 24,
     paddingHorizontal: 20,
-    paddingTop: 18,
+    paddingTop: 24,
   },
   webCourseMain: {
-    flex: 1,
-    minWidth: 0,
-    gap: 12,
+    width: 350,
+    flexShrink: 0,
+    gap: 16,
+  },
+  webPanel: {
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 20,
+  },
+  webUtilityRow: {
+    borderWidth: 1,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   webLessonsSidebar: {
-    width: 410,
-    flexShrink: 0,
-    padding: 14,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.45)',
-  },
-  webLessonsScroller: {
-    width: '100%',
-  },
-  webLessonsScrollerContent: {
-    paddingBottom: 6,
+    flex: 1,
+    minWidth: 0,
+    padding: 22,
+    borderWidth: 1,
+    borderRadius: 20,
+    shadowColor: '#0F3550',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.06,
+    shadowRadius: 26,
   },
   webNextCard: {
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 16,
-    marginHorizontal: 20,
+    borderRadius: 20,
+    padding: 20,
   },
   webNextTitle: {
     fontSize: 16,
@@ -902,12 +975,13 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   webNextButton: {
-    alignSelf: 'flex-start',
+    width: '100%',
     minHeight: 40,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   webNextButtonText: {
@@ -915,9 +989,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
   },
-  webHidden: {
-    display: 'none',
-  },
+  webModuleCard: { borderWidth: 1, borderRadius: 14, padding: 16 },
   certOverlay: { flex: 1, backgroundColor: 'rgba(30, 41, 59, 0.95)', justifyContent: 'center', alignItems: 'center', padding: 20 },
   certLegacyHidden: { display: 'none' },
   certCardLandscape: { width: '100%', maxWidth: 800, aspectRatio: 1.414, backgroundColor: '#fff', padding: 4, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 30, elevation: 20, marginBottom: 24 },

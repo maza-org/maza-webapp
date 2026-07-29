@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
+import { Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as SplashScreen from 'expo-splash-screen';
 import { useAuth } from '../context/AuthContext';
@@ -78,10 +79,10 @@ const MainTabs = () => {
         tabBarActiveBackgroundColor: useSideNav ? themeColors.primary : 'transparent',
         tabBarInactiveBackgroundColor: 'transparent',
         tabBarLabelStyle: useSideNav
-          ? { fontSize: 12, letterSpacing: 0, fontWeight: '700' }
+          ? { fontSize: 13, letterSpacing: 0, fontWeight: '700' }
           : { fontSize: 9.5, letterSpacing: -0.3 },
         tabBarStyle: {
-          width: useSideNav ? 164 : undefined,
+          width: useSideNav ? 216 : undefined,
           borderTopWidth: useSideNav ? 0 : 1,
           borderRightWidth: useSideNav ? 1 : 0,
           borderTopColor: themeColors.border,
@@ -89,11 +90,11 @@ const MainTabs = () => {
           elevation: 0,
           shadowOpacity: 0,
           backgroundColor: themeColors.card,
-          paddingTop: useSideNav ? 18 : undefined,
-          paddingBottom: useSideNav ? 18 : undefined,
+          paddingTop: useSideNav ? 24 : undefined,
+          paddingBottom: useSideNav ? 24 : undefined,
         },
         tabBarItemStyle: useSideNav
-          ? { paddingVertical: 10, minHeight: 58, marginHorizontal: 12, marginVertical: 5, borderRadius: 12 }
+          ? { paddingVertical: 11, minHeight: 58, marginHorizontal: 14, marginVertical: 5, borderRadius: 14 }
           : undefined,
         headerShown: false,
       })}
@@ -109,6 +110,48 @@ const MainTabs = () => {
 
 export default function AppNavigator() {
   const { user, loading } = useAuth();
+  const isAuthenticated = !!user;
+  const assessmentDone = user?.profile?.assessmentDone ?? false;
+
+  const linking = useMemo(() => {
+    if (Platform.OS !== 'web') return undefined;
+
+    const prefixes = [globalThis.location?.origin ?? 'https://web.mazas.org'];
+    const screens = !isAuthenticated
+      ? {
+          Login: '',
+          Register: 'registar',
+          OtpVerification: 'confirmar-sms',
+          ForgotPassword: 'recuperar-senha',
+          ResetPassword: 'nova-senha',
+          CourseDetail: 'curso/:courseId',
+        }
+      : !assessmentDone
+        ? {
+            BotAssessment: '',
+            Main: 'inicio',
+            CourseDetail: 'curso/:courseId',
+          }
+        : {
+            Main: '',
+            CourseDetail: 'curso/:courseId',
+            ImpactAssessment: 'curso/:courseId/avaliacao',
+            LessonViewer: 'curso/:courseId/aula/:lessonId',
+            JobDetail: 'oportunidades/:jobId',
+            MyCertificates: 'certificados',
+            NotificationsInbox: 'notificacoes',
+            Notificacoes: 'preferencias/notificacoes',
+            Configuracoes: 'definicoes',
+            EditProfile: 'perfil/editar',
+            ChangePassword: 'perfil/mudar-senha',
+            CareerOutcomes: 'resultados-profissionais',
+            CourseForum: 'curso/:courseId/comunidade',
+            HowItWorksStory: 'como-funciona',
+            BotAssessment: 'avaliacao-inicial',
+          };
+
+    return { prefixes, config: { screens } } as any;
+  }, [assessmentDone, isAuthenticated]);
 
   useEffect(() => {
     if (!loading) SplashScreen.hideAsync().catch(() => {});
@@ -118,10 +161,13 @@ export default function AppNavigator() {
     return <ScreenLoader label="A abrir..." />;
   }
 
-  const assessmentDone = user?.profile?.assessmentDone ?? false;
-
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      linking={linking}
+      documentTitle={Platform.OS === 'web' ? {
+        formatter: (options, route) => `Maza | ${options?.title ?? route?.name ?? 'Aprender'}`,
+      } : undefined}
+    >
       <Stack.Navigator
         key={!user ? 'guest' : 'auth'}
         initialRouteName={!user ? 'Login' : undefined}
@@ -130,13 +176,20 @@ export default function AppNavigator() {
         {!user ? (
           // ── Not logged in ────────────────────────────────────
           <>
-            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-            <Stack.Screen name="HowItWorksStory" component={HowItWorksStoryScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-            <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
-            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+            {Platform.OS !== 'web' && <Stack.Screen name="Onboarding" component={OnboardingScreen} />}
+            {Platform.OS !== 'web' && <Stack.Screen name="HowItWorksStory" component={HowItWorksStoryScreen} options={{ headerShown: false }} />}
+            <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Entrar' }} />
+            <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'Registar' }} />
+            <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} options={{ title: 'Código SMS' }} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ title: 'Recuperar senha' }} />
+            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ title: 'Nova senha' }} />
+            {Platform.OS === 'web' && (
+              <Stack.Screen
+                name="CourseDetail"
+                component={CourseDetailScreen}
+                options={({ route }: any) => ({ title: route.params?.title ?? 'Curso' })}
+              />
+            )}
           </>
         ) : !assessmentDone ? (
           // ── Logged in but assessment NOT done ────────────────
@@ -147,26 +200,34 @@ export default function AppNavigator() {
               options={{ gestureEnabled: false }}
             />
             <Stack.Screen name="Main" component={MainTabs} />
-            <Stack.Screen name="CourseDetail" component={CourseDetailScreen} />
+            <Stack.Screen
+              name="CourseDetail"
+              component={CourseDetailScreen}
+              options={({ route }: any) => ({ title: route.params?.title ?? 'Curso' })}
+            />
           </>
         ) : (
           // ── Logged in + assessment done ───────────────────────
           <>
             <Stack.Screen name="Main" component={MainTabs} />
-            <Stack.Screen name="CourseDetail" component={CourseDetailScreen} />
-            <Stack.Screen name="ImpactAssessment" component={ImpactAssessmentScreen} />
-            <Stack.Screen name="LessonViewer" component={LessonViewerScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="JobDetail" component={JobDetailScreen} />
-            <Stack.Screen name="MyCertificates" component={MyCertificatesScreen} />
-            <Stack.Screen name="NotificationsInbox" component={NotificationsInboxScreen} />
-            <Stack.Screen name="Notificacoes" component={NotificacoesScreen} />
-            <Stack.Screen name="Configuracoes" component={ConfiguracoesScreen} />
-            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-            <Stack.Screen name="CareerOutcomes" component={CareerOutcomesScreen} />
-            <Stack.Screen name="CourseForum" component={CourseForumScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="HowItWorksStory" component={HowItWorksStoryScreen} options={{ presentation: 'fullScreenModal', headerShown: false }} />
-            <Stack.Screen name="BotAssessment" component={BotAssessmentScreen} />
+            <Stack.Screen
+              name="CourseDetail"
+              component={CourseDetailScreen}
+              options={({ route }: any) => ({ title: route.params?.title ?? 'Curso' })}
+            />
+            <Stack.Screen name="ImpactAssessment" component={ImpactAssessmentScreen} options={{ title: 'Avaliação do curso' }} />
+            <Stack.Screen name="LessonViewer" component={LessonViewerScreen} options={{ headerShown: false, title: 'Aula' }} />
+            <Stack.Screen name="JobDetail" component={JobDetailScreen} options={{ title: 'Oportunidade' }} />
+            <Stack.Screen name="MyCertificates" component={MyCertificatesScreen} options={{ title: 'Certificados' }} />
+            <Stack.Screen name="NotificationsInbox" component={NotificationsInboxScreen} options={{ title: 'Notificações' }} />
+            <Stack.Screen name="Notificacoes" component={NotificacoesScreen} options={{ title: 'Preferências de notificações' }} />
+            <Stack.Screen name="Configuracoes" component={ConfiguracoesScreen} options={{ title: 'Definições' }} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Editar perfil' }} />
+            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Mudar senha' }} />
+            <Stack.Screen name="CareerOutcomes" component={CareerOutcomesScreen} options={{ title: 'Resultados profissionais' }} />
+            <Stack.Screen name="CourseForum" component={CourseForumScreen} options={{ headerShown: false, title: 'Comunidade do curso' }} />
+            <Stack.Screen name="HowItWorksStory" component={HowItWorksStoryScreen} options={{ presentation: 'fullScreenModal', headerShown: false, title: 'Como funciona' }} />
+            <Stack.Screen name="BotAssessment" component={BotAssessmentScreen} options={{ title: 'Avaliação inicial' }} />
           </>
         )}
       </Stack.Navigator>

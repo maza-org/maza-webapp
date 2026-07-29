@@ -7,16 +7,14 @@ function readBrowserViewportWidth() {
   const doc = (globalThis as any).document;
   const widths = [
     win?.visualViewport?.width,
-    win?.innerWidth,
-    win?.outerWidth,
-    win?.screen?.width,
     doc?.documentElement?.clientWidth,
+    win?.innerWidth,
     doc?.body?.getBoundingClientRect?.().width,
   ]
     .map((value) => Number(value))
     .filter((value) => Number.isFinite(value) && value > 0);
 
-  return widths.length > 0 ? Math.min(...widths) : 0;
+  return widths[0] ?? 0;
 }
 
 export function useIsWideWeb(minWidth = 900) {

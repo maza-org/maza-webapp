@@ -475,7 +475,7 @@ export default function RegisterScreen({ navigation }: any) {
   })();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isWideWeb && styles.webPage]}>
       <StatusBar barStyle="dark-content" backgroundColor="#F5F6FA" />
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -640,7 +640,8 @@ export default function RegisterScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
   scroll: { paddingHorizontal: 24, paddingTop: 28 },
-  webScroll: { width: '100%', maxWidth: 760, alignSelf: 'center', paddingTop: 40 },
+  webPage: { backgroundColor: '#F3F8FB' },
+  webScroll: { width: '100%', maxWidth: 800, alignSelf: 'center', paddingTop: 40, paddingHorizontal: 32 },
   logo: { width: 160, height: 70, marginBottom: 32, alignSelf: 'flex-start' },
 
   header: { paddingBottom: 14 },
@@ -653,7 +654,7 @@ const styles = StyleSheet.create({
   formIntro: { marginTop: 4, marginBottom: 2, fontSize: 14, lineHeight: 20, color: '#8A8A9A', fontWeight: '500' },
 
   card: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, paddingTop: 16, marginBottom: 14, borderWidth: 1, borderColor: '#F0F1F5' },
-  webCard: { borderRadius: 8, padding: 22 },
+  webCard: { borderRadius: 20, padding: 24, borderColor: '#DCEAF2', shadowColor: '#0F3550', shadowOpacity: 0.06, shadowRadius: 22 },
   cardHint: { fontSize: 12, color: '#A0A0B0', marginBottom: 12, marginTop: -4 },
 
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 18 },
@@ -685,7 +686,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary, paddingVertical: 17, borderRadius: 16, alignItems: 'center', marginTop: 8,
     shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 16, elevation: 8,
   },
-  webRegisterBtn: { borderRadius: 8, paddingVertical: 14, shadowOpacity: 0.18 },
+  webRegisterBtn: { borderRadius: 12, paddingVertical: 14, shadowOpacity: 0.18 },
   registerBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
   feedbackOverlay: {
     flex: 1,

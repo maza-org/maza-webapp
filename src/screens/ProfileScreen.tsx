@@ -147,7 +147,7 @@ export default function ProfileScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { flexGrow: 1, paddingBottom: 10 },
-  webPage: { width: '100%', maxWidth: 920, alignSelf: 'center' },
+  webPage: { width: '100%', maxWidth: 1040, alignSelf: 'center', paddingTop: 20, paddingBottom: 24 },
   header: { alignItems: 'center', paddingHorizontal: 20, paddingTop: 18, paddingBottom: 14 },
   avatarContainer: { position: 'relative', marginBottom: 10, overflow: 'visible' },
   avatar: { width: 76, height: 76, borderRadius: 38, justifyContent: 'center', alignItems: 'center', shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 },

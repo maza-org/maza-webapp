@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import api, { mapAuthError } from '../services/api';
 import { colors } from '../theme/colors';
+import { useIsWideWeb } from '../utils/webViewport';
 
 export default function ForgotPasswordScreen() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -14,6 +15,7 @@ export default function ForgotPasswordScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation<any>();
   const { isDark } = useTheme();
+  const isWideWeb = useIsWideWeb(760);
 
   const sanitizeIdentifier = (value: string) => value
     .replace(/\s+/g, '')
@@ -48,24 +50,24 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? colors.background : '#FAFAFA' }}>
+    <SafeAreaView style={[{ flex: 1, backgroundColor: isDark ? colors.background : '#FAFAFA' }, isWideWeb && styles.webPage]}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={styles.container}
+          contentContainerStyle={[styles.container, isWideWeb && styles.webContainer]}
           bounces={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
         >
-            <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+            <TouchableOpacity style={[styles.back, isWideWeb && styles.webBack]} onPress={() => navigation.goBack()}>
               <Ionicons name="arrow-back" size={24} color={colors.text} />
             </TouchableOpacity>
 
             <Image
               source={isDark ? require('../../assets/maza-logo-branco.png') : require('../../assets/maza-logo-azul.png')}
-              style={styles.logo}
+              style={[styles.logo, isWideWeb && styles.webLogo]}
               resizeMode="contain"
             />
 
@@ -77,7 +79,7 @@ export default function ForgotPasswordScreen() {
             <View style={styles.inputContainer}>
               <Text style={[styles.label, { color: isDark ? colors.white : colors.text }]}>EMAIL OU TELEFONE</Text>
               <TextInput
-                style={[styles.input, { backgroundColor: isDark ? '#1e293b' : colors.white, color: isDark ? colors.white : colors.text }]}
+                style={[styles.input, isWideWeb && styles.webInput, { backgroundColor: isDark ? '#1e293b' : colors.white, color: isDark ? colors.white : colors.text }]}
                 placeholder=""
                 placeholderTextColor={isDark ? '#94a3b8' : '#9ca3af'}
                 value={identifier}
@@ -101,7 +103,7 @@ export default function ForgotPasswordScreen() {
             ) : null}
 
             <TouchableOpacity 
-              style={[styles.button, { opacity: isLoading ? 0.7 : 1 }]} 
+              style={[styles.button, isWideWeb && styles.webButton, { opacity: isLoading ? 0.7 : 1 }]}
               onPress={handleForgotPassword}
               disabled={isLoading}
             >
@@ -139,4 +141,26 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
+  webPage: { backgroundColor: '#F3F8FB' },
+  webContainer: {
+    flexGrow: 0,
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    marginVertical: 32,
+    padding: 40,
+    borderWidth: 1,
+    borderColor: '#DCEAF2',
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#0F3550',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.1,
+    shadowRadius: 36,
+  },
+  webBack: { backgroundColor: '#EDF7FC' },
+  webLogo: { width: 140, height: 58, marginBottom: 24 },
+  webInput: { borderWidth: 1, borderColor: '#CFE0EA' },
+  webButton: { borderRadius: 12, shadowOpacity: 0.2, shadowRadius: 12 },
 });

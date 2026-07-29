@@ -569,7 +569,7 @@ export default function BadgesScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  webPage: { width: '100%', maxWidth: 1040, alignSelf: 'center', paddingTop: 8 },
+  webPage: { width: '100%', maxWidth: 1180, alignSelf: 'center', paddingTop: 20, paddingBottom: 24 },
   header: { paddingHorizontal: 24, paddingTop: 44, paddingBottom: 20, overflow: 'hidden' },
   headerWatermark: {
     position: 'absolute',

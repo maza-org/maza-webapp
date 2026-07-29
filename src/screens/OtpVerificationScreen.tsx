@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
+import { useIsWideWeb } from '../utils/webViewport';
 
 function getOtpErrorMessage(err: any, fallback: string) {
   const message = String(err?.message ?? '');
@@ -21,6 +22,7 @@ function getOtpErrorMessage(err: any, fallback: string) {
 export default function OtpVerificationScreen({ route, navigation }: any) {
   const { phone } = route.params;
   const { verifyOtp } = useAuth();
+  const isWideWeb = useIsWideWeb(760);
 
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,7 +44,7 @@ export default function OtpVerificationScreen({ route, navigation }: any) {
     try {
       await verifyOtp(phone, otpCode);
     } catch (err: any) {
-      Alert.alert('Erro', getOtpErrorMessage(err, 'C骴igo inv醠ido. Tente novamente.'));
+      Alert.alert('Erro', getOtpErrorMessage(err, 'C贸digo inv谩lido. Tente novamente.'));
     } finally {
       setLoading(false);
     }
@@ -62,31 +64,31 @@ export default function OtpVerificationScreen({ route, navigation }: any) {
       inputRef.current?.focus();
       Alert.alert('C贸digo enviado', 'Um novo c贸digo foi enviado para o seu n煤mero.');
     } catch (err: any) {
-      Alert.alert('Erro', getOtpErrorMessage(err, 'N鉶 foi poss韛el reenviar o c骴igo.'));
+      Alert.alert('Erro', getOtpErrorMessage(err, 'N茫o foi poss铆vel reenviar o c贸digo.'));
     } finally {
       setResending(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isWideWeb && styles.webPage]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, isWideWeb && styles.webContent]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, isWideWeb && styles.webBackBtn]}>
             <Ionicons name="arrow-back" size={24} color="#1A1A2E" />
           </TouchableOpacity>
 
           <Image
             source={require('../../assets/maza-logo-azul.png')}
-            style={styles.logo}
+            style={[styles.logo, isWideWeb && styles.webLogo]}
             resizeMode="contain"
           />
 
@@ -100,7 +102,7 @@ export default function OtpVerificationScreen({ route, navigation }: any) {
 
           <TextInput
             ref={inputRef}
-            style={[styles.otpInput, code && styles.otpInputFilled]}
+            style={[styles.otpInput, isWideWeb && styles.webInput, code && styles.otpInputFilled]}
             keyboardType="number-pad"
             inputMode="numeric"
             maxLength={6}
@@ -118,7 +120,7 @@ export default function OtpVerificationScreen({ route, navigation }: any) {
           />
 
           <TouchableOpacity
-            style={[styles.confirmBtn, (loading || code.length < 6) && { opacity: 0.55 }]}
+            style={[styles.confirmBtn, isWideWeb && styles.webButton, (loading || code.length < 6) && { opacity: 0.55 }]}
             onPress={handleVerify}
             disabled={loading || code.length < 6}
             activeOpacity={0.85}
@@ -178,4 +180,26 @@ const styles = StyleSheet.create({
   resendLink: { alignItems: 'center', marginTop: 24 },
   resendText: { color: '#8A8A9A', fontSize: 14 },
   resendHighlight: { color: colors.primary, fontWeight: '700' },
+  webPage: { backgroundColor: '#F3F8FB' },
+  webContent: {
+    flexGrow: 0,
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    marginVertical: 32,
+    padding: 40,
+    borderWidth: 1,
+    borderColor: '#DCEAF2',
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#0F3550',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.1,
+    shadowRadius: 36,
+  },
+  webBackBtn: { backgroundColor: '#EDF7FC' },
+  webLogo: { width: 140, height: 58, marginBottom: 24 },
+  webInput: { borderColor: '#CFE0EA', shadowOpacity: 0 },
+  webButton: { borderRadius: 12, shadowOpacity: 0.2, shadowRadius: 12 },
 });

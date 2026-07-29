@@ -30,7 +30,7 @@ function Root() {
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <AppNavigator />
-      {token ? <OfflineDownloadBanner /> : null}
+      {token && Platform.OS !== 'web' ? <OfflineDownloadBanner /> : null}
     </>
   );
 }
@@ -38,6 +38,8 @@ function Root() {
 export default function App() {
   useEffect(() => {
     if (Platform.OS !== 'web') return;
+
+    document.title = 'Maza';
 
     const style = document.createElement('style');
     style.setAttribute('data-maza-web-viewport', 'true');
@@ -61,6 +63,12 @@ export default function App() {
       }
       #root [style*="overflow"] {
         -webkit-overflow-scrolling: touch;
+      }
+      #root input:focus,
+      #root textarea:focus {
+        outline: none !important;
+        border-color: #1CABE2 !important;
+        box-shadow: 0 0 0 3px rgba(28, 171, 226, 0.14) !important;
       }
     `;
     document.head.appendChild(style);
