@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { useEffect } from 'react';
 import { colors } from '../theme/colors';
+import { actionShadow } from '../theme/shadows';
 import api from '../services/api';
 import PhoneInput from '../components/PhoneInput';
 import DatePicker from '../components/DatePicker';
@@ -315,6 +316,7 @@ export default function RegisterScreen({ navigation }: any) {
       if (!value) message = 'Selecione o distrito.';
       else if (!districtOptions.includes(value)) message = 'Selecione um distrito válido para a província escolhida.';
     }
+    if (key === 'educationLevel' && !value) message = 'Selecione o nível académico.';
 
     setFieldErrors((prev) => ({ ...prev, [key]: message }));
     return !message;
@@ -540,7 +542,7 @@ export default function RegisterScreen({ navigation }: any) {
           ) : null}
           <Field label="Bilhete de Identidade (BI)" value={form.idDocument} onChangeText={set('idDocument')} onBlur={() => touchAndValidate('idDocument')} error={fieldErrors.idDocument} autoCapitalize="characters" maxLength={15} />
           <Select label="Ocupação" value={form.occupation} error={fieldErrors.occupation} onPress={() => openModal('Ocupação', 'occupation', OCCUPATIONS)} />
-          <Select label="Nível Académico" value={form.educationLevel} onPress={() => openModal('Nível Académico', 'educationLevel', EDUCATION_LEVELS)} />
+          <Select label="Nível Académico" value={form.educationLevel} required error={fieldErrors.educationLevel} onPress={() => openModal('Nível Académico', 'educationLevel', EDUCATION_LEVELS)} />
           <Field label="Instituição de ensino" value={form.school} onChangeText={set('school')} />
         </View>
 
@@ -684,9 +686,9 @@ const styles = StyleSheet.create({
 
   registerBtn: {
     backgroundColor: colors.primary, paddingVertical: 17, borderRadius: 16, alignItems: 'center', marginTop: 8,
-    shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 16, elevation: 8,
+    shadowColor: colors.primary, ...actionShadow,
   },
-  webRegisterBtn: { borderRadius: 12, paddingVertical: 14, shadowOpacity: 0.18 },
+  webRegisterBtn: { borderRadius: 12, paddingVertical: 14, shadowOpacity: 0.1 },
   registerBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
   feedbackOverlay: {
     flex: 1,

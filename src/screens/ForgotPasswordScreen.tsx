@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import api, { mapAuthError } from '../services/api';
 import { colors } from '../theme/colors';
+import { actionShadow } from '../theme/shadows';
 import { useIsWideWeb } from '../utils/webViewport';
 
 export default function ForgotPasswordScreen() {
@@ -77,7 +78,7 @@ export default function ForgotPasswordScreen() {
             </Text>
 
             <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: isDark ? colors.white : colors.text }]}>EMAIL OU TELEFONE</Text>
+              <Text style={[styles.label, { color: isDark ? colors.white : colors.text }]}>Email ou telefone</Text>
               <TextInput
                 style={[styles.input, isWideWeb && styles.webInput, { backgroundColor: isDark ? '#1e293b' : colors.white, color: isDark ? colors.white : colors.text }]}
                 placeholder=""
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8 },
   subtitle: { fontSize: 14, marginBottom: 32, lineHeight: 22 },
   inputContainer: { marginBottom: 20 },
-  label: { fontSize: 13, marginBottom: 8, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5 },
+  label: { fontSize: 13, marginBottom: 8, fontWeight: '500' },
   input: { borderRadius: 12, padding: 16, fontSize: 16 },
   button: {
     backgroundColor: colors.primary,
@@ -135,10 +136,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 8,
+    ...actionShadow,
   },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
   webPage: { backgroundColor: '#F3F8FB' },
@@ -162,5 +160,5 @@ const styles = StyleSheet.create({
   webBack: { backgroundColor: '#EDF7FC' },
   webLogo: { width: 140, height: 58, marginBottom: 24 },
   webInput: { borderWidth: 1, borderColor: '#CFE0EA' },
-  webButton: { borderRadius: 12, shadowOpacity: 0.2, shadowRadius: 12 },
+  webButton: { borderRadius: 12, shadowOpacity: 0.1 },
 });

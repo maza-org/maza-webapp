@@ -198,34 +198,55 @@ export default function QuizRenderer({
   // ── Results ──
   if (phase === 'done' && result) {
     if (mode === 'impact') {
-      const impactValue = result.impact?.impactPercent;
+      const impactPoints = result.impact?.impactPoints;
+      const isEndline = result.assessmentType === 'ENDLINE';
+      const endlinePassed = !isEndline || result.passed !== false;
+      const resultTitle = isEndline
+        ? (endlinePassed ? 'Avaliação final concluída' : 'Continue a aprender')
+        : 'Avaliação inicial registada';
+      const resultDescription = isEndline
+        ? (endlinePassed
+            ? 'Comparámos este resultado com a avaliação inicial para acompanhar a sua evolução.'
+            : (result.message || 'Reveja o curso e tente novamente quando estiver preparado.'))
+        : 'Este resultado será comparado com a avaliação final no fim do curso.';
+      const formattedImpactPoints = typeof impactPoints === 'number'
+        ? `${impactPoints > 0 ? '+' : ''}${impactPoints}`
+        : null;
       return (
         <ScrollView style={s.scroll} contentContainerStyle={{ paddingBottom: bottomSafeSpace(insets.bottom, 24) }}>
-          <View style={[s.scoreCard, { backgroundColor: '#E0F2FE' }]}>
+          <View style={[s.scoreCard, { backgroundColor: endlinePassed ? '#E0F2FE' : '#FFF7ED' }]}>
             <View style={s.scoreEmoji}>
-              <Ionicons name="analytics-outline" size={56} color="#0284C7" />
+              <Ionicons
+                name={endlinePassed ? 'analytics-outline' : 'refresh-circle-outline'}
+                size={56}
+                color={endlinePassed ? '#0284C7' : '#C2410C'}
+              />
             </View>
-            <Text style={[s.scoreTitle, { color: '#075985' }]}>Avaliação registada</Text>
+            <Text style={[s.scoreTitle, { color: endlinePassed ? '#075985' : '#9A3412' }]}>
+              {resultTitle}
+            </Text>
             <Text style={s.scorePct}>{result.percentage}%</Text>
             <Text style={[s.scorePts, { textAlign: 'center', lineHeight: 22 }]}>
-              Não se preocupe com a pontuação. Isto ajuda-nos a perceber o seu ponto de partida para aprender melhor.
+              {resultDescription}
             </Text>
-            {impactValue !== null && impactValue !== undefined ? (
+            {isEndline && endlinePassed && formattedImpactPoints !== null ? (
               <Text style={[s.scorePts, { marginTop: 10, color: '#047857', fontWeight: '800' }]}>
-                Melhoria de aprendizagem: {impactValue}%
+                Evolução: {formattedImpactPoints} pontos percentuais
               </Text>
             ) : null}
           </View>
 
-          <View style={s.impactNoteCard}>
-            <Text style={s.impactNoteTitle}>Pode começar a aprender</Text>
-            <Text style={s.impactNoteText}>
-              O objetivo é ganhar novas competências ao longo do curso. No fim, fará a mesma avaliação para vermos a sua evolução.
-            </Text>
-          </View>
+          {!isEndline ? (
+            <View style={s.impactNoteCard}>
+              <Text style={s.impactNoteTitle}>Pronto para começar</Text>
+              <Text style={s.impactNoteText}>
+                Faça o curso ao seu ritmo. No fim, repetirá esta avaliação para acompanhar a sua evolução.
+              </Text>
+            </View>
+          ) : null}
 
           <TouchableOpacity style={s.bigBtn} onPress={() => onComplete(result)}>
-            <Text style={s.bigBtnTxt}>Continuar</Text>
+            <Text style={s.bigBtnTxt}>{isEndline ? 'Voltar ao curso' : 'Começar o curso'}</Text>
           </TouchableOpacity>
         </ScrollView>
       );

@@ -73,6 +73,7 @@ let networkAvailable = true;
 const listeners = new Set<Listener>();
 const runningCourses = new Set<string>();
 const activeTasks = new Map<string, FileSystem.DownloadResumable>();
+const cancelledCourses = new Set<string>();
 
 function nowIso() {
   return new Date().toISOString();
@@ -232,6 +233,7 @@ function getContentSummary(items: OfflineMediaItem[]) {
 }
 
 async function prepareCourse(record: OfflineCourseManifest, courseHint?: any) {
+  if (cancelledCourses.has(record.courseId)) return false;
   if (!networkAvailable) {
     record.status = 'waiting';
     record.error = 'Aguardando ligacao a internet';
@@ -246,6 +248,7 @@ async function prepareCourse(record: OfflineCourseManifest, courseHint?: any) {
 
   try {
     const response = await api.get(`/courses/${record.courseId}/offline-manifest`);
+    if (cancelledCourses.has(record.courseId)) return false;
     const freshCourse = response.data ?? courseHint;
     const media = collectMedia(freshCourse);
     const previousItems = new Map(record.items.map((item) => [item.url, item]));
@@ -278,6 +281,7 @@ async function prepareCourse(record: OfflineCourseManifest, courseHint?: any) {
     publish(record, true);
     return true;
   } catch {
+    if (cancelledCourses.has(record.courseId)) return false;
     record.status = networkAvailable ? 'error' : 'waiting';
     record.error = networkAvailable
       ? 'Nao foi possivel preparar o curso. Tente novamente.'
@@ -290,7 +294,7 @@ async function prepareCourse(record: OfflineCourseManifest, courseHint?: any) {
 async function runCourseDownload(courseId: string) {
   const records = await readRecords();
   const record = records[courseId];
-  if (!record || runningCourses.has(courseId) || record.status === 'paused' || record.status === 'completed') return;
+  if (!record || cancelledCourses.has(courseId) || runningCourses.has(courseId) || record.status === 'paused' || record.status === 'completed') return;
   if (!record.course || record.items.length === 0) return;
   if (!networkAvailable) {
     record.status = 'waiting';
@@ -307,7 +311,7 @@ async function runCourseDownload(courseId: string) {
   try {
     const token = await getStoredAuthToken();
     for (const item of record.items) {
-      if (isCoursePaused(courseId)) break;
+      if (cancelledCourses.has(courseId) || isCoursePaused(courseId)) break;
       if (item.status === 'completed') continue;
       if (!networkAvailable) {
         record.status = 'waiting';
@@ -339,7 +343,7 @@ async function runCourseDownload(courseId: string) {
       activeTasks.set(courseId, task);
       try {
         const result = item.resumeData ? await task.resumeAsync() : await task.downloadAsync();
-        if (isCoursePaused(courseId)) break;
+        if (cancelledCourses.has(courseId) || isCoursePaused(courseId)) break;
         if (!result || result.status < 200 || result.status >= 300) {
           throw new Error(`Download HTTP ${result?.status ?? 'unknown'}`);
         }
@@ -354,6 +358,7 @@ async function runCourseDownload(courseId: string) {
         calculateProgress(record);
         publish(record, true);
       } catch {
+        if (cancelledCourses.has(courseId)) break;
         if (isCoursePaused(courseId)) break;
         item.status = 'pending';
         const savable = task.savable();
@@ -369,7 +374,7 @@ async function runCourseDownload(courseId: string) {
       }
     }
 
-    if (record.items.every((item) => item.status === 'completed')) {
+    if (!cancelledCourses.has(courseId) && record.items.every((item) => item.status === 'completed')) {
       record.status = 'completed';
       record.downloadedAt = nowIso();
       record.error = undefined;
@@ -379,6 +384,17 @@ async function runCourseDownload(courseId: string) {
     }
   } finally {
     runningCourses.delete(courseId);
+    const latestRecord = recordsCache?.[courseId];
+    if (
+      latestRecord &&
+      !cancelledCourses.has(courseId) &&
+      networkAvailable &&
+      latestRecord.status === 'queued'
+    ) {
+      setTimeout(() => {
+        void runCourseDownload(courseId);
+      }, 0);
+    }
   }
 }
 
@@ -520,6 +536,7 @@ export async function startCourseDownload(course: any) {
   await initializeOfflineDownloads();
   const courseId = course?.id ?? course?.courseId;
   if (!courseId) throw new Error('Curso invalido');
+  cancelledCourses.delete(courseId);
 
   const records = await readRecords();
   const existing = records[courseId];
@@ -614,10 +631,14 @@ export async function removeOfflineCourse(courseId: string) {
   const record = records[courseId];
   if (!record) return;
 
+  cancelledCourses.add(courseId);
   const task = activeTasks.get(courseId);
   if (task) await task.cancelAsync().catch(() => {});
   activeTasks.delete(courseId);
   runningCourses.delete(courseId);
+  await Promise.all(record.items.map((item) => (
+    FileSystem.deleteAsync(item.fileUri, { idempotent: true }).catch(() => {})
+  )));
   await removeOfflineMedia(record.mediaUrls);
   delete records[courseId];
   schedulePersist(true);

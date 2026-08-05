@@ -98,8 +98,11 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   const didFirstLoadRef = useRef(false);
   const lastFocusRefreshRef = useRef(0);
 
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isWideWeb = useIsWideWeb(1024);
+  const webContentPanelHeight = isWideWeb
+    ? Math.max(360, Math.min(720, height - 390))
+    : undefined;
 
   useEffect(() => {
     if (course?.title) navigation.setOptions({ title: course.title });
@@ -370,9 +373,8 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   };
 
   const handleShare = async () => {
+    const url = `https://web.mazas.org/curso/${encodeURIComponent(String(courseId))}`;
     if (Platform.OS === 'web') {
-      const origin = globalThis.location?.origin ?? 'https://web.mazas.org';
-      const url = `${origin}/curso/${encodeURIComponent(String(courseId))}`;
       const webNavigator = globalThis.navigator as any;
       const shareData = {
         title: course?.title ?? 'Curso MAZA',
@@ -399,7 +401,8 @@ export default function CourseDetailScreen({ route, navigation }: any) {
     }
     await Share.share({
       title: course?.title ?? 'Curso MAZA',
-      message: `Veja o curso ${course?.title ?? ''} no MAZA.`,
+      message: `Veja o curso ${course?.title ?? ''} no MAZA: ${url}`,
+      url,
     }).catch(() => {});
   };
 
@@ -504,10 +507,24 @@ export default function CourseDetailScreen({ route, navigation }: any) {
           <Text style={[styles.loadingText, { color: themeColors.textMuted }]}>A abrir o curso...</Text>
         </View>
       ) : course ? (
+        <>
+        {Platform.OS !== 'web' && (
+          <View style={[styles.floatingCourseNav, { top: insets.top + 10 }]} pointerEvents="box-none">
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={handleBack} style={styles.heroIconButton}>
+              <Ionicons name="arrow-back" size={21} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Partilhar curso" onPress={handleShare} style={styles.heroIconButton}>
+              <Ionicons name="share-outline" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
         <ScrollView 
           style={WEB_VERTICAL_PAN_STYLE}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[{ paddingBottom: Math.max(insets.bottom, 24) + 96 }, WEB_VERTICAL_PAN_STYLE]}
+          contentContainerStyle={[
+            { paddingBottom: isWideWeb ? Math.max(insets.bottom, 24) : Math.max(insets.bottom, 24) + 96 },
+            WEB_VERTICAL_PAN_STYLE,
+          ]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => fetchData('manual')} />}
         >
           <View style={isWideWeb ? styles.webHeroFrame : undefined}>
@@ -515,14 +532,14 @@ export default function CourseDetailScreen({ route, navigation }: any) {
             const thumbUri = resolveThumbnail(course.thumbnail);
             const heroContent = (
               <View style={[styles.heroOverlay, isWideWeb && styles.webHeroOverlay, { paddingTop: insets.top }]}>
-                <View style={styles.heroActions}>
+                {Platform.OS === 'web' ? <View style={styles.heroActions}>
                   <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={handleBack} style={styles.heroIconButton}>
                     <Ionicons name="arrow-back" size={21} color="#fff" />
                   </TouchableOpacity>
                   <TouchableOpacity accessibilityRole="button" accessibilityLabel="Partilhar curso" onPress={handleShare} style={styles.heroIconButton}>
                     <Ionicons name="share-outline" size={20} color="#fff" />
                   </TouchableOpacity>
-                </View>
+                </View> : <View style={styles.heroActionsSpacer} />}
                 <View style={styles.heroCopy}>
                 {courseCategories.length > 0 && (
                   <View style={styles.categoryRow}>
@@ -695,6 +712,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
           <View style={[
             styles.section,
             isWideWeb && styles.webLessonsSidebar,
+            isWideWeb && { height: webContentPanelHeight },
             isWideWeb && { backgroundColor: themeColors.card, borderColor: themeColors.border },
           ]}>
             <View style={styles.sectionHeaderRow}>
@@ -723,7 +741,9 @@ export default function CourseDetailScreen({ route, navigation }: any) {
             {!hasLessons && detailLoaded && (
               <Text style={[styles.emptyLessonsText, { color: themeColors.textMuted }]}>As lições serão adicionadas em breve.</Text>
             )}
-            <View>
+            {(() => {
+              const moduleList = (
+                <View>
             {course.modules?.map((mod: any, idx: number) => {
               const modProgress = getModuleProgress(mod.id);
               const isUnlocked = !courseLocked && !baselinePending && (modProgress?.isUnlocked ?? mod.isUnlocked ?? (idx === 0));
@@ -793,12 +813,26 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                 </View>
               );
             })}
-            </View>
+                </View>
+              );
+
+              return isWideWeb ? (
+                <ScrollView
+                  style={styles.webLessonsScroll}
+                  contentContainerStyle={styles.webLessonsScrollContent}
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator
+                >
+                  {moduleList}
+                </ScrollView>
+              ) : moduleList;
+            })()}
           </View>
           </View>
 
           <View style={{ height: Math.max(insets.bottom, 24) }} />
         </ScrollView>
+        </>
       ) : (
         <Text style={[styles.error, { color: themeColors.textMuted }]}>Curso não encontrado</Text>
       )}
@@ -818,6 +852,16 @@ const styles = StyleSheet.create({
   webHeroOverlay: { minHeight: 292, justifyContent: 'space-between', borderRadius: 24 },
   webHeroTitle: { maxWidth: 760, fontSize: 38, lineHeight: 45, marginBottom: 10 },
   heroActions: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 10 },
+  heroActionsSpacer: { height: 50 },
+  floatingCourseNav: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    zIndex: 20,
+    elevation: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   heroIconButton: {
     width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(15,23,42,0.56)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
@@ -958,7 +1002,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.06,
     shadowRadius: 26,
+    overflow: 'hidden',
   },
+  webLessonsScroll: { flex: 1, minHeight: 0 },
+  webLessonsScrollContent: { paddingRight: 8, paddingBottom: 8 },
   webNextCard: {
     borderWidth: 1,
     borderRadius: 20,

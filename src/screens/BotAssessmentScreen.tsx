@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { bottomSafeSpace } from '../utils/safeArea';
+import * as Network from 'expo-network';
 
 const { width } = Dimensions.get('window');
 
@@ -116,6 +117,11 @@ export default function BotAssessmentScreen({ navigation }: any) {
     setMsgCount(newCount);
 
     try {
+      const networkState = await Network.getNetworkStateAsync().catch(() => null);
+      if (networkState?.isConnected === false || networkState?.isInternetReachable === false) {
+        addMessage('bot', 'O Assistente MAZA precisa de ligação à internet. Pode continuar a usar os cursos guardados offline e voltar aqui quando estiver online.');
+        return;
+      }
       const res = await api.post('/bot/chat', {
         message: text,
         isFirst: isFirst || isFirstMessage,
@@ -129,10 +135,13 @@ export default function BotAssessmentScreen({ navigation }: any) {
         showReveal(withPathwayMeta(pathway));
       }
     } catch (err: any) {
-      addMessage('bot', 'Estou com dificuldade em contactar o assistente neste momento. Tente enviar a resposta novamente.');
+      addMessage('bot', err?.response
+        ? 'O assistente está temporariamente indisponível. Tente novamente dentro de instantes.'
+        : 'O Assistente MAZA precisa de ligação à internet. Pode continuar a usar os cursos guardados offline e voltar aqui quando estiver online.');
       console.error('[BotChat]', err?.response?.data ?? err.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleSend = () => {

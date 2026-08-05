@@ -43,12 +43,15 @@ export default function ImpactAssessmentScreen({ route, navigation }: any) {
   }, [initialAssessment, loadAssessment]);
 
   const finish = (result?: any) => {
-    const impact = result?.impact;
-    const message = impact?.impactPercent !== null && impact?.impactPercent !== undefined
-      ? `Melhoria de aprendizagem calculada: ${impact.impactPercent}%`
-      : impactType === 'BASELINE'
-        ? 'Avaliação inicial guardada. Pode começar o curso.'
-        : 'Avaliação final guardada.';
+    const impactPoints = result?.impact?.impactPoints;
+    const formattedImpactPoints = typeof impactPoints === 'number'
+      ? `${impactPoints > 0 ? '+' : ''}${impactPoints}`
+      : null;
+    const message = impactType === 'BASELINE'
+      ? 'A avaliação inicial foi guardada. Este resultado será comparado com a avaliação final.'
+      : formattedImpactPoints !== null
+        ? `Avaliação final concluída. Evolução: ${formattedImpactPoints} pontos percentuais.`
+        : 'A avaliação final foi concluída.';
     setCompleteMessage(message);
   };
 
@@ -90,8 +93,8 @@ export default function ImpactAssessmentScreen({ route, navigation }: any) {
         <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
         <Text style={[styles.infoText, { color: colors.textMuted }]}>
           {impactType === 'BASELINE'
-            ? 'Esta avaliação não é para passar ou chumbar. Serve para perceber o seu ponto de partida antes de começar a aprender.'
-            : 'Esta avaliação mede a sua evolução depois do curso. Não é para castigar; ajuda a medir a melhoria real da aprendizagem.'}
+            ? 'Esta avaliação regista o seu ponto de partida. Responda com atenção; o resultado será comparado com a avaliação final.'
+            : 'Esta avaliação confirma a aprendizagem após o curso. Para concluir, obtenha pelo menos 80% e mantenha ou melhore o resultado inicial.'}
         </Text>
       </View>
       <QuizRenderer
@@ -106,7 +109,9 @@ export default function ImpactAssessmentScreen({ route, navigation }: any) {
             <View style={[styles.completeIcon, { backgroundColor: `${colors.primary}18` }]}>
               <Ionicons name="checkmark-circle-outline" size={34} color={colors.primary} />
             </View>
-            <Text style={[styles.completeTitle, { color: colors.text }]}>Concluído</Text>
+            <Text style={[styles.completeTitle, { color: colors.text }]}>
+              {impactType === 'BASELINE' ? 'Avaliação inicial guardada' : 'Avaliação final concluída'}
+            </Text>
             <Text style={[styles.completeText, { color: colors.textMuted }]}>{completeMessage}</Text>
             <TouchableOpacity style={[styles.completeButton, { backgroundColor: colors.primary }]} onPress={returnToCourse}>
               <Text style={styles.completeButtonText}>OK</Text>

@@ -33,7 +33,6 @@ const lazyScreen = <T extends React.ComponentType<any>>(
 
 const OnboardingScreen = lazyScreen(() => import('../screens/OnboardingScreen'));
 const RegisterScreen = lazyScreen(() => import('../screens/RegisterScreen'));
-const OtpVerificationScreen = lazyScreen(() => import('../screens/OtpVerificationScreen'));
 const BotAssessmentScreen = lazyScreen(() => import('../screens/BotAssessmentScreen'));
 const HomeScreen = lazyScreen(() => import('../screens/HomeScreen'));
 const CoursesScreen = lazyScreen(() => import('../screens/CoursesScreen'));
@@ -121,7 +120,6 @@ export default function AppNavigator() {
       ? {
           Login: '',
           Register: 'registar',
-          OtpVerification: 'confirmar-sms',
           ForgotPassword: 'recuperar-senha',
           ResetPassword: 'nova-senha',
           CourseDetail: 'curso/:courseId',
@@ -180,7 +178,6 @@ export default function AppNavigator() {
             {Platform.OS !== 'web' && <Stack.Screen name="HowItWorksStory" component={HowItWorksStoryScreen} options={{ headerShown: false }} />}
             <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Entrar' }} />
             <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'Registar' }} />
-            <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} options={{ title: 'Código SMS' }} />
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ title: 'Recuperar senha' }} />
             <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ title: 'Nova senha' }} />
             {Platform.OS === 'web' && (

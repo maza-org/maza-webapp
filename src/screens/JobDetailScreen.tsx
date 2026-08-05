@@ -6,6 +6,7 @@ import { MapPin, Briefcase, Calendar, Users, ExternalLink } from 'lucide-react-n
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import { decodeHtmlEntities } from '../utils/text';
+import { compactActionShadow } from '../theme/shadows';
 
 const TYPE_LABELS: Record<string, string> = { EMPLOYMENT: 'Emprego', INTERNSHIP: 'Estágio', CHALLENGE: 'Desafio', GIG: 'Freelance', Vagas: 'Vaga' };
 const DESCRIPTION_FALLBACKS = new Set(['Ver detalhes no site oficial.', 'Ver detalhes no site original.']);
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
   detailLabel: { width: 68, fontSize: 12, fontWeight: '600', color: colors.textMuted },
   detailValue: { flex: 1, fontSize: 12, color: colors.text, lineHeight: 18 },
   sourceNote: { fontSize: 12, lineHeight: 18, color: colors.textMuted, marginTop: 10 },
-  applyBtn: { backgroundColor: colors.primary, marginHorizontal: 16, marginTop: 16, paddingVertical: 14, borderRadius: 14, alignItems: 'center', shadowColor: colors.primary, shadowOpacity: 0.2, shadowRadius: 8, elevation: 3 },
+  applyBtn: { backgroundColor: colors.primary, marginHorizontal: 16, marginTop: 16, paddingVertical: 14, borderRadius: 14, alignItems: 'center', shadowColor: colors.primary, ...compactActionShadow },
   applyBtnDisabled: { backgroundColor: colors.success },
   applyText: { color: colors.white, fontWeight: '700', fontSize: 15 },
   error: { textAlign: 'center', color: colors.textMuted, marginTop: 40 }

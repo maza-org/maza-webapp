@@ -118,8 +118,8 @@ export default function HomeScreen({ navigation }: any) {
         updateUser(meRes.data);
       }
 
-      const [myRes, coursesRes, careerRes] = await Promise.all([
-        api.get('/pathways/my').catch(() => null),
+      const [myData, coursesRes, careerRes] = await Promise.all([
+        getPersistentCached<any>('/pathways/my', 5 * 60 * 1000).catch(() => undefined),
         getPersistentCached('/courses', 2 * 60 * 1000, (staleCourses) => {
           setCourses(visiblePublishedCourses(staleCourses));
           setLoading(false);
@@ -130,11 +130,7 @@ export default function HomeScreen({ navigation }: any) {
       getPersistentCached('/jobs', 10 * 60 * 1000).catch(() => {});
       getPersistentCached('/pathways', 10 * 60 * 1000).catch(() => {});
 
-      if (myRes?.data?.pathway) {
-        setPathway(myRes.data.pathway);
-      } else {
-        setPathway(null);
-      }
+      if (myData !== undefined) setPathway(myData?.pathway ?? null);
       if (Array.isArray(coursesRes)) {
         setCourses(visiblePublishedCourses(coursesRes));
       }

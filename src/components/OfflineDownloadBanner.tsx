@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Pause, Play, WifiOff } from 'lucide-react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pause, Play, WifiOff, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../context/ThemeContext';
 import { useOfflineDownloads } from '../hooks/useOfflineDownloads';
-import { pauseCourseDownload, resumeCourseDownload } from '../services/offlineCourses';
+import { pauseCourseDownload, removeOfflineCourse, resumeCourseDownload } from '../services/offlineCourses';
 
 export default function OfflineDownloadBanner() {
   const records = useOfflineDownloads();
@@ -35,6 +35,17 @@ export default function OfflineDownloadBanner() {
         ? 'A preparar para uso offline'
         : `A guardar · ${percent}%${contentProgress ? ` · ${contentProgress}` : ''}`;
 
+  const cancel = () => {
+    Alert.alert(
+      'Cancelar download?',
+      'O progresso guardado neste dispositivo será removido.',
+      [
+        { text: 'Continuar download', style: 'cancel' },
+        { text: 'Cancelar download', style: 'destructive', onPress: () => void removeOfflineCourse(download.courseId) },
+      ]
+    );
+  };
+
   return (
     <View pointerEvents="box-none" style={styles.overlay}>
       <View style={[styles.banner, { bottom: Math.max(insets.bottom, 12) + 70, backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -50,14 +61,24 @@ export default function OfflineDownloadBanner() {
             <View style={[styles.fill, { width: `${Math.max(percent, 3)}%`, backgroundColor: waiting ? '#F59E0B' : colors.primary }]} />
           </View>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={paused || waiting ? 'Retomar download' : 'Pausar download'}
-          style={[styles.action, { borderColor: colors.border }]}
-          onPress={() => void (paused || waiting ? resumeCourseDownload(download.courseId) : pauseCourseDownload(download.courseId))}
-        >
-          {paused || waiting ? <Play size={17} color={colors.primary} /> : <Pause size={17} color={colors.text} />}
-        </Pressable>
+        <View style={styles.actions}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={paused || waiting ? 'Retomar download' : 'Pausar download'}
+            style={[styles.action, { borderColor: colors.border }]}
+            onPress={() => void (paused || waiting ? resumeCourseDownload(download.courseId) : pauseCourseDownload(download.courseId))}
+          >
+            {paused || waiting ? <Play size={17} color={colors.primary} /> : <Pause size={17} color={colors.text} />}
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Cancelar download"
+            style={[styles.action, { borderColor: colors.border }]}
+            onPress={cancel}
+          >
+            <X size={18} color={colors.textMuted} />
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -84,5 +105,6 @@ const styles = StyleSheet.create({
   status: { fontSize: 11, marginTop: 1 },
   track: { height: 4, borderRadius: 2, overflow: 'hidden', marginTop: 6 },
   fill: { height: '100%', borderRadius: 2 },
+  actions: { flexDirection: 'row', gap: 6 },
   action: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
 });

@@ -55,7 +55,6 @@ type AuthContextType = {
   token: string | null;
   loading: boolean;
   login: (identifier: string, password?: string) => Promise<void>;
-  verifyOtp: (phone: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updatedUser: User) => Promise<void>;
   setSession: (token: string, fullUser: User) => Promise<void>;
@@ -135,35 +134,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(fullUser);
   };
 
-  const verifyOtp = async (phone: string, code: string) => {
-    const response = await fetch(`${API_BASE}/auth/login/otp/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, code }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data?.error ?? 'OTP verification failed');
-
-    const { token: t } = data;
-    let fullUser = data.user;
-
-    try {
-      const meRes = await fetch(`${API_BASE}/auth/me`, {
-        headers: { Authorization: `Bearer ${t}` },
-      });
-      if (meRes.ok) {
-        fullUser = await meRes.json();
-      }
-    } catch {}
-
-    await storeAuthToken(t);
-    await AsyncStorage.setItem('maza_user', JSON.stringify(fullUser));
-    setApiToken(t);
-    setToken(t);
-    setUser(fullUser);
-  };
-
   const logout = async () => {
     try {
       await removeStoredAuthToken();
@@ -195,7 +165,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, verifyOtp, logout, updateUser, setSession }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser, setSession }}>
       {children}
     </AuthContext.Provider>
   );

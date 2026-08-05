@@ -9,7 +9,8 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://backend.mazas.org/api"
-      }
+      },
+      "channel": "development"
     },
     "preview": {
       "distribution": "internal",
@@ -18,7 +19,8 @@
       },
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://backend.mazas.org/api"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
       "autoIncrement": true,
@@ -30,7 +32,8 @@
       },
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://backend.mazas.org/api"
-      }
+      },
+      "channel": "production"
     }
   },
   "submit": {

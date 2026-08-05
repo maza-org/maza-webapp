@@ -82,7 +82,7 @@ No camera, contacts, photos, precise location, microphone, or tracking permissio
 
 ## Privacy Policy Gaps To Confirm
 
-- Live privacy policy URL.
+- Live privacy policy URL: `https://www.mazas.org/pt/privacy`.
 - Support/deletion email.
 - Retention period for inactive accounts and logs.
 - Whether production SMS/email providers are enabled.

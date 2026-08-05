@@ -62,6 +62,6 @@ The app provides educational content, career opportunities, discussions related 
 
 ## Support / Contact
 
-- Support email: `TODO: add monitored support email`
-- Privacy policy URL: `TODO: add live privacy policy URL`
-- Website: `TODO: add public MAZA website URL`
+- Support email: `TODO: confirm a monitored support email`
+- Privacy policy URL: `https://www.mazas.org/pt/privacy`
+- Website: `https://www.mazas.org`

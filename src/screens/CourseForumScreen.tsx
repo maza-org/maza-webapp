@@ -11,6 +11,9 @@ import { colors } from '../theme/colors';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { bottomSafeSpace } from '../utils/safeArea';
+import { compactActionShadow } from '../theme/shadows';
+import * as Network from 'expo-network';
+import { queueOfflineRequest } from '../services/offlineQueue';
 
 type Post = {
   id: string;
@@ -96,6 +99,11 @@ export default function CourseForumScreen({ route, navigation }: any) {
     setSending(true);
     const content = text.trim();
     try {
+      const networkState = await Network.getNetworkStateAsync().catch(() => null);
+      if (networkState?.isConnected === false || networkState?.isInternetReachable === false) {
+        Alert.alert('Sem ligação', 'As mensagens da comunidade precisam de internet. O texto ficará aqui para enviar quando voltar a estar online.');
+        return;
+      }
       if (editingPostId) {
         const res = await api.put(`/forum/posts/${editingPostId}`, { content });
         setPosts(prev => prev.map(p => p.id === editingPostId ? res.data : p));
@@ -108,9 +116,10 @@ export default function CourseForumScreen({ route, navigation }: any) {
       setText('');
     } catch {
       Alert.alert('Erro', 'Não foi possível guardar a mensagem.');
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
     }
-    sendingRef.current = false;
-    setSending(false);
   };
 
   const handleEdit = (post: Post) => {
@@ -140,15 +149,32 @@ export default function CourseForumScreen({ route, navigation }: any) {
     setMyRating(star); // optimistic update
     setSubmittingRating(true);
     try {
-      const res = await api.post(`/forum/courses/${courseId}/rating`, { rating: Number(star) });
+      const endpoint = `/forum/courses/${courseId}/rating`;
+      const networkState = await Network.getNetworkStateAsync().catch(() => null);
+      if (networkState?.isConnected === false || networkState?.isInternetReachable === false) {
+        await queueOfflineRequest({ method: 'post', url: endpoint, data: { rating: Number(star) } });
+        Alert.alert('Avaliação guardada', 'Será enviada automaticamente quando voltar a ter internet.');
+        return;
+      }
+      const res = await api.post(endpoint, { rating: Number(star) });
       setAvgRating(res.data.average ?? res.data.newAverage ?? star);
       setRatingCount(res.data.count ?? ratingCount);
       setMyRating(res.data.myRating ?? star);
-    } catch {
-      setMyRating(previousRating); // revert on error
-      Alert.alert('Erro', 'Não foi possível enviar a avaliação. Tente de novo.');
+    } catch (error: any) {
+      if (!error?.response) {
+        await queueOfflineRequest({
+          method: 'post',
+          url: `/forum/courses/${courseId}/rating`,
+          data: { rating: Number(star) },
+        });
+        Alert.alert('Avaliação guardada', 'Será enviada automaticamente quando voltar a ter internet.');
+      } else {
+        setMyRating(previousRating); // revert only when the server rejects the rating
+        Alert.alert('Erro', 'Não foi possível enviar a avaliação. Tente de novo.');
+      }
+    } finally {
+      setSubmittingRating(false);
     }
-    setSubmittingRating(false);
   };
 
   const renderPost = ({ item }: { item: Post }) => {
@@ -340,7 +366,7 @@ const styles = StyleSheet.create({
   sendBtn: {
     width: 42, height: 42, borderRadius: 21,
     backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center',
-    shadowColor: colors.primary, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4,
+    shadowColor: colors.primary, ...compactActionShadow,
   },
   sendBtnDisabled: { backgroundColor: colors.textMuted, shadowOpacity: 0 },
 });

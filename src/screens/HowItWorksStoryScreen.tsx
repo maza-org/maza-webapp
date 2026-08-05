@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { bottomSafeSpace } from '../utils/safeArea';
 import { useAuth } from '../context/AuthContext';
+import { prominentActionShadow } from '../theme/shadows';
 
 const STORY_DURATION = 5000;
 
@@ -331,8 +332,7 @@ const styles = StyleSheet.create({
     position: 'absolute', bottom: 32, left: 28, right: 28,
     backgroundColor: '#29B6F6',
     paddingVertical: 16, borderRadius: 30, alignItems: 'center', zIndex: 20,
-    shadowColor: '#29B6F6', shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5, shadowRadius: 16, elevation: 10,
+    shadowColor: '#29B6F6', ...prominentActionShadow,
   },
   ctaText: { color: '#FFFFFF', fontSize: 17, fontWeight: 'bold', letterSpacing: 0.5 },
 });

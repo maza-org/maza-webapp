@@ -16,6 +16,7 @@ import api from '../services/api';
 import PhoneInput from '../components/PhoneInput';
 import DatePicker from '../components/DatePicker';
 import { bottomSafeSpace } from '../utils/safeArea';
+import { actionShadow } from '../theme/shadows';
 import { MOZAMBIQUE_BI_MESSAGE, isValidMozambiqueBI, normalizeMozambiqueBI } from '../utils/mozambiqueBi';
 import { MOZAMBIQUE_DISTRICTS_BY_PROVINCE } from '../data/mozambiqueDistricts';
 
@@ -544,7 +545,7 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 15 },
   inputText: { fontSize: 15 },
   fieldError: { color: '#EF4444', fontSize: 12, marginTop: 6, fontWeight: '600' },
-  mainSaveBtn: { height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginTop: 20, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
+  mainSaveBtn: { height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginTop: 20, ...actionShadow },
   mainSaveBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, minHeight: '50%', maxHeight: '80%', padding: 24 },

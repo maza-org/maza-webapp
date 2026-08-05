@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert, Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { colors } from '../theme/colors';
+import { actionShadow } from '../theme/shadows';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
-import { API_BASE } from '../services/api';
-import PhoneInput from '../components/PhoneInput';
 import { Ionicons } from '@expo/vector-icons';
 import { useIsWideWeb } from '../utils/webViewport';
 
 export default function LoginScreen({ navigation }: any) {
   const { login } = useAuth();
   const isWideWeb = useIsWideWeb(900);
-  const [mode, setMode] = useState<'otp' | 'email'>('email');
-  const [phone, setPhone] = useState('');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,55 +26,17 @@ export default function LoginScreen({ navigation }: any) {
 
   const handleLogin = async () => {
     setErrorMsg(null);
-    if (mode === 'email') {
-      if (!identifier || !password) { setErrorMsg('Preencha todos os campos'); return; }
-      setLoading(true);
-      try {
-        await login(identifier, password);
-      } catch (err: any) {
-        const msg = err?.response?.data?.error ?? err?.message ?? 'Erro ao iniciar sessão. Tente novamente.';
-        setErrorMsg(msg);
-        Alert.alert('Erro ao entrar', msg);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      if (!phone) { setErrorMsg('Introduza o seu número de telemóvel'); return; }
-      
-      const cleanPhone = phone.replace(/\s/g, '');
-      if (!/^\d{9}$/.test(cleanPhone)) {
-        setErrorMsg('O número de telemóvel deve ter exatamente 9 dígitos (ex: 841234567).');
-        return;
-      }
+    if (!identifier || !password) { setErrorMsg('Preencha todos os campos'); return; }
 
-      setLoading(true);
-      try {
-        const fullPhone = `+258${phone.replace(/\s/g, '')}`;
-
-        const response = await fetch(`${API_BASE}/auth/login/otp/send`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: fullPhone })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          const msg = response.status === 417
-            ? 'Número não encontrado. Por favor registe-se primeiro.'
-            : data?.error?.message || data?.error || 'Não foi possível enviar o código.';
-          setErrorMsg(msg);
-          Alert.alert('Erro', msg);
-          return;
-        }
-
-        navigation.navigate('OtpVerification', { phone: fullPhone });
-      } catch (err: any) {
-        setErrorMsg('Não foi possível contactar o servidor. Verifique a sua ligação à internet.');
-        Alert.alert('Erro de ligação', 'Não foi possível contactar o servidor. Verifique a sua ligação à internet.');
-      } finally {
-        setLoading(false);
-      }
+    setLoading(true);
+    try {
+      await login(identifier, password);
+    } catch (err: any) {
+      const msg = err?.response?.data?.error ?? err?.message ?? 'Erro ao iniciar sessão. Tente novamente.';
+      setErrorMsg(msg);
+      Alert.alert('Erro ao entrar', msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -107,63 +66,57 @@ export default function LoginScreen({ navigation }: any) {
       </TouchableOpacity>
 
       <View style={{ marginTop: 40 }}>
-        {mode === 'otp' ? (
-          <View style={styles.inputContainer}>
-            <PhoneInput
-              label="Número de Telemóvel"
-              value={phone}
-              onChangeText={setPhone}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Email, utilizador ou telemóvel</Text>
+          <TextInput
+            style={[styles.input, isWideWeb && styles.webInput]}
+            value={identifier}
+            onChangeText={updateIdentifier}
+            autoCapitalize="none"
+            autoCorrect={false}
+            textContentType="username"
+            autoComplete="username"
+            returnKeyType="next"
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Palavra-passe</Text>
+          <View style={styles.passwordInputWrap}>
+            <TextInput
+              style={[styles.input, styles.passwordInput, isWideWeb && styles.webInput]}
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="password"
+              autoComplete="current-password"
+              accessibilityLabel="Palavra-passe"
+              returnKeyType="done"
+              onSubmitEditing={handleLogin}
             />
-          </View>
-        ) : (
-          <>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email ou nome de utilizador</Text>
-              <TextInput
-                style={[styles.input, isWideWeb && styles.webInput]}
-                value={identifier}
-                onChangeText={updateIdentifier}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Palavra-passe</Text>
-              <View style={styles.passwordInputWrap}>
-                <TextInput
-                  style={[styles.input, styles.passwordInput, isWideWeb && styles.webInput]}
-                  secureTextEntry={!showPassword}
-                  value={password}
-                  onChangeText={setPassword}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="password"
-                  accessibilityLabel="Palavra-passe"
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword((visible) => !visible)}
-                  style={styles.passwordToggle}
-                  accessibilityRole="button"
-                  accessibilityLabel={showPassword ? 'Ocultar palavra-passe' : 'Mostrar palavra-passe'}
-                  accessibilityHint={showPassword ? 'Esconde os caracteres da palavra-passe' : 'Mostra os caracteres da palavra-passe'}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={22}
-                    color={colors.textMuted}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-            <TouchableOpacity 
-              style={{ alignItems: 'flex-end', marginBottom: 20 }}
-              onPress={() => navigation.navigate('ForgotPassword')}
+            <TouchableOpacity
+              onPress={() => setShowPassword((visible) => !visible)}
+              style={styles.passwordToggle}
+              accessibilityRole="button"
+              accessibilityLabel={showPassword ? 'Ocultar palavra-passe' : 'Mostrar palavra-passe'}
+              accessibilityHint={showPassword ? 'Esconde os caracteres da palavra-passe' : 'Mostra os caracteres da palavra-passe'}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-               <Text style={{ color: colors.primary, fontSize: 13 }}>Esqueceu a palavra-passe?</Text>
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={22}
+                color={colors.textMuted}
+              />
             </TouchableOpacity>
-          </>
-        )}
+          </View>
+        </View>
+        <TouchableOpacity
+          style={{ alignItems: 'flex-end', marginBottom: 20 }}
+          onPress={() => navigation.navigate('ForgotPassword')}
+        >
+           <Text style={{ color: colors.primary, fontSize: 13 }}>Esqueceu a palavra-passe?</Text>
+        </TouchableOpacity>
 
         {errorMsg ? (
           <Text style={{ color: '#EF4444', marginBottom: 12, textAlign: 'center', fontWeight: '500' }}>
@@ -175,20 +128,6 @@ export default function LoginScreen({ navigation }: any) {
           {loading ? <ActivityIndicator color={colors.white} /> : <Text style={styles.buttonText}>Entrar</Text>}
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => {
-            Keyboard.dismiss();
-            setMode(mode === 'otp' ? 'email' : 'otp');
-          }}
-          hitSlop={{ top: 14, bottom: 14, left: 24, right: 24 }}
-          pressRetentionOffset={{ top: 24, bottom: 24, left: 32, right: 32 }}
-          activeOpacity={0.65}
-          style={styles.switchModeLink}
-        >
-          <Text style={styles.switchModeText}>
-            {mode === 'otp' ? 'Prefere usar email e palavra-passe?' : 'Prefere usar número de telefone?'}
-          </Text>
-        </TouchableOpacity>
       </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -242,16 +181,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 8,
+    ...actionShadow,
   },
   webLogo: { width: 140, height: 58, marginBottom: 24 },
-  webButton: { borderRadius: 12, paddingVertical: 14, shadowOpacity: 0.18 },
+  webButton: { borderRadius: 12, paddingVertical: 14, shadowOpacity: 0.1 },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
   registerLink: { alignItems: 'flex-start' },
   registerText: { color: '#8A8A8E', fontSize: 14 },
-  switchModeLink: { alignItems: 'center', justifyContent: 'center', marginTop: 18, minHeight: 52, paddingHorizontal: 16, paddingVertical: 12 },
-  switchModeText: { color: '#8A8A8E', fontSize: 14, fontWeight: '600', textAlign: 'center' },
 });

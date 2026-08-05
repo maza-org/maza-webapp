@@ -5,6 +5,7 @@ import { ChevronLeft, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { actionShadow } from '../theme/shadows';
 
 export default function ChangePasswordScreen({ navigation }: any) {
   const { colors } = useTheme();
@@ -168,6 +169,6 @@ const styles = StyleSheet.create({
   inputWrap: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 1, paddingHorizontal: 16, height: 56 },
   input: { flex: 1, fontSize: 16 },
   eye: { padding: 8 },
-  submitBtn: { height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginTop: 12, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
+  submitBtn: { height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginTop: 12, ...actionShadow },
   submitBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });

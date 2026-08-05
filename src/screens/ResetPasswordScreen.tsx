@@ -7,6 +7,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import api, { mapAuthError } from '../services/api';
 import { colors } from '../theme/colors';
+import { actionShadow } from '../theme/shadows';
 import { useIsWideWeb } from '../utils/webViewport';
 
 export default function ResetPasswordScreen() {
@@ -178,10 +179,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 8,
+    ...actionShadow,
   },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
   webPage: { backgroundColor: '#F3F8FB' },
@@ -205,5 +203,5 @@ const styles = StyleSheet.create({
   webLogo: { width: 140, height: 56, marginBottom: 20 },
   webSubtitle: { marginBottom: 24 },
   webInput: { borderWidth: 1, borderColor: '#CFE0EA' },
-  webButton: { borderRadius: 12, shadowOpacity: 0.2, shadowRadius: 12 },
+  webButton: { borderRadius: 12, shadowOpacity: 0.1 },
 });

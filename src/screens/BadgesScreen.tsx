@@ -5,7 +5,7 @@ import { Award, TrendingUp, Trophy, Lock, BookOpen, FileText, CalendarDays, Cloc
 import { useAuth } from '../context/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
-import api from '../services/api';
+import api, { getPersistentCached } from '../services/api';
 import { colors } from '../theme/colors';
 import CertificatePreview from '../components/CertificatePreview';
 import { useIsWideWeb } from '../utils/webViewport';
@@ -73,23 +73,25 @@ export default function BadgesScreen({ navigation }: any) {
   const [certificates, setCertificates] = useState<any[]>([]);
   const [selectedCertificate, setSelectedCertificate] = useState<any | null>(null);
   const [careerSummary, setCareerSummary] = useState<any>(null);
+  const [pathwayUnavailable, setPathwayUnavailable] = useState(false);
 
   const fetchPathwayData = useCallback(async () => {
     try {
-      const [meRes, myRes, completedRes, certificatesRes, careerRes] = await Promise.all([
+      const [meRes, myData, completedData, certificatesData, careerData] = await Promise.all([
         api.get('/auth/me').catch(() => null),
-        api.get('/pathways/my').catch(() => ({ data: { pathway: null } })),
-        api.get('/pathways/completed').catch(() => ({ data: [] })),
-        api.get('/certificates/my').catch(() => ({ data: [] })),
-        api.get('/career-outcomes/me').catch(() => ({ data: null })),
+        getPersistentCached<any>('/pathways/my', 5 * 60 * 1000).catch(() => undefined),
+        getPersistentCached<any[]>('/pathways/completed', 5 * 60 * 1000).catch(() => undefined),
+        getPersistentCached<any[]>('/certificates/my', 5 * 60 * 1000).catch(() => undefined),
+        getPersistentCached<any>('/career-outcomes/me', 5 * 60 * 1000).catch(() => undefined),
       ]);
       if (meRes?.data && updateUser) {
         await updateUser(meRes.data);
       }
-      setPathway(myRes.data?.pathway);
-      setCompletedPathways(completedRes.data || []);
-      setCertificates(certificatesRes.data || []);
-      setCareerSummary(careerRes.data ?? null);
+      setPathwayUnavailable(myData === undefined);
+      if (myData !== undefined) setPathway(myData?.pathway ?? null);
+      if (completedData !== undefined) setCompletedPathways(completedData || []);
+      if (certificatesData !== undefined) setCertificates(certificatesData || []);
+      if (careerData !== undefined) setCareerSummary(careerData ?? null);
     } catch (e) {
       console.log('Error fetching pathway in Gamification:', e);
     }
@@ -208,7 +210,7 @@ export default function BadgesScreen({ navigation }: any) {
             resizeMode="contain"
           />
           <Text style={[styles.headerTitle, { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit>As Suas Conquistas e Jornadas</Text>
-          <Text style={[styles.headerSub, { color: 'rgba(255,255,255,0.8)' }]} numberOfLines={1} adjustsFontSizeToFit>Acompanhe o progresso das suas jornadas.</Text>
+          <Text style={[styles.headerSub, { color: 'rgba(255,255,255,0.94)' }]} numberOfLines={1}>Acompanhe o progresso das suas jornadas.</Text>
           
           <View style={styles.statsCard}>
             {achievementStats.map((stat) => {
@@ -364,6 +366,18 @@ export default function BadgesScreen({ navigation }: any) {
               })()}
             </View>
           </>
+        ) : pathwayUnavailable || user?.profile?.assessmentDone ? (
+          <View style={styles.emptyPathwaySection}>
+            <View style={[styles.emptyPathwayCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
+              <View style={[styles.emptyPathwayIcon, { backgroundColor: `${themeColors.primary}18` }]}>
+                <BookOpen size={26} color={themeColors.primary} />
+              </View>
+              <Text style={[styles.emptyPathwayTitle, { color: themeColors.text }]}>Jornada indisponível offline</Text>
+              <Text style={[styles.emptyPathwayText, { color: themeColors.textMuted }]}>
+                A sua jornada não foi removida. Ligue-se à internet para atualizar estes dados.
+              </Text>
+            </View>
+          </View>
         ) : (
           <View style={styles.emptyPathwaySection}>
             <View style={[styles.emptyPathwayCard, { backgroundColor: themeColors.card, borderColor: themeColors.border }]}>
@@ -581,7 +595,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-10deg' }],
   },
   headerTitle: { fontSize: 21, fontWeight: '700', marginBottom: 5 },
-  headerSub: { fontSize: 13, lineHeight: 18 },
+  headerSub: { fontSize: 14, lineHeight: 19, fontWeight: '500' },
   statsCard: {
     paddingVertical: 4,
     flexDirection: 'row',

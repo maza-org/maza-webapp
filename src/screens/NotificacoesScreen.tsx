@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, MessageSquare, Award, BookOpen, BriefcaseBusiness, Target } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
+import { actionShadow } from '../theme/shadows';
 
 const NOTIF_ITEMS = [
   { id: 'lessons', label: 'Novas lições', sub: 'Quando um novo módulo for adicionado', icon: BookOpen, defaultOn: true },
@@ -121,7 +122,7 @@ const styles = StyleSheet.create({
   saveBtn: {
     marginTop: 24, borderRadius: 16,
     paddingVertical: 16, alignItems: 'center',
-    shadowOpacity: 0.3, shadowRadius: 10, elevation: 4,
+    ...actionShadow,
   },
   saveBtnText: { color: '#FFF', fontWeight: '800', fontSize: 16 },
 });
