@@ -16,6 +16,7 @@ import CourseThumbnailImage from '../components/CourseThumbnailImage';
 import { API_BASE as _API_BASE } from '../services/api';
 import { useIsWideWeb } from '../utils/webViewport';
 import { flushOfflineQueue } from '../services/offlineQueue';
+import YouthPortalBanner from '../components/YouthPortalBanner';
 
 const API_BASE = _API_BASE.replace('/api', '');
 
@@ -443,6 +444,8 @@ export default function HomeScreen({ navigation }: any) {
           />
         </View>
 
+        <YouthPortalBanner style={styles.youthPortalBanner} />
+
         {recentCourses.length > 0 && renderHorizontalCourseList('Cursos Recentes', recentCourses)}
 
         {/* MazaBot Promo Card */}
@@ -617,6 +620,10 @@ const styles = StyleSheet.create({
   jobsPromoImage: {
     width: 112,
     height: 126,
+  },
+  youthPortalBanner: {
+    marginHorizontal: 20,
+    marginBottom: 20,
   },
   botPromoCard: {
     backgroundColor: '#F8FAFC',

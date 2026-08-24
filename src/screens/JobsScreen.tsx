@@ -9,6 +9,7 @@ import { colors } from '../theme/colors';
 import { decodeHtmlEntities } from '../utils/text';
 import { bottomSafeSpace } from '../utils/safeArea';
 import { useIsWideWeb } from '../utils/webViewport';
+import YouthPortalBanner from '../components/YouthPortalBanner';
 
 const TABS = ['Todos', 'EMPLOYMENT', 'INTERNSHIP', 'CHALLENGE'];
 const TAB_LABELS: Record<string, string> = { Todos: 'Todos', EMPLOYMENT: 'Vagas', INTERNSHIP: 'Estágios', CHALLENGE: 'Desafios' };
@@ -121,6 +122,8 @@ export default function JobsScreen({ navigation }: any) {
           <SlidersHorizontal size={20} color={selectedProvince !== 'Todas as Províncias' ? themeColors.primary : themeColors.text} />
         </TouchableOpacity>
       </View>
+
+      <YouthPortalBanner style={styles.youthPortalBanner} />
 
       <View style={styles.activeFiltersContainer}>
         {activeTab !== 'Todos' && (
@@ -284,6 +287,7 @@ const styles = StyleSheet.create({
   searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', borderRadius: 16, paddingHorizontal: 16, height: 50, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
   searchInput: { flex: 1, marginLeft: 12, fontSize: 16 },
   filterBtn: { borderRadius: 16, width: 50, height: 50, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  youthPortalBanner: { marginHorizontal: 24, marginBottom: 14 },
   activeFiltersContainer: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: 24, marginBottom: 14, gap: 8 },
   activeBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, gap: 8 },
   activeBadgeText: { fontSize: 13, fontWeight: '700' },
