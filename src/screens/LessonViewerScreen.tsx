@@ -22,6 +22,7 @@ import NativePdf from '../components/NativePdf';
 import { useIsWideWeb } from '../utils/webViewport';
 import { queueOfflineRequest } from '../services/offlineQueue';
 import { getOfflineCourseSnapshot, getOfflineLesson, markOfflineLessonCompleted } from '../services/offlineCourses';
+import { trackActivity } from '../services/analytics';
 
 const API_BASE = _API_BASE.replace('/api', '');
 const TRANSCRIPT_HIGHLIGHT_OFFSET_SECONDS = 0;
@@ -429,23 +430,33 @@ function GameWebView({
 function NativeVideoPlayer({
   uri,
   onPlaybackTime,
+  onPlaybackError,
 }: {
   uri: string;
-  onPlaybackTime: (currentTime: number, duration: number) => void;
+  onPlaybackTime: (currentTime: number, duration: number, isPlaying?: boolean) => void;
+  onPlaybackError: (message: string) => void;
 }) {
   const [isReady, setIsReady] = useState(false);
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const autoplayStartedRef = useRef(false);
   const onPlaybackTimeRef = useRef(onPlaybackTime);
+  const onPlaybackErrorRef = useRef(onPlaybackError);
   const player = useVideoPlayer({ uri }, (createdPlayer) => {
     createdPlayer.muted = false;
     createdPlayer.volume = 1;
     createdPlayer.timeUpdateEventInterval = 0.35;
+    createdPlayer.bufferOptions = {
+      preferredForwardBufferDuration: 12,
+      minBufferForPlayback: 2.5,
+      prioritizeTimeOverSizeThreshold: true,
+    };
   });
 
   useEffect(() => {
     onPlaybackTimeRef.current = onPlaybackTime;
-  }, [onPlaybackTime]);
+    onPlaybackErrorRef.current = onPlaybackError;
+  }, [onPlaybackError, onPlaybackTime]);
 
   useEffect(() => {
     let mounted = true;
@@ -472,9 +483,10 @@ function NativeVideoPlayer({
     };
   }, [player, uri]);
 
-  useEventListener(player, 'statusChange', ({ status }) => {
+  useEventListener(player, 'statusChange', ({ status, error }) => {
     if (status === 'readyToPlay') {
       setHasPlaybackError(false);
+      setRetrying(false);
       if (!autoplayStartedRef.current) {
         player.play();
         autoplayStartedRef.current = true;
@@ -483,17 +495,38 @@ function NativeVideoPlayer({
     if (status === 'error') {
       setHasPlaybackError(true);
       setIsReady(true);
+      setRetrying(false);
+      onPlaybackErrorRef.current(error?.message ?? 'video_player_error');
     }
   });
 
   useEventListener(player, 'timeUpdate', ({ currentTime }) => {
-    onPlaybackTimeRef.current(currentTime, player.duration || 0);
+    onPlaybackTimeRef.current(currentTime, player.duration || 0, player.playing);
+  });
+
+  useEventListener(player, 'playingChange', ({ isPlaying }) => {
+    onPlaybackTimeRef.current(player.currentTime || 0, player.duration || 0, isPlaying);
   });
 
   useEventListener(player, 'playToEnd', () => {
     const duration = player.duration || 0;
-    onPlaybackTimeRef.current(duration, duration);
+    onPlaybackTimeRef.current(duration, duration, false);
   });
+
+  const retry = async () => {
+    setRetrying(true);
+    setHasPlaybackError(false);
+    setIsReady(false);
+    try {
+      await player.replaceAsync({ uri, contentType: 'progressive' });
+      player.play();
+    } catch (error: any) {
+      setRetrying(false);
+      setIsReady(true);
+      setHasPlaybackError(true);
+      onPlaybackErrorRef.current(error?.message ?? 'video_retry_failed');
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
@@ -501,6 +534,7 @@ function NativeVideoPlayer({
         player={player}
         style={{ flex: 1, backgroundColor: '#000' }}
         nativeControls
+        requiresLinearPlayback
         contentFit="contain"
         fullscreenOptions={{ enable: true }}
         surfaceType="surfaceView"
@@ -509,7 +543,7 @@ function NativeVideoPlayer({
           setHasPlaybackError(false);
         }}
       />
-      {!isReady && (
+      {(!isReady || retrying) && !hasPlaybackError && (
         <View style={styles.mediaLoadingOverlay}>
           <ActivityIndicator color="#fff" size="large" />
           <Text style={styles.mediaLoadingText}>A carregar vídeo...</Text>
@@ -519,6 +553,11 @@ function NativeVideoPlayer({
         <View style={styles.mediaLoadingOverlay}>
           <Ionicons name="alert-circle-outline" size={28} color="#fff" style={{ marginBottom: 8 }} />
           <Text style={styles.mediaLoadingText}>Não foi possível carregar o vídeo</Text>
+          <Text style={styles.mediaErrorHint}>Verifique a ligação e tente novamente. A transcrição continua disponível abaixo.</Text>
+          <TouchableOpacity style={styles.mediaRetryButton} onPress={retry}>
+            <Ionicons name="refresh" size={17} color="#fff" />
+            <Text style={styles.mediaRetryText}>Tentar novamente</Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -532,53 +571,121 @@ function YouTubeWebPlayer({
 }: {
   videoId: string;
   duration: number;
-  onPlaybackTime: (currentTime: number, duration: number) => void;
+  onPlaybackTime: (currentTime: number, duration: number, isPlaying?: boolean) => void;
 }) {
   const onPlaybackTimeRef = useRef(onPlaybackTime);
-  const [loaded, setLoaded] = useState(false);
+  const playerHostRef = useRef<any>(null);
+  const fallbackDurationRef = useRef(duration);
 
   useEffect(() => {
     onPlaybackTimeRef.current = onPlaybackTime;
+    fallbackDurationRef.current = duration;
   }, [onPlaybackTime]);
 
   useEffect(() => {
-    if (!loaded) return;
-    const safeDuration = Math.max(15, Math.floor(duration || 0) || 60);
-    const start = Date.now();
-    onPlaybackTimeRef.current(0, safeDuration);
-    const timer = setInterval(() => {
-      const elapsed = Math.min(safeDuration, (Date.now() - start) / 1000);
-      onPlaybackTimeRef.current(elapsed, safeDuration);
-      if (elapsed >= safeDuration) clearInterval(timer);
-    }, 1000);
+    fallbackDurationRef.current = duration;
+  }, [duration]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !playerHostRef.current) return;
+
+    let active = true;
+    let player: any = null;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    let playing = false;
+    let furthestWatched = 0;
+
+    const report = () => {
+      if (!player?.getCurrentTime) return;
+      let currentTime = Number(player.getCurrentTime()) || 0;
+      const playerDuration = Number(player.getDuration()) || fallbackDurationRef.current || 0;
+
+      if (playing && currentTime > furthestWatched + 3) {
+        player.seekTo(furthestWatched, true);
+        currentTime = furthestWatched;
+      } else if (playing && currentTime >= furthestWatched - 1) {
+        furthestWatched = Math.max(furthestWatched, currentTime);
+      }
+      onPlaybackTimeRef.current(currentTime, playerDuration, playing);
+    };
+
+    const createPlayer = (YouTube: any) => {
+      if (!active || !playerHostRef.current) return;
+      const mountNode = browserWindow.document.createElement('div');
+      playerHostRef.current.replaceChildren(mountNode);
+      player = new YouTube.Player(mountNode, {
+        width: '100%',
+        height: '100%',
+        videoId,
+        playerVars: {
+          autoplay: 1,
+          playsinline: 1,
+          rel: 0,
+          modestbranding: 1,
+          controls: 1,
+          disablekb: 1,
+        },
+        events: {
+          onReady: (event: any) => {
+            player = event.target;
+            report();
+            event.target.playVideo();
+            timer = setInterval(report, 500);
+          },
+          onStateChange: (event: any) => {
+            playing = event.data === YouTube.PlayerState.PLAYING;
+            report();
+          },
+        },
+      });
+    };
+
+    const browserWindow = globalThis as any;
+    if (browserWindow.YT?.Player) {
+      createPlayer(browserWindow.YT);
+    } else {
+      const documentRef = browserWindow.document;
+      if (!documentRef?.getElementById('maza-youtube-iframe-api')) {
+        const script = documentRef.createElement('script');
+        script.id = 'maza-youtube-iframe-api';
+        script.src = 'https://www.youtube.com/iframe_api';
+        documentRef.head.appendChild(script);
+      }
+      const waitForApi = setInterval(() => {
+        if (!browserWindow.YT?.Player) return;
+        clearInterval(waitForApi);
+        createPlayer(browserWindow.YT);
+      }, 100);
+      const stopWaiting = setTimeout(() => clearInterval(waitForApi), 15000);
+
+      return () => {
+        active = false;
+        clearInterval(waitForApi);
+        clearTimeout(stopWaiting);
+        if (timer) clearInterval(timer);
+        player?.destroy?.();
+        playerHostRef.current?.replaceChildren?.();
+      };
+    }
 
     return () => {
-      clearInterval(timer);
+      active = false;
+      if (timer) clearInterval(timer);
+      player?.destroy?.();
+      playerHostRef.current?.replaceChildren?.();
     };
-  }, [loaded, duration]);
+  }, [videoId]);
 
   if (Platform.OS !== 'web') return null;
 
-  const origin = (globalThis as any).location?.origin ?? '';
-  const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?playsinline=1&rel=0&modestbranding=1&controls=1&enablejsapi=1&origin=${encodeURIComponent(origin)}`;
-
   return (
     <View style={styles.youtubeFrameWrap}>
-      {React.createElement('iframe', {
-        src: embedUrl,
-        title: 'YouTube video lesson',
-        allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen',
-        allowFullScreen: true,
-        allowfullscreen: 'true',
-        webkitallowfullscreen: 'true',
-        mozallowfullscreen: 'true',
-        onLoad: () => setLoaded(true),
+      {React.createElement('div', {
+        ref: playerHostRef,
         style: {
           width: '100%',
           height: '100%',
-          border: 'none',
           backgroundColor: '#000',
-          display: 'block',
         },
       })}
     </View>
@@ -875,10 +982,13 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const [syncedTranscriptSegments, setSyncedTranscriptSegments] = useState<TranscriptSegment[]>(initialSyncedTranscriptSegments);
   const [mediaTime, setMediaTime] = useState(0);
   const [mediaDuration, setMediaDuration] = useState(lessonParam.duration ?? 0);
+  const [watchedSeconds, setWatchedSeconds] = useState(0);
   const [cachedMediaUri, setCachedMediaUri] = useState<string | null>(null);
   const [mediaSourceReady, setMediaSourceReady] = useState(false);
   const [playbackVideoUrl, setPlaybackVideoUrl] = useState<string | null>(null);
   const playbackTimeRef = useRef(0);
+  const watchedSecondsRef = useRef(0);
+  const playbackSampleRef = useRef<{ currentTime: number; at: number; playing: boolean } | null>(null);
   const reportedDurationRef = useRef<number | null>(null);
   const lessonOpenedAtRef = useRef(new Date().toISOString());
   const transcriptScrollRef = useRef<ScrollView | null>(null);
@@ -887,7 +997,6 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const [transcriptLayoutVersion, setTranscriptLayoutVersion] = useState(0);
   // Anti-cheat countdown
   const [countdown, setCountdown] = useState<number>(getRequiredLessonSeconds(lessonParam));
-  const countdownRef = useRef<any>(null);
   const [htmlContentReady, setHtmlContentReady] = useState(lessonParam.contentType !== 'HTML');
   const autoCompletedLessonRef = useRef<string | null>(null);
 
@@ -911,10 +1020,13 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const reachedLastTranscriptBlock = transcriptSegments.length > 0
     && safeActiveTranscriptIndex === transcriptSegments.length - 1;
   const reachedMediaEnd = mediaDuration > 0 && mediaTime >= Math.max(0, mediaDuration - 2);
+  const requiredWatchedSeconds = mediaDuration > 0
+    ? Math.max(Math.min(15, mediaDuration * 0.8), mediaDuration * 0.9)
+    : 0;
   const watchedEnoughVideo = lessonParam.contentType !== 'VIDEO' || (
     mediaDuration > 0
     && mediaTime >= Math.max(0, mediaDuration - 3)
-    && mediaTime >= Math.min(15, mediaDuration * 0.8)
+    && watchedSeconds >= requiredWatchedSeconds
   );
   const canCompleteVideoLesson = lessonParam.contentType !== 'VIDEO' || watchedEnoughVideo;
   const shouldShowCompleteButton = lessonParam.contentType === 'VIDEO';
@@ -940,11 +1052,11 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   }, [cachedMediaUri, lessonParam.contentType, lessonParam.htmlContent, mediaSourceReady]);
   const youtubeEmbedHtml = useMemo(() => {
     if (!ytId) return '';
-    return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{margin:0;padding:0;box-sizing:border-box}html,body,#player{width:100%;height:100%;background:#000;overflow:hidden}</style></head><body><div id="player"></div><script src="https://www.youtube.com/iframe_api"></script><script>let player;let timer;function send(payload){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(JSON.stringify(payload));}function report(){if(!player||!player.getCurrentTime)return;send({type:'media-time',currentTime:player.getCurrentTime()||0,duration:player.getDuration()||0});}function onYouTubeIframeAPIReady(){player=new YT.Player('player',{width:'100%',height:'100%',videoId:'${ytId}',playerVars:{autoplay:1,playsinline:1,rel:0,modestbranding:1,controls:1},events:{onReady:function(){send({type:'media-duration',duration:player.getDuration()||0});player.playVideo();timer=setInterval(report,500);},onStateChange:report}});}window.addEventListener('beforeunload',function(){if(timer)clearInterval(timer);});</script></body></html>`;
+    return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{margin:0;padding:0;box-sizing:border-box}html,body,#player{width:100%;height:100%;background:#000;overflow:hidden}</style></head><body><div id="player"></div><script src="https://www.youtube.com/iframe_api"></script><script>let player;let timer;let playing=false;let furthest=0;function send(payload){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(JSON.stringify(payload));}function report(){if(!player||!player.getCurrentTime)return;let current=player.getCurrentTime()||0;const duration=player.getDuration()||0;if(playing&&current>furthest+3){player.seekTo(furthest,true);current=furthest;}else if(playing&&current>=furthest-1){furthest=Math.max(furthest,current);}send({type:'media-time',currentTime:current,duration,isPlaying:playing});}function onYouTubeIframeAPIReady(){player=new YT.Player('player',{width:'100%',height:'100%',videoId:'${ytId}',playerVars:{autoplay:1,playsinline:1,rel:0,modestbranding:1,controls:1,disablekb:1},events:{onReady:function(){send({type:'media-duration',duration:player.getDuration()||0});player.playVideo();timer=setInterval(report,500);},onStateChange:function(event){playing=event.data===YT.PlayerState.PLAYING;report();}}});}window.addEventListener('beforeunload',function(){if(timer)clearInterval(timer);});</script></body></html>`;
   }, [ytId]);
   const webVideoHtml = useMemo(() => {
     if (!playbackVideoUrl) return '';
-    return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;display:flex;align-items:center;justify-content:center;height:100vh;width:100vw}video{width:100%;max-height:100%;outline:none}</style></head><body><video id="media" controls autoplay playsinline preload="metadata"><source src="${playbackVideoUrl}"></video><script>const media=document.getElementById('media');function send(payload){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(JSON.stringify(payload));}function report(){send({type:'media-time',currentTime:media.currentTime||0,duration:media.duration||0});}media.addEventListener('loadedmetadata',()=>send({type:'media-duration',duration:media.duration||0}));media.addEventListener('timeupdate',report);media.addEventListener('seeked',report);media.addEventListener('pause',report);media.addEventListener('play',report);media.addEventListener('ended',report);const timer=setInterval(report,500);window.addEventListener('beforeunload',()=>clearInterval(timer));media.play().catch(()=>{});</script></body></html>`;
+    return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;display:flex;align-items:center;justify-content:center;height:100vh;width:100vw}video{width:100%;max-height:100%;outline:none}</style></head><body><video id="media" controls controlsList="nodownload noplaybackrate" autoplay playsinline preload="metadata"><source src="${playbackVideoUrl}"></video><script>const media=document.getElementById('media');let furthest=0;function send(payload){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(JSON.stringify(payload));}function report(){const current=media.currentTime||0;if(!media.paused&&current>=furthest-1)furthest=Math.max(furthest,current);send({type:'media-time',currentTime:current,duration:media.duration||0,isPlaying:!media.paused&&!media.ended});}media.addEventListener('loadedmetadata',()=>send({type:'media-duration',duration:media.duration||0}));media.addEventListener('seeking',()=>{if(media.currentTime>furthest+2)media.currentTime=furthest;});media.addEventListener('timeupdate',report);media.addEventListener('seeked',report);media.addEventListener('pause',report);media.addEventListener('play',report);media.addEventListener('ended',report);const timer=setInterval(report,500);window.addEventListener('beforeunload',()=>clearInterval(timer));media.play().catch(()=>{});</script></body></html>`;
   }, [playbackVideoUrl]);
   const videoWebViewSource = useMemo(() => {
     if (ytId && youtubeEmbedHtml) return { html: youtubeEmbedHtml };
@@ -1057,6 +1169,9 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     setMediaDuration(lessonParam.duration ?? 0);
     setMediaTime(0);
     playbackTimeRef.current = 0;
+    watchedSecondsRef.current = 0;
+    playbackSampleRef.current = null;
+    setWatchedSeconds(0);
     reportedDurationRef.current = null;
     lessonOpenedAtRef.current = new Date().toISOString();
     setCountdown(getRequiredLessonSeconds(lessonParam));
@@ -1092,7 +1207,10 @@ export default function LessonViewerScreen({ route, navigation }: any) {
       setCachedMediaUri(local);
       setMediaSourceReady(true);
 
-      if (!local) {
+      // Playing and downloading a remote video simultaneously doubles bandwidth
+      // on slow mobile connections. Videos are cached only by the explicit
+      // offline-download flow; lighter media can still warm the temporary cache.
+      if (!local && lessonParam.contentType !== 'VIDEO') {
         void cacheMediaInBackground(resolved);
       }
     })();
@@ -1104,21 +1222,9 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     // Signal to backend that the lesson was opened
     api.post(`/progress/lesson/${lessonParam.id}/start`).catch(() => {});
 
-    // Start countdown only for video lessons that require a minimum duration.
-    const min = getRequiredLessonSeconds(lessonParam);
-    if (min > 0) {
-      setCountdown(min);
-      countdownRef.current = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(countdownRef.current);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+    // This counter now follows actual playback time. Pauses and buffering do
+    // not satisfy a minimum-duration requirement.
+    setCountdown(getRequiredLessonSeconds(lessonParam));
   }, [lessonParam.id, lessonLoading]);
 
   useEffect(() => {
@@ -1148,20 +1254,37 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     setTranscriptLayoutVersion((version) => version + 1);
   };
 
-  const applyPlaybackTime = useCallback((currentTime: number, duration: number) => {
+  const applyPlaybackTime = useCallback((currentTime: number, duration: number, isPlaying = true) => {
     const safeCurrentTime = Number.isFinite(currentTime) ? Math.max(0, currentTime) : null;
     const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
 
     if (safeCurrentTime !== null) {
       const previousTime = playbackTimeRef.current;
+      const now = Date.now();
+      const previousSample = playbackSampleRef.current;
       const looksLikeSourceReset = safeCurrentTime < 1.25
         && previousTime >= PLAYBACK_RESET_GUARD_SECONDS
         && (!safeDuration || previousTime < safeDuration - 2);
 
       if (!looksLikeSourceReset) {
+        if (previousSample?.playing && isPlaying) {
+          const wallSeconds = Math.max(0, (now - previousSample.at) / 1000);
+          const positionDelta = safeCurrentTime - previousSample.currentTime;
+          const continuousPlayback = positionDelta >= 0
+            && positionDelta <= Math.max(1.5, wallSeconds + 1.25);
+          if (continuousPlayback && wallSeconds <= 5) {
+            watchedSecondsRef.current += Math.min(positionDelta, wallSeconds + 0.5);
+            setWatchedSeconds(watchedSecondsRef.current);
+            const minimum = getRequiredLessonSeconds(lessonParam);
+            if (minimum > 0) {
+              setCountdown(Math.max(0, Math.ceil(minimum - watchedSecondsRef.current)));
+            }
+          }
+        }
         playbackTimeRef.current = safeCurrentTime;
         setMediaTime(safeCurrentTime);
       }
+      playbackSampleRef.current = { currentTime: safeCurrentTime, at: now, playing: isPlaying };
     }
 
     if (safeDuration > 0) {
@@ -1176,13 +1299,13 @@ export default function LessonViewerScreen({ route, navigation }: any) {
         api.post(`/progress/lesson/${lessonParam.id}/duration`, { duration: roundedDuration }).catch(() => {});
       }
     }
-  }, [lessonParam.contentType, lessonParam.id]);
+  }, [lessonParam]);
 
   const handleMediaMessage = (event: any) => {
     try {
       const data = JSON.parse(event?.nativeEvent?.data ?? '{}');
       if (data.type === 'media-time') {
-        applyPlaybackTime(data.currentTime, data.duration);
+        applyPlaybackTime(data.currentTime, data.duration, data.isPlaying !== false);
       }
       if (data.type === 'media-duration' && Number.isFinite(data.duration) && data.duration > 0) {
         setMediaDuration(data.duration);
@@ -1190,9 +1313,30 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     } catch {}
   };
 
-  const handleNativePlaybackTime = (currentTime: number, duration: number) => {
-    applyPlaybackTime(currentTime, duration);
+  const handleNativePlaybackTime = (currentTime: number, duration: number, isPlaying?: boolean) => {
+    applyPlaybackTime(currentTime, duration, isPlaying);
   };
+
+  const handleVideoPlaybackError = useCallback((message: string) => {
+    const source = playbackVideoUrl ?? '';
+    let sourceHost = source.startsWith('file:') ? 'local-file' : 'unknown';
+    try { sourceHost = new URL(source).hostname || sourceHost; } catch {}
+    void Network.getNetworkStateAsync().then((network) => {
+      trackActivity({
+        type: 'VIDEO_PLAYBACK_ERROR',
+        courseId,
+        lessonId: lessonParam.id,
+        metadata: {
+          platform: Platform.OS,
+          sourceHost,
+          cached: source.startsWith('file:'),
+          connected: network.isConnected,
+          reachable: network.isInternetReachable,
+          error: String(message).slice(0, 500),
+        },
+      });
+    }).catch(() => undefined);
+  }, [courseId, lessonParam.id, playbackVideoUrl]);
 
   const findNextUnlockedLesson = (courseData: any, progressData: any, currentLessonId: string) => {
     const unlockedModuleIds = new Set(
@@ -1275,6 +1419,8 @@ export default function LessonViewerScreen({ route, navigation }: any) {
             contentType: lessonParam.contentType,
             currentTime: mediaTime,
             duration: mediaDuration || lessonParam.duration || 0,
+            watchedSeconds: watchedSecondsRef.current,
+            proofVersion: 2,
             watchedToEnd: canCompleteVideoLesson,
             offline: true,
             startedAt: lessonOpenedAtRef.current,
@@ -1301,6 +1447,8 @@ export default function LessonViewerScreen({ route, navigation }: any) {
           contentType: lessonParam.contentType,
           currentTime: mediaTime,
           duration: mediaDuration || lessonParam.duration || 0,
+          watchedSeconds: watchedSecondsRef.current,
+          proofVersion: 2,
           watchedToEnd: canCompleteVideoLesson,
         },
       });
@@ -1534,7 +1682,12 @@ export default function LessonViewerScreen({ route, navigation }: any) {
                   onMessage={handleMediaMessage}
                 />
               ) : playbackVideoUrl ? (
-                <NativeVideoPlayer uri={playbackVideoUrl} onPlaybackTime={handleNativePlaybackTime} />
+                <NativeVideoPlayer
+                  key={playbackVideoUrl}
+                  uri={playbackVideoUrl}
+                  onPlaybackTime={handleNativePlaybackTime}
+                  onPlaybackError={handleVideoPlaybackError}
+                />
               ) : null}
             </View>
             {isWideWeb ? renderWebRail() : renderTranscriptPanel()}
@@ -1679,6 +1832,9 @@ const styles = StyleSheet.create({
   videoFrameWeb: { flex: 1, width: undefined, minWidth: 0, borderRadius: 8, overflow: 'hidden', alignSelf: 'flex-start' },
   mediaLoadingOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' },
   mediaLoadingText: { color: '#fff', fontSize: 14, fontWeight: '700', marginTop: 10 },
+  mediaErrorHint: { color: '#CBD5E1', fontSize: 12, lineHeight: 18, textAlign: 'center', maxWidth: 280, marginTop: 8 },
+  mediaRetryButton: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 16, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 22, borderWidth: 1, borderColor: '#94A3B8' },
+  mediaRetryText: { color: '#fff', fontSize: 13, fontWeight: '800' },
   youtubeFrameWrap: { flex: 1, backgroundColor: '#000' },
   audioContainer: { alignItems: 'center', padding: 32, width: '100%' },
   audioIcon: { fontSize: 64, marginBottom: 16 },

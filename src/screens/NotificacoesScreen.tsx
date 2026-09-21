@@ -5,8 +5,10 @@ import { ChevronLeft, MessageSquare, Award, BookOpen, BriefcaseBusiness, Target 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
 import { actionShadow } from '../theme/shadows';
+import { updateCourseReminderPreference } from '../services/courseReminders';
 
 const NOTIF_ITEMS = [
+  { id: 'courseReminders', label: 'Lembretes para continuar', sub: 'Depois de algum tempo sem concluir um curso', icon: BookOpen, defaultOn: true },
   { id: 'lessons', label: 'Novas lições', sub: 'Quando um novo módulo for adicionado', icon: BookOpen, defaultOn: true },
   { id: 'achievements', label: 'Conquistas', sub: 'Quando ganhar um badge ou certificado', icon: Award, defaultOn: true },
   { id: 'messages', label: 'Mensagens', sub: 'Avisos e comunicados da plataforma', icon: MessageSquare, defaultOn: false },
@@ -43,7 +45,15 @@ export default function NotificacoesScreen({ navigation }: any) {
     setLoading(true);
     setSuccessMsg(null);
     try {
-      await AsyncStorage.setItem('maza_notif_prefs', JSON.stringify(prefs));
+      const nextPrefs = { ...prefs };
+      if (nextPrefs.courseReminders) {
+        const granted = await updateCourseReminderPreference(true);
+        if (!granted) nextPrefs.courseReminders = false;
+      } else {
+        await updateCourseReminderPreference(false);
+      }
+      setPrefs(nextPrefs);
+      await AsyncStorage.setItem('maza_notif_prefs', JSON.stringify(nextPrefs));
     } catch (e) {
       console.error('Failed to save notification preferences', e);
     }

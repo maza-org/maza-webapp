@@ -9,6 +9,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { startAppUsageTracking } from './src/services/analytics';
 import OfflineDownloadBanner from './src/components/OfflineDownloadBanner';
 import { initializeOfflineDownloads } from './src/services/offlineCourses';
+import { startCourseReminderLifecycle } from './src/services/courseReminders';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -24,6 +25,11 @@ function Root() {
   useEffect(() => {
     if (loading || !token || Platform.OS === 'web') return;
     void initializeOfflineDownloads();
+  }, [loading, token]);
+
+  useEffect(() => {
+    if (loading || !token || Platform.OS === 'web') return;
+    return startCourseReminderLifecycle();
   }, [loading, token]);
 
   return (

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, ActivityIndicator, Alert,
+  TextInput, ActivityIndicator,
 } from 'react-native';
 import { colors } from '../theme/colors';
 import api from '../services/api';
@@ -65,6 +65,7 @@ export default function QuizRenderer({
   const [timeLeft, setTimeLeft] = useState(initialTimeLeft);
   const [phase, setPhase] = useState<'quiz' | 'submitting' | 'done'>('quiz');
   const [result, setResult] = useState<any>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const timerRef = useRef<any>(null);
   const answersRef = useRef<Record<string, string>>({});
   const submittingRef = useRef(false);
@@ -81,6 +82,7 @@ export default function QuizRenderer({
     setTimeLeft(initialTimeLeft);
     setPhase('quiz');
     setResult(null);
+    setSubmissionError(null);
     submittingRef.current = false;
   }, [quiz.id, initialTimeLeft]);
 
@@ -115,6 +117,7 @@ export default function QuizRenderer({
     submittingRef.current = true;
     clearInterval(timerRef.current);
     setPhase('submitting');
+    setSubmissionError(null);
     try {
       const final: Record<string, string> = { ...answersRef.current };
       quiz.questions.forEach((q) => { if (!final[q.id]) final[q.id] = ''; });
@@ -153,12 +156,12 @@ export default function QuizRenderer({
         return;
       }
       const detail = err?.response?.data?.message || err?.response?.data?.error;
-      Alert.alert(
-        'Erro',
-        detail || (mode === 'impact'
-          ? 'Não foi possível guardar a avaliação. Tente novamente.'
-          : 'Não foi possível submeter o quiz.')
-      );
+      const offline = !err?.response;
+      setSubmissionError(detail || (offline
+        ? 'Sem ligação à internet. As respostas continuam neste ecrã; ligue-se e tente novamente.'
+        : mode === 'impact'
+          ? 'Não foi possível guardar a avaliação. As respostas foram mantidas; tente novamente.'
+          : 'Não foi possível submeter o quiz. As respostas foram mantidas.'));
       submittingRef.current = false;
       setTimeLeft((p) => (p <= 0 ? initialTimeLeft : p));
       setPhase('quiz');
@@ -429,6 +432,17 @@ export default function QuizRenderer({
         <View style={{ height: 16 }} />
       </ScrollView>
 
+      {submissionError ? (
+        <View style={s.submitError} accessibilityRole="alert">
+          <Ionicons name="cloud-offline-outline" size={20} color="#B45309" />
+          <Text style={s.submitErrorText}>{submissionError}</Text>
+          <TouchableOpacity style={s.submitRetry} onPress={submit}>
+            <Ionicons name="refresh" size={15} color="#92400E" />
+            <Text style={s.submitRetryText}>Tentar novamente</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
       <View style={[s.footerNav, { paddingBottom: bottomSafeSpace(insets.bottom, 16) }]}>
         <TouchableOpacity
           style={[s.navBtn, s.prevBtn, idx === 0 && s.navBtnDisabled]}
@@ -486,6 +500,10 @@ const s = StyleSheet.create({
   reviseBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, marginTop: 8 },
   reviseTxt: { color: colors.primary, fontSize: 14, fontWeight: '800' },
   footerNav: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingTop: 12, backgroundColor: '#F8FAFC' },
+  submitError: { marginHorizontal: 16, marginTop: 8, borderWidth: 1, borderColor: '#FCD34D', backgroundColor: '#FFFBEB', borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 9, flexWrap: 'wrap' },
+  submitErrorText: { flex: 1, minWidth: 180, color: '#92400E', fontSize: 13, lineHeight: 18, fontWeight: '600' },
+  submitRetry: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 8 },
+  submitRetryText: { color: '#92400E', fontSize: 13, fontWeight: '800' },
   navBtn: { minHeight: 52, borderRadius: 30, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, paddingHorizontal: 16 },
   prevBtn: { width: 118, backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#E2E8F0' },
   nextBtn: { flex: 1, backgroundColor: '#1E293B' },

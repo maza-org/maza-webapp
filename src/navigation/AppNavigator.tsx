@@ -113,9 +113,9 @@ export default function AppNavigator() {
   const assessmentDone = user?.profile?.assessmentDone ?? false;
 
   const linking = useMemo(() => {
-    if (Platform.OS !== 'web') return undefined;
-
-    const prefixes = [globalThis.location?.origin ?? 'https://web.mazas.org'];
+    const prefixes = Platform.OS === 'web'
+      ? [globalThis.location?.origin ?? 'https://web.mazas.org']
+      : ['maza://', 'https://web.mazas.org'];
     const screens = !isAuthenticated
       ? {
           Login: '',
