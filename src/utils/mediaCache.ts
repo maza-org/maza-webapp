@@ -6,6 +6,18 @@ import { API_BASE } from '../services/api';
 const CACHE_DIR = `${FileSystem.cacheDirectory ?? ''}maza-media/`;
 export const OFFLINE_MEDIA_DIR = `${FileSystem.documentDirectory ?? ''}maza-offline-media/`;
 const OFFLINE_REGISTRY_KEY = 'maza_offline_media_registry';
+const pendingDownloads = new Map<string, Promise<string | null>>();
+
+async function verifiedTemporaryCache(fileUri: string) {
+  try {
+    const info = await FileSystem.getInfoAsync(fileUri);
+    if (!info.exists || info.isDirectory || info.size <= 0) return null;
+    const marker = JSON.parse(await FileSystem.readAsStringAsync(fileUri + '.complete'));
+    return marker.bytes === info.size ? fileUri : null;
+  } catch {
+    return null;
+  }
+}
 
 async function getOfflineRegistry(): Promise<Record<string, string>> {
   try {
@@ -79,12 +91,11 @@ export async function getCachedMediaUri(url: string): Promise<string | null> {
     const offlineUri = registry[url] ?? registry[resolvedUrl];
     if (offlineUri) {
       const offlineInfo = await FileSystem.getInfoAsync(offlineUri);
-      if (offlineInfo.exists) return offlineUri;
+      if (offlineInfo.exists && !offlineInfo.isDirectory && offlineInfo.size > 0) return offlineUri;
     }
 
     const fileUri = cachePathForUrl(resolvedUrl);
-    const info = await FileSystem.getInfoAsync(fileUri);
-    return info.exists ? fileUri : null;
+    return verifiedTemporaryCache(fileUri);
   } catch {
     return null;
   }
@@ -109,19 +120,40 @@ export async function removeOfflineMedia(urls: string[]) {
 }
 
 export async function cacheMediaInBackground(url: string): Promise<string | null> {
+  const resolvedUrl = resolveMediaUrl(url);
+  if (!resolvedUrl || resolvedUrl.startsWith('file:')) return resolvedUrl;
+  const existing = pendingDownloads.get(resolvedUrl);
+  if (existing) return existing;
+  const download = downloadTemporaryMedia(resolvedUrl).finally(() => pendingDownloads.delete(resolvedUrl));
+  pendingDownloads.set(resolvedUrl, download);
+  return download;
+}
+
+async function downloadTemporaryMedia(resolvedUrl: string): Promise<string | null> {
+  let temporaryUri: string | null = null;
   try {
     if (!FileSystem.cacheDirectory) return null;
-    const resolvedUrl = resolveMediaUrl(url);
-    if (!resolvedUrl || resolvedUrl.startsWith('file:')) return resolvedUrl;
 
     await FileSystem.makeDirectoryAsync(CACHE_DIR, { intermediates: true }).catch(() => {});
     const fileUri = cachePathForUrl(resolvedUrl);
-    const info = await FileSystem.getInfoAsync(fileUri);
-    if (info.exists) return fileUri;
+    const existing = await verifiedTemporaryCache(fileUri);
+    if (existing) return existing;
 
-    const result = await FileSystem.downloadAsync(resolvedUrl, fileUri);
-    return result.uri;
+    temporaryUri = fileUri + '.download';
+    const result = await FileSystem.downloadAsync(resolvedUrl, temporaryUri);
+    const info = await FileSystem.getInfoAsync(temporaryUri);
+    if (result.status !== 200 || !info.exists || info.isDirectory || info.size <= 0) return null;
+    const expectedBytes = Number(result.headers?.['Content-Length'] ?? result.headers?.['content-length']);
+    const encoding = result.headers?.['Content-Encoding'] ?? result.headers?.['content-encoding'];
+    if ((!encoding || encoding === 'identity') && expectedBytes > 0 && expectedBytes !== info.size) return null;
+    await FileSystem.deleteAsync(fileUri + '.complete', { idempotent: true });
+    await FileSystem.deleteAsync(fileUri, { idempotent: true });
+    await FileSystem.moveAsync({ from: temporaryUri, to: fileUri });
+    await FileSystem.writeAsStringAsync(fileUri + '.complete', JSON.stringify({ bytes: info.size }));
+    return fileUri;
   } catch {
     return null;
+  } finally {
+    if (temporaryUri) await FileSystem.deleteAsync(temporaryUri, { idempotent: true }).catch(() => {});
   }
 }

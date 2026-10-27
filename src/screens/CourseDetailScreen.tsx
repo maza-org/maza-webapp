@@ -96,7 +96,6 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [expandedModules, setExpandedModules] = useState<Record<string, number>>({});
   const didFirstLoadRef = useRef(false);
-  const lastFocusRefreshRef = useRef(0);
 
   const { width, height } = useWindowDimensions();
   const isWideWeb = useIsWideWeb(1024);
@@ -184,10 +183,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   useFocusEffect(useCallback(() => {
     const firstLoad = !didFirstLoadRef.current;
     const showSpinner = firstLoad && !initialCourse;
-    const now = Date.now();
-    if (!firstLoad && now - lastFocusRefreshRef.current < 20000) return;
     didFirstLoadRef.current = true;
-    lastFocusRefreshRef.current = now;
     fetchData(showSpinner ? 'initial' : 'background');
   }, [fetchData, initialCourse]));
 

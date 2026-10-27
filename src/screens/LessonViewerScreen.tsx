@@ -442,7 +442,7 @@ function NativeVideoPlayer({
   const autoplayStartedRef = useRef(false);
   const onPlaybackTimeRef = useRef(onPlaybackTime);
   const onPlaybackErrorRef = useRef(onPlaybackError);
-  const player = useVideoPlayer({ uri }, (createdPlayer) => {
+  const player = useVideoPlayer({ uri, contentType: 'progressive' }, (createdPlayer) => {
     createdPlayer.muted = false;
     createdPlayer.volume = 1;
     createdPlayer.timeUpdateEventInterval = 0.35;
@@ -953,6 +953,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const [courseProgress, setCourseProgress] = useState<any>(null);
   const [completed, setCompleted] = useState(false);
   const [marking, setMarking] = useState(false);
+  const [completionError, setCompletionError] = useState<string | null>(null);
   const htmlMediaUrl = lessonParam.contentType === 'HTML'
     && typeof lessonParam.htmlContent === 'string'
     && /^(https?:|file:|\/)/i.test(lessonParam.htmlContent)
@@ -986,6 +987,10 @@ export default function LessonViewerScreen({ route, navigation }: any) {
   const [cachedMediaUri, setCachedMediaUri] = useState<string | null>(null);
   const [mediaSourceReady, setMediaSourceReady] = useState(false);
   const [playbackVideoUrl, setPlaybackVideoUrl] = useState<string | null>(null);
+  const playbackIdentityRef = useRef({ lessonId: lessonParam.id, source: playbackVideoUrl });
+  useEffect(() => {
+    playbackIdentityRef.current = { lessonId: lessonParam.id, source: playbackVideoUrl };
+  }, [lessonParam.id, playbackVideoUrl]);
   const playbackTimeRef = useRef(0);
   const watchedSecondsRef = useRef(0);
   const playbackSampleRef = useRef<{ currentTime: number; at: number; playing: boolean } | null>(null);
@@ -1176,6 +1181,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     lessonOpenedAtRef.current = new Date().toISOString();
     setCountdown(getRequiredLessonSeconds(lessonParam));
     setCompleted(false);
+    setCompletionError(null);
     setHtmlContentReady(lessonParam.contentType !== 'HTML');
   }, [lessonParam.id, initialTranscript, initialSyncedTranscriptSegments]);
 
@@ -1322,6 +1328,13 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     let sourceHost = source.startsWith('file:') ? 'local-file' : 'unknown';
     try { sourceHost = new URL(source).hostname || sourceHost; } catch {}
     void Network.getNetworkStateAsync().then((network) => {
+      if (playbackIdentityRef.current.lessonId === lessonParam.id && playbackIdentityRef.current.source === source
+        && source.startsWith('file:') && network.isConnected === true && network.isInternetReachable !== false
+        && resolvedVideoUrl && /^https?:/i.test(resolvedVideoUrl)) {
+        setCachedMediaUri(null);
+        setPlaybackVideoUrl(resolvedVideoUrl);
+        playbackSampleRef.current = null;
+      }
       trackActivity({
         type: 'VIDEO_PLAYBACK_ERROR',
         courseId,
@@ -1336,7 +1349,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
         },
       });
     }).catch(() => undefined);
-  }, [courseId, lessonParam.id, playbackVideoUrl]);
+  }, [courseId, lessonParam.id, playbackVideoUrl, resolvedVideoUrl]);
 
   const findNextUnlockedLesson = (courseData: any, progressData: any, currentLessonId: string) => {
     const unlockedModuleIds = new Set(
@@ -1409,6 +1422,7 @@ export default function LessonViewerScreen({ route, navigation }: any) {
       return;
     }
     setMarking(true);
+    setCompletionError(null);
     const saveOfflineCompletion = async () => {
       const completedAt = new Date().toISOString();
       await queueOfflineRequest({
@@ -1458,11 +1472,13 @@ export default function LessonViewerScreen({ route, navigation }: any) {
     } catch (err: any) {
       const data = err?.response?.data;
       if (data?.error === 'anti_cheat') {
+        setCompletionError(data.message ?? 'Não foi possível confirmar o progresso. Tente novamente.');
         if (!silent) Alert.alert('Demasiado rápido!', data.message ?? 'Passa mais tempo na lição antes de concluir.');
       } else if (!err?.response) {
-        await saveOfflineCompletion();
-      } else if (!silent) {
-        navigation.goBack();
+        try { await saveOfflineCompletion(); }
+        catch { setCompletionError('Não foi possível guardar o progresso neste dispositivo. Tente novamente.'); }
+      } else {
+        setCompletionError(data?.message ?? 'Não foi possível guardar o progresso. Tente novamente.');
       }
     } finally {
       setMarking(false);
@@ -1814,12 +1830,23 @@ export default function LessonViewerScreen({ route, navigation }: any) {
         {renderContent()}
       </View>
 
+      {completionError ? (
+        <View style={styles.completionError} accessibilityRole="alert">
+          <Text style={styles.completionErrorText}>{completionError}</Text>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Tentar guardar o progresso novamente" disabled={marking} onPress={() => markComplete({ navigateAfter: false })} style={styles.completionRetry}>
+            <Ionicons name="refresh" size={20} color="#92400E" />
+          </TouchableOpacity>
+        </View>
+      ) : null}
       {!isWideWeb && renderCompleteButton(false)}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  completionError: { paddingHorizontal: 16, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#FFFBEB' },
+  completionErrorText: { flex: 1, color: '#92400E', fontSize: 14, lineHeight: 20 },
+  completionRetry: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
   backBtn: { padding: 4, marginRight: 12 },
