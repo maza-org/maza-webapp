@@ -17,6 +17,7 @@ import { API_BASE as _API_BASE } from '../services/api';
 import { useIsWideWeb } from '../utils/webViewport';
 import { flushOfflineQueue } from '../services/offlineQueue';
 import YouthPortalBanner from '../components/YouthPortalBanner';
+import LearningSyncStatus from '../components/LearningSyncStatus';
 
 const API_BASE = _API_BASE.replace('/api', '');
 
@@ -111,7 +112,7 @@ export default function HomeScreen({ navigation }: any) {
     try {
       await flushOfflineQueue().catch(() => {});
       const meRes = await api.get('/auth/me').catch((error) => error?.response ?? null);
-      if (meRes?.status === 401 || meRes?.status === 404) {
+      if (meRes?.status === 401) {
         await logout();
         return;
       }
@@ -161,6 +162,8 @@ export default function HomeScreen({ navigation }: any) {
   const progressPercent = Math.max(0, Math.min(100, Math.round(progressAverage)));
   const pathwayMeta = pathway ? getPathwayMeta(pathway.name) : null;
   const pathwayCourses: any[] = pathway?.courses ?? [];
+  const resumeCourse = pathwayCourses.find((item: any) => !item.isLocked && !item.isCompleted && Number(item.progress ?? 0) > 0)
+    ?? pathwayCourses.find((item: any) => !item.isLocked && !item.isCompleted);
   const useWebShell = useIsWideWeb(900);
   const useCourseGrid = useWebShell || width >= 760;
 
@@ -243,6 +246,22 @@ export default function HomeScreen({ navigation }: any) {
         </View>
 
         {/* User evolution */}
+        <LearningSyncStatus />
+        {resumeCourse ? (
+          <TouchableOpacity
+            style={[styles.resumeBanner, { backgroundColor: themeColors.primary }]}
+            accessibilityRole="button"
+            onPress={() => handleCoursePress(resumeCourse)}
+          >
+            <Ionicons name="play-circle-outline" size={32} color="#FFFFFF" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.resumeTitle}>Continuar aprendizagem</Text>
+              <Text style={styles.resumeCourse} numberOfLines={2}>{resumeCourse.title ?? resumeCourse.course?.title}</Text>
+              <Text style={styles.resumeCourse}>{Math.min(100, Math.max(0, Math.round(Number(resumeCourse.progress ?? 0))))}% concluído</Text>
+            </View>
+            <ChevronRight size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+        ) : null}
         <LinearGradient
           colors={isDark
             ? [themeColors.card, themeColors.card, '#0C4A6E']
@@ -474,6 +493,9 @@ export default function HomeScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
+  resumeBanner: { marginHorizontal: 20, marginBottom: 18, padding: 16, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  resumeTitle: { fontSize: 17, fontWeight: '700', color: '#FFFFFF', marginBottom: 4 },
+  resumeCourse: { fontSize: 14, color: '#FFFFFF', lineHeight: 20 },
   container: { flex: 1, backgroundColor: colors.background },
   webPage: { width: '100%', maxWidth: 1180, alignSelf: 'center', paddingTop: 20, paddingBottom: 24 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 24, paddingBottom: 10 },

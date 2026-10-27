@@ -78,9 +78,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
           // Always fetch fresh profile FIRST so assessmentDone is current
           // before the navigator renders — prevents routing to wrong screen
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 10000);
           try {
             const meRes = await fetch(`${API_BASE}/auth/me`, {
               headers: { Authorization: `Bearer ${storedToken}` },
+              signal: controller.signal,
             });
             if (meRes.ok) {
               const meData = await meRes.json();
@@ -88,15 +91,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               await AsyncStorage.setItem('maza_user', JSON.stringify(refreshed));
               setToken(storedToken);
               setUser(refreshed);
-            } else {
+            } else if (meRes.status === 401 || meRes.status === 403) {
               // Token expired — log out silently
               await removeStoredAuthToken();
               await AsyncStorage.removeItem('maza_user');
+              clearApiSession();
+            } else {
+              throw new Error('Profile temporarily unavailable');
             }
           } catch {
             // Offline — use cached data as fallback
             setToken(storedToken);
             setUser(parsedUser);
+          } finally {
+            clearTimeout(timeout);
           }
         }
       } catch {}

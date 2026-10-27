@@ -10,6 +10,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Network from 'expo-network';
 import { bottomSafeSpace } from '../utils/safeArea';
 import { queueOfflineRequest } from '../services/offlineQueue';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../context/AuthContext';
 
 type Question = {
   id: string; questionType: string; text: string;
@@ -53,6 +55,15 @@ export default function QuizRenderer({
   mode?: 'quiz' | 'impact';
 }) {
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+  const draftKey = user?.id
+    ? `maza_assessment_draft:${encodeURIComponent(user.id)}:${encodeURIComponent(submitEndpoint ?? quiz.id)}`
+    : null;
+  const questionSignature = JSON.stringify(quiz.questions.map(({ id, text, questionType, options }) => [id, text, questionType, options]));
+  const draftIdentity = JSON.stringify([draftKey, questionSignature, quiz.timeLimit]);
+  const [hydratedDraft, setHydratedDraft] = useState<string | null>(null);
+  const draftReady = hydratedDraft === draftIdentity;
+  const draftWrites = useRef<Promise<unknown>>(Promise.resolve());
   const total = quiz.questions.length;
   const initialTimeLeft = useMemo(
     () => (quiz.timeLimit && quiz.timeLimit > 0 ? quiz.timeLimit : 15) * 60,
@@ -76,6 +87,8 @@ export default function QuizRenderer({
   }, [answers]);
 
   useEffect(() => {
+    let active = true;
+    setHydratedDraft(null);
     setIdx(0);
     setAnswers({});
     setConfirmed({});
@@ -84,7 +97,40 @@ export default function QuizRenderer({
     setResult(null);
     setSubmissionError(null);
     submittingRef.current = false;
-  }, [quiz.id, initialTimeLeft]);
+    const restore = async () => {
+      try {
+        await draftWrites.current;
+        const raw = draftKey ? await AsyncStorage.getItem(draftKey) : null;
+        const draft = raw ? JSON.parse(raw) : null;
+        if (active && draft?.signature === questionSignature && draft.answers && typeof draft.answers === 'object') {
+          const restored: Record<string, string> = {};
+          for (const question of quiz.questions) {
+            if (typeof draft.answers[question.id] === 'string') restored[question.id] = draft.answers[question.id];
+          }
+          answersRef.current = restored;
+          setAnswers(restored);
+          setConfirmed(Object.fromEntries(Object.keys(restored).map((id) => [id, true])));
+          setIdx(Math.max(0, Math.min(total - 1, Number(draft.index) || 0)));
+          setTimeLeft(Math.max(0, Math.min(initialTimeLeft, Number(draft.timeLeft) || 0)));
+        }
+      } catch {
+        if (active) setSubmissionError('Não foi possível recuperar as respostas guardadas.');
+      } finally {
+        if (active) setHydratedDraft(draftIdentity);
+      }
+    };
+    void restore();
+    return () => { active = false; };
+  }, [draftIdentity, draftKey, questionSignature, initialTimeLeft]);
+
+  useEffect(() => {
+    if (!draftReady || !draftKey || phase !== 'quiz') return;
+    const value = JSON.stringify({ signature: questionSignature, answers, index: idx, timeLeft });
+    draftWrites.current = draftWrites.current
+      .catch(() => undefined)
+      .then(() => AsyncStorage.setItem(draftKey, value))
+      .catch(() => setSubmissionError('Não foi possível guardar o rascunho neste dispositivo. Mantenha esta avaliação aberta.'));
+  }, [answers, idx, timeLeft, draftReady, draftKey, phase, questionSignature]);
 
   const shuffledOptions = React.useMemo(() => {
     if (!currentQ || currentQ.questionType !== 'ORDERING') return [];
@@ -113,7 +159,7 @@ export default function QuizRenderer({
   };
 
   const submit = useCallback(async () => {
-    if (submittingRef.current) return;
+    if (submittingRef.current || !draftReady) return;
     submittingRef.current = true;
     clearInterval(timerRef.current);
     setPhase('submitting');
@@ -132,6 +178,10 @@ export default function QuizRenderer({
       const res = await api.post(endpoint, submission);
       setResult(res.data);
       setPhase('done');
+      if (draftKey) {
+        draftWrites.current = draftWrites.current.catch(() => undefined)
+          .then(() => AsyncStorage.removeItem(draftKey)).catch(() => undefined);
+      }
     } catch (err: any) {
       if (!err?.response && mode === 'quiz' && quiz.questions.every((question) => (
         question.questionType === 'MATCHING' || question.offlineAnswer !== undefined
@@ -146,13 +196,25 @@ export default function QuizRenderer({
         const earnedPoints = results.reduce((sum, item) => sum + item.earnedPoints, 0);
         const percentage = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
         const minScore = Number(quiz.minScore ?? 70);
-        await queueOfflineRequest({
-          method: 'post',
-          url: submitEndpoint ?? `/quizzes/${quiz.id}/submit`,
-          data: { answers: quiz.questions.map((question) => ({ questionId: question.id, answerData: final[question.id] })) },
-        });
+        try {
+          await queueOfflineRequest({
+            method: 'post',
+            url: submitEndpoint ?? `/quizzes/${quiz.id}/submit`,
+            data: { answers: quiz.questions.map((question) => ({ questionId: question.id, answerData: final[question.id] })) },
+          });
+        } catch {
+          setSubmissionError('Não foi possível guardar o envio neste dispositivo. Mantenha esta avaliação aberta e tente novamente.');
+          submittingRef.current = false;
+          setTimeLeft((previous) => previous <= 0 ? initialTimeLeft : previous);
+          setPhase('quiz');
+          return;
+        }
         setResult({ passed: percentage >= minScore, percentage, earnedPoints, totalPoints, results, offline: true });
         setPhase('done');
+        if (draftKey) {
+          draftWrites.current = draftWrites.current.catch(() => undefined)
+            .then(() => AsyncStorage.removeItem(draftKey)).catch(() => undefined);
+        }
         return;
       }
       const detail = err?.response?.data?.message || err?.response?.data?.error;
@@ -166,10 +228,10 @@ export default function QuizRenderer({
       setTimeLeft((p) => (p <= 0 ? initialTimeLeft : p));
       setPhase('quiz');
     }
-  }, [initialTimeLeft, mode, quiz.id, quiz.questions, submitEndpoint]);
+  }, [initialTimeLeft, mode, quiz.id, quiz.questions, submitEndpoint, draftKey, draftReady]);
 
   useEffect(() => {
-    if (phase !== 'quiz') {
+    if (phase !== 'quiz' || !draftReady) {
       clearInterval(timerRef.current);
       return;
     }
@@ -185,7 +247,11 @@ export default function QuizRenderer({
       });
     }, 1000);
     return () => clearInterval(timerRef.current);
-  }, [phase, submit]);
+  }, [phase, submit, draftReady]);
+
+  if (!draftReady) return (
+    <View style={s.center}><ActivityIndicator size="large" color={colors.primary} /></View>
+  );
 
   if (total === 0) return (
     <View style={s.center}><Text style={s.muted}>Quiz sem perguntas ainda.</Text></View>

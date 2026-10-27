@@ -28,7 +28,7 @@ export const API_BASE = Platform.OS === 'web'
   ? webApiBase
   : shouldIgnoreConfiguredApiBase
     ? productionApiBase
-    : configuredApiBase ?? localApiBase;
+    : configuredApiBase ?? (__DEV__ ? localApiBase : productionApiBase);
 
 
 
@@ -41,9 +41,14 @@ let memoryToken: string | null | undefined;
 const getCache = new Map<string, { expiresAt: number; promise?: Promise<any>; data?: any }>();
 const persistentPrefix = 'maza_api_cache:';
 
-const persistentCacheKey = (url: string) => `${persistentPrefix}${url}`;
+const persistentCacheKey = async (url: string) => {
+  const raw = await AsyncStorage.getItem('maza_user');
+  const userId = raw ? JSON.parse(raw)?.id : null;
+  return `${persistentPrefix}v2:${encodeURIComponent(userId ?? 'anonymous')}:${url}`;
+};
 
 export function setApiToken(token: string | null) {
+  if (memoryToken !== token) getCache.clear();
   memoryToken = token;
   if (token) api.defaults.headers.common.Authorization = `Bearer ${token}`;
   else delete api.defaults.headers.common.Authorization;
@@ -74,7 +79,7 @@ export async function clearPersistentApiCache(prefix?: string) {
       return;
     }
 
-    const storagePrefix = persistentCacheKey(prefix);
+    const storagePrefix = await persistentCacheKey(prefix);
     const keys = await AsyncStorage.getAllKeys();
     const cacheKeys = keys.filter((key) => key.startsWith(storagePrefix));
     if (cacheKeys.length > 0) await AsyncStorage.multiRemove(cacheKeys);
@@ -87,11 +92,13 @@ export async function getCached<T = any>(url: string, ttlMs = 60000): Promise<T>
   if (cached?.data !== undefined && cached.expiresAt > now) return cached.data as T;
   if (cached?.promise) return cached.promise as Promise<T>;
 
+  const sessionToken = memoryToken;
   const promise = api.get(url).then((res) => {
+    if (memoryToken !== sessionToken) throw new Error('A sessão mudou. Atualize este ecrã.');
     getCache.set(url, { data: res.data, expiresAt: Date.now() + ttlMs });
     return res.data as T;
   }).catch((error) => {
-    getCache.delete(url);
+    if (memoryToken === sessionToken) getCache.delete(url);
     throw error;
   });
   getCache.set(url, { promise, expiresAt: now + ttlMs });
@@ -103,7 +110,7 @@ export async function getPersistentCached<T = any>(
   ttlMs = 300000,
   onStaleData?: (data: T) => void
 ): Promise<T> {
-  const storageKey = persistentCacheKey(url);
+  const storageKey = await persistentCacheKey(url);
   const now = Date.now();
   const cached = getCache.get(url);
   if (cached?.data !== undefined && cached.expiresAt > now) return cached.data as T;
@@ -133,7 +140,7 @@ export async function getPersistentCached<T = any>(
 }
 
 export async function refreshPersistentCached<T = any>(url: string, ttlMs = 300000): Promise<T> {
-  const storageKey = persistentCacheKey(url);
+  const storageKey = await persistentCacheKey(url);
   const data = await api.get(url).then((res) => res.data as T);
   const expiresAt = Date.now() + ttlMs;
   getCache.set(url, { data, expiresAt });
