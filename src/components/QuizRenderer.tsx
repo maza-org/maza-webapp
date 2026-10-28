@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Network from 'expo-network';
 import { bottomSafeSpace } from '../utils/safeArea';
 import { queueOfflineRequest } from '../services/offlineQueue';
+import { stableQuizOrder } from '../utils/quizOptionOrder';
 
 type Question = {
   id: string; questionType: string; text: string;
@@ -89,8 +90,8 @@ export default function QuizRenderer({
   const shuffledOptions = React.useMemo(() => {
     if (!currentQ || currentQ.questionType !== 'ORDERING') return [];
     const arr = (() => { try { return JSON.parse(currentQ.options); } catch { return []; } })();
-    return arr.map((text: string, i: number) => ({ text, index: i })).sort(() => Math.random() - 0.5);
-  }, [currentQ?.id]);
+    return stableQuizOrder<{ text: string; index: number }>(arr.map((text: string, i: number) => ({ text, index: i })), currentQ.id);
+  }, [currentQ?.id, currentQ?.options]);
 
   const pick = (val: string) => {
     if (!currentQ) return;
@@ -410,6 +411,7 @@ export default function QuizRenderer({
         {/* MATCHING */}
         {currentQ.questionType === 'MATCHING' && (
           <MatchingQuestion
+            questionKey={currentQ.id}
             options={(() => { try { return JSON.parse(currentQ.options); } catch { return []; } })()}
             locked={currentConfirmed}
             currentAnswer={(() => { try { return JSON.parse(currentAnswer || '[]'); } catch { return []; } })()}
@@ -528,9 +530,9 @@ const s = StyleSheet.create({
   impactNoteText: { fontSize: 14, color: '#475569', lineHeight: 22 },
 });
 
-function MatchingQuestion({ options, locked, currentAnswer, onChange, onConfirm }: any) {
+function MatchingQuestion({ questionKey, options, locked, currentAnswer, onChange, onConfirm }: any) {
   const rights = React.useMemo(() => {
-    return options.map((o: any) => o.right).sort(() => Math.random() - 0.5);
+    return stableQuizOrder<string>(options.map((o: any) => o.right), questionKey);
   }, [options]);
 
   const getSelectedRight = (left: string) => currentAnswer.find((a: any) => a.left === left)?.right;
