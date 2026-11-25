@@ -3,6 +3,8 @@ import { Image, LayoutChangeEvent, StyleSheet, Text, View, ViewStyle } from 'rea
 import { CertificateData, formatCertificateDate, getCertificateCode } from '../utils/certificateGenerator';
 import { MAZA_LOGO_B64, UNICEF_LOGO_B64 } from '../assets/certificateAssets';
 import { MAZA_HORIZONTAL_LOGO_B64 } from '../assets/certificateExtraAssets';
+import { SvgXml } from 'react-native-svg';
+import { certificateQr } from '../utils/certificateVerification';
 
 type Props = CertificateData & {
   style?: ViewStyle | ViewStyle[];
@@ -14,6 +16,7 @@ const A4_RATIO = A4_WIDTH / A4_HEIGHT;
 
 export default function CertificatePreview({ style, ...data }: Props) {
   const [width, setWidth] = useState(0);
+  const qr = useMemo(() => certificateQr(data.verificationUrl)?.createSvgTag({ scalable: true }), [data.verificationUrl]);
 
   const certificate = useMemo(() => ({
     date: formatCertificateDate(data.issuedAt),
@@ -46,6 +49,7 @@ export default function CertificatePreview({ style, ...data }: Props) {
           ]}
         />
 
+        {qr ? <View style={{ position: 'absolute', bottom: s(58), left: '50%', marginLeft: -s(54), width: s(108), height: s(108) }}><SvgXml xml={qr} width="100%" height="100%" /></View> : null}
         <Text
           style={[styles.title, { top: s(58), fontSize: s(30, 10), letterSpacing: s(0.8) }]}
           numberOfLines={1}

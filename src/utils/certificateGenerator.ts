@@ -3,6 +3,7 @@ import * as Sharing from 'expo-sharing';
 import { Alert, Platform } from 'react-native';
 import { MAZA_LOGO_B64, UNICEF_LOGO_B64 } from '../assets/certificateAssets';
 import { MAZA_HORIZONTAL_LOGO_B64 } from '../assets/certificateExtraAssets';
+import { certificateQr, safeVerificationUrl } from './certificateVerification';
 
 export interface CertificateData {
   studentName: string;
@@ -11,6 +12,7 @@ export interface CertificateData {
   issuedAt: string;
   courseId: string;
   certificateId: string;
+  verificationUrl?: string | null;
 }
 
 export function getCertificateCode(certificateId: string): string {
@@ -42,6 +44,8 @@ export function buildCertificateHTML(data: CertificateData): string {
   const certCode = getCertificateCode(data.certificateId);
   const studentName = escapeHtml(data.studentName || 'NOME COMPLETO');
   const courseTitle = escapeHtml(data.courseTitle || 'NOME DO CURSO');
+  const verificationUrl = safeVerificationUrl(data.verificationUrl);
+  const qr = certificateQr(verificationUrl);
 
   return `<!DOCTYPE html>
 <html lang="pt">
@@ -195,6 +199,8 @@ export function buildCertificateHTML(data: CertificateData): string {
     text-align: center;
     text-transform: uppercase;
   }
+  .verification { position: absolute; left: 50%; bottom: 66px; transform: translateX(-50%); text-align: center; z-index: 4; font-size: 9px; color: #42566a; }
+  .verification svg { display: block; width: 108px; height: 108px; }
 
   @media print {
     html, body, .certificate {
@@ -246,6 +252,7 @@ export function buildCertificateHTML(data: CertificateData): string {
       <img class="maza" src="${MAZA_HORIZONTAL_LOGO_B64}" alt="MAZA"/>
     </div>
     <div class="footer-id">ID do Certificado: ${certCode}</div>
+    ${qr && verificationUrl ? `<a class="verification" href="${escapeHtml(verificationUrl)}">${qr.createSvgTag({ scalable: true })}Verificar certificado</a>` : ''}
   </section>
 </body>
 </html>`;

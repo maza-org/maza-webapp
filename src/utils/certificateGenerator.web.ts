@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { MAZA_LOGO_B64, UNICEF_LOGO_B64 } from '../assets/certificateAssets';
 import { MAZA_HORIZONTAL_LOGO_B64 } from '../assets/certificateExtraAssets';
+import { certificateQr, safeVerificationUrl } from './certificateVerification';
 
 export interface CertificateData {
   studentName: string;
@@ -9,6 +10,7 @@ export interface CertificateData {
   issuedAt: string;
   courseId: string;
   certificateId: string;
+  verificationUrl?: string | null;
 }
 
 export function getCertificateCode(certificateId: string): string {
@@ -99,6 +101,23 @@ export async function downloadCertificatePDF(data: CertificateData): Promise<voi
   pdf.setTextColor(107, 114, 128);
   pdf.setFontSize(6.5);
   pdf.text(`ID DO CERTIFICADO: ${getCertificateCode(data.certificateId)}`, pageWidth / 2, 201, { align: 'center' });
+  const verificationUrl = safeVerificationUrl(data.verificationUrl);
+  const qr = certificateQr(verificationUrl);
+  if (qr && verificationUrl) {
+    const size = 29;
+    const left = (pageWidth - size) / 2;
+    const top = 164;
+    const cells = qr.getModuleCount();
+    const cell = size / (cells + 8);
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(left, top, size, size, 'F');
+    pdf.setFillColor(0, 0, 0);
+    for (let row = 0; row < cells; row++) for (let col = 0; col < cells; col++) {
+      if (qr.isDark(row, col)) pdf.rect(left + (col + 4) * cell, top + (row + 4) * cell, cell, cell, 'F');
+    }
+    pdf.textWithLink('Verificar certificado', pageWidth / 2, 196, { url: verificationUrl, align: 'center' });
+    pdf.link(left, top, size, size, { url: verificationUrl });
+  }
 
   const filename = `Certificado_MAZA_${safeFilePart(data.studentName || 'Estudante')}_${getCertificateCode(data.certificateId)}.pdf`;
   pdf.save(filename);

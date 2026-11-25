@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Modal, Share, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FileText, Download, ChevronLeft, Award } from 'lucide-react-native';
+import { FileText, Download, ChevronLeft, Award, Copy, Share2 } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { downloadCertificatePDF } from '../utils/certificateGenerator';
 import CertificatePreview from '../components/CertificatePreview';
+import { safeVerificationUrl } from '../utils/certificateVerification';
+import * as Clipboard from 'expo-clipboard';
 
 export default function MyCertificatesScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -38,6 +40,7 @@ export default function MyCertificatesScreen({ navigation }: any) {
         issuedAt: cert.issuedAt ?? cert.createdAt ?? new Date().toISOString(),
         courseId: cert.courseId ?? cert.course?.id ?? '',
         certificateId: cert.id ?? '',
+        verificationUrl: cert.verificationUrl,
       });
     } catch (e) {
       Alert.alert('Erro', 'Não foi possível gerar o certificado.');
@@ -45,10 +48,22 @@ export default function MyCertificatesScreen({ navigation }: any) {
     setGenerating(null);
   };
 
+  const shareLink = async (cert: any, copy = false) => {
+    const url = safeVerificationUrl(cert.verificationUrl);
+    if (!url) { Alert.alert('Link indisponível', 'Não foi possível obter o link de verificação. Atualize a lista com ligação à internet.'); return; }
+    try {
+      if (copy) { await Clipboard.setStringAsync(url); Alert.alert('Link copiado', 'O link de verificação foi copiado.'); }
+      else if (Platform.OS === 'web') {
+        if (typeof navigator !== 'undefined' && navigator.share) await navigator.share({ title: 'Certificado MAZA', url });
+        else { await Clipboard.setStringAsync(url); Alert.alert('Link copiado', 'O link de verificação foi copiado.'); }
+      } else await Share.share(Platform.OS === 'ios' ? { url, message: `Certificado MAZA — ${cert.course?.title || 'Curso'}` } : { message: `Certificado MAZA — ${cert.course?.title || 'Curso'}\n${url}` });
+    } catch { Alert.alert('Não foi possível partilhar', 'Tente copiar o link.'); }
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <Modal visible={!!selectedCert} animationType="slide" transparent>
-        <View style={styles.previewOverlay}>
+        <ScrollView style={styles.previewOverlay} contentContainerStyle={styles.previewContent}>
           {selectedCert && (
             <>
               <CertificatePreview
@@ -59,6 +74,7 @@ export default function MyCertificatesScreen({ navigation }: any) {
                 issuedAt={selectedCert.issuedAt ?? selectedCert.createdAt ?? new Date().toISOString()}
                 courseId={selectedCert.courseId ?? selectedCert.course?.id ?? ''}
                 certificateId={selectedCert.id ?? ''}
+                verificationUrl={selectedCert.verificationUrl}
               />
               <View style={styles.previewActions}>
                 <TouchableOpacity
@@ -75,9 +91,16 @@ export default function MyCertificatesScreen({ navigation }: any) {
                   <Text style={styles.previewCloseText}>Fechar</Text>
                 </TouchableOpacity>
               </View>
+              {safeVerificationUrl(selectedCert.verificationUrl) ? <>
+                <Text style={{ color: '#fff', textAlign: 'center', maxWidth: 520, marginTop: 16 }}>Quem receber o link poderá consultar o seu nome, curso e data de emissão.</Text>
+                <View style={[styles.previewActions, { marginTop: 12 }]}>
+                  <TouchableOpacity accessibilityLabel="Copiar link" style={styles.previewClose} onPress={() => shareLink(selectedCert, true)}><Copy size={18} color="#fff" /><Text style={styles.previewCloseText}>Copiar link</Text></TouchableOpacity>
+                  <TouchableOpacity accessibilityLabel="Partilhar link" style={styles.previewClose} onPress={() => shareLink(selectedCert)}><Share2 size={18} color="#fff" /><Text style={styles.previewCloseText}>Partilhar link</Text></TouchableOpacity>
+                </View>
+              </> : null}
             </>
           )}
-        </View>
+        </ScrollView>
       </Modal>
 
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
@@ -137,12 +160,13 @@ export default function MyCertificatesScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  previewOverlay: { flex: 1, backgroundColor: 'rgba(30, 41, 59, 0.95)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  previewOverlay: { flex: 1, backgroundColor: 'rgba(30, 41, 59, 0.95)' },
+  previewContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   previewCertificate: { width: '100%', maxWidth: 800, marginBottom: 24, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 30, elevation: 20 },
-  previewActions: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  previewActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, alignItems: 'center' },
   previewDownload: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 22, paddingVertical: 14, borderRadius: 10 },
   previewDownloadText: { color: '#fff', fontWeight: 'bold', marginLeft: 8 },
-  previewClose: { backgroundColor: '#374151', paddingHorizontal: 22, paddingVertical: 14, borderRadius: 10 },
+  previewClose: { backgroundColor: '#374151', paddingHorizontal: 18, paddingVertical: 12, borderRadius: 8, flexDirection: 'row', gap: 8, alignItems: 'center' },
   previewCloseText: { color: '#fff', fontWeight: 'bold' },
   header: { flexDirection: 'row', alignItems: 'center', padding: 20, paddingBottom: 12, borderBottomWidth: 1 },
   backBtn: { marginRight: 12, padding: 4 },
