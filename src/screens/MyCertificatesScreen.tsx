@@ -93,7 +93,7 @@ export default function MyCertificatesScreen({ navigation }: any) {
       </Modal>
 
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.7}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.7}>
           <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>Os meus Certificados</Text>

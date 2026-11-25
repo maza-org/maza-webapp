@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
-import { Platform } from 'react-native';
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
+import { Platform, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as SplashScreen from 'expo-splash-screen';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +13,8 @@ import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import ScreenLoader from '../components/ScreenLoader';
 import { useIsWideWeb } from '../utils/webViewport';
+import { appLinkingConfig } from './linking';
+import WebAppNavigation from './WebAppNavigation';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -111,44 +113,18 @@ export default function AppNavigator() {
   const { user, loading } = useAuth();
   const isAuthenticated = !!user;
   const assessmentDone = user?.profile?.assessmentDone ?? false;
+  const navigationRef = useNavigationContainerRef<any>();
+  const [rootScreen, setRootScreen] = useState('');
+  const captureRootScreen = () => {
+    const state = navigationRef.getRootState();
+    setRootScreen(state?.routes[state.index ?? 0]?.name ?? '');
+  };
 
   const linking = useMemo(() => {
     const prefixes = Platform.OS === 'web'
       ? [globalThis.location?.origin ?? 'https://web.mazas.org']
       : ['maza://', 'https://web.mazas.org'];
-    const screens = !isAuthenticated
-      ? {
-          Login: '',
-          Register: 'registar',
-          ForgotPassword: 'recuperar-senha',
-          ResetPassword: 'nova-senha',
-          CourseDetail: 'curso/:courseId',
-        }
-      : !assessmentDone
-        ? {
-            BotAssessment: '',
-            Main: 'inicio',
-            CourseDetail: 'curso/:courseId',
-          }
-        : {
-            Main: '',
-            CourseDetail: 'curso/:courseId',
-            ImpactAssessment: 'curso/:courseId/avaliacao',
-            LessonViewer: 'curso/:courseId/aula/:lessonId',
-            JobDetail: 'oportunidades/:jobId',
-            MyCertificates: 'certificados',
-            NotificationsInbox: 'notificacoes',
-            Notificacoes: 'preferencias/notificacoes',
-            Configuracoes: 'definicoes',
-            EditProfile: 'perfil/editar',
-            ChangePassword: 'perfil/mudar-senha',
-            CareerOutcomes: 'resultados-profissionais',
-            CourseForum: 'curso/:courseId/comunidade',
-            HowItWorksStory: 'como-funciona',
-            BotAssessment: 'avaliacao-inicial',
-          };
-
-    return { prefixes, config: { screens } } as any;
+    return { prefixes, config: appLinkingConfig(isAuthenticated, assessmentDone) } as any;
   }, [assessmentDone, isAuthenticated]);
 
   useEffect(() => {
@@ -161,11 +137,16 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer
+      ref={navigationRef}
+      onReady={captureRootScreen}
+      onStateChange={captureRootScreen}
       linking={linking}
       documentTitle={Platform.OS === 'web' ? {
         formatter: (options, route) => `Maza | ${options?.title ?? route?.name ?? 'Aprender'}`,
       } : undefined}
     >
+      <View style={{ flex: 1 }}>
+      {Platform.OS === 'web' && isAuthenticated && assessmentDone && rootScreen && rootScreen !== 'Main' ? <WebAppNavigation navigation={navigationRef} /> : null}
       <Stack.Navigator
         key={!user ? 'guest' : 'auth'}
         initialRouteName={!user ? 'Login' : undefined}
@@ -228,6 +209,7 @@ export default function AppNavigator() {
           </>
         )}
       </Stack.Navigator>
+      </View>
     </NavigationContainer>
   );
 }

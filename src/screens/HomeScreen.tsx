@@ -91,21 +91,23 @@ export default function HomeScreen({ navigation }: any) {
   const [careerDueMilestone, setCareerDueMilestone] = useState<number | null>(null);
   const storyCheckStarted = useRef(false);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!user?.id || storyCheckStarted.current) return;
+    let active = true;
     storyCheckStarted.current = true;
 
     const openStoryOnFirstAccess = async () => {
       const storageKey = `maza_how_it_works_seen:${user.id}`;
       const alreadySeen = await AsyncStorage.getItem(storageKey);
-      if (alreadySeen) return;
+      if (alreadySeen || !active || !navigation.isFocused()) return;
 
       await AsyncStorage.setItem(storageKey, 'true');
-      navigation.navigate('HowItWorksStory');
+      if (active && navigation.isFocused()) navigation.navigate('HowItWorksStory');
     };
 
     openStoryOnFirstAccess().catch(() => {});
-  }, [navigation, user?.id]);
+    return () => { active = false; storyCheckStarted.current = false; };
+  }, [navigation, user?.id]));
 
   const fetchHomeData = useCallback(async () => {
     try {
