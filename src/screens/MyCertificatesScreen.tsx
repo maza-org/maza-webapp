@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FileText, Download, ChevronLeft, Award, Copy, Share2 } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
@@ -12,6 +12,7 @@ import { shareCertificateLink as shareLink } from '../services/certificateSharin
 
 export default function MyCertificatesScreen({ navigation }: any) {
   const { user } = useAuth();
+  const modalInsets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const [certificates, setCertificates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,19 +52,9 @@ export default function MyCertificatesScreen({ navigation }: any) {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <Modal visible={!!selectedCert} animationType="slide" transparent onRequestClose={() => setSelectedCert(null)}>
-        <ScrollView style={styles.previewOverlay} contentContainerStyle={styles.previewContent}>
+        <ScrollView style={styles.previewOverlay} contentContainerStyle={[styles.previewContent, { paddingTop: Math.max(20, modalInsets.top), paddingBottom: Math.max(20, modalInsets.bottom) }]}>
           {selectedCert && (
             <>
-              <CertificatePreview
-                style={styles.previewCertificate}
-                studentName={user?.name ?? user?.phone ?? 'Estudante'}
-                courseTitle={selectedCert.course?.title ?? selectedCert.courseName ?? 'Curso'}
-                instructor={selectedCert.course?.instructor ?? 'MAZA'}
-                issuedAt={selectedCert.issuedAt ?? selectedCert.createdAt ?? new Date().toISOString()}
-                courseId={selectedCert.courseId ?? selectedCert.course?.id ?? ''}
-                certificateId={selectedCert.id ?? ''}
-                verificationUrl={selectedCert.verificationUrl}
-              />
               <View style={styles.previewActions}>
                 <TouchableOpacity
                   style={[styles.previewDownload, { backgroundColor: colors.primary }]}
@@ -86,6 +77,16 @@ export default function MyCertificatesScreen({ navigation }: any) {
                   <TouchableOpacity accessibilityLabel="Partilhar link" style={styles.previewClose} onPress={() => shareLink(selectedCert)}><Share2 size={18} color="#fff" /><Text style={styles.previewCloseText}>Partilhar link</Text></TouchableOpacity>
                 </View>
               </> : null}
+              <CertificatePreview
+                style={[styles.previewCertificate, { marginTop: 24, marginBottom: 0 }]}
+                studentName={user?.name ?? user?.phone ?? 'Estudante'}
+                courseTitle={selectedCert.course?.title ?? selectedCert.courseName ?? 'Curso'}
+                instructor={selectedCert.course?.instructor ?? 'MAZA'}
+                issuedAt={selectedCert.issuedAt ?? selectedCert.createdAt ?? new Date().toISOString()}
+                courseId={selectedCert.courseId ?? selectedCert.course?.id ?? ''}
+                certificateId={selectedCert.id ?? ''}
+                verificationUrl={selectedCert.verificationUrl}
+              />
             </>
           )}
         </ScrollView>
@@ -149,7 +150,7 @@ export default function MyCertificatesScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   previewOverlay: { flex: 1, backgroundColor: 'rgba(30, 41, 59, 0.95)' },
-  previewContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  previewContent: { flexGrow: 1, justifyContent: 'flex-start', alignItems: 'center', padding: 20 },
   previewCertificate: { width: '100%', maxWidth: 800, marginBottom: 24, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 30, elevation: 20 },
   previewActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, alignItems: 'center' },
   previewDownload: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 22, paddingVertical: 14, borderRadius: 10 },

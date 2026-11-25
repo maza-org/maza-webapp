@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Image, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Award, TrendingUp, Trophy, Lock, BookOpen, FileText, CalendarDays, Clock3, BriefcaseBusiness, ChevronRight, Download, Copy, Share2 } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
@@ -68,6 +68,7 @@ function formatMinutesPerDay(minutes: number) {
 export default function BadgesScreen({ navigation }: any) {
   const { colors: themeColors, isDark } = useTheme();
   const { user, updateUser } = useAuth();
+  const modalInsets = useSafeAreaInsets();
   const updateUserRef = useRef(updateUser);
   useEffect(() => { updateUserRef.current = updateUser; }, [updateUser]);
   const isWideWeb = useIsWideWeb(900);
@@ -579,19 +580,9 @@ export default function BadgesScreen({ navigation }: any) {
       </ScrollView>
 
       <Modal visible={!!selectedCertificate} animationType="slide" transparent onRequestClose={() => setSelectedCertificate(null)}>
-        <ScrollView style={styles.previewOverlay} contentContainerStyle={styles.previewContent}>
+        <ScrollView style={styles.previewOverlay} contentContainerStyle={[styles.previewContent, { paddingTop: Math.max(20, modalInsets.top), paddingBottom: Math.max(20, modalInsets.bottom) }]}>
           {selectedCertificate && (
             <>
-              <CertificatePreview
-                style={styles.previewCertificate}
-                studentName={user?.name ?? user?.phone ?? 'Estudante'}
-                courseTitle={selectedCertificate.course?.title ?? selectedCertificate.courseName ?? 'Curso'}
-                instructor={selectedCertificate.course?.instructor ?? 'MAZA'}
-                issuedAt={selectedCertificate.issuedAt ?? selectedCertificate.createdAt ?? new Date().toISOString()}
-                courseId={selectedCertificate.courseId ?? selectedCertificate.course?.id ?? ''}
-                certificateId={selectedCertificate.id ?? ''}
-                verificationUrl={selectedCertificate.verificationUrl}
-              />
               <View style={styles.previewActions}>
                 <TouchableOpacity style={[styles.previewClose, { backgroundColor: themeColors.primary }]} onPress={downloadSelectedCertificate} disabled={generatingCertificate}>
                   {generatingCertificate ? <ActivityIndicator color="#fff" size="small" /> : <Download size={18} color="#fff" />}
@@ -608,6 +599,16 @@ export default function BadgesScreen({ navigation }: any) {
                   <TouchableOpacity accessibilityLabel="Partilhar link" style={styles.previewClose} onPress={() => shareCertificateLink(selectedCertificate)}><Share2 size={18} color="#fff" /><Text style={styles.previewCloseText}>Partilhar link</Text></TouchableOpacity>
                 </View>
               </> : null}
+              <CertificatePreview
+                style={[styles.previewCertificate, { marginTop: 24, marginBottom: 0 }]}
+                studentName={user?.name ?? user?.phone ?? 'Estudante'}
+                courseTitle={selectedCertificate.course?.title ?? selectedCertificate.courseName ?? 'Curso'}
+                instructor={selectedCertificate.course?.instructor ?? 'MAZA'}
+                issuedAt={selectedCertificate.issuedAt ?? selectedCertificate.createdAt ?? new Date().toISOString()}
+                courseId={selectedCertificate.courseId ?? selectedCertificate.course?.id ?? ''}
+                certificateId={selectedCertificate.id ?? ''}
+                verificationUrl={selectedCertificate.verificationUrl}
+              />
             </>
           )}
         </ScrollView>
@@ -843,7 +844,7 @@ const styles = StyleSheet.create({
   },
 
   previewOverlay: { flex: 1, backgroundColor: 'rgba(30, 41, 59, 0.95)' },
-  previewContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  previewContent: { flexGrow: 1, justifyContent: 'flex-start', alignItems: 'center', padding: 20 },
   previewCertificate: { width: '100%', maxWidth: 800, marginBottom: 24, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 30, elevation: 20 },
   previewActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, alignItems: 'center' },
   previewClose: { backgroundColor: '#374151', paddingHorizontal: 18, paddingVertical: 12, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 8 },

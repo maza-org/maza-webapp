@@ -33,7 +33,7 @@ export default function CertificatePreview({ style, ...data }: Props) {
   const s = (value: number, min = 0) => Math.max(min, value * scale);
 
   return (
-    <View style={[styles.container, style]} onLayout={handleLayout}>
+    <View testID="certificate-preview" style={[styles.container, style]} onLayout={handleLayout}>
       <View style={[styles.sheet, { borderWidth: s(12, 3) }]}>
         <Image
           source={{ uri: MAZA_LOGO_B64 }}

@@ -443,17 +443,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   return (
     <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <Modal visible={showCertificate} animationType="slide" transparent onRequestClose={() => setShowCertificate(false)}>
-        <ScrollView style={styles.certOverlay} contentContainerStyle={styles.certOverlayContent}>
-          <CertificatePreview
-            style={styles.certCardLandscape}
-            studentName={user?.name || user?.phone || 'Aprendiz Demo'}
-            courseTitle={course?.title ?? ''}
-            instructor={course?.instructor ?? 'MAZA'}
-            issuedAt={progress?.certificate?.issuedAt ?? new Date().toISOString()}
-            courseId={courseId}
-            certificateId={progress?.certificate?.id ?? ''}
-            verificationUrl={verificationUrl}
-          />
+        <ScrollView style={styles.certOverlay} contentContainerStyle={[styles.certOverlayContent, { paddingTop: Math.max(20, insets.top), paddingBottom: Math.max(20, insets.bottom) }]}>
           <View style={styles.certLegacyHidden}>
             <View style={styles.certBorderOuter}>
               <View style={styles.certBorderInner}>
@@ -518,6 +508,16 @@ export default function CourseDetailScreen({ route, navigation }: any) {
               <TouchableOpacity accessibilityLabel="Partilhar link" style={styles.certCloseBtn} onPress={() => shareCertificateLink({ verificationUrl, course })}><Share2 size={18} color="#fff" /><Text style={styles.certCloseBtnText}>Partilhar link</Text></TouchableOpacity>
             </View>
           </> : null}
+          <CertificatePreview
+            style={[styles.certCardLandscape, { marginTop: 24, marginBottom: 0 }]}
+            studentName={user?.name || user?.phone || 'Aprendiz Demo'}
+            courseTitle={course?.title ?? ''}
+            instructor={course?.instructor ?? 'MAZA'}
+            issuedAt={progress?.certificate?.issuedAt ?? new Date().toISOString()}
+            courseId={courseId}
+            certificateId={progress?.certificate?.id ?? ''}
+            verificationUrl={verificationUrl}
+          />
         </ScrollView>
       </Modal>
 
@@ -1058,7 +1058,7 @@ const styles = StyleSheet.create({
   },
   webModuleCard: { borderWidth: 1, borderRadius: 14, padding: 16 },
   certOverlay: { flex: 1, backgroundColor: 'rgba(30, 41, 59, 0.95)' },
-  certOverlayContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  certOverlayContent: { flexGrow: 1, justifyContent: 'flex-start', alignItems: 'center', padding: 20 },
   certLegacyHidden: { display: 'none' },
   certCardLandscape: { width: '100%', maxWidth: 800, aspectRatio: 1.414, backgroundColor: '#fff', padding: 4, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 30, elevation: 20, marginBottom: 24 },
   certBorderOuter: { flex: 1, borderColor: '#1CABE2', borderWidth: 2, padding: 2 },
