@@ -6,7 +6,7 @@ import {
 import { useTheme } from '../context/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { Award, BookOpen, Play, Lock, CheckCircle, FileText, Headphones, Globe, AlignLeft, ClipboardList, Download, MessageCircle } from 'lucide-react-native';
+import { Award, BookOpen, Play, Lock, CheckCircle, FileText, Headphones, Globe, AlignLeft, ClipboardList, Download, MessageCircle, Copy, Share2 } from 'lucide-react-native';
 import api, { API_BASE as _API_BASE, getPersistentCached, refreshPersistentCached } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { trackActivity } from '../services/analytics';
@@ -17,6 +17,8 @@ import CertificatePreview from '../components/CertificatePreview';
 import { useIsWideWeb } from '../utils/webViewport';
 import { getOfflineCourseSnapshot } from '../services/offlineCourses';
 import CourseOfflineDownloadCard from '../components/CourseOfflineDownloadCard';
+import { safeVerificationUrl } from '../utils/certificateVerification';
+import { shareCertificateLink } from '../services/certificateSharing';
 
 const API_BASE = _API_BASE.replace('/api', '');
 
@@ -94,6 +96,19 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   const [detailLoaded, setDetailLoaded] = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [certificateLink, setCertificateLink] = useState<{ id: string; userId: string; url: string | null } | null>(null);
+  const certificateId = progress?.certificate?.id;
+  const verificationUrl = certificateLink?.id === certificateId && certificateLink?.userId === user?.id ? certificateLink?.url : null;
+  useEffect(() => {
+    if (!showCertificate || !certificateId || !user?.id) return;
+    let active = true;
+    // Progress payloads from older backends do not contain a signed public link.
+    api.get('/certificates/my').then(response => {
+      const owned = response.data.find((item: any) => item.id === certificateId);
+      if (active) setCertificateLink({ id: certificateId, userId: user.id, url: safeVerificationUrl(owned?.verificationUrl) });
+    }).catch(() => { if (active) setCertificateLink(null); });
+    return () => { active = false; };
+  }, [showCertificate, certificateId, user?.id]);
   const [expandedModules, setExpandedModules] = useState<Record<string, number>>({});
   const didFirstLoadRef = useRef(false);
 
@@ -427,8 +442,8 @@ export default function CourseDetailScreen({ route, navigation }: any) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <Modal visible={showCertificate} animationType="slide" transparent>
-        <View style={styles.certOverlay}>
+      <Modal visible={showCertificate} animationType="slide" transparent onRequestClose={() => setShowCertificate(false)}>
+        <ScrollView style={styles.certOverlay} contentContainerStyle={styles.certOverlayContent}>
           <CertificatePreview
             style={styles.certCardLandscape}
             studentName={user?.name || user?.phone || 'Aprendiz Demo'}
@@ -437,6 +452,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
             issuedAt={progress?.certificate?.issuedAt ?? new Date().toISOString()}
             courseId={courseId}
             certificateId={progress?.certificate?.id ?? ''}
+            verificationUrl={verificationUrl}
           />
           <View style={styles.certLegacyHidden}>
             <View style={styles.certBorderOuter}>
@@ -482,6 +498,7 @@ export default function CourseDetailScreen({ route, navigation }: any) {
                   issuedAt: progress.certificate.issuedAt,
                   courseId,
                   certificateId: progress.certificate.id,
+                  verificationUrl,
                 });
                 setGeneratingPDF(false);
               }}
@@ -494,7 +511,14 @@ export default function CourseDetailScreen({ route, navigation }: any) {
               <Text style={styles.certCloseBtnText}>Fechar</Text>
             </TouchableOpacity>
           </View>
-        </View>
+          {verificationUrl ? <>
+            <Text style={{ color: '#fff', textAlign: 'center', maxWidth: 520, marginTop: 16 }}>Quem receber o link poderá consultar o seu nome, curso e data de emissão.</Text>
+            <View style={[styles.certActionsRow, { marginTop: 12 }]}>
+              <TouchableOpacity accessibilityLabel="Copiar link" style={styles.certCloseBtn} onPress={() => shareCertificateLink({ verificationUrl, course }, true)}><Copy size={18} color="#fff" /><Text style={styles.certCloseBtnText}>Copiar link</Text></TouchableOpacity>
+              <TouchableOpacity accessibilityLabel="Partilhar link" style={styles.certCloseBtn} onPress={() => shareCertificateLink({ verificationUrl, course })}><Share2 size={18} color="#fff" /><Text style={styles.certCloseBtnText}>Partilhar link</Text></TouchableOpacity>
+            </View>
+          </> : null}
+        </ScrollView>
       </Modal>
 
       {loading ? (
@@ -1033,7 +1057,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   webModuleCard: { borderWidth: 1, borderRadius: 14, padding: 16 },
-  certOverlay: { flex: 1, backgroundColor: 'rgba(30, 41, 59, 0.95)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  certOverlay: { flex: 1, backgroundColor: 'rgba(30, 41, 59, 0.95)' },
+  certOverlayContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   certLegacyHidden: { display: 'none' },
   certCardLandscape: { width: '100%', maxWidth: 800, aspectRatio: 1.414, backgroundColor: '#fff', padding: 4, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 30, elevation: 20, marginBottom: 24 },
   certBorderOuter: { flex: 1, borderColor: '#1CABE2', borderWidth: 2, padding: 2 },
@@ -1051,9 +1076,9 @@ const styles = StyleSheet.create({
   certSignatureLine: { width: '100%', height: 1, backgroundColor: '#6B7280', marginBottom: 2 },
   certSignatureRole: { fontSize: 6, fontWeight: 'bold', color: '#4B5563', letterSpacing: 1 },
   certFooterInfo: { position: 'absolute', bottom: 6, width: '100%', textAlign: 'center', fontSize: 6, color: '#9CA3AF', letterSpacing: 1 },
-  certActionsRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  certActionsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, alignItems: 'center' },
   certPrintBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1CABE2', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 8 },
   certPrintBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 14, marginLeft: 8 },
-  certCloseBtn: { backgroundColor: '#374151', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 8 },
+  certCloseBtn: { backgroundColor: '#374151', paddingHorizontal: 18, paddingVertical: 12, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 8 },
   certCloseBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
 });

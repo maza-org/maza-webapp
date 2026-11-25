@@ -1,15 +1,18 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Image } from 'react-native';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Award, TrendingUp, Trophy, Lock, BookOpen, FileText, CalendarDays, Clock3, BriefcaseBusiness, ChevronRight } from 'lucide-react-native';
+import { Award, TrendingUp, Trophy, Lock, BookOpen, FileText, CalendarDays, Clock3, BriefcaseBusiness, ChevronRight, Download, Copy, Share2 } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
-import api, { getPersistentCached } from '../services/api';
+import api, { getPersistentCached, refreshPersistentCached } from '../services/api';
 import { colors } from '../theme/colors';
 import CertificatePreview from '../components/CertificatePreview';
 import { useIsWideWeb } from '../utils/webViewport';
 import { LinearGradient } from 'expo-linear-gradient';
+import { downloadCertificatePDF } from '../utils/certificateGenerator';
+import { safeVerificationUrl } from '../utils/certificateVerification';
+import { shareCertificateLink } from '../services/certificateSharing';
 
 // ── Palette of rich, dark card backgrounds (one per pathway) ─────────────────
 const CARD_PALETTE = [
@@ -65,6 +68,8 @@ function formatMinutesPerDay(minutes: number) {
 export default function BadgesScreen({ navigation }: any) {
   const { colors: themeColors, isDark } = useTheme();
   const { user, updateUser } = useAuth();
+  const updateUserRef = useRef(updateUser);
+  useEffect(() => { updateUserRef.current = updateUser; }, [updateUser]);
   const isWideWeb = useIsWideWeb(900);
   const [pathway, setPathway] = useState<any>(null);
   const [completedPathways, setCompletedPathways] = useState<any[]>([]);
@@ -72,6 +77,7 @@ export default function BadgesScreen({ navigation }: any) {
   const [startingAssessment, setStartingAssessment] = useState(false);
   const [certificates, setCertificates] = useState<any[]>([]);
   const [selectedCertificate, setSelectedCertificate] = useState<any | null>(null);
+  const [generatingCertificate, setGeneratingCertificate] = useState(false);
   const [careerSummary, setCareerSummary] = useState<any>(null);
   const [pathwayUnavailable, setPathwayUnavailable] = useState(false);
 
@@ -81,11 +87,11 @@ export default function BadgesScreen({ navigation }: any) {
         api.get('/auth/me').catch(() => null),
         getPersistentCached<any>('/pathways/my', 5 * 60 * 1000).catch(() => undefined),
         getPersistentCached<any[]>('/pathways/completed', 5 * 60 * 1000).catch(() => undefined),
-        getPersistentCached<any[]>('/certificates/my', 5 * 60 * 1000).catch(() => undefined),
+        refreshPersistentCached<any[]>('/certificates/my', 5 * 60 * 1000).catch(() => getPersistentCached<any[]>('/certificates/my', 5 * 60 * 1000).catch(() => undefined)),
         getPersistentCached<any>('/career-outcomes/me', 5 * 60 * 1000).catch(() => undefined),
       ]);
-      if (meRes?.data && updateUser) {
-        await updateUser(meRes.data);
+      if (meRes?.data && updateUserRef.current) {
+        await updateUserRef.current(meRes.data);
       }
       setPathwayUnavailable(myData === undefined);
       if (myData !== undefined) setPathway(myData?.pathway ?? null);
@@ -96,7 +102,7 @@ export default function BadgesScreen({ navigation }: any) {
       console.log('Error fetching pathway in Gamification:', e);
     }
     setLoading(false);
-  }, [updateUser]);
+  }, [user?.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -190,6 +196,23 @@ export default function BadgesScreen({ navigation }: any) {
     } finally {
       setStartingAssessment(false);
     }
+  };
+
+  const downloadSelectedCertificate = async () => {
+    if (!selectedCertificate || generatingCertificate) return;
+    setGeneratingCertificate(true);
+    try {
+      await downloadCertificatePDF({
+        studentName: user?.name ?? user?.phone ?? 'Estudante',
+        courseTitle: selectedCertificate.course?.title ?? selectedCertificate.courseName ?? 'Curso',
+        instructor: selectedCertificate.course?.instructor ?? 'MAZA',
+        issuedAt: selectedCertificate.issuedAt ?? selectedCertificate.createdAt,
+        courseId: selectedCertificate.courseId ?? selectedCertificate.course?.id ?? '',
+        certificateId: selectedCertificate.id ?? '',
+        verificationUrl: selectedCertificate.verificationUrl,
+      });
+    } catch { Alert.alert('Erro', 'Não foi possível gerar o certificado.'); }
+    finally { setGeneratingCertificate(false); }
   };
 
   return (
@@ -555,8 +578,8 @@ export default function BadgesScreen({ navigation }: any) {
         </View>
       </ScrollView>
 
-      <Modal visible={!!selectedCertificate} animationType="slide" transparent>
-        <View style={styles.previewOverlay}>
+      <Modal visible={!!selectedCertificate} animationType="slide" transparent onRequestClose={() => setSelectedCertificate(null)}>
+        <ScrollView style={styles.previewOverlay} contentContainerStyle={styles.previewContent}>
           {selectedCertificate && (
             <>
               <CertificatePreview
@@ -567,15 +590,27 @@ export default function BadgesScreen({ navigation }: any) {
                 issuedAt={selectedCertificate.issuedAt ?? selectedCertificate.createdAt ?? new Date().toISOString()}
                 courseId={selectedCertificate.courseId ?? selectedCertificate.course?.id ?? ''}
                 certificateId={selectedCertificate.id ?? ''}
+                verificationUrl={selectedCertificate.verificationUrl}
               />
               <View style={styles.previewActions}>
+                <TouchableOpacity style={[styles.previewClose, { backgroundColor: themeColors.primary }]} onPress={downloadSelectedCertificate} disabled={generatingCertificate}>
+                  {generatingCertificate ? <ActivityIndicator color="#fff" size="small" /> : <Download size={18} color="#fff" />}
+                  <Text style={styles.previewCloseText}>{generatingCertificate ? 'A gerar PDF...' : 'Guardar PDF'}</Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.previewClose} onPress={() => setSelectedCertificate(null)}>
                   <Text style={styles.previewCloseText}>Fechar</Text>
                 </TouchableOpacity>
               </View>
+              {safeVerificationUrl(selectedCertificate.verificationUrl) ? <>
+                <Text style={{ color: '#fff', textAlign: 'center', maxWidth: 520, marginTop: 16 }}>Quem receber o link poderá consultar o seu nome, curso e data de emissão.</Text>
+                <View style={[styles.previewActions, { marginTop: 12 }]}>
+                  <TouchableOpacity accessibilityLabel="Copiar link" style={styles.previewClose} onPress={() => shareCertificateLink(selectedCertificate, true)}><Copy size={18} color="#fff" /><Text style={styles.previewCloseText}>Copiar link</Text></TouchableOpacity>
+                  <TouchableOpacity accessibilityLabel="Partilhar link" style={styles.previewClose} onPress={() => shareCertificateLink(selectedCertificate)}><Share2 size={18} color="#fff" /><Text style={styles.previewCloseText}>Partilhar link</Text></TouchableOpacity>
+                </View>
+              </> : null}
             </>
           )}
-        </View>
+        </ScrollView>
       </Modal>
     </SafeAreaView>
   );
@@ -807,9 +842,10 @@ const styles = StyleSheet.create({
     fontSize: 18, color: 'rgba(255,255,255,0.3)', fontWeight: '300',
   },
 
-  previewOverlay: { flex: 1, backgroundColor: 'rgba(30, 41, 59, 0.95)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  previewOverlay: { flex: 1, backgroundColor: 'rgba(30, 41, 59, 0.95)' },
+  previewContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   previewCertificate: { width: '100%', maxWidth: 800, marginBottom: 24, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 30, elevation: 20 },
-  previewActions: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  previewClose: { backgroundColor: '#374151', paddingHorizontal: 22, paddingVertical: 14, borderRadius: 10 },
+  previewActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, alignItems: 'center' },
+  previewClose: { backgroundColor: '#374151', paddingHorizontal: 18, paddingVertical: 12, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 8 },
   previewCloseText: { color: '#fff', fontWeight: 'bold' }
 });

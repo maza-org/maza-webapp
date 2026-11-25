@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Modal, Share, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FileText, Download, ChevronLeft, Award, Copy, Share2 } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { downloadCertificatePDF } from '../utils/certificateGenerator';
 import CertificatePreview from '../components/CertificatePreview';
 import { safeVerificationUrl } from '../utils/certificateVerification';
-import * as Clipboard from 'expo-clipboard';
+import { shareCertificateLink as shareLink } from '../services/certificateSharing';
 
 export default function MyCertificatesScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -48,21 +48,9 @@ export default function MyCertificatesScreen({ navigation }: any) {
     setGenerating(null);
   };
 
-  const shareLink = async (cert: any, copy = false) => {
-    const url = safeVerificationUrl(cert.verificationUrl);
-    if (!url) { Alert.alert('Link indisponível', 'Não foi possível obter o link de verificação. Atualize a lista com ligação à internet.'); return; }
-    try {
-      if (copy) { await Clipboard.setStringAsync(url); Alert.alert('Link copiado', 'O link de verificação foi copiado.'); }
-      else if (Platform.OS === 'web') {
-        if (typeof navigator !== 'undefined' && navigator.share) await navigator.share({ title: 'Certificado MAZA', url });
-        else { await Clipboard.setStringAsync(url); Alert.alert('Link copiado', 'O link de verificação foi copiado.'); }
-      } else await Share.share(Platform.OS === 'ios' ? { url, message: `Certificado MAZA — ${cert.course?.title || 'Curso'}` } : { message: `Certificado MAZA — ${cert.course?.title || 'Curso'}\n${url}` });
-    } catch { Alert.alert('Não foi possível partilhar', 'Tente copiar o link.'); }
-  };
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Modal visible={!!selectedCert} animationType="slide" transparent>
+      <Modal visible={!!selectedCert} animationType="slide" transparent onRequestClose={() => setSelectedCert(null)}>
         <ScrollView style={styles.previewOverlay} contentContainerStyle={styles.previewContent}>
           {selectedCert && (
             <>
